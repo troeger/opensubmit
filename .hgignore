@@ -1,0 +1,10 @@
+syntax: glob
+*.pyc
+media/uploads/*
+bin
+build
+dist
+include
+lib
+.Python
+.DS_Store

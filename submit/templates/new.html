@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ block.super }} - New Submission
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+{% endblock %}
+
+{%block navigation_settings %}hidden{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        New Submission
+    </h1>
+</div>
+
+<table>
+{{ newsubmission_form }}
+</table>
+
+{% endblock %}

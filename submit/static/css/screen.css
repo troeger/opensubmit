@@ -1,0 +1,56 @@
+section {
+    padding-top: 40px;
+}
+
+.brand {
+    color: white !important;
+}
+
+.center-vertical {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.footer {
+    margin-top: 35px;
+    padding: 35px 0px 35px 0px;
+    border-top: 1px solid #E5E5E5;
+}
+
+.footer p {
+    margin-bottom: 0;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: white;
+}
+
+.space-top {
+    padding-top: 80px;
+}
+
+.space-bottom {
+    padding-bottom: 80px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    cursor: pointer;
+}
+
+.table tbody form {
+    margin: 0;
+}
+
+.table tbody button {
+    cursor: default;
+}
