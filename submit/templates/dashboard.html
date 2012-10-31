@@ -33,7 +33,7 @@
                 <tr>
                     <td>{{ assignment.course }}</td>
                     <td>{{ assignment }}</td>
-                    <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
+                    <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }} (submission still possible){%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -61,17 +61,17 @@
 
         <tbody>
             {% for submission in submissions %} 
-                <tr>
+                <tr {% if submission.withdrawn %}style="font-style: italic; color: lightgray"{%endif%}>
                     <td>{{ submission.assignment.course }}</td>
                     <td>{{ submission.assignment }}</td>
                     <td>{{ submission.created }}</td>
-                    <td>{{ submission.submitter }}</td>
-                    <td>{{ submission.mates.all|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.submitter.get_full_name }}</td>
+                    <td>{{ submission.mate_list|safeseq|join:"<br/>" }}</td>
                     <td>{{ submission.number_of_files }}</td>
                     <td>{{ submission.status }}</td>
                     <td>
-                        {% if submission.submitter == user %}
-                            <a href="/delete/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Delete</a>
+                        {% if submission.submitter == user and not submission.withdrawn %}
+                            <a href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Withdraw</a>
                         {% endif %}
                     </td>
                 </tr>

@@ -26,9 +26,9 @@ def about(request):
 @login_required
 def dashboard(request):
     submissions=request.user.submissions.all() | request.user.group_submissions.all()
-    submissions.order_by('-created')
+    submissions=submissions.order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
-    assignments=Assignment.objects.filter(course__active__exact=True)
+    assignments=Assignment.open_ones.all()
     return render(request, 'dashboard.html', {
         'submissions': submissions,
         'user': request.user,
@@ -58,14 +58,15 @@ def new(request):
     return render(request, 'new.html', {'submissionForm': submissionForm, 'filesForm': filesForm})
 
 @login_required
-def delete(request, subm_id):
+def withdraw(request, subm_id):
     # submission should only be deletable by their creator
     submission = get_object_or_404(Submission, pk=subm_id, submitter=request.user)
     if "confirm" in request.POST:
-        submission.delete()
+        submission.withdrawn=True
+        submission.save()
         return redirect('dashboard')
     else:
-        return render(request, 'delete.html', {'submission': submission})
+        return render(request, 'withdraw.html', {'submission': submission})
 
 @require_http_methods(['GET', 'POST'])
 def login(request):

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import datetime
 import string
 valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
@@ -34,6 +35,10 @@ class Course(models.Model):
 	def __unicode__(self):
 		return unicode(self.title)
 
+class OpenAssignmentsManager(models.Manager):
+    def get_query_set(self):
+        return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = datetime.now()).filter(course__active__exact=True)
+
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)
 	course = models.ForeignKey(Course, related_name='assignments')
@@ -45,18 +50,25 @@ class Assignment(models.Model):
 	hard_deadline = models.DateTimeField()
 	def __unicode__(self):
 		return unicode(self.title)
+	objects = models.Manager() # The default manager.
+	open_ones = OpenAssignmentsManager() 
 
 class Submission(models.Model):
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
 	submitter = models.ForeignKey(User, related_name='submissions')
-	mates = models.ManyToManyField(User, related_name='group_submissions')
+	group_mates = models.ManyToManyField(User, blank=True, related_name='group_submissions')
 	notes = models.TextField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
+	withdrawn = models.BooleanField(default=False)
 	def __unicode__(self):
 		return unicode("Submission %u"%(self.pk))
 	def number_of_files(self):
 		return self.files.count()
-
+	def status(self):
+		if self.withdrawn:
+			return "Withdrawn"
+	def mate_list(self):
+		return [u.get_full_name() for u in self.group_mates.all()]
 
 class SubmissionFile(models.Model):
 	submission = models.ForeignKey(Submission, related_name='files')

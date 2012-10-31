@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {{ block.super }} - Delete Submission
+    {{ block.super }} - Withdraw Submission
 {% endblock %}
 
 {% block script %}
@@ -14,7 +14,9 @@
 {% block content %}
 <div class="page-header">
     <h1>
-        Delete Submission
+        Are you sure  ?
+		<br/>
+        <small>This submission will not be considered in grading. Your group mates will be informed by eMail.</small>
     </h1>
 </div>
 
@@ -46,7 +48,7 @@
 <form action="." method="post" enctype="multipart/form-data">
 {% csrf_token %}
 <input type="hidden" name="confirm"/>
-<button type="submit" href="/delete/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Delete</button>
+<button type="submit" href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Yes, withdraw it.</button>
 </form>
 
 {% endblock %}
