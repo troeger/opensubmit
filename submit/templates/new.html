@@ -8,6 +8,7 @@
 {{ block.super }}
 {% endblock %}
 
+
 {%block navigation_settings %}hidden{% endblock %}
 
 {% block content %}
@@ -17,8 +18,15 @@
     </h1>
 </div>
 
+<form action="{%url new%}" method="post" enctype="multipart/form-data">
+ {% csrf_token %}
 <table>
-{{ newsubmission_form }}
+{{ submissionForm }}
 </table>
+<table>
+{{ filesForm }}
+</table>
+<input type="submit" class="btn"/>
+</form>
 
 {% endblock %}

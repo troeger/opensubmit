@@ -5,7 +5,10 @@ from django.contrib import auth, messages
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from django.contrib.auth.models import User
 from django.core.mail import mail_managers
+from django.forms.models import modelformset_factory
 from forms import SubmissionForm
+from models import SubmissionFile, Submission, Assignment
+from datetime import datetime
 import urllib
 
 def index(request):
@@ -22,13 +25,47 @@ def about(request):
 
 @login_required
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    submissions=request.user.submissions.all() | request.user.group_submissions.all()
+    submissions.order_by('-created')
+    username=request.user.get_full_name() + " <" + request.user.email + ">"
+    assignments=Assignment.objects.filter(course__active__exact=True)
+    return render(request, 'dashboard.html', {
+        'submissions': submissions,
+        'user': request.user,
+        'username': username,
+        'assignments': assignments}
+    )
 
 @login_required
 def new(request):
-    form=SubmissionForm()
-    return render(request, 'new.html', {'newsubmission_form': form})
+    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission'))
+    if request.POST:
+        submissionForm=SubmissionForm(request.POST, request.FILES)
+        filesForm=SubmissionFileFormSet(request.POST, request.FILES)
+        if submissionForm.is_valid() and filesForm.is_valid():
+            submission=submissionForm.save(commit=False)
+            submission.submitter=request.user
+            submission.save()
+            submissionForm.save_m2m()
+            files=filesForm.save(commit=False)
+            for f in files:
+                f.submission=submission
+                f.save()
+            return redirect('dashboard')
+    else:
+        submissionForm=SubmissionForm()
+        filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
+    return render(request, 'new.html', {'submissionForm': submissionForm, 'filesForm': filesForm})
 
+@login_required
+def delete(request, subm_id):
+    # submission should only be deletable by their creator
+    submission = get_object_or_404(Submission, pk=subm_id, submitter=request.user)
+    if "confirm" in request.POST:
+        submission.delete()
+        return redirect('dashboard')
+    else:
+        return render(request, 'delete.html', {'submission': submission})
 
 @require_http_methods(['GET', 'POST'])
 def login(request):
@@ -90,9 +127,7 @@ def login(request):
 
             linkOpenID(new_user, user.openid_claim)
             mail_managers('New user', str(new_user), fail_silently=True)
-
-            return redirect('/login/?openid_identifier=%s' % 
-                            urllib.quote_plus(request.session['openid_identifier'])) 
+            return redirect('index')
 
     auth.login(request, user)
     return redirect('dashboard')

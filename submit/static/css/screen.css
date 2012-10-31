@@ -54,3 +54,7 @@ section {
 .table tbody button {
     cursor: default;
 }
+
+.errorlist {
+    list-style: none;
+}

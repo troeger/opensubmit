@@ -4,14 +4,15 @@ import string
 valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 def fname(title):
-	result=title.replace(" ","_")
+	title=title.replace(" ","_")
 	result=''.join(c for c in title if c in valid_fname_chars)
 	return result
 
 def upload_path(instance, filename):
+	course_title=fname(instance.submission.assignment.course.title)
 	ass_title=fname(instance.submission.assignment.title)
-	subm_title=fname(instance.submission.submitter)
-	return '/'.join([ass_title, subm_title, filename])
+	subm_title=fname(instance.submission.submitter.get_full_name())
+	return '/'.join([course_title, ass_title, subm_title, filename])
 
 class Grading(models.Model):
 	title = models.CharField(max_length=20)
@@ -33,29 +34,33 @@ class Course(models.Model):
 	def __unicode__(self):
 		return unicode(self.title)
 
-class StudentGroup(models.Model):
-	course = models.ForeignKey(Course, related_name='studentGroups')
-	members = models.ManyToManyField(User)
-
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)
 	course = models.ForeignKey(Course, related_name='assignments')
+	download = models.URLField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	gradingScheme = models.ForeignKey(GradingScheme)
-	published = models.DateTimeField(blank=True)
-	soft_deadline = models.DateTimeField()
+	published = models.DateTimeField(blank=True, null=True)
+	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()
 	def __unicode__(self):
-		return unicode("%s (%s)"%(self.title, self.course))
-
-class SubmissionFile(models.Model):
-	file_link = models.FileField(upload_to=upload_path) 
+		return unicode(self.title)
 
 class Submission(models.Model):
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
 	submitter = models.ForeignKey(User, related_name='submissions')
-	notes = models.TextField(max_length=200)
-	files = models.ManyToManyField(SubmissionFile, related_name="submission")
+	mates = models.ManyToManyField(User, related_name='group_submissions')
+	notes = models.TextField(max_length=200, blank=True)
+	created = models.DateTimeField(auto_now_add=True, editable=False)
+	def __unicode__(self):
+		return unicode("Submission %u"%(self.pk))
+	def number_of_files(self):
+		return self.files.count()
+
+
+class SubmissionFile(models.Model):
+	submission = models.ForeignKey(Submission, related_name='files')
+	attachment = models.FileField(upload_to=upload_path) 
 
 class Job(models.Model):
 	submission = models.ForeignKey(Submission, related_name='jobs')

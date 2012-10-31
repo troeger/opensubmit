@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ block.super }} - Delete Submission
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+{% endblock %}
+
+
+{%block navigation_settings %}hidden{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        Delete Submission
+    </h1>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Course</th>
+            <th>Assignment</th>
+            <th>Submitted</th>
+            <th>Submitter</th>
+            <th>Group Mates</th>
+            <th>Files</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ submission.assignment.course }}</td>
+            <td>{{ submission.assignment }}</td>
+            <td>{{ submission.created }}</td>
+            <td>{{ submission.submitter }}</td>
+            <td>{{ submission.mates.all|safeseq|join:"<br/>" }}</td>
+            <td>{{ submission.number_of_files }}</td>
+            <td>{{ submission.status }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<form action="." method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<input type="hidden" name="confirm"/>
+<button type="submit" href="/delete/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Delete</button>
+</form>
+
+{% endblock %}

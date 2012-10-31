@@ -13,20 +13,49 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>
-        Dashboard
-    </h1>
+    <h1>Dashboard</h1>
+    <h6>{{ username }}</h6>
 </div>
 
-<a href="/new/" class="btn"><i class="icon-plus"></i>New Submission</a>
-
 <section>
-    <table class="table">
+    <h3>Active Assignments</h3>
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Course</th>
                 <th>Assignment</th>
+                <th>Time Left</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for assignment in assignments %} 
+                <tr>
+                    <td>{{ assignment.course }}</td>
+                    <td>{{ assignment }}</td>
+                    <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h3>Your Submissions</h3>
+    {% if assignments %}
+    <a style="margin-top:20px" href="/new/" class="btn"><i class="icon-plus"></i>New Submission</a>
+    {% endif %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Assignment</th>
+                <th>Submitted</th>
+                <th>Submitter</th>
+                <th>Group Mates</th>
+                <th>Files</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
         </thead>
 
@@ -35,10 +64,34 @@
                 <tr>
                     <td>{{ submission.assignment.course }}</td>
                     <td>{{ submission.assignment }}</td>
+                    <td>{{ submission.created }}</td>
+                    <td>{{ submission.submitter }}</td>
+                    <td>{{ submission.mates.all|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.number_of_files }}</td>
                     <td>{{ submission.status }}</td>
+                    <td>
+                        {% if submission.submitter == user %}
+                            <a href="/delete/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Delete</a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </section>
+
+<div id="delconfirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Confirmation" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Modal header</h3>
+  </div>
+  <div class="modal-body">
+    <p>One fine body…</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="btn btn-primary">Save changes</button>
+  </div>
+</div>
+
 {% endblock %}
