@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import datetime
+from django.utils import timezone
 import string
 valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
@@ -37,7 +37,7 @@ class Course(models.Model):
 
 class OpenAssignmentsManager(models.Manager):
     def get_query_set(self):
-        return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = datetime.now()).filter(course__active__exact=True)
+        return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = timezone.now()).filter(course__active__exact=True)
 
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)

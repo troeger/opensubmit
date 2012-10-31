@@ -8,7 +8,7 @@ from django.core.mail import mail_managers
 from django.forms.models import modelformset_factory
 from forms import SubmissionForm
 from models import SubmissionFile, Submission, Assignment
-from datetime import datetime
+from django.utils import timezone
 import urllib
 
 def index(request):
@@ -104,7 +104,7 @@ def login(request):
 
             # both, username and e-mail were not given, use a timestamp as username
             elif not user_name and not email:
-                now = datetime.datetime.now()
+                now = timezone.now()
                 user_name = 'Anonymous %u%u%u%u' % (now.hour, now.minute,\
                                                     now.second, now.microsecond)
                 new_user = User(username=user_name)

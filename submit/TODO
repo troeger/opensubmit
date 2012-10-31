@@ -1,8 +1,7 @@
 TODO:
 
-- Wenn Soft-Deadline existiert, entsprechend optisch darstellen
 - Nur eine Submission pro Nutzer pro Assignment erlauben (Gruppen berücksichtigen)
 - Korrekturstatus anzeigen
 - Jobs ausführen
-- DJango Model Versioning Tool verwenden
+- Django Model Versioning Tool verwenden
 - Mail an selbst, Admins und Kollegen: EInreichen, löschen
