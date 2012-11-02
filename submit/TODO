@@ -1,6 +1,7 @@
 TODO:
 
 - Nur eine Submission pro Nutzer pro Assignment erlauben (Gruppen berücksichtigen)
+- Kurs-Flags berücksichtigen
 - Korrekturstatus anzeigen
 - Jobs ausführen
 - Django Model Versioning Tool verwenden

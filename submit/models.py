@@ -32,6 +32,8 @@ class Course(models.Model):
 	owner   = models.ForeignKey(User, related_name='courses')
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
+	groups_allowed = models.BooleanField(default=False)
+	groups_fixed = models.BooleanField(default=False)
 	def __unicode__(self):
 		return unicode(self.title)
 
