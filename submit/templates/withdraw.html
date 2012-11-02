@@ -26,8 +26,8 @@
             <th>Course</th>
             <th>Assignment</th>
             <th>Submitted</th>
-            <th>Submitter</th>
-            <th>Group Mates</th>
+            <th>Original Submitter</th>
+            <th>Authors</th>
             <th>Files</th>
             <th>Status</th>
         </tr>
@@ -37,8 +37,8 @@
             <td>{{ submission.assignment.course }}</td>
             <td>{{ submission.assignment }}</td>
             <td>{{ submission.created }}</td>
-            <td>{{ submission.submitter }}</td>
-            <td>{{ submission.mates.all|safeseq|join:"<br/>" }}</td>
+            <td>{{ submission.submitter.get_full_name }}</td>
+            <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
             <td>{{ submission.number_of_files }}</td>
             <td>{{ submission.status }}</td>
         </tr>

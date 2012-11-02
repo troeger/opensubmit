@@ -18,13 +18,14 @@
 </div>
 
 <section>
-    <h3>Active Assignments</h3>
+    <h3>Open Assignments</h3>
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Course</th>
                 <th>Assignment</th>
                 <th>Time Left</th>
+                <th>Action</th>
             </tr>
         </thead>
 
@@ -34,6 +35,7 @@
                     <td>{{ assignment.course }}</td>
                     <td>{{ assignment }}</td>
                     <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }} (submission still possible){%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
+                    <td><a href="/assignments/{{ assignment.pk }}/new/" class="btn"><i class="icon-plus"></i>New Solution</a></td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -41,18 +43,14 @@
 </section>
 
 <section>
-    <h3>Your Submissions</h3>
-    {% if assignments %}
-    <a style="margin-top:20px" href="/new/" class="btn"><i class="icon-plus"></i>New Submission</a>
-    {% endif %}
+    <h3>Your Solutions</h3>
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Course</th>
                 <th>Assignment</th>
                 <th>Submitted</th>
-                <th>Submitter</th>
-                <th>Group Mates</th>
+                <th>Authors</th>
                 <th>Files</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -60,17 +58,16 @@
         </thead>
 
         <tbody>
-            {% for submission in submissions %} 
-                <tr {% if submission.withdrawn %}style="font-style: italic; color: lightgray"{%endif%}>
+            {% for submission in authored %} 
+                <tr {% if not submission.to_be_graded %}style="font-style: italic; color: lightgray"{%endif%}>
                     <td>{{ submission.assignment.course }}</td>
                     <td>{{ submission.assignment }}</td>
-                    <td>{{ submission.created }}</td>
-                    <td>{{ submission.submitter.get_full_name }}</td>
-                    <td>{{ submission.mate_list|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.created }}<br/>by {{ submission.submitter.get_full_name }}</td>
+                    <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
                     <td>{{ submission.number_of_files }}</td>
                     <td>{{ submission.status }}</td>
                     <td>
-                        {% if submission.submitter == user and not submission.withdrawn %}
+                        {% if submission.to_be_graded %}
                             <a href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Withdraw</a>
                         {% endif %}
                     </td>

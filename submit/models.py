@@ -33,7 +33,6 @@ class Course(models.Model):
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
 	groups_allowed = models.BooleanField(default=False)
-	groups_fixed = models.BooleanField(default=False)
 	def __unicode__(self):
 		return unicode(self.title)
 
@@ -57,20 +56,21 @@ class Assignment(models.Model):
 
 class Submission(models.Model):
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
-	submitter = models.ForeignKey(User, related_name='submissions')
-	group_mates = models.ManyToManyField(User, blank=True, related_name='group_submissions')
+	submitter = models.ForeignKey(User, related_name='submitted')
+	authors = models.ManyToManyField(User, related_name='authored')
 	notes = models.TextField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
-	withdrawn = models.BooleanField(default=False)
+	to_be_graded = models.BooleanField(default=True)
+	grading = models.ForeignKey(Grading, blank=True, null=True)
 	def __unicode__(self):
 		return unicode("Submission %u"%(self.pk))
 	def number_of_files(self):
 		return self.files.count()
 	def status(self):
-		if self.withdrawn:
-			return "Withdrawn"
-	def mate_list(self):
-		return [u.get_full_name() for u in self.group_mates.all()]
+		if self.to_be_graded:
+			return "To be graded"
+	def authors_list(self):
+		return [u.get_full_name() for u in self.authors.all()]
 
 class SubmissionFile(models.Model):
 	submission = models.ForeignKey(Submission, related_name='files')

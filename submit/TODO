@@ -1,8 +1,8 @@
 TODO:
 
-- Nur eine Submission pro Nutzer pro Assignment erlauben (Gruppen berücksichtigen)
-- Kurs-Flags berücksichtigen
 - Korrekturstatus anzeigen
 - Jobs ausführen
+- Grading im Admin unterstützen
+
 - Django Model Versioning Tool verwenden
 - Mail an selbst, Admins und Kollegen: EInreichen, löschen

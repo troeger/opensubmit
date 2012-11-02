@@ -6,7 +6,7 @@ from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from django.contrib.auth.models import User
 from django.core.mail import mail_managers
 from django.forms.models import modelformset_factory
-from forms import SubmissionForm
+from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
 from models import SubmissionFile, Submission, Assignment
 from django.utils import timezone
 import urllib
@@ -25,28 +25,39 @@ def about(request):
 
 @login_required
 def dashboard(request):
-    submissions=request.user.submissions.all() | request.user.group_submissions.all()
-    submissions=submissions.order_by('-created')
+    authored=request.user.authored.order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
-    assignments=Assignment.open_ones.all()
+    usersolved=[subm.assignment for subm in request.user.authored.all() if subm.to_be_graded]
+    openassignments=[ass for ass in Assignment.open_ones.all() if ass not in usersolved]
     return render(request, 'dashboard.html', {
-        'submissions': submissions,
+        'authored': authored,
         'user': request.user,
         'username': username,
-        'assignments': assignments}
+        'assignments': openassignments}
     )
 
 @login_required
-def new(request):
+def new(request, ass_id):
+    ass = get_object_or_404(Assignment, pk=ass_id)
+    if ass.course.groups_allowed:
+        SubmissionForm=SubmissionWithGroupsForm
+    else:
+        SubmissionForm=SubmissionWithoutGroupsForm
+    # Files are a separate model entity -> separate form
     SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission'))
     if request.POST:
         submissionForm=SubmissionForm(request.POST, request.FILES)
+        submissionForm.removeFinishedAuthors(ass)
         filesForm=SubmissionFileFormSet(request.POST, request.FILES)
         if submissionForm.is_valid() and filesForm.is_valid():
-            submission=submissionForm.save(commit=False)
+            submission=submissionForm.save(commit=False)   # to set submitter
             submission.submitter=request.user
+            submission.assignment=ass
             submission.save()
-            submissionForm.save_m2m()
+            if not ass.course.groups_allowed:
+                submission.authors.add(request.user)
+            submissionForm.save_m2m()   # because of commit=False
+            # make sure that the submitter is part of the authors ?
             files=filesForm.save(commit=False)
             for f in files:
                 f.submission=submission
@@ -54,15 +65,20 @@ def new(request):
             return redirect('dashboard')
     else:
         submissionForm=SubmissionForm()
+        submissionForm.removeFinishedAuthors(ass)
         filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
-    return render(request, 'new.html', {'submissionForm': submissionForm, 'filesForm': filesForm})
+    return render(request, 'new.html', {'submissionForm': submissionForm, 
+                                        'filesForm': filesForm,
+                                        'assignment': ass})
 
 @login_required
 def withdraw(request, subm_id):
-    # submission should only be deletable by their creator
-    submission = get_object_or_404(Submission, pk=subm_id, submitter=request.user)
+    # submission should only be deletable by their creators
+    submission = get_object_or_404(Submission, pk=subm_id)
+    if request.user not in submission.authors.all():
+        return redirect('dashboard')        
     if "confirm" in request.POST:
-        submission.withdrawn=True
+        submission.to_be_graded=False
         submission.save()
         return redirect('dashboard')
     else:

@@ -13,8 +13,12 @@ class SubmissionFileInline(admin.TabularInline):
 def number_of_files(submission):
 	return submission.files.count()
 
+def authors(submission):
+    return "\n".join([author.get_full_name() for author in submission.authors.all()])
+
 class SubmissionAdmin(admin.ModelAdmin):
 	inlines = [SubmissionFileInline,]
-	list_display = ['__unicode__', 'assignment','submitter', 'created', number_of_files]
+	list_display = ['__unicode__', 'assignment', 'created', authors, number_of_files, 'to_be_graded', 'grading']
 	date_hierarchy = 'created'
+	list_filter = ('to_be_graded',)
 admin.site.register(Submission, SubmissionAdmin)
