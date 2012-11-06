@@ -3,6 +3,7 @@ TODO:
 - Korrekturstatus anzeigen
 - Jobs ausführen
 - Grading im Admin unterstützen
+- Autorenzuweisung mit besserem Widget (Limit)
 
 - Django Model Versioning Tool verwenden
 - Mail an selbst, Admins und Kollegen: EInreichen, löschen

@@ -39,7 +39,7 @@ def dashboard(request):
 @login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
-    if ass.course.groups_allowed:
+    if ass.course.max_authors > 1:
         SubmissionForm=SubmissionWithGroupsForm
     else:
         SubmissionForm=SubmissionWithoutGroupsForm
@@ -54,7 +54,7 @@ def new(request, ass_id):
             submission.submitter=request.user
             submission.assignment=ass
             submission.save()
-            if not ass.course.groups_allowed:
+            if not ass.course.max_authors==1:
                 submission.authors.add(request.user)
             submissionForm.save_m2m()   # because of commit=False
             # make sure that the submitter is part of the authors ?

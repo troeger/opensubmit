@@ -32,7 +32,7 @@ class Course(models.Model):
 	owner   = models.ForeignKey(User, related_name='courses')
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
-	max_authors = models.IntegerField(default=1)
+	max_authors = models.PositiveSmallIntegerField(default=1)
 	def __unicode__(self):
 		return unicode(self.title)
 
