@@ -5,7 +5,7 @@ from models import Submission, Assignment
 class SubmissionWithGroupsForm(forms.ModelForm):
 	class Meta:
 		model = Submission
-		exclude = ('assignment', 'submitter', 'files', 'to_be_graded', 'grading')
+		fields = ('authors', 'notes')
 	def removeFinishedAuthors(self, ass):
 		havingSubmissions=[]
 		for submission in ass.submissions.filter(to_be_graded=True).all():
@@ -13,11 +13,9 @@ class SubmissionWithGroupsForm(forms.ModelForm):
 				havingSubmissions.append(author.pk)
 		self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions)
 
-
-
 class SubmissionWithoutGroupsForm(forms.ModelForm):
 	class Meta:
 		model = Submission
-		exclude = ('assignment', 'submitter', 'files', 'to_be_graded', 'grading', 'authors')
+		fields = ('notes',)
 	def removeFinishedAuthors(self, ass):
 		pass

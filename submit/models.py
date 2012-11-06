@@ -32,7 +32,7 @@ class Course(models.Model):
 	owner   = models.ForeignKey(User, related_name='courses')
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
-	groups_allowed = models.BooleanField(default=False)
+	max_authors = models.IntegerField(default=1)
 	def __unicode__(self):
 		return unicode(self.title)
 
@@ -60,8 +60,10 @@ class Submission(models.Model):
 	authors = models.ManyToManyField(User, related_name='authored')
 	notes = models.TextField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
-	to_be_graded = models.BooleanField(default=True)
+	to_be_graded = models.BooleanField(default=True) # inverted withdraw flag
+	is_valid = models.BooleanField(default=False)    # tests successful ?
 	grading = models.ForeignKey(Grading, blank=True, null=True)
+	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
 	def __unicode__(self):
 		return unicode("Submission %u"%(self.pk))
 	def number_of_files(self):
