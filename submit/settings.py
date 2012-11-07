@@ -157,3 +157,5 @@ AUTHENTICATION_BACKENDS = (
     'openid2rp.django.auth.Backend'
 )
 
+LOGIN_URL="/"
+JOB_EXECUTOR_SECRET="39845zut93purfh977TTTiuhgalkjfnk89"

@@ -8,7 +8,7 @@ class SubmissionWithGroupsForm(forms.ModelForm):
 		fields = ('authors', 'notes')
 	def removeFinishedAuthors(self, ass):
 		havingSubmissions=[]
-		for submission in ass.submissions.filter(to_be_graded=True).all():
+		for submission in ass.submissions.all().exclude(state=Submission.WITHDRAWN):
 			for author in submission.authors.all():
 				havingSubmissions.append(author.pk)
 		self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions)

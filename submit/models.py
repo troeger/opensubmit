@@ -37,8 +37,8 @@ class Course(models.Model):
 		return unicode(self.title)
 
 class OpenAssignmentsManager(models.Manager):
-    def get_query_set(self):
-        return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = timezone.now()).filter(course__active__exact=True)
+	def get_query_set(self):
+		return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = timezone.now()).filter(course__active__exact=True)
 
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)
@@ -48,35 +48,70 @@ class Assignment(models.Model):
 	gradingScheme = models.ForeignKey(GradingScheme)
 	published = models.DateTimeField(blank=True, null=True)
 	soft_deadline = models.DateTimeField(blank=True, null=True)
-	hard_deadline = models.DateTimeField()
+	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
+	test_attachment = models.BooleanField(default=False)
 	def __unicode__(self):
 		return unicode(self.title)
 	objects = models.Manager() # The default manager.
 	open_ones = OpenAssignmentsManager() 
 
 class Submission(models.Model):
+	RECEIVED = 'R'
+	WITHDRAWN = 'W'
+	SUBMITTED = 'S'
+	SUBMITTED_TESTED = 'ST'
+	UNTESTED = 'NT'
+	TEST_FAILED = 'FT'
+	GRADED = 'G'
+	STATES = (
+		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
+		(WITHDRAWN, 'Withdrawn'),
+		(SUBMITTED, 'Submitted, waiting for grading'),
+		(SUBMITTED_TESTED, 'Submitted, tests ok, waiting for grading'),
+		(UNTESTED, 'Tests in progress'),
+		(TEST_FAILED, 'Tests failed, please re-upload'),
+		(GRADED, 'Grading done')
+	)
+
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
 	submitter = models.ForeignKey(User, related_name='submitted')
 	authors = models.ManyToManyField(User, related_name='authored')
+	authors.help_text = 'Please add all authors, including yourself.'		
 	notes = models.TextField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
-	to_be_graded = models.BooleanField(default=True) # inverted withdraw flag
-	is_valid = models.BooleanField(default=False)    # tests successful ?
 	grading = models.ForeignKey(Grading, blank=True, null=True)
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
+	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 	def __unicode__(self):
 		return unicode("Submission %u"%(self.pk))
 	def number_of_files(self):
 		return self.files.count()
-	def status(self):
-		if self.to_be_graded:
-			return "To be graded"
 	def authors_list(self):
 		return [u.get_full_name() for u in self.authors.all()]
+	def can_withdraw(self):
+		if self.assignment.hard_deadline < timezone.now():
+			# Assignment is over
+			return False
+		# Hard deadline is not over
+		if self.assignment.soft_deadline:
+			if self.assignment.soft_deadline > timezone.now():
+				# soft deadline is over, allowance of withdrawal here may become configurable later
+				return False
+		# Soft deadline is not over 
+		# Allow withdrawal only if no tests are pending and no grading occured
+		if self.state == self.SUBMITTED or self.state == self.SUBMITTED_TESTED or self.state == self.TEST_FAILED:
+			return True
+		else:
+			return False
+	def is_withdrawn(self):
+		return self.state == self.WITHDRAWN
 
 class SubmissionFile(models.Model):
 	submission = models.ForeignKey(Submission, related_name='files')
 	attachment = models.FileField(upload_to=upload_path) 
+	fetched = models.DateTimeField(editable=False, null=True)
+	output = models.TextField(null=True, blank=True)
+	error_code = models.IntegerField(null=True)
 
 class Job(models.Model):
 	submission = models.ForeignKey(Submission, related_name='jobs')

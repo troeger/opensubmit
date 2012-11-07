@@ -1,9 +1,8 @@
 TODO:
 
-- Korrekturstatus anzeigen
+- Wenn TEsts fehlschlug, erneuten Upload erlauben
 - Jobs ausführen
-- Grading im Admin unterstützen
-- Autorenzuweisung mit besserem Widget (Limit)
 
+- Grading im Admin unterstützen
 - Django Model Versioning Tool verwenden
 - Mail an selbst, Admins und Kollegen: EInreichen, löschen

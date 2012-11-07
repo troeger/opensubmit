@@ -9,7 +9,10 @@ from django.forms.models import modelformset_factory
 from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
 from models import SubmissionFile, Submission, Assignment
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
+from django.http import Http404, HttpResponse
 import urllib
+from settings import JOB_EXECUTOR_SECRET
 
 def index(request):
     if 'logout' in request.GET:
@@ -23,12 +26,35 @@ def index(request):
 def about(request):
     return render(request, 'about.html')
 
+def jobs(request, secret):
+    # it is changing the database, so using GET here is not really RESTish
+    # A visible shared secret in the request is no problem, since the executors come
+    # from trusted networks. The secret only protects this view from outside foreigners.
+    if request.method == "GET":
+        # if the secret matches, hands over a pending job to be tested as file download
+        if secret != JOB_EXECUTOR_SECRET:
+            raise PermissionDenied
+        # return the oldest submisison in status UNTESTED
+        subm = Submission.objects.filter(state=Submission.UNTESTED).order_by('-created')
+        if len(subm) == 0:
+            raise Http404
+        for sub in subm:
+            if sub.files:
+                frecord=sub.files.all()[0]
+                f=frecord.attachment
+                fname=f.name[f.name.rfind('/')+1:]
+                response=HttpResponse(f, content_type='application/vnd.ms-excel')
+                response['Content-Disposition'] = 'attachment; filename="%s"'%fname
+                frecord.fetched=timezone.now()
+                frecord.save()
+                return response
+
 @login_required
 def dashboard(request):
     authored=request.user.authored.order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
-    usersolved=[subm.assignment for subm in request.user.authored.all() if subm.to_be_graded]
-    openassignments=[ass for ass in Assignment.open_ones.all() if ass not in usersolved]
+    waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
+    openassignments=[ass for ass in Assignment.open_ones.all() if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
         'user': request.user,
@@ -44,7 +70,7 @@ def new(request, ass_id):
     else:
         SubmissionForm=SubmissionWithoutGroupsForm
     # Files are a separate model entity -> separate form
-    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission'))
+    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code'))
     if request.POST:
         submissionForm=SubmissionForm(request.POST, request.FILES)
         submissionForm.removeFinishedAuthors(ass)
@@ -53,11 +79,13 @@ def new(request, ass_id):
             submission=submissionForm.save(commit=False)   # to set submitter
             submission.submitter=request.user
             submission.assignment=ass
+            if submission.assignment.test_attachment:
+                submission.state=Submission.UNTESTED
+            else:
+                submission.state=Submission.SUBMITTED
             submission.save()
-            if not ass.course.max_authors==1:
-                submission.authors.add(request.user)
+            submission.authors.add(request.user)    # submitter is always an author
             submissionForm.save_m2m()   # because of commit=False
-            # make sure that the submitter is part of the authors ?
             files=filesForm.save(commit=False)
             for f in files:
                 f.submission=submission
@@ -78,7 +106,7 @@ def withdraw(request, subm_id):
     if request.user not in submission.authors.all():
         return redirect('dashboard')        
     if "confirm" in request.POST:
-        submission.to_be_graded=False
+        submission.state=Submission.WITHDRAWN
         submission.save()
         return redirect('dashboard')
     else:

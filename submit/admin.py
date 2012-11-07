@@ -18,7 +18,7 @@ def authors(submission):
 
 class SubmissionAdmin(admin.ModelAdmin):
 	inlines = [SubmissionFileInline,]
-	list_display = ['__unicode__', 'assignment', 'created', authors, number_of_files, 'to_be_graded', 'grading']
+	list_display = ['__unicode__', 'assignment', 'created', 'submitter', authors, number_of_files, 'state', 'grading']
 	date_hierarchy = 'created'
-	list_filter = ('to_be_graded',)
+	list_filter = ('state',)
 admin.site.register(Submission, SubmissionAdmin)

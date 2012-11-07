@@ -59,15 +59,15 @@
 
         <tbody>
             {% for submission in authored %} 
-                <tr {% if not submission.to_be_graded %}style="font-style: italic; color: lightgray"{%endif%}>
+                <tr {% if submission.is_withdrawn %}style="font-style: italic; color: lightgray"{%endif%}>
                     <td>{{ submission.assignment.course }}</td>
                     <td>{{ submission.assignment }}</td>
                     <td>{{ submission.created }}<br/>by {{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
                     <td>{{ submission.number_of_files }}</td>
-                    <td>{{ submission.status }}</td>
+                    <td>{{ submission.get_state_display }}</td>
                     <td>
-                        {% if submission.to_be_graded %}
+                        {% if submission.can_withdraw %}
                             <a href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Withdraw</a>
                         {% endif %}
                     </td>
