@@ -1,9 +1,9 @@
 TODO:
 
-- Wenn TEsts fehlschlug, erneuten Upload erlauben
 - Jobs ausführen
-
-- Berücksichtigen, wenn Assignments keine Tests / File sbrauchen
-- Grading im Admin unterstützen
+- Internet-Konnektivität und FS-Zugriff einschränken
 - Django Model Versioning Tool verwenden
+
+- Berücksichtigen, wenn Assignments keine Tests / Files brauchen
+- Grading im Admin unterstützen
 - Mail an selbst, Admins und Kollegen: EInreichen, löschen
