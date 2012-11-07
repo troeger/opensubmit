@@ -1,11 +1,10 @@
-from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, Job
+from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile
 from django.contrib import admin
 
 admin.site.register(Grading)
 admin.site.register(GradingScheme)
 admin.site.register(Course)
 admin.site.register(Assignment)
-admin.site.register(Job)
 
 class SubmissionFileInline(admin.TabularInline):
 	model = SubmissionFile

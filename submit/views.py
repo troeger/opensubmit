@@ -11,6 +11,7 @@ from models import SubmissionFile, Submission, Assignment
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 import urllib
 from settings import JOB_EXECUTOR_SECRET
 
@@ -26,28 +27,52 @@ def index(request):
 def about(request):
     return render(request, 'about.html')
 
+@csrf_exempt
 def jobs(request, secret):
-    # it is changing the database, so using GET here is not really RESTish
+    # This is the view used by the executor.py scripts for getting / putting the test results.
+    #
+    # Fetching some file for testing is changing the database, so using GET here is not really RESTish. Anyway.
+    #
     # A visible shared secret in the request is no problem, since the executors come
     # from trusted networks. The secret only protects this view from outside foreigners.
+    if secret != JOB_EXECUTOR_SECRET:
+        raise PermissionDenied
     if request.method == "GET":
-        # if the secret matches, hands over a pending job to be tested as file download
-        if secret != JOB_EXECUTOR_SECRET:
-            raise PermissionDenied
-        # return the oldest submisison in status UNTESTED
+        # Hand over a pending job to be tested as file download
+        # Return the oldest submisison in status UNTESTED
         subm = Submission.objects.filter(state=Submission.UNTESTED).order_by('-created')
         if len(subm) == 0:
             raise Http404
         for sub in subm:
-            if sub.files:
-                frecord=sub.files.all()[0]
+            files=sub.files.all()
+            if files:
+                frecord=files[0]
                 f=frecord.attachment
                 fname=f.name[f.name.rfind('/')+1:]
-                response=HttpResponse(f, content_type='application/vnd.ms-excel')
+                response=HttpResponse(f, content_type='application/binary')
                 response['Content-Disposition'] = 'attachment; filename="%s"'%fname
+                response['SubmissionFileId'] = str(frecord.pk)
                 frecord.fetched=timezone.now()
                 frecord.save()
                 return response
+        # No files found in the submissions
+        raise Http404
+
+    elif request.method == "POST":
+        # executor.py is providing the results as POST parameters, so changing the names 
+        # must be reflected here and there
+        sid = request.POST['SubmissionFileId']
+        submission_file=get_object_or_404(SubmissionFile, pk=sid)
+        submission_file.error_code = request.POST['ErrorCode']
+        submission_file.output = request.POST['Message']
+        submission_file.save()
+        subm=submission_file.submission
+        if submission_file.error_code == 0:
+            subm.state = Submission.SUBMITTED_TESTED
+        else:
+            subm.state = Submission.TEST_FAILED
+        subm.save()
+        return HttpResponse(status=201)
 
 @login_required
 def dashboard(request):

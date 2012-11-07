@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from models import Submission, Assignment
+from models import Submission, Assignment, SubmissionFile
 
 class SubmissionWithGroupsForm(forms.ModelForm):
 	class Meta:
@@ -19,3 +19,9 @@ class SubmissionWithoutGroupsForm(forms.ModelForm):
 		fields = ('notes',)
 	def removeFinishedAuthors(self, ass):
 		pass
+
+class SubmissionFilesForm(forms.ModelForm):
+	# TODO: additional hidden field to encode the minimum number of files needed
+	class Meta:
+		model = SubmissionFile
+		exclude = ('submission', 'fetched', 'output', 'error_code')

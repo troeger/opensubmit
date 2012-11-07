@@ -49,6 +49,7 @@ class Assignment(models.Model):
 	published = models.DateTimeField(blank=True, null=True)
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
+	has_attachment = models.BooleanField(default=False)
 	test_attachment = models.BooleanField(default=False)
 	def __unicode__(self):
 		return unicode(self.title)
@@ -112,9 +113,3 @@ class SubmissionFile(models.Model):
 	fetched = models.DateTimeField(editable=False, null=True)
 	output = models.TextField(null=True, blank=True)
 	error_code = models.IntegerField(null=True)
-
-class Job(models.Model):
-	submission = models.ForeignKey(Submission, related_name='jobs')
-	dryrun = models.BooleanField(default=True)
-	status = models.CharField(max_length=10)
-
