@@ -28,8 +28,6 @@
             <th>Submitted</th>
             <th>Original Submitter</th>
             <th>Authors</th>
-            <th>Files</th>
-            <th>Status</th>
         </tr>
     </thead>
     <tbody>
@@ -39,8 +37,6 @@
             <td>{{ submission.created }}</td>
             <td>{{ submission.submitter.get_full_name }}</td>
             <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
-            <td>{{ submission.number_of_files }}</td>
-            <td>{{ submission.status }}</td>
         </tr>
     </tbody>
 </table>
@@ -48,7 +44,7 @@
 <form action="." method="post" enctype="multipart/form-data">
 {% csrf_token %}
 <input type="hidden" name="confirm"/>
-<button type="submit" href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i>Yes, withdraw it.</button>
+<button type="submit" href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i> Yes, withdraw it.</button>
 </form>
 
 {% endblock %}

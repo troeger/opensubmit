@@ -46,7 +46,7 @@ def unpack_run_job(fname, submid, targetdir):
 		tar.extractall(targetdir)
 		tar.close()
 	logging.info("Invalid compressed file")
-#	send_result("This is not a valid compressed file.",-1, submid)
+	send_result("This is not a valid compressed file.",-1, submid)
 	exit(-1)
 
 fname, submid=fetch_job()
