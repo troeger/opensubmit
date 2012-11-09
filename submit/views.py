@@ -44,7 +44,7 @@ def jobs(request, secret):
         if len(subm) == 0:
             raise Http404
         for sub in subm:
-            files=sub.files.all()
+            files=sub.active_files()
             if files:
                 frecord=files[0]
                 f=frecord.attachment
@@ -150,6 +150,7 @@ def update(request, subm_id):
             # ok, all files save, now adjust the submission status
             submission.state = Submission.UNTESTED
             submission.save()
+            messages.info(request, 'Submission files successfully updated.')
             return redirect('dashboard')
     else:
         filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
@@ -165,6 +166,7 @@ def withdraw(request, subm_id):
     if "confirm" in request.POST:
         submission.state=Submission.WITHDRAWN
         submission.save()
+        messages.info(request, 'Submission successfully withdrawn.')
         return redirect('dashboard')
     else:
         return render(request, 'withdraw.html', {'submission': submission})
@@ -229,6 +231,7 @@ def login(request):
 
             linkOpenID(new_user, user.openid_claim)
             mail_managers('New user', str(new_user), fail_silently=True)
+            messages.info(request, 'We created a new account for you. Please click again to enter the system.')
             return redirect('index')
 
     auth.login(request, user)
