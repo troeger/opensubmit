@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load projecttags %}
+
+{% block title %}
+    {{ block.super }} - Update Submission Files
+{% endblock %}
+
+{%block navigation_settings %}hidden{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        Update Submission Files<br/>
+        <small>{{ submission.assignment.course }}, {{ submission.assignment }}</small><br/>
+        <small> Submission by {{ submission.submitter.get_full_name }} on {{ submission.created }}</small><br/>
+
+        <small>Authors: {{ submission.authors_list|safeseq|join:",&nbsp;" }}</small>
+    </h1>
+</div>
+
+<p>
+	The following files belong to this submission:
+</p>
+<ul>
+	{% for file in submission.active_files %}
+		<li>{{ file.attachment|basename }} (Last test result: {{ file.error_code }})</li>
+	{% endfor %}
+</ul>
+<p>
+	These files will be removed and replaced by the following ones:
+</p>
+
+<form action="." method="post" enctype="multipart/form-data">
+ {% csrf_token %}
+<ul>
+{{ filesForm.as_ul }}
+</ul>
+<br/>
+<button type="submit" href="/update/{{submission.pk}}" class="btn"><i class="icon icon-ok"></i> Update it.</button>
+
+</form>
+
+{% endblock %}

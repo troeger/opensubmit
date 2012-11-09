@@ -63,15 +63,17 @@ class Submission(models.Model):
 	SUBMITTED_TESTED = 'ST'
 	UNTESTED = 'NT'
 	TEST_FAILED = 'FT'
-	GRADED = 'G'
+	GRADED_PASS = 'GP'
+	GRADED_FAIL = 'GF'
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Submitted, waiting for grading'),
-		(SUBMITTED_TESTED, 'Submitted, tests ok, waiting for grading'),
-		(UNTESTED, 'Tests in progress'),
-		(TEST_FAILED, 'Tests failed, please re-upload'),
-		(GRADED, 'Grading done')
+		(SUBMITTED_TESTED, 'Test ok, waiting for grading'),
+		(UNTESTED, 'Test in progress'),
+		(TEST_FAILED, 'Test failed, please re-upload'),
+		(GRADED_PASS, 'Passed'),
+		(GRADED_FAIL, 'Failed'),
 	)
 
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
@@ -104,12 +106,21 @@ class Submission(models.Model):
 			return True
 		else:
 			return False
+	def can_reupload(self):
+		return self.state == self.TEST_FAILED
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
+	def passed(self):
+		return self.state == self.GRADED_PASS
+	def failed(self):
+		return self.state == self.GRADED_FAIL
+	def active_files(self):
+		return self.files.filter(replaced_by__isnull=True)
 
 class SubmissionFile(models.Model):
 	submission = models.ForeignKey(Submission, related_name='files')
 	attachment = models.FileField(upload_to=upload_path) 
 	fetched = models.DateTimeField(editable=False, null=True)
 	output = models.TextField(null=True, blank=True)
-	error_code = models.IntegerField(null=True)
+	error_code = models.IntegerField(null=True, blank=True)
+	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)

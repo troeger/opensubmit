@@ -19,5 +19,5 @@ class SubmissionAdmin(admin.ModelAdmin):
 	inlines = [SubmissionFileInline,]
 	list_display = ['__unicode__', 'assignment', 'created', 'submitter', authors, number_of_files, 'state', 'grading']
 	date_hierarchy = 'created'
-	list_filter = ('state',)
+	list_filter = ('state','assignment')
 admin.site.register(Submission, SubmissionAdmin)

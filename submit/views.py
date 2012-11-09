@@ -67,7 +67,7 @@ def jobs(request, secret):
         submission_file.output = request.POST['Message']
         submission_file.save()
         subm=submission_file.submission
-        if submission_file.error_code == 0:
+        if int(submission_file.error_code) == 0:
             subm.state = Submission.SUBMITTED_TESTED
         else:
             subm.state = Submission.TEST_FAILED
@@ -95,7 +95,7 @@ def new(request, ass_id):
     else:
         SubmissionForm=SubmissionWithoutGroupsForm
     # Files are a separate model entity -> separate form
-    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code'))
+    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
     if request.POST:
         submissionForm=SubmissionForm(request.POST, request.FILES)
         submissionForm.removeFinishedAuthors(ass)
@@ -123,6 +123,38 @@ def new(request, ass_id):
     return render(request, 'new.html', {'submissionForm': submissionForm, 
                                         'filesForm': filesForm,
                                         'assignment': ass})
+
+@login_required
+def update(request, subm_id):
+    # submission should only be editable by their creators
+    submission = get_object_or_404(Submission, pk=subm_id)
+    if request.user not in submission.authors.all():
+        return redirect('dashboard')        
+    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
+    if request.POST:
+        filesForm=SubmissionFileFormSet(request.POST, request.FILES)
+        if filesForm.is_valid():
+            # determine old files
+            # TODO: This needs to properly hable the multiple file case
+            # currently, we hack it by just replacing the first with the first
+            oldfiles=list(submission.files.all())       # enforce QS evaluation by list()
+            # now save new files
+            files=filesForm.save(commit=False)
+            for f in files:
+                f.submission=submission
+                f.replaced_by=None
+                f.save()
+                for oldfile in oldfiles:
+                    oldfile.replaced_by=f
+                    oldfile.save()
+            # ok, all files save, now adjust the submission status
+            submission.state = Submission.UNTESTED
+            submission.save()
+            return redirect('dashboard')
+    else:
+        filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
+    return render(request, 'update.html', {'filesForm': filesForm,
+                                           'submission': submission})
 
 @login_required
 def withdraw(request, subm_id):

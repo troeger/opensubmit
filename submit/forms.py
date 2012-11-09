@@ -20,8 +20,3 @@ class SubmissionWithoutGroupsForm(forms.ModelForm):
 	def removeFinishedAuthors(self, ass):
 		pass
 
-class SubmissionFilesForm(forms.ModelForm):
-	# TODO: additional hidden field to encode the minimum number of files needed
-	class Meta:
-		model = SubmissionFile
-		exclude = ('submission', 'fetched', 'output', 'error_code')

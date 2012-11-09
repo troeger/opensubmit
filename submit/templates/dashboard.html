@@ -6,7 +6,8 @@
 {% endblock %}
 
 {% block docready %}
-    $('.codepopup').popover({placement: 'left', title: 'Test output'})
+    $('.testpopup').popover({placement: 'left', title: 'Console output'})
+    $('.gradepopup').popover({placement: 'left', title: 'Grading results'})
 {% endblock %}
 
 
@@ -36,7 +37,7 @@
                 <tr>
                     <td>{{ assignment.course }}</td>
                     <td>{{ assignment }}</td>
-                    <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }} (submission still possible){%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
+                    <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                     <td><a href="/assignments/{{ assignment.pk }}/new/" class="btn"><i class="icon-plus"></i>New Solution</a></td>
                 </tr>
             {% endfor %}
@@ -61,22 +62,33 @@
 
         <tbody>
             {% for submission in authored %} 
-                <tr {% if submission.is_withdrawn %}style="font-style: italic; color: lightgray"{%endif%}>
+                <tr {% if submission.is_withdrawn or submission.passed or submission.failed %}style="font-style: italic; color: lightgray"{%endif%}>
                     <td>{{ submission.assignment.course }}</td>
                     <td>{{ submission.assignment }}</td>
                     <td>{{ submission.created }}<br/>by {{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
                     <td>
-                        {% for file in submission.files.all %}
-                            {% if file.output and file.error_code and not submission.is_withdrawn %}
-                                <a href="#" class="btn codepopup" rel="popover" data-content="{{ file.output }}">Test result<br/>(error code {{ file.error_code }})</a>
+                        {% for file in submission.active_files %}
+                            {% if file.output and not submission.is_withdrawn and not submission.passed and not submission.failed %}
+                                <a href="#" class="btn testpopup" rel="popover" data-content="<br/>{{ file.output|linebreaks }}<br/><br>Error code: {{ file.error_code }}">Test result for {{ file.attachment|basename }}</a>
                             {% else %}
                                 {{ file.attachment|basename }}
                             {% endif %}
                         {% endfor %}
                     </td>
-                    <td>{{ submission.get_state_display }}</td>
                     <td>
+                        {% if submission.passed %}
+                            <a href="#" class="btn gradepopup btn-success" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
+                        {% elif submission.failed %}                            
+                            <a href="#" class="btn gradepopup btn-danger" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
+                        {% else %}
+                            {{ submission.get_state_display }}
+                        {% endif %}
+                    </td>
+                    <td style="white-space: nowrap;">
+                        {% if submission.can_reupload %}
+                            <a href="/update/{{submission.pk}}" class="btn btn-info"><i class="icon-white icon-upload"></i> Update files</a>
+                        {% endif %}
                         {% if submission.can_withdraw %}
                             <a href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i> Withdraw</a>
                         {% endif %}
