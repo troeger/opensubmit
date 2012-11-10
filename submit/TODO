@@ -1,9 +1,14 @@
 TODO:
 
-- Jobs ausführen
-- Internet-Konnektivität und FS-Zugriff einschränken
-- Django Model Versioning Tool verwenden
+- Dateianhang je nach Flag erlauben / verbieten
+- Prüfen, ob Test-Flag ausgewertet wird
+- Setup-Skript portierbar machen
+- Nachrichten-Popup bei Status-Wechsel
+- Sortieren der Übungen nach Deadline
+- Mail an Autoren und Submitter: Submission, Withdraw, Test fertig, Grading fertig
+- Admin immer CC bei Mails
 
-- Berücksichtigen, wenn Assignments keine Tests / Files brauchen
+LATER:
+
+- Django Model Versioning Tool verwenden
 - Grading im Admin unterstützen
-- Mail an selbst, Admins und Kollegen: EInreichen, löschen

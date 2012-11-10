@@ -1,4 +1,5 @@
 from django.conf.urls import patterns, include, url
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
 admin.autodiscover()
 
@@ -11,7 +12,9 @@ urlpatterns = patterns('',
     url(r'^withdraw/(?P<subm_id>\d+)/$', 'submit.views.withdraw', name='withdraw'),
     url(r'^update/(?P<subm_id>\d+)/$', 'submit.views.update', name='update'),
     url(r'^jobs/secret=(?P<secret>\w+)$', 'submit.views.jobs', name='jobs'),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )
+
+# disables itself when DEBUG==FALSE
+urlpatterns += staticfiles_urlpatterns()

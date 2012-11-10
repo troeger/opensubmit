@@ -14,7 +14,7 @@ from django.http import Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 import urllib
-from settings import JOB_EXECUTOR_SECRET
+from settings import JOB_EXECUTOR_SECRET, OPENID_RETURN
 
 def index(request):
     if request.user.is_authenticated():
@@ -181,7 +181,7 @@ def login(request):
     if 'authmethod' in GET:
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", 'http://%s/%s/?openidreturn' % (request.get_host(), reverse('login')))
+            return preAuthenticate("http://openid.hpi.uni-potsdam.de", OPENID_RETURN)
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)
