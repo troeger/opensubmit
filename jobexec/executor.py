@@ -4,7 +4,7 @@ from datetime import datetime
 
 # BEGIN Configuration
 FORMAT = "%(asctime)-15s (%(levelname)s): %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+logging.basicConfig(format=FORMAT, level=logging.INFO, filename='/tmp/executor.log')
 submit_server = "http://www.dcl.hpi.uni-potsdam.de/submit"
 secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
 #targetdir=tempfile.mkdtemp()+"/"
@@ -33,7 +33,7 @@ def fetch_job():
 		return fname, submid
 	except urllib2.HTTPError, e:
 		if e.code == 404:
-			logging.info("Nothing to do.")
+			logging.debug("Nothing to do.")
 			exit(0)
 		else:
 			logging.error(str(e))
@@ -62,20 +62,24 @@ def unpack_job(fname, submid):
 
 def handle_alarm(signum, frame):
 	logging.info("Got alarm signal, killing due to timeout.")
-	frame.f_back.f_locals['self'].terminate()
+	pid=frame.f_back.f_locals['self'].pid
+	os.killpg(pid, signal.SIGTERM)
 
-def run_job(finalpath, cmd, submid):
+def run_job(finalpath, cmd, submid, keepdata=False):
 	logging.info("Changing to target directory.")
 	os.chdir(finalpath)
 	logging.info("Installing signal handler for timeout")
 	signal.signal(signal.SIGALRM, handle_alarm)
 	logging.info("Spawning process for "+str(cmd))
-	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
 	logging.info("Starting timeout counter")
 	signal.alarm(max_time)
 	output, stderr = proc.communicate()
 	logging.info("Process is done")
 	signal.alarm(0)
+	logging.info("Cleaning up temporary data")
+	if not keepdata:
+		shutil.rmtree(finalpath, ignore_errors=True)
 	if proc.returncode == 0:
 		logging.info("Success: \n\n"+output)
 		return output
@@ -88,7 +92,7 @@ def run_job(finalpath, cmd, submid):
 
 fname, submid=fetch_job()
 finalpath=unpack_job(fname, submid)
-run_job(finalpath,['make'],submid)
+run_job(finalpath,['make'],submid,keepdata=True)
 output=run_job(finalpath,['make','run'],submid)
 send_result(output, 0, submid)
 
