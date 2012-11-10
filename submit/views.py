@@ -12,17 +12,19 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.urlresolvers import reverse
 import urllib
 from settings import JOB_EXECUTOR_SECRET
 
 def index(request):
-    if 'logout' in request.GET:
-        auth.logout(request)
-
     if request.user.is_authenticated():
         return redirect('dashboard')
 
     return render(request, 'index.html')
+
+def logout(request):
+    auth.logout(request)
+    return redirect('index')
 
 def about(request):
     return render(request, 'about.html')
@@ -179,7 +181,7 @@ def login(request):
     if 'authmethod' in GET:
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", 'http://%s/login/?openidreturn' % request.get_host())
+            return preAuthenticate("http://openid.hpi.uni-potsdam.de", 'http://%s/%s/?openidreturn' % (request.get_host(), reverse('login')))
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)
