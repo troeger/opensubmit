@@ -45,18 +45,22 @@ def unpack_job(fname, submid):
 	shutil.rmtree(finalpath, ignore_errors=True)
 	os.makedirs(finalpath)
 	if zipfile.is_zipfile(fname):
-		logging.info("Valid ZIP file")
+		logging.debug("Valid ZIP file")
 		f=zipfile.ZipFile(fname, 'r')
 		f.extractall(finalpath)
+		os.remove(fname)
 		return finalpath
 	elif tarfile.is_tarfile(fname):
-		logging.info("Valid TAR file")
+		logging.debug("Valid TAR file")
 		tar = tarfile.open(fname)
-		logging.info("Extracting TAR file.")
+		logging.debug("Extracting TAR file.")
 		tar.extractall(finalpath)
 		tar.close()
+		os.remove(fname)
 		return finalpath
 	else:
+		os.remove(fname)
+		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("This is not a valid compressed file.",-1, submid)
 		exit(-1)		
 
@@ -66,27 +70,29 @@ def handle_alarm(signum, frame):
 	os.killpg(pid, signal.SIGTERM)
 
 def run_job(finalpath, cmd, submid, keepdata=False):
-	logging.info("Changing to target directory.")
+	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
-	logging.info("Installing signal handler for timeout")
+	logging.debug("Installing signal handler for timeout")
 	signal.signal(signal.SIGALRM, handle_alarm)
 	logging.info("Spawning process for "+str(cmd))
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-	logging.info("Starting timeout counter")
+	logging.debug("Starting timeout counter")
 	signal.alarm(max_time)
 	output, stderr = proc.communicate()
-	logging.info("Process is done")
+	logging.debug("Process is done")
 	signal.alarm(0)
-	logging.info("Cleaning up temporary data")
-	if not keepdata:
-		shutil.rmtree(finalpath, ignore_errors=True)
+	logging.debug("Cleaning up temporary data")
 	if proc.returncode == 0:
-		logging.info("Success: \n\n"+output)
+		logging.info("Executed with error code 0: \n\n"+output)
+		if not keepdata:
+			shutil.rmtree(finalpath, ignore_errors=True)
 		return output
 	elif proc.returncode == 0-signal.SIGTERM:
+		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("'%s' call was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(str(cmd[0]),max_time,output), proc.returncode, submid)
 		exit(-1)		
 	else:
+		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("'%s' call was not successful:\n\n%s"%(str(cmd[0]),output), proc.returncode, submid)
 		exit(-1)		
 
