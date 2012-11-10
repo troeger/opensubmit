@@ -1,10 +1,12 @@
+#!/usr/bin/env python
 import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal
 from datetime import datetime
 
 # BEGIN Configuration
-logging.basicConfig(level=logging.DEBUG)
-submit_server = "http://localhost:8000"
-secret = "39845zut93purfh977TTTiuhgalkjfnk89"		
+FORMAT = "%(asctime)-15s (%(levelname)s): %(message)s"
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+submit_server = "http://www.dcl.hpi.uni-potsdam.de/submit"
+secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
 #targetdir=tempfile.mkdtemp()+"/"
 targetdir="/tmp/"		# with trailing slash
 max_time=5				# maximum execution time in seconds
@@ -71,9 +73,9 @@ def run_job(finalpath, cmd, submid):
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	logging.info("Starting timeout counter")
 	signal.alarm(max_time)
-	proc.wait()
+	output, stderr = proc.communicate()
+	logging.info("Process is done")
 	signal.alarm(0)
-	output=proc.stdout.read()
 	if proc.returncode == 0:
 		logging.info("Success: \n\n"+output)
 		return output
