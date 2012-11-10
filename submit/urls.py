@@ -5,6 +5,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     url(r'^$', 'submit.views.index', name='index'),
     url(r'^login/$', 'submit.views.login', name='login'),
+    url(r'^logout/$', 'submit.views.logout', name='logout'),
     url(r'^dashboard/$', 'submit.views.dashboard', name='dashboard'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', 'submit.views.new', name='new'),
     url(r'^withdraw/(?P<subm_id>\d+)/$', 'submit.views.withdraw', name='withdraw'),

@@ -13,10 +13,10 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE':   'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME':     'submit/database.sqlite',     # Or path to database file if using sqlite3.
-        'USER':     '',                           # Not used with sqlite3.
-        'PASSWORD': '',                           # Not used with sqlite3.
+        'ENGINE':   'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+	'NAME':	    'submit',
+        'USER':     'submit',                           # Not used with sqlite3.
+        'PASSWORD': 'submit',                           # Not used with sqlite3.
         'HOST':     '',                           # Set to empty string for localhost. Not used with sqlite3.
         'PORT':     '',                           # Set to empty string for default. Not used with sqlite3.
     }
@@ -32,8 +32,6 @@ TIME_ZONE = "Europe/Berlin"
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-en'
 
-SITE_ID = 1
-
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
@@ -47,28 +45,29 @@ USE_TZ = False
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = '/data/submit/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/files/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = 'static/'
+STATIC_ROOT = '/var/www/submit/submit/static/'
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    "/var/www/submit/submit/static"
 )
 
 # List of finder classes that know how to find static files in
@@ -114,7 +113,6 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
@@ -158,6 +156,7 @@ AUTHENTICATION_BACKENDS = (
     'openid2rp.django.auth.Backend'
 )
 
-LOGIN_URL="/"
-JOB_EXECUTOR_SECRET="39845zut93purfh977TTTiuhgalkjfnk89"
+FORCE_SCRIPT_NAME="/submit"
+JOB_EXECUTOR_SECRET="49845zut93purfh977TTTiuhgalkjfnk89"
 assert(JOB_EXECUTOR_SECRET is not "")
+

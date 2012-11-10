@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load url from future %}
+
 {% block scripts %}
 {{ block.super }}
 {% endblock %}
@@ -27,7 +29,7 @@
 
 <section>
     <div style="text-align: center;">
-        <form action="/login" method="GET">
+        <form action="{% url 'login' %}" method="GET">
             <input type="hidden" name="authmethod" value="hpi" />
             <img src="{{ STATIC_URL }}images/hpi_small.png" width="51" height="51"/>
             <input type="submit" value="Sign in with your HPI account" class="btn"/>
