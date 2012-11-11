@@ -117,6 +117,7 @@ def new(request, ass_id):
             for f in files:
                 f.submission=submission
                 f.save()
+            messages.info(request, "New submission saved.")
             return redirect('dashboard')
     else:
         submissionForm=SubmissionForm()

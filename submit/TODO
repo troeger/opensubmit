@@ -2,7 +2,6 @@ TODO:
 
 - Dateianhang je nach Flag erlauben / verbieten
 - Prüfen, ob Test-Flag ausgewertet wird
-- Setup-Skript portierbar machen
 - Nachrichten-Popup bei Status-Wechsel
 - Sortieren der Übungen nach Deadline
 - Mail an Autoren und Submitter: Submission, Withdraw, Test fertig, Grading fertig
