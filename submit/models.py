@@ -92,6 +92,8 @@ class Submission(models.Model):
 	def authors_list(self):
 		return [u.get_full_name() for u in self.authors.all()]
 	def can_withdraw(self):
+		if self.state == self.WITHDRAWN:
+			return False
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
 			return False
