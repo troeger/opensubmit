@@ -1,28 +1,31 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
 from django.contrib import auth, messages
-from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.mail import mail_managers
+from django.core.exceptions import PermissionDenied
+from django.core.mail import mail_managers, send_mail
+from django.core.urlresolvers import reverse
 from django.forms.models import modelformset_factory
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
 from models import SubmissionFile, Submission, Assignment
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
+from settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from mail import inform_test_ok, inform_test_failed
 import urllib
-from settings import JOB_EXECUTOR_SECRET
 
 def index(request):
-    if 'logout' in request.GET:
-        auth.logout(request)
-
     if request.user.is_authenticated():
         return redirect('dashboard')
 
     return render(request, 'index.html')
+
+def logout(request):
+    auth.logout(request)
+    return redirect('index')
 
 def about(request):
     return render(request, 'about.html')
@@ -69,8 +72,10 @@ def jobs(request, secret):
         subm=submission_file.submission
         if int(submission_file.error_code) == 0:
             subm.state = Submission.SUBMITTED_TESTED
+            inform_test_ok(subm)
         else:
             subm.state = Submission.TEST_FAILED
+            inform_test_failed(subm)
         subm.save()
         return HttpResponse(status=201)
 
@@ -115,6 +120,7 @@ def new(request, ass_id):
             for f in files:
                 f.submission=submission
                 f.save()
+            messages.info(request, "New submission saved.")
             return redirect('dashboard')
     else:
         submissionForm=SubmissionForm()
@@ -179,7 +185,7 @@ def login(request):
     if 'authmethod' in GET:
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", 'http://%s/login/?openidreturn' % request.get_host())
+            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"login?openidreturn")
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)

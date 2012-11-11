@@ -7,7 +7,7 @@ valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 def fname(title):
 	title=title.replace(" ","_")
 	result=''.join(c for c in title if c in valid_fname_chars)
-	return result
+	return result.lower()
 
 def upload_path(instance, filename):
 	course_title=fname(instance.submission.assignment.course.title)
@@ -92,20 +92,25 @@ class Submission(models.Model):
 	def authors_list(self):
 		return [u.get_full_name() for u in self.authors.all()]
 	def can_withdraw(self):
+		if self.state == self.WITHDRAWN or self.state == self.UNTESTED:
+			return False
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
 			return False
 		# Hard deadline is not over
 		if self.assignment.soft_deadline:
-			if self.assignment.soft_deadline > timezone.now():
+			if self.assignment.soft_deadline < timezone.now():
 				# soft deadline is over, allowance of withdrawal here may become configurable later
 				return False
-		# Soft deadline is not over 
-		# Allow withdrawal only if no tests are pending and no grading occured
-		if self.state == self.SUBMITTED or self.state == self.SUBMITTED_TESTED or self.state == self.TEST_FAILED:
-			return True
+			else:
+				# Soft deadline is not over 
+				# Allow withdrawal only if no tests are pending and no grading occured
+				if self.state == self.SUBMITTED or self.state == self.SUBMITTED_TESTED or self.state == self.TEST_FAILED:
+					return True
+				else:
+					return False
 		else:
-			return False
+			return True
 	def can_reupload(self):
 		return self.state == self.TEST_FAILED
 	def is_withdrawn(self):
