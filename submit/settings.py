@@ -24,7 +24,8 @@ if is_production:
     STATIC_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/static/'
     STATICFILES_DIRS = ("/var/www/submit/submit/static")
     FORCE_SCRIPT_NAME="/submit"
-    OPENID_RETURN = 'http://www.dcl.hpi.uni-potsdam.de/submit/login?openidreturn' 
+    MAIN_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/' 
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
 else:
     DEBUG = True
     DATABASES = {
@@ -33,11 +34,12 @@ else:
         'NAME':     'database.sqlite',
         }
     }
-    MEDIA_ROOT = '/media/'
+    MEDIA_ROOT = 'media/'
     MEDIA_URL = '/media/'
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'
-    OPENID_RETURN = 'http://localhost:8000/login?openidreturn' 
+    MAIN_URL = 'http://localhost:8000/' 
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Global settings
 TEMPLATE_DEBUG = DEBUG

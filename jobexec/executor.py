@@ -5,7 +5,7 @@ from datetime import datetime
 # BEGIN Configuration
 FORMAT = "%(asctime)-15s (%(levelname)s): %(message)s"
 logging.basicConfig(format=FORMAT, level=logging.INFO, filename='/tmp/executor.log')
-submit_server = "http://www.dcl.hpi.uni-potsdam.de/submit"
+submit_server = "http://localhost:8000"
 secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
 #targetdir=tempfile.mkdtemp()+"/"
 targetdir="/tmp/"		# with trailing slash
