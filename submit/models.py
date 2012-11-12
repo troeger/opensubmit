@@ -56,6 +56,9 @@ class Assignment(models.Model):
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
 	test_attachment = models.BooleanField(default=False)
+	test_timeout = models.IntegerField(default=30)
+	test_script = models.FileField(upload_to="testscripts", null=True) 
+
 	def __unicode__(self):
 		return unicode(self.title)
 	objects = models.Manager() # The default manager.

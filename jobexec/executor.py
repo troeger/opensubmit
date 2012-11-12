@@ -9,7 +9,6 @@ submit_server = "http://localhost:8000"
 secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
 #targetdir=tempfile.mkdtemp()+"/"
 targetdir="/tmp/"		# with trailing slash
-max_time=5				# maximum execution time in seconds
 # END Configuration
 
 def send_result(msg, error_code, submission_file_id, action):
@@ -27,11 +26,12 @@ def fetch_job():
 		fname=targetdir+datetime.now().isoformat()
 		submid=result.info()['SubmissionFileId']
 		action=result.info()['Action']
+		timeout=int(result.info()['Timeout'])
 		logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
 		target=open(fname,"wb")
 		target.write(result.read())
 		target.close()
-		return fname, submid, action
+		return fname, submid, action, timeout
 	except urllib2.HTTPError, e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
@@ -73,7 +73,7 @@ def handle_alarm(signum, frame):
 		pid=frame.f_back.f_locals['self'].pid
 	os.killpg(pid, signal.SIGTERM)
 
-def run_job(finalpath, cmd, submid, action, keepdata=False):
+def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
 	logging.debug("Installing signal handler for timeout")
@@ -81,7 +81,7 @@ def run_job(finalpath, cmd, submid, action, keepdata=False):
 	logging.info("Spawning process for "+str(cmd))
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
 	logging.debug("Starting timeout counter")
-	signal.alarm(max_time)
+	signal.alarm(timeout)
 	output, stderr = proc.communicate()
 	logging.debug("Process is done")
 	signal.alarm(0)
@@ -93,21 +93,21 @@ def run_job(finalpath, cmd, submid, action, keepdata=False):
 		return output
 	elif proc.returncode == 0-signal.SIGTERM:
 		shutil.rmtree(finalpath, ignore_errors=True)
-		send_result("'%s' call was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(' '.join(cmd),max_time,output), proc.returncode, submid, action)
+		send_result("'%s' call was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(' '.join(cmd),timeout,output), proc.returncode, submid, action)
 		exit(-1)		
 	else:
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("'%s' call was not successful:\n\n%s"%(str(cmd[0]),output), proc.returncode, submid, action)
 		exit(-1)		
 
-fname, submid, action=fetch_job()
+fname, submid, action, timeout=fetch_job()
 finalpath=unpack_job(fname, submid, action)
 if action == 'compile':
-	output=run_job(finalpath,['make'],submid, action)
+	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
 elif action == 'run':
-	run_job(finalpath,['make'],submid,action,keepdata=True)
-	output=run_job(finalpath,['make','run'],submid,action)
+	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
+	output=run_job(finalpath,['make','run'],submid,action,timeout)
 	send_result(output, 0, submid, action)
 else:
 	assert(False)

@@ -57,6 +57,7 @@ def jobs(request, secret):
                 response=HttpResponse(f, content_type='application/binary')
                 response['Content-Disposition'] = 'attachment; filename="%s"'%fname
                 response['SubmissionFileId'] = str(frecord.pk)
+                response['Timeout'] = sub.assignment.test_timeout
                 if sub.state == Submission.SUBMITTED_UNTESTED:
                     response['Action'] = 'compile'
                 elif sub.state == Submission.SUBMITTED_COMPILED:
