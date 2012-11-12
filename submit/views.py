@@ -100,7 +100,7 @@ def dashboard(request):
     authored=request.user.authored.order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    openassignments=[ass for ass in Assignment.open_ones.all() if ass not in waiting_for_action]
+    openassignments=[ass for ass in Assignment.open_ones.all().order_by('soft_deadline').order_by('hard_deadline') if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
         'user': request.user,
