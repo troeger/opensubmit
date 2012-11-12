@@ -41,11 +41,13 @@ def jobs(request, secret):
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
-        # Hand over a pending job to be tested as file download
-        # Return the oldest submisison in status SUBMITTED_UNTESTED
-        subm = Submission.objects.filter(state__in=[Submission.SUBMITTED_UNTESTED, Submission.SUBMITTED_COMPILED]).order_by('-created')
+        # Hand over a pending job to be tested 
+        # Compilation jobs have precedence, th oldest one wins
+        subm = Submission.objects.filter(state=Submission.SUBMITTED_UNTESTED).order_by('created')
         if len(subm) == 0:
-            raise Http404
+            subm = Submission.objects.filter(state=Submission.SUBMITTED_COMPILED).order_by('created')
+            if len(subm) == 0:
+                raise Http404
         for sub in subm:
             files=sub.active_files()
             if files:
