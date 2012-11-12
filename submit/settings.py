@@ -31,7 +31,7 @@ else:
     DATABASES = {
         'default': {
         'ENGINE':   'django.db.backends.sqlite3', 
-        'NAME':     'database.sqlite',
+        'NAME':     'submit/database.sqlite',
         }
     }
     MEDIA_ROOT = 'media/'

@@ -14,7 +14,7 @@ from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
-from mail import inform_test_ok, inform_test_failed
+from mail import inform_student, inform_course_owner
 import urllib
 
 def index(request):
@@ -42,8 +42,8 @@ def jobs(request, secret):
         raise PermissionDenied
     if request.method == "GET":
         # Hand over a pending job to be tested as file download
-        # Return the oldest submisison in status UNTESTED
-        subm = Submission.objects.filter(state=Submission.UNTESTED).order_by('-created')
+        # Return the oldest submisison in status SUBMITTED_UNTESTED
+        subm = Submission.objects.filter(state__in=[Submission.SUBMITTED_UNTESTED, Submission.SUBMITTED_COMPILED]).order_by('-created')
         if len(subm) == 0:
             raise Http404
         for sub in subm:
@@ -55,6 +55,12 @@ def jobs(request, secret):
                 response=HttpResponse(f, content_type='application/binary')
                 response['Content-Disposition'] = 'attachment; filename="%s"'%fname
                 response['SubmissionFileId'] = str(frecord.pk)
+                if sub.state == Submission.SUBMITTED_UNTESTED:
+                    response['Action'] = 'compile'
+                elif sub.state == Submission.SUBMITTED_COMPILED:
+                    response['Action'] = 'run'
+                else:
+                    assert(False)
                 frecord.fetched=timezone.now()
                 frecord.save()
                 return response
@@ -70,13 +76,21 @@ def jobs(request, secret):
         submission_file.output = request.POST['Message']
         submission_file.save()
         subm=submission_file.submission
-        if int(submission_file.error_code) == 0:
-            subm.state = Submission.SUBMITTED_TESTED
-            inform_test_ok(subm)
+        if request.POST['Action'] == 'compile':
+            if int(submission_file.error_code) == 0:
+                subm.state = Submission.SUBMITTED_COMPILED
+            else:
+                subm.state = Submission.FAILED_COMPILE                
+        elif request.POST['Action'] == 'run':
+            if int(submission_file.error_code) == 0:
+                subm.state = Submission.SUBMITTED_TESTED
+                inform_course_owner(request, subm)
+            else:
+                subm.state = Submission.FAILED_EXEC
         else:
-            subm.state = Submission.TEST_FAILED
-            inform_test_failed(subm)
+            assert(False)
         subm.save()
+        inform_student(subm)
         return HttpResponse(status=201)
 
 @login_required
@@ -110,9 +124,10 @@ def new(request, ass_id):
             submission.submitter=request.user
             submission.assignment=ass
             if submission.assignment.test_attachment:
-                submission.state=Submission.UNTESTED
+                submission.state=Submission.SUBMITTED_UNTESTED
             else:
                 submission.state=Submission.SUBMITTED
+                inform_course_owner(request, submission)
             submission.save()
             submission.authors.add(request.user)    # submitter is always an author
             submissionForm.save_m2m()   # because of commit=False
@@ -154,7 +169,7 @@ def update(request, subm_id):
                     oldfile.replaced_by=f
                     oldfile.save()
             # ok, all files save, now adjust the submission status
-            submission.state = Submission.UNTESTED
+            submission.state = Submission.SUBMITTED_UNTESTED
             submission.save()
             messages.info(request, 'Submission files successfully updated.')
             return redirect('dashboard')
@@ -173,6 +188,7 @@ def withdraw(request, subm_id):
         submission.state=Submission.WITHDRAWN
         submission.save()
         messages.info(request, 'Submission successfully withdrawn.')
+        inform_course_owner(request, submission)
         return redirect('dashboard')
     else:
         return render(request, 'withdraw.html', {'submission': submission})
@@ -202,14 +218,14 @@ def login(request):
                 user_name = unicode(user_sreg['nickname'],'utf-8')[:29]
 
             if 'email' in user_sreg:         
-                email = unicode(user_sreg['email'],'utf-8')[:29]
+                email = unicode(user_sreg['email'],'utf-8')#[:29]
 
             if AX.email in user_ax:
-                email = unicode(user_ax[AX.email],'utf-8')[:29]
+                email = unicode(user_ax[AX.email],'utf-8')#[:29]
 
             # no username given, register user with his e-mail address as username
             if not user_name and email:
-                new_user = User(username=email, email=email)
+                new_user = User(username=email[:29], email=email)
 
             # both, username and e-mail were not given, use a timestamp as username
             elif not user_name and not email:

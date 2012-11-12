@@ -60,20 +60,24 @@ class Submission(models.Model):
 	RECEIVED = 'R'
 	WITHDRAWN = 'W'
 	SUBMITTED = 'S'
+	SUBMITTED_UNTESTED = 'NT'
+	SUBMITTED_COMPILED = 'SC'
 	SUBMITTED_TESTED = 'ST'
-	UNTESTED = 'NT'
-	TEST_FAILED = 'FT'
+	FAILED_COMPILE = 'FT'
+	FAILED_EXEC = 'FE'
 	GRADED_PASS = 'GP'
 	GRADED_FAIL = 'GF'
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
-		(SUBMITTED, 'Submitted, waiting for grading'),
-		(SUBMITTED_TESTED, 'Test ok, waiting for grading'),
-		(UNTESTED, 'Test in progress'),
-		(TEST_FAILED, 'Test failed, please re-upload'),
-		(GRADED_PASS, 'Passed'),
-		(GRADED_FAIL, 'Failed'),
+		(SUBMITTED, 'Waiting for grading'),
+		(SUBMITTED_TESTED, 'Waiting for grading, all tests ok'),
+		(SUBMITTED_COMPILED, 'Waiting for execution test'),
+		(SUBMITTED_UNTESTED, 'Waiting for compilation test'),
+		(FAILED_COMPILE, 'Compilation failed, please re-upload'),
+		(FAILED_EXEC, 'Execution failed, please re-upload'),
+		(GRADED_PASS, 'Graded - Passed'),
+		(GRADED_FAIL, 'Graded - Failed'),
 	)
 
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
@@ -92,7 +96,7 @@ class Submission(models.Model):
 	def authors_list(self):
 		return [u.get_full_name() for u in self.authors.all()]
 	def can_withdraw(self):
-		if self.state == self.WITHDRAWN or self.state == self.UNTESTED:
+		if self.state == self.WITHDRAWN or self.state == self.SUBMITTED_UNTESTED or self.state == self.SUBMITTED_COMPILED:
 			return False
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
@@ -105,14 +109,14 @@ class Submission(models.Model):
 			else:
 				# Soft deadline is not over 
 				# Allow withdrawal only if no tests are pending and no grading occured
-				if self.state == self.SUBMITTED or self.state == self.SUBMITTED_TESTED or self.state == self.TEST_FAILED:
+				if self.state == self.SUBMITTED or self.state == self.SUBMITTED_TESTED or self.state == self.FAILED_COMPILE or self.state == FAILED_EXEC:
 					return True
 				else:
 					return False
 		else:
 			return True
 	def can_reupload(self):
-		return self.state == self.TEST_FAILED
+		return self.state == self.FAILED_COMPILE or self.state == self.FAILED_EXEC
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def passed(self):

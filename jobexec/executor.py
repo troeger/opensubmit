@@ -12,9 +12,9 @@ targetdir="/tmp/"		# with trailing slash
 max_time=5				# maximum execution time in seconds
 # END Configuration
 
-def send_result(msg, error_code, submission_file_id):
+def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
-	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code)]    
+	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
 		urllib2.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.urlencode(post_data))	
 	except urllib2.HTTPError, e:
@@ -26,11 +26,12 @@ def fetch_job():
 		result = urllib2.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
 		fname=targetdir+datetime.now().isoformat()
 		submid=result.info()['SubmissionFileId']
-		logging.info("Retrieved submission file %s: %s"%(submid, fname))
+		action=result.info()['Action']
+		logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
 		target=open(fname,"wb")
 		target.write(result.read())
 		target.close()
-		return fname, submid
+		return fname, submid, action
 	except urllib2.HTTPError, e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
@@ -39,7 +40,7 @@ def fetch_job():
 			logging.error(str(e))
 			exit(-1)
 
-def unpack_job(fname, submid):
+def unpack_job(fname, submid, action):
 	# os.chroot is not working with tarfile support
 	finalpath=targetdir+str(submid)+"/"
 	shutil.rmtree(finalpath, ignore_errors=True)
@@ -61,15 +62,18 @@ def unpack_job(fname, submid):
 	else:
 		os.remove(fname)
 		shutil.rmtree(finalpath, ignore_errors=True)
-		send_result("This is not a valid compressed file.",-1, submid)
+		send_result("This is not a valid compressed file.",-1, submid, action)
 		exit(-1)		
 
 def handle_alarm(signum, frame):
 	logging.info("Got alarm signal, killing due to timeout.")
-	pid=frame.f_back.f_locals['self'].pid
+	if 'self' in frame.f_locals:
+		pid=frame.f_locals['self'].pid
+	else:
+		pid=frame.f_back.f_locals['self'].pid
 	os.killpg(pid, signal.SIGTERM)
 
-def run_job(finalpath, cmd, submid, keepdata=False):
+def run_job(finalpath, cmd, submid, action, keepdata=False):
 	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
 	logging.debug("Installing signal handler for timeout")
@@ -89,16 +93,21 @@ def run_job(finalpath, cmd, submid, keepdata=False):
 		return output
 	elif proc.returncode == 0-signal.SIGTERM:
 		shutil.rmtree(finalpath, ignore_errors=True)
-		send_result("'%s' call was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(str(cmd[0]),max_time,output), proc.returncode, submid)
+		send_result("'%s' call was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(' '.join(cmd),max_time,output), proc.returncode, submid, action)
 		exit(-1)		
 	else:
 		shutil.rmtree(finalpath, ignore_errors=True)
-		send_result("'%s' call was not successful:\n\n%s"%(str(cmd[0]),output), proc.returncode, submid)
+		send_result("'%s' call was not successful:\n\n%s"%(str(cmd[0]),output), proc.returncode, submid, action)
 		exit(-1)		
 
-fname, submid=fetch_job()
-finalpath=unpack_job(fname, submid)
-run_job(finalpath,['make'],submid,keepdata=True)
-output=run_job(finalpath,['make','run'],submid)
-send_result(output, 0, submid)
-
+fname, submid, action=fetch_job()
+finalpath=unpack_job(fname, submid, action)
+if action == 'compile':
+	output=run_job(finalpath,['make'],submid, action)
+	send_result(output, 0, submid, action)
+elif action == 'run':
+	run_job(finalpath,['make'],submid,action,keepdata=True)
+	output=run_job(finalpath,['make','run'],submid,action)
+	send_result(output, 0, submid, action)
+else:
+	assert(False)
