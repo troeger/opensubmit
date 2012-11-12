@@ -2,9 +2,7 @@ TODO:
 
 - Dateianhang je nach Flag erlauben / verbieten
 - Prüfen, ob Test-Flag ausgewertet wird
-- Sortieren der Übungen nach Deadline
-- Mail an Autoren und Submitter: Submission, Withdraw, Test fertig, Grading fertig
-- Admin immer CC bei Mails
+- Mail an Autoren und Submitter: Grading fertig
 - Check-Skript pro Aufgabe, als dritten Schritt
 - Timeout pro Aufgabe konfigurieren
 
