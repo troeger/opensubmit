@@ -153,39 +153,32 @@ class SubmissionFile(models.Model):
 def inform_student(submission):
 	if submission.state == Submission.SUBMITTED_TESTED:
 		subject = 'Your submission was tested successfully'
-		message = u'''
-			Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested 
-			successfully. Compilation and execution worked fine. No further action is needed.\n\n
-			You will get another eMail notification when the grading is finished.\n\n
-			Further information can be found at %s.\n\n'''
+		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. Compilation and execution worked fine. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.SUBMITTED_COMPILED:
 		subject = 'Your submission was compiled successfully'
-		message = u'''
-			Hi,\n\nthis a short notice that your submission for "%s" in "%s" was compiled 
-			successfully. The execution test is still pending, you will get another eMail notification when it is finished.\n\n
-			Further information can be found at %s.\n\n'''
+		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was compiled successfully. The execution test is still pending, you will get another eMail notification when it is finished.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.FAILED_COMPILE:
 		subject = 'Warning: Your submission did not pass the compilation test'
-		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'''
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.FAILED_EXEC:
 		subject = 'Warning: Your submission did not pass the execution test'
-		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'''
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.GRADED_PASS or submission.state == Submission.GRADED_FAIL:
 		subject = 'Grading completed'
-		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'''
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	else:		
 		subject = 'Your submission has a new status'
-		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" has a new status.\n\n Further information can be found at %s.\n\n'''
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" has a new status.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)		
 
 	subject = "[%s] %s"%(submission.assignment.course, subject)

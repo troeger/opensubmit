@@ -79,9 +79,9 @@
                     </td>
                     <td>
                         {% if submission.green_tag %}
-                            <a href="#" class="btn gradepopup btn-success" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
+                            <a href="#" class="label gradepopup label-success" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
                         {% elif submission.red_tag %}                            
-                            <a href="#" class="btn gradepopup btn-danger" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
+                            <a href="#" class="label gradepopup label-important" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
                         {% else %}
                             {{ submission.get_state_display }}
                         {% endif %}
