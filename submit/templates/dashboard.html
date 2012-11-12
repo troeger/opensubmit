@@ -39,7 +39,7 @@
                     <td>{{ assignment.course }}</td>
                     <td>{{ assignment }}</td>
                     <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
-                    <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i>New Solution</a></td>
+                    <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Solution</a></td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -71,16 +71,16 @@
                     <td>
                         {% for file in submission.active_files %}
                             {% if file.output and not submission.is_withdrawn and not submission.passed and not submission.failed %}
-                                <a href="#" class="btn testpopup" rel="popover" data-content="<br/>{{ file.output|linebreaks }}<br/><br>Error code: {{ file.error_code }}">Test result for {{ file.attachment|basename }}</a>
+                                <a href="#" class="testpopup" rel="popover" data-content="<br/>{{ file.output|linebreaks }}<br/><br>Error code: {{ file.error_code }}">Test result for {{ file.attachment|basename }}</a>
                             {% else %}
                                 {{ file.attachment|basename }}
                             {% endif %}
                         {% endfor %}
                     </td>
                     <td>
-                        {% if submission.passed %}
+                        {% if submission.green_tag %}
                             <a href="#" class="btn gradepopup btn-success" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
-                        {% elif submission.failed %}                            
+                        {% elif submission.red_tag %}                            
                             <a href="#" class="btn gradepopup btn-danger" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
                         {% else %}
                             {{ submission.get_state_display }}
@@ -88,10 +88,10 @@
                     </td>
                     <td style="white-space: nowrap;">
                         {% if submission.can_reupload %}
-                            <a href="{% url 'update' submission.pk %}" class="btn btn-info"><i class="icon-white icon-upload"></i> Update files</a>
+                            <a href="{% url 'update' submission.pk %}" class="btn"><i class="icon-upload"></i> Update files</a>
                         {% endif %}
                         {% if submission.can_withdraw %}
-                            <a href="{% url 'withdraw' submission.pk %}" class="btn btn-danger"><i class="icon-white icon-trash"></i> Withdraw</a>
+                            <a href="{% url 'withdraw' submission.pk %}" class="btn"><i class="icon-trash"></i> Withdraw</a>
                         {% endif %}
                     </td>
                 </tr>

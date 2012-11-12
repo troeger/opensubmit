@@ -2,9 +2,7 @@ TODO:
 
 - Dateianhang je nach Flag erlauben / verbieten
 - Prüfen, ob Test-Flag ausgewertet wird
-- Mail an Autoren und Submitter: Grading fertig
-- Check-Skript pro Aufgabe, als dritten Schritt
-- Timeout pro Aufgabe konfigurieren
+- Nutzereinstellungen ändern (eMail, Name)
 
 LATER:
 

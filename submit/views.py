@@ -14,7 +14,7 @@ from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
-from mail import inform_student, inform_course_owner
+from models import inform_student, inform_course_owner
 import urllib
 
 def index(request):

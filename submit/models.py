@@ -1,7 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail, EmailMessage
+from settings import MAIN_URL
 import string
+
 valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 def fname(title):
@@ -109,7 +114,7 @@ class Submission(models.Model):
 			else:
 				# Soft deadline is not over 
 				# Allow withdrawal only if no tests are pending and no grading occured
-				if self.state == self.SUBMITTED or self.state == self.SUBMITTED_TESTED or self.state == self.FAILED_COMPILE or self.state == FAILED_EXEC:
+				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.FAILED_COMPILE, self.FAILED_EXEC]:
 					return True
 				else:
 					return False
@@ -119,12 +124,21 @@ class Submission(models.Model):
 		return self.state == self.FAILED_COMPILE or self.state == self.FAILED_EXEC
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
-	def passed(self):
-		return self.state == self.GRADED_PASS
-	def failed(self):
-		return self.state == self.GRADED_FAIL
+	def green_tag(self):
+		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED]
+	def red_tag(self):
+		return self.state in [self.GRADED_FAIL, self.FAILED_COMPILE, self.FAILED_EXEC]
 	def active_files(self):
 		return self.files.filter(replaced_by__isnull=True)
+
+# send mail notification on successful grading
+# since this is done in the admin interface, and not in the frontend,
+# we trigger it by a save signal
+@receiver(post_save, sender=Submission)
+def postSubmissionSaveHandler(sender, **kwargs):
+	sub=kwargs['instance']
+	if sub.state == Submission.GRADED_PASS or sub.state == Submission.GRADED_FAIL:
+		inform_student(sub)
 
 class SubmissionFile(models.Model):
 	submission = models.ForeignKey(Submission, related_name='files')
@@ -133,3 +147,75 @@ class SubmissionFile(models.Model):
 	output = models.TextField(null=True, blank=True)
 	error_code = models.IntegerField(null=True, blank=True)
 	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
+
+# convinienvce function for email information
+# to avoid cyclic dependencies, we keep it in the models.py
+def inform_student(submission):
+	if submission.state == Submission.SUBMITTED_TESTED:
+		subject = 'Your submission was tested successfully'
+		message = u'''
+			Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested 
+			successfully. Compilation and execution worked fine. No further action is needed.\n\n
+			You will get another eMail notification when the grading is finished.\n\n
+			Further information can be found at %s.\n\n'''
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+
+	elif submission.state == Submission.SUBMITTED_COMPILED:
+		subject = 'Your submission was compiled successfully'
+		message = u'''
+			Hi,\n\nthis a short notice that your submission for "%s" in "%s" was compiled 
+			successfully. The execution test is still pending, you will get another eMail notification when it is finished.\n\n
+			Further information can be found at %s.\n\n'''
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+
+	elif submission.state == Submission.FAILED_COMPILE:
+		subject = 'Warning: Your submission did not pass the compilation test'
+		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'''
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+
+	elif submission.state == Submission.FAILED_EXEC:
+		subject = 'Warning: Your submission did not pass the execution test'
+		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'''
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+
+	elif submission.state == Submission.GRADED_PASS or submission.state == Submission.GRADED_FAIL:
+		subject = 'Grading completed'
+		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'''
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+
+	else:		
+		subject = 'Your submission has a new status'
+		message = u'''Hi,\n\nthis is a short notice that your submission for "%s" in "%s" has a new status.\n\n Further information can be found at %s.\n\n'''
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)		
+
+	subject = "[%s] %s"%(submission.assignment.course, subject)
+	from_email = submission.assignment.course.owner.email
+	recipients = submission.authors.values_list('email', flat=True).order_by('email')
+	send_mail(subject, message, from_email, recipients, fail_silently=True)
+	# send student email with BCC to course owner. This might be configurable later
+	email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
+	email.send(fail_silently=False)
+
+# convinienvce function for email information to the course owner
+# to avoid cyclic dependencies, we keep it in the models.py
+def inform_course_owner(request, submission):
+	if submission.state == Submission.WITHDRAWN:
+		subject = "Submission withdrawn"
+		message = "User %s withdrawed solution %u for '%s'"%(request.user, submission.pk, submission.assignment)	
+
+	elif submission.state == Submission.SUBMITTED:
+		subject = "Submission ready for grading"
+		message = "User %s submitted a solution for '%s' that is ready for grading."%(request.user, submission.assignment)	
+
+	elif submission.state == Submission.SUBMITTED_TESTED:
+		subject = "Submission tested and ready for grading"
+		message = "User %s submitted a solution for '%s' that was tested and is ready for grading."%(request.user, submission.assignment)	
+
+	else:
+		subject = "Submission changed state"
+		message = "Submission %u has now the state '%s'."%(submission.pk, submission.STATES[submission.state])	
+
+	from_email = submission.assignment.course.owner.email
+	recipients = [submission.assignment.course.owner.email]
+	send_mail(subject, message, from_email, recipients, fail_silently=True)
+
