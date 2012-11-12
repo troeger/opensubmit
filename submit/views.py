@@ -111,17 +111,18 @@ def dashboard(request):
 @login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
+    # Prepare the model form classes
+    # Assignments with only one author need no author choice
     if ass.course.max_authors > 1:
         SubmissionForm=SubmissionWithGroupsForm
     else:
         SubmissionForm=SubmissionWithoutGroupsForm
-    # Files are a separate model entity -> separate form
     SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
     if request.POST:
+        # Analyze submission data
         submissionForm=SubmissionForm(request.POST, request.FILES)
         submissionForm.removeFinishedAuthors(ass)
-        filesForm=SubmissionFileFormSet(request.POST, request.FILES)
-        if submissionForm.is_valid() and filesForm.is_valid():
+        if submissionForm.is_valid(): 
             submission=submissionForm.save(commit=False)   # to set submitter
             submission.submitter=request.user
             submission.assignment=ass
@@ -132,11 +133,15 @@ def new(request, ass_id):
                 inform_course_owner(request, submission)
             submission.save()
             submission.authors.add(request.user)    # submitter is always an author
-            submissionForm.save_m2m()   # because of commit=False
-            files=filesForm.save(commit=False)
-            for f in files:
-                f.submission=submission
-                f.save()
+            submissionForm.save_m2m()               # because of commit=False
+            # If assignment allows attachments, analyze them too
+            if ass.has_attachment:
+                filesForm=SubmissionFileFormSet(request.POST, request.FILES)
+                if filesForm.is_valid():
+                    files=filesForm.save(commit=False)
+                    for f in files:
+                        f.submission=submission
+                        f.save()
             messages.info(request, "New submission saved.")
             return redirect('dashboard')
     else:

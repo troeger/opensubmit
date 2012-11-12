@@ -24,9 +24,36 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 <div class="page-header">
     <h1>
         New Submission<br/>
-        <small>{{ assignment.course }}</small><br/>
-        <small>{{ assignment }}</small>
+        <small>{{ assignment }} ({{ assignment.course }})</small>
     </h1>
+</div>
+
+<div class="hero-unit">
+	<h4>Please note:</h4>
+	{% if assignment.test_attachment %}
+		<p>
+			Your upload is automatically tested for validity. Invalid submissions are
+			not accepted for grading.<br/>The test results are shown in the Dashboard and
+			sent by mail to all authors. Validations are processed in order of arrival.
+			A valid upload fulfills at least the following conditions:
+			<ul>
+				<li>The uploaded file is a TGZ or ZIP archive.</li>
+				<li>After unpacking, a 'make' call can be issued to build the sources.</li>
+				<li>After successful building, the application can be executed by 'make run'. A successful application return terminates with exit code 0.</li>
+			</ul>
+		</p>
+		<p>
+			Additional validity constraints might be given by the <a href="{{ assignment.download }}">assignment description</a>.
+		</p>
+	{% else %}
+		<p>
+	    	You can find further information in the <a href="{{ assignment.download }}">assignment description</a>.
+	    </p>
+	{% endif %}
+	{% if assignment.course.max_authors > 1 %}
+		<p> A maximum of {{ assignment.course.max_authors }} author(s) is allowed. Don't forget to add yourself.
+		</p>
+	{% endif %}
 </div>
 
 <form action="." method="post" enctype="multipart/form-data">
@@ -34,10 +61,14 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 <table>
 {{ submissionForm }}
 </table>
-<table>
-{{ filesForm }}
-</table>
-<input type="submit" class="btn"/>
+{% if assignment.has_attachment %}
+	<table>
+	{{ filesForm }}
+	</table>
+{% endif %}
+<p>
+<button type="submit" href="." class="btn"><i class="icon icon-ok"></i> Submit</button>
+</p>
 </form>
 
 {% endblock %}

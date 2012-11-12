@@ -2,9 +2,10 @@ TODO:
 
 - Dateianhang je nach Flag erlauben / verbieten
 - Prüfen, ob Test-Flag ausgewertet wird
-- Nutzereinstellungen ändern (eMail, Name)
+- Prüfskript unterstützen
 
 LATER:
 
 - Django Model Versioning Tool verwenden
 - Grading im Admin unterstützen
+- Nutzereinstellungen ändern (eMail, Name)

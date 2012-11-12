@@ -48,7 +48,7 @@ class OpenAssignmentsManager(models.Manager):
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)
 	course = models.ForeignKey(Course, related_name='assignments')
-	download = models.URLField(max_length=200, blank=True)
+	download = models.URLField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	gradingScheme = models.ForeignKey(GradingScheme)
 	published = models.DateTimeField(blank=True, null=True)
@@ -125,7 +125,7 @@ class Submission(models.Model):
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def green_tag(self):
-		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED]
+		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED]
 	def red_tag(self):
 		return self.state in [self.GRADED_FAIL, self.FAILED_COMPILE, self.FAILED_EXEC]
 	def active_files(self):
