@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm, getSubmissionFilesFormset
+from forms import SettingsForm, SubmissionWithGroupsForm, SubmissionWithoutGroupsForm, getSubmissionFilesFormset
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
@@ -22,12 +22,25 @@ def index(request):
 
     return render(request, 'index.html')
 
+def about(request):
+    return render(request, 'about.html')
+
+@login_required
 def logout(request):
     auth.logout(request)
     return redirect('index')
 
-def about(request):
-    return render(request, 'about.html')
+@login_required
+def settings(request):
+    if request.POST:
+        settingsForm=SettingsForm(request.POST, instance=request.user)
+        if settingsForm.is_valid():
+            settingsForm.save()
+            messages.info(request, 'User settings saved.')
+            return redirect('dashboard')
+    else:
+        settingsForm=SettingsForm(instance=request.user)
+    return render(request, 'settings.html', {'settingsForm': settingsForm})
 
 def testscript(request, ass_id, secret):
     #import pdb; pdb.set_trace()

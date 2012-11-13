@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ block.super }} - User Settings
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>User Settings</h1>
+</div>
+
+<form action="." method="post">
+ {% csrf_token %}
+<table>
+{{ settingsForm }}
+</table>
+<p>
+<button type="submit" href="." class="btn"><i class="icon icon-ok"></i> Submit</button>
+</p>
+</form>
+
+{% endblock %}

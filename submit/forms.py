@@ -38,3 +38,8 @@ def getSubmissionFilesFormset(assignment):
 	# mark form set so that mandatory atttachments are detected on validation
 	fs.mandatory = assignment.has_attachment
 	return fs
+
+class SettingsForm(forms.ModelForm):
+	class Meta:
+		model = User
+		fields = ('username','first_name','last_name','email')
