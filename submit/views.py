@@ -151,8 +151,9 @@ def new(request, ass_id):
                 submission.state=Submission.SUBMITTED
                 inform_course_owner(request, submission)
             submission.save()
-            submission.authors.add(request.user)    # submitter is always an author
             submissionForm.save_m2m()               # because of commit=False
+            submission.authors.add(request.user)    # submitter is always an author
+            submission.save()
             # If assignment allows attachments, analyze them too
             if ass.has_attachment:
                 filesForm=SubmissionFileFormSet(request.POST, request.FILES)

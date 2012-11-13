@@ -96,7 +96,7 @@ class Submission(models.Model):
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
 	submitter = models.ForeignKey(User, related_name='submitted')
 	authors = models.ManyToManyField(User, related_name='authored')
-	authors.help_text = 'Please add all authors, including yourself.'		
+	authors.help_text = 'Please add all additional authors beside yourself.'		
 	notes = models.TextField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	grading = models.ForeignKey(Grading, blank=True, null=True)
