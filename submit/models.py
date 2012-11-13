@@ -57,7 +57,7 @@ class Assignment(models.Model):
 	has_attachment = models.BooleanField(default=False)
 	test_attachment = models.BooleanField(default=False)
 	test_timeout = models.IntegerField(default=30)
-	test_script = models.FileField(upload_to="testscripts", null=True) 
+	test_script = models.FileField(upload_to="testscripts", blank=True, null=True) 
 
 	def __unicode__(self):
 		return unicode(self.title)

@@ -79,7 +79,7 @@ def jobs(request, secret):
                     assert(False)
                 # If the assignment has a validation script, point the executor to the download
                 if sub.assignment.test_script:
-                    response['PostRunValidation'] = MAIN_URL+reverse('testscript', args=(sub.assignment.pk, JOB_EXECUTOR_SECRET))
+                    response['PostRunValidation'] = MAIN_URL+"/testscript/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
                 # store date of fetching for debugging purposes
                 frecord.fetched=timezone.now()
                 frecord.save()
