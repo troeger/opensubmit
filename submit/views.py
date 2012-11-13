@@ -4,13 +4,12 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers, send_mail
 from django.core.urlresolvers import reverse
-from django.forms.models import modelformset_factory
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
+from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm, getSubmissionFilesFormset
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
@@ -136,13 +135,28 @@ def new(request, ass_id):
         SubmissionForm=SubmissionWithGroupsForm
     else:
         SubmissionForm=SubmissionWithoutGroupsForm
-    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
+    SubmissionFileFormSet = getSubmissionFilesFormset(ass)
+    # Analyze submission data
     if request.POST:
-        # Analyze submission data
+        # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm=SubmissionForm(request.POST, request.FILES)
-        submissionForm.removeFinishedAuthors(ass)
+        submissionForm.removeUnwantedAuthors(request.user, ass)
+        if ass.has_attachment:
+            filesForm=SubmissionFileFormSet(request.POST, request.FILES)
+        else:
+            filesForm=None
+        all_valid=False
         if submissionForm.is_valid(): 
-            submission=submissionForm.save(commit=False)   # to set submitter
+        # ok, submission data is valid, but if the view has offered files, they must be valid too to start saving of all data
+        # Therefore, we first determine overal validity and then start saving
+            if ass.has_attachment:
+                if filesForm.is_valid():
+                    all_valid=True
+            else:
+                all_valid=True
+        if all_valid:
+            # whether files or not, it is valid now to save
+            submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
             submission.submitter=request.user
             submission.assignment=ass
             if submission.assignment.test_attachment:
@@ -151,22 +165,21 @@ def new(request, ass_id):
                 submission.state=Submission.SUBMITTED
                 inform_course_owner(request, submission)
             submission.save()
-            submissionForm.save_m2m()               # because of commit=False
+            submissionForm.save_m2m()               # because of commit=False, we first need to add the form-given authors
             submission.authors.add(request.user)    # submitter is always an author
             submission.save()
-            # If assignment allows attachments, analyze them too
+            # we can do this only after submission saving. At least we know here that it is valid
             if ass.has_attachment:
-                filesForm=SubmissionFileFormSet(request.POST, request.FILES)
-                if filesForm.is_valid():
-                    files=filesForm.save(commit=False)
-                    for f in files:
-                        f.submission=submission
-                        f.save()
+                files=filesForm.save(commit=False)
+                for f in files:
+                    f.submission=submission
+                    f.save()
+            # all saved
             messages.info(request, "New submission saved.")
             return redirect('dashboard')
     else:
         submissionForm=SubmissionForm()
-        submissionForm.removeFinishedAuthors(ass)
+        submissionForm.removeUnwantedAuthors(request.user, ass)
         filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
     return render(request, 'new.html', {'submissionForm': submissionForm, 
                                         'filesForm': filesForm,
@@ -178,7 +191,7 @@ def update(request, subm_id):
     submission = get_object_or_404(Submission, pk=subm_id)
     if request.user not in submission.authors.all():
         return redirect('dashboard')        
-    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
+    SubmissionFileFormSet = getSubmissionFilesFormset(submission.assignment)
     if request.POST:
         filesForm=SubmissionFileFormSet(request.POST, request.FILES)
         if filesForm.is_valid():
