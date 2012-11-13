@@ -1,3 +1,4 @@
-#!/usr/bin/env python
-exit(0)
+#! /usr/bin/env python
 
+print("Your solution produced the correct output.")
+exit(0)

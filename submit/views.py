@@ -30,8 +30,21 @@ def logout(request):
 def about(request):
     return render(request, 'about.html')
 
+def testscript(request, ass_id, secret):
+    #import pdb; pdb.set_trace()
+    # This is the view used by the executor.py scripts for getting the test script for an assignment
+    ass = get_object_or_404(Assignment, pk=ass_id)
+    try:
+        fname=ass.test_script.name[ass.test_script.name.rfind('/')+1:]
+        response=HttpResponse(ass.test_script, content_type='application/binary')
+        response['Content-Disposition'] = 'attachment; filename="%s"'%fname
+        return response
+    except:
+        raise Http404
+
 @csrf_exempt
 def jobs(request, secret):
+    #import pdb; pdb.set_trace()
     # This is the view used by the executor.py scripts for getting / putting the test results.
     #
     # Fetching some file for testing is changing the database, so using GET here is not really RESTish. Anyway.
@@ -51,6 +64,7 @@ def jobs(request, secret):
         for sub in subm:
             files=sub.active_files()
             if files:
+                # create HTTP response with file download
                 frecord=files[0]
                 f=frecord.attachment
                 fname=f.name[f.name.rfind('/')+1:]
@@ -64,6 +78,10 @@ def jobs(request, secret):
                     response['Action'] = 'run'
                 else:
                     assert(False)
+                # If the assignment has a validation script, point the executor to the download
+                if sub.assignment.test_script:
+                    response['PostRunValidation'] = MAIN_URL+reverse('testscript', args=(sub.assignment.pk, JOB_EXECUTOR_SECRET))
+                # store date of fetching for debugging purposes
                 frecord.fetched=timezone.now()
                 frecord.save()
                 return response
@@ -209,7 +227,7 @@ def login(request):
     if 'authmethod' in GET:
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"login?openidreturn")
+            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"/login?openidreturn")
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)

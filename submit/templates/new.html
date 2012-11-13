@@ -32,18 +32,19 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 	<h4>Please note:</h4>
 	{% if assignment.test_attachment %}
 		<p>
-			Your upload is automatically tested for validity. Invalid submissions are
-			not accepted for grading.<br/>The test results are shown in the Dashboard and
-			sent by mail to all authors. Validations are processed in order of arrival.
-			A valid upload fulfills at least the following conditions:
+			Your file attachment is automatically tested for validity. Invalid submissions are
+			not accepted for grading.<br/>Validations are processed in order of arrival, you will be informed by eMail. A valid upload fulfills at least the following conditions:
+		</p>
 			<ul>
 				<li>The uploaded file is a TGZ or ZIP archive.</li>
-				<li>After unpacking, a 'make' call can be issued to build the sources.</li>
-				<li>After successful building, the application can be executed by 'make run'. A successful application return terminates with exit code 0.</li>
+				<li>"Must build" - After unpacking, a 'make' call can be issued to build the sources.</li>
+				<li>"Must run" - After successful building, the application can be executed by 'make run'. A successful application terminates with exit code 0.</li>
+				{% if assignment.test_script %}
+				<li>"Must work" - After application execution, it is validated if your solution produced the neccessary output files, as demanded by the <a href="{{ assignment.download }}">assignment description</a>.</li>
+				{% endif %}
 			</ul>
-		</p>
 		<p>
-			Additional validity constraints might be given by the <a href="{{ assignment.download }}">assignment description</a>.
+			The console output and exit code is shown in the Dashboard.			
 		</p>
 	{% else %}
 		<p>

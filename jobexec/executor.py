@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal
+import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat
 from datetime import datetime
 
 # BEGIN Configuration
 FORMAT = "%(asctime)-15s (%(levelname)s): %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO, filename='/tmp/executor.log')
+logging.basicConfig(format=FORMAT, level=logging.DEBUG, filename='/tmp/executor.log')
 submit_server = "http://localhost:8000"
 secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
 #targetdir=tempfile.mkdtemp()+"/"
@@ -24,14 +24,20 @@ def fetch_job():
 	try:
 		result = urllib2.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
 		fname=targetdir+datetime.now().isoformat()
-		submid=result.info()['SubmissionFileId']
-		action=result.info()['Action']
-		timeout=int(result.info()['Timeout'])
+		headers=result.info()
+		submid=headers['SubmissionFileId']
+		action=headers['Action']
+		timeout=int(headers['Timeout'])
 		logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
+		if 'PostRunValidation' in headers:
+			validator=headers['PostRunValidation']
+			logging.debug("Using validator from "+validator)
+		else:
+			validator=None
 		target=open(fname,"wb")
 		target.write(result.read())
 		target.close()
-		return fname, submid, action, timeout
+		return fname, submid, action, timeout, validator
 	except urllib2.HTTPError, e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
@@ -100,14 +106,24 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		send_result("'%s' call was not successful:\n\n%s"%(str(cmd[0]),output), proc.returncode, submid, action)
 		exit(-1)		
 
-fname, submid, action, timeout=fetch_job()
+fname, submid, action, timeout, validator=fetch_job()
 finalpath=unpack_job(fname, submid, action)
 if action == 'compile':
+	# build it and return result
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
 elif action == 'run':
+	# build it, execute it, validate it, return result
 	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
-	output=run_job(finalpath,['make','run'],submid,action,timeout)
+	if validator:
+		run_job(finalpath,['make','run'],submid,action,timeout,keepdata=True)
+		logging.debug("Fetching validator script from "+validator)
+		# fetch validator into target directory and report it's results
+		urllib.urlretrieve(validator, finalpath+"validator.py")
+		os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
+		output=run_job(finalpath,['python', 'validator.py'],submid,action,timeout)
+	else:
+		output=run_job(finalpath,['make','run'],submid,action,timeout)
 	send_result(output, 0, submid, action)
 else:
 	assert(False)

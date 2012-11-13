@@ -24,7 +24,7 @@ if is_production:
     STATIC_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/static/'
     STATICFILES_DIRS = ("/var/www/submit/submit/static")
     FORCE_SCRIPT_NAME="/submit"
-    MAIN_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/' 
+    MAIN_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit' 
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
 else:
     DEBUG = True
@@ -38,7 +38,7 @@ else:
     MEDIA_URL = '/media/'
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'
-    MAIN_URL = 'http://localhost:8000/' 
+    MAIN_URL = 'http://localhost:8000' 
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Global settings
