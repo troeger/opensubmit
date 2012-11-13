@@ -24,9 +24,37 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 <div class="page-header">
     <h1>
         New Submission<br/>
-        <small>{{ assignment.course }}</small><br/>
-        <small>{{ assignment }}</small>
+        <small>{{ assignment }} ({{ assignment.course }})</small>
     </h1>
+</div>
+
+<div class="hero-unit">
+	<h4>Please note:</h4>
+	{% if assignment.test_attachment %}
+		<p>
+			Your file attachment is automatically tested for validity. Invalid submissions are
+			not accepted for grading.<br/>Validations are processed in order of arrival, you will be informed by eMail. A valid upload fulfills at least the following conditions:
+		</p>
+			<ul>
+				<li>The uploaded file is a TGZ or ZIP archive.</li>
+				<li>"Must build" - After unpacking, a 'make' call can be issued to build the sources.</li>
+				<li>"Must run" - After successful building, the application can be executed by 'make run'. A successful application terminates with exit code 0.</li>
+				{% if assignment.test_script %}
+				<li>"Must work" - After application execution, it is validated if your solution produced the neccessary output files, as demanded by the <a href="{{ assignment.download }}">assignment description</a>.</li>
+				{% endif %}
+			</ul>
+		<p>
+			The console output and exit code is shown in the Dashboard.			
+		</p>
+	{% else %}
+		<p>
+	    	You can find further information in the <a href="{{ assignment.download }}">assignment description</a>.
+	    </p>
+	{% endif %}
+	{% if assignment.course.max_authors > 1 %}
+		<p> A maximum of {{ assignment.course.max_authors }} author(s) is allowed. You are added automatically.
+		</p>
+	{% endif %}
 </div>
 
 <form action="." method="post" enctype="multipart/form-data">
@@ -34,10 +62,14 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 <table>
 {{ submissionForm }}
 </table>
-<table>
-{{ filesForm }}
-</table>
-<input type="submit" class="btn"/>
+{% if assignment.has_attachment %}
+	<table>
+	{{ filesForm }}
+	</table>
+{% endif %}
+<p>
+<button type="submit" href="." class="btn"><i class="icon icon-ok"></i> Submit</button>
+</p>
 </form>
 
 {% endblock %}

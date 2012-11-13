@@ -43,18 +43,6 @@ section {
     vertical-align: middle;
 }
 
-.table tbody tr:hover {
-    cursor: pointer;
-}
-
-.table tbody form {
-    margin: 0;
-}
-
-.table tbody button {
-    cursor: default;
-}
-
 .errorlist {
     list-style: none;
 }

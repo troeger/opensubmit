@@ -1,12 +1,9 @@
 TODO:
 
-- Dateianhang je nach Flag erlauben / verbieten
-- Prüfen, ob Test-Flag ausgewertet wird
-- Sortieren der Übungen nach Deadline
-- Mail an Autoren und Submitter: Submission, Withdraw, Test fertig, Grading fertig
-- Admin immer CC bei Mails
+- Prüfskript unterstützen
 
 LATER:
 
 - Django Model Versioning Tool verwenden
 - Grading im Admin unterstützen
+- Nutzereinstellungen ändern (eMail, Name)

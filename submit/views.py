@@ -4,17 +4,16 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers, send_mail
 from django.core.urlresolvers import reverse
-from django.forms.models import modelformset_factory
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm
+from forms import SubmissionWithGroupsForm, SubmissionWithoutGroupsForm, getSubmissionFilesFormset
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
-from mail import inform_test_ok, inform_test_failed
+from models import inform_student, inform_course_owner
 import urllib
 
 def index(request):
@@ -30,8 +29,21 @@ def logout(request):
 def about(request):
     return render(request, 'about.html')
 
+def testscript(request, ass_id, secret):
+    #import pdb; pdb.set_trace()
+    # This is the view used by the executor.py scripts for getting the test script for an assignment
+    ass = get_object_or_404(Assignment, pk=ass_id)
+    try:
+        fname=ass.test_script.name[ass.test_script.name.rfind('/')+1:]
+        response=HttpResponse(ass.test_script, content_type='application/binary')
+        response['Content-Disposition'] = 'attachment; filename="%s"'%fname
+        return response
+    except:
+        raise Http404
+
 @csrf_exempt
 def jobs(request, secret):
+    #import pdb; pdb.set_trace()
     # This is the view used by the executor.py scripts for getting / putting the test results.
     #
     # Fetching some file for testing is changing the database, so using GET here is not really RESTish. Anyway.
@@ -41,20 +53,34 @@ def jobs(request, secret):
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
-        # Hand over a pending job to be tested as file download
-        # Return the oldest submisison in status UNTESTED
-        subm = Submission.objects.filter(state=Submission.UNTESTED).order_by('-created')
+        # Hand over a pending job to be tested 
+        # Compilation jobs have precedence, th oldest one wins
+        subm = Submission.objects.filter(state=Submission.SUBMITTED_UNTESTED).order_by('created')
         if len(subm) == 0:
-            raise Http404
+            subm = Submission.objects.filter(state=Submission.SUBMITTED_COMPILED).order_by('created')
+            if len(subm) == 0:
+                raise Http404
         for sub in subm:
             files=sub.active_files()
             if files:
+                # create HTTP response with file download
                 frecord=files[0]
                 f=frecord.attachment
                 fname=f.name[f.name.rfind('/')+1:]
                 response=HttpResponse(f, content_type='application/binary')
                 response['Content-Disposition'] = 'attachment; filename="%s"'%fname
                 response['SubmissionFileId'] = str(frecord.pk)
+                response['Timeout'] = sub.assignment.test_timeout
+                if sub.state == Submission.SUBMITTED_UNTESTED:
+                    response['Action'] = 'compile'
+                elif sub.state == Submission.SUBMITTED_COMPILED:
+                    response['Action'] = 'run'
+                else:
+                    assert(False)
+                # If the assignment has a validation script, point the executor to the download
+                if sub.assignment.test_script:
+                    response['PostRunValidation'] = MAIN_URL+reverse('testscript', args=(sub.assignment.pk, JOB_EXECUTOR_SECRET))
+                # store date of fetching for debugging purposes
                 frecord.fetched=timezone.now()
                 frecord.save()
                 return response
@@ -70,13 +96,21 @@ def jobs(request, secret):
         submission_file.output = request.POST['Message']
         submission_file.save()
         subm=submission_file.submission
-        if int(submission_file.error_code) == 0:
-            subm.state = Submission.SUBMITTED_TESTED
-            inform_test_ok(subm)
+        if request.POST['Action'] == 'compile':
+            if int(submission_file.error_code) == 0:
+                subm.state = Submission.SUBMITTED_COMPILED
+            else:
+                subm.state = Submission.FAILED_COMPILE                
+        elif request.POST['Action'] == 'run':
+            if int(submission_file.error_code) == 0:
+                subm.state = Submission.SUBMITTED_TESTED
+                inform_course_owner(request, subm)
+            else:
+                subm.state = Submission.FAILED_EXEC
         else:
-            subm.state = Submission.TEST_FAILED
-            inform_test_failed(subm)
+            assert(False)
         subm.save()
+        inform_student(subm)
         return HttpResponse(status=201)
 
 @login_required
@@ -84,7 +118,7 @@ def dashboard(request):
     authored=request.user.authored.order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    openassignments=[ass for ass in Assignment.open_ones.all() if ass not in waiting_for_action]
+    openassignments=[ass for ass in Assignment.open_ones.all().order_by('soft_deadline').order_by('hard_deadline') if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
         'user': request.user,
@@ -95,36 +129,57 @@ def dashboard(request):
 @login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
+    # Prepare the model form classes
+    # Assignments with only one author need no author choice
     if ass.course.max_authors > 1:
         SubmissionForm=SubmissionWithGroupsForm
     else:
         SubmissionForm=SubmissionWithoutGroupsForm
-    # Files are a separate model entity -> separate form
-    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
+    SubmissionFileFormSet = getSubmissionFilesFormset(ass)
+    # Analyze submission data
     if request.POST:
+        # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm=SubmissionForm(request.POST, request.FILES)
-        submissionForm.removeFinishedAuthors(ass)
-        filesForm=SubmissionFileFormSet(request.POST, request.FILES)
-        if submissionForm.is_valid() and filesForm.is_valid():
-            submission=submissionForm.save(commit=False)   # to set submitter
+        submissionForm.removeUnwantedAuthors(request.user, ass)
+        if ass.has_attachment:
+            filesForm=SubmissionFileFormSet(request.POST, request.FILES)
+        else:
+            filesForm=None
+        all_valid=False
+        if submissionForm.is_valid(): 
+        # ok, submission data is valid, but if the view has offered files, they must be valid too to start saving of all data
+        # Therefore, we first determine overal validity and then start saving
+            if ass.has_attachment:
+                if filesForm.is_valid():
+                    all_valid=True
+            else:
+                all_valid=True
+        if all_valid:
+            # whether files or not, it is valid now to save
+            submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
             submission.submitter=request.user
             submission.assignment=ass
             if submission.assignment.test_attachment:
-                submission.state=Submission.UNTESTED
+                submission.state=Submission.SUBMITTED_UNTESTED
             else:
                 submission.state=Submission.SUBMITTED
+                inform_course_owner(request, submission)
             submission.save()
+            submissionForm.save_m2m()               # because of commit=False, we first need to add the form-given authors
             submission.authors.add(request.user)    # submitter is always an author
-            submissionForm.save_m2m()   # because of commit=False
-            files=filesForm.save(commit=False)
-            for f in files:
-                f.submission=submission
-                f.save()
+            submission.save()
+            # we can do this only after submission saving. At least we know here that it is valid
+            if ass.has_attachment:
+                files=filesForm.save(commit=False)
+                for f in files:
+                    f.submission=submission
+                    f.save()
+            # all saved
             messages.info(request, "New submission saved.")
             return redirect('dashboard')
     else:
         submissionForm=SubmissionForm()
-        submissionForm.removeFinishedAuthors(ass)
+        submissionForm.removeUnwantedAuthors(request.user, ass)
         filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
     return render(request, 'new.html', {'submissionForm': submissionForm, 
                                         'filesForm': filesForm,
@@ -136,7 +191,7 @@ def update(request, subm_id):
     submission = get_object_or_404(Submission, pk=subm_id)
     if request.user not in submission.authors.all():
         return redirect('dashboard')        
-    SubmissionFileFormSet = modelformset_factory(SubmissionFile, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
+    SubmissionFileFormSet = getSubmissionFilesFormset(submission.assignment)
     if request.POST:
         filesForm=SubmissionFileFormSet(request.POST, request.FILES)
         if filesForm.is_valid():
@@ -154,7 +209,7 @@ def update(request, subm_id):
                     oldfile.replaced_by=f
                     oldfile.save()
             # ok, all files save, now adjust the submission status
-            submission.state = Submission.UNTESTED
+            submission.state = Submission.SUBMITTED_UNTESTED
             submission.save()
             messages.info(request, 'Submission files successfully updated.')
             return redirect('dashboard')
@@ -173,6 +228,7 @@ def withdraw(request, subm_id):
         submission.state=Submission.WITHDRAWN
         submission.save()
         messages.info(request, 'Submission successfully withdrawn.')
+        inform_course_owner(request, submission)
         return redirect('dashboard')
     else:
         return render(request, 'withdraw.html', {'submission': submission})
@@ -185,7 +241,7 @@ def login(request):
     if 'authmethod' in GET:
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"login?openidreturn")
+            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"/login?openidreturn")
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)
@@ -202,14 +258,14 @@ def login(request):
                 user_name = unicode(user_sreg['nickname'],'utf-8')[:29]
 
             if 'email' in user_sreg:         
-                email = unicode(user_sreg['email'],'utf-8')[:29]
+                email = unicode(user_sreg['email'],'utf-8')#[:29]
 
             if AX.email in user_ax:
-                email = unicode(user_ax[AX.email],'utf-8')[:29]
+                email = unicode(user_ax[AX.email],'utf-8')#[:29]
 
             # no username given, register user with his e-mail address as username
             if not user_name and email:
-                new_user = User(username=email, email=email)
+                new_user = User(username=email[:29], email=email)
 
             # both, username and e-mail were not given, use a timestamp as username
             elif not user_name and not email:
