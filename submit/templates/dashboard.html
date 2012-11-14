@@ -6,12 +6,6 @@
     {{ block.super }} - Dashboard
 {% endblock %}
 
-{% block docready %}
-    $('.testpopup').popover({placement: 'left', title: 'Console output'})
-    $('.gradepopup').popover({placement: 'left', title: 'Grading results'})
-{% endblock %}
-
-
 {%block navigation_home %}hidden{% endblock %}
 
 {% block content %}
@@ -54,7 +48,6 @@
                 <th>Assignment</th>
                 <th>Submitted by</th>
                 <th>Authors</th>
-                <th>Files</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
@@ -68,20 +61,7 @@
                     <td>{{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
                     <td>
-                        {% if submission.file_upload.output and not submission.is_withdrawn and not submission.passed and not submission.failed %}
-                            <a href="#" class="testpopup" rel="popover" data-content="<br/>{{ file.output|linebreaks }}<br/><br>Error code: {{ file.error_code }}">Test result for {{ submission.file_upload.attachment|basename }}</a>
-                        {% else %}
-                            {{ submission.file_upload.attachment|basename }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if submission.green_tag %}
-                            <a href="#" class="label gradepopup label-success" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
-                        {% elif submission.red_tag %}                            
-                            <a href="#" class="label gradepopup label-important" rel="popover" data-content="Grade: {{ submission.grading }}<br/>{{ submission.grading_notes }}">{{ submission.get_state_display }}</a>
-                        {% else %}
-                            {{ submission.get_state_display }}
-                        {% endif %}
+                            <a href="#" class="label {% if submission.green_tag %}label-success{% endif %}{% if submission.red_tag %}label-important{% endif %}">{{ submission.get_state_display }}</a>
                     </td>
                     <td style="white-space: nowrap;">
                         <a href="{% url 'details' submission.pk %}" class="btn"><i class="icon-th-list"></i> Details</a>

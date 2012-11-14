@@ -1,11 +1,5 @@
 TODO:
 
-- Test results und Grading Results in Details
-- Tool Tips raus im Dashboard
-- Withdraw testen
-- Re-upload testen
-- Executor testen
-
 - Statt "make run" vorgegebenes Kommando ausführen
 - Zusätzliches "Grading Script", welches Ausgaben für den Korrektor erzeugt
 

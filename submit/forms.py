@@ -46,6 +46,11 @@ class SubmissionWithoutGroupsWithoutFileForm(forms.ModelForm):
 		# there is no choice for authors in this form
 		pass
 
+class SubmissionFileForm(forms.ModelForm):
+	class Meta:
+		model = SubmissionFile
+		fields = ('attachment',)	
+
 def getSubmissionForm(assignment):
 	if assignment.course.max_authors > 1:
 		if assignment.has_attachment:

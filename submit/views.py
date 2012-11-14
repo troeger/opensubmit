@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from forms import SettingsForm, getSubmissionForm
+from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
@@ -63,7 +63,6 @@ def filedownload(request, subm_id):
 
 @csrf_exempt
 def jobs(request, secret):
-    #import pdb; pdb.set_trace()
     # This is the view used by the executor.py scripts for getting / putting the test results.
     #
     # Fetching some file for testing is changing the database, so using GET here is not really RESTish. Anyway.
@@ -84,6 +83,7 @@ def jobs(request, secret):
             if sub.file_upload:
                 # create HTTP response with file download
                 f=sub.file_upload.attachment
+                assert(f)
                 response=HttpResponse(f, content_type='application/binary')
                 response['Content-Disposition'] = 'attachment; filename="%s"'%sub.file_upload.basename()
                 response['SubmissionFileId'] = str(sub.file_upload.pk)
@@ -178,16 +178,10 @@ def new(request, ass_id):
                 inform_course_owner(request, submission)
             # take uploaded file from extra field
             if ass.has_attachment:
-                # the strange ordering of actions here is reasoned by the file name generation approach
-                # it relies on a available "submission" link from the file
-                submissionFile=SubmissionFile()
+                submissionFile=SubmissionFile(attachment=submissionForm.cleaned_data['attachment'])
                 submissionFile.save()
                 submission.file_upload=submissionFile                
-                submission.save()
-                submissionFile.attachment=submissionForm.cleaned_data['attachment']
-                submissionFile.save()
-            else:
-                submission.save()
+            submission.save()
             submissionForm.save_m2m()               # because of commit=False, we first need to add the form-given authors
             submission.authors.add(request.user)    # submitter is always an author
             submission.save()
@@ -207,31 +201,22 @@ def update(request, subm_id):
     submission = get_object_or_404(Submission, pk=subm_id)
     if request.user not in submission.authors.all():
         return redirect('dashboard')        
-    SubmissionFileFormSet = getSubmissionFilesFormset(submission.assignment)
     if request.POST:
-        filesForm=SubmissionFileFormSet(request.POST, request.FILES)
-        if filesForm.is_valid():
-            # determine old files
-            # TODO: This needs to properly hable the multiple file case
-            # currently, we hack it by just replacing the first with the first
-            oldfiles=list(submission.files.all())       # enforce QS evaluation by list()
-            # now save new files
-            files=filesForm.save(commit=False)
-            for f in files:
-                f.submission=submission
-                f.replaced_by=None
-                f.save()
-                for oldfile in oldfiles:
-                    oldfile.replaced_by=f
-                    oldfile.save()
-            # ok, all files save, now adjust the submission status
+        fileForm=SubmissionFileForm(request.POST, request.FILES)
+        if fileForm.is_valid():
+            f=fileForm.save()
+            # fix status of old uploaded file
+            submission.file_upload.replaced_by=f
+            submission.file_upload.save()
+            # store new file for submissions
+            submission.file_upload=f
             submission.state = Submission.SUBMITTED_UNTESTED
             submission.save()
             messages.info(request, 'Submission files successfully updated.')
             return redirect('dashboard')
     else:
-        filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
-    return render(request, 'update.html', {'filesForm': filesForm,
+        fileForm=SubmissionFileForm()
+    return render(request, 'update.html', {'fileForm': fileForm,
                                            'submission': submission})
 
 @login_required

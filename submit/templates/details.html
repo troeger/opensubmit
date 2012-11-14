@@ -24,7 +24,15 @@
 		<td>Notes</td><td>{{ submission.notes }}</td>
 	{% if submission.assignment.has_attachment %}
 		</tr><tr>
-			<td>Files</td><td><a href="{{ submission.file_upload.get_absolute_url }}">{{ submission.file_upload.attachment|basename }}</a></td>
+			<td>File</td>
+			<td>
+				<a href="{{ submission.file_upload.get_absolute_url }}">{{ submission.file_upload.attachment|basename }}</a> 
+				{% if submission.file_upload.error_code %}
+					(Error Code: {{ submission.file_upload.error_code }})
+					<br/>
+					<code>{{ submission.file_upload.output|linebreaks }}</code>
+				{% endif %}
+			</td>
 	{% endif %}
 	</tr><tr>
 		<td>State</td><td>{{ submission.get_state_display }}</td>

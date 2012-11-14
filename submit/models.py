@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMessage
 from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL
+from datetime import date
 import string
 
 # helper function for creating storage paths
@@ -18,10 +19,7 @@ def fname(title):
 	return result.lower()
 
 def upload_path(instance, filename):
-	course_title=fname(instance.submission.all()[0].assignment.course.title)
-	ass_title=fname(instance.submission.all()[0].assignment.title)
-	subm_title=fname(instance.submission.all()[0].submitter.get_full_name())
-	return '/'.join([course_title, ass_title, subm_title, filename])
+	return '/'.join([str(date.today().isoformat()),filename])
 
 # monkey patch for getting better user name stringification
 # User proxies did not make the job
