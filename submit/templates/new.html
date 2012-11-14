@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load bootstrap %}
 
 {% block title %}
     {{ block.super }} - New Submission
@@ -55,14 +56,14 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 	{% endif %}
 </div>
 
-<form action="." method="post" enctype="multipart/form-data">
+<form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
  {% csrf_token %}
 <table>
-{{ submissionForm }}
+{{ submissionForm|bootstrap }}
 </table>
 {% if assignment.has_attachment %}
 	<table>
-	{{ filesForm }}
+	{{ filesForm|bootstrap }}
 	</table>
 {% endif %}
 <p>
