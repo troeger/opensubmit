@@ -73,10 +73,10 @@ class Assignment(models.Model):
 	objects = models.Manager() # The default manager.
 	open_ones = OpenAssignmentsManager() 
 
-class Tutor(models.Model):
-	user = models.ForeignKey(User, related_name='tutor_roles')
-	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
-	students = 	models.ManyToManyField(User)
+#class Tutor(models.Model):
+#	user = models.ForeignKey(User, related_name='tutor_roles')
+#	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
+#	students = 	models.ManyToManyField(User)
 
 class Submission(models.Model):
 	RECEIVED = 'R'
