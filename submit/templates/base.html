@@ -64,16 +64,16 @@
             <div style="position: relative; margin-top: -40px; top: 0; width: 100%">
             {% for message in messages %}
                 {% if message.tags == "success" %}
-                    <div class="alert alert-success hide">
+                    <div class="alert alert-success">
                     <i class="icon-ok-sign"></i>
                 {% elif message.tags == "info"%}
-                    <div class="alert alert-info hide">
+                    <div class="alert alert-info">
                     <i class="icon-info-sign"></i>                
                 {% elif message.tags == "warning"%}
-                    <div class="alert hide">
+                    <div class="alert">
                     <i class="icon-warning-sign"></i>                
                 {% elif message.tags == "error"%}
-                    <div class="alert alert-error hide">
+                    <div class="alert alert-error">
                     <i class="icon-warning-sign"></i>                
                 {% endif %}
                 {{ message }}

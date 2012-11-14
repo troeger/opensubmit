@@ -170,8 +170,12 @@ def new(request, ass_id):
             if ass.has_attachment:
                 if filesForm.is_valid():
                     all_valid=True
+                else:
+                    messages.error(request, "Please specify the file to upload.")
             else:
                 all_valid=True
+        else:
+            messages.error(request, "Please correct your submission information.")
         if all_valid:
             # whether files or not, it is valid now to save
             submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
