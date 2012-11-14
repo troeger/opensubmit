@@ -7,6 +7,8 @@ from django.core.mail import send_mail, EmailMessage
 from settings import MAIN_URL
 import string
 
+# helper function for creating storage paths
+
 valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 def fname(title):
@@ -19,6 +21,13 @@ def upload_path(instance, filename):
 	ass_title=fname(instance.submission.assignment.title)
 	subm_title=fname(instance.submission.submitter.get_full_name())
 	return '/'.join([course_title, ass_title, subm_title, filename])
+
+# monkey patch for getting better user name stringification
+# User proxies did not make the job
+# Obsolete with Django 1.5 custom User feature
+def user_unicode(self):
+    return  u'%s %s <%s>' % (self.first_name, self.last_name, self.email)
+User.__unicode__ = user_unicode
 
 class Grading(models.Model):
 	title = models.CharField(max_length=20)

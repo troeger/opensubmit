@@ -26,13 +26,20 @@ class SubmissionWithoutGroupsForm(forms.ModelForm):
 class SubmissionFilesModelFormSet(BaseModelFormSet):
 	def clean(self):
 		super(SubmissionFilesModelFormSet, self).clean()
-		for formdata in self.cleaned_data:
-			if 'attachment' in formdata:
-				return
-		# ok, no attachment found, is this a problem ?        		
-		if self.mandatory:
+		if self.cleaned_data:
+			for formdata in self.cleaned_data:
+				if 'attachment' in formdata:
+					return
+			# ok, no attachment found, is this a problem ?        		
+			if self.mandatory:
+				raise forms.ValidationError("Please choose a file.")        	
+		else:
+			# happens with the upload of empty files
 			raise forms.ValidationError("Please choose a file.")        	
 
+
+# creates a new fromset for submission files
+# we need this helper function to add the custom "mandatory" flag to the instance, which is needed on validation time
 def getSubmissionFilesFormset(assignment):
 	fs=modelformset_factory(SubmissionFile, formset=SubmissionFilesModelFormSet, exclude=('submission', 'fetched', 'output', 'error_code', 'replaced_by'))
 	# mark form set so that mandatory atttachments are detected on validation

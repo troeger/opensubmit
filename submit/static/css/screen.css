@@ -43,3 +43,10 @@ section {
     vertical-align: middle;
 }
 
+select {
+    width: 75%;
+}
+
+textarea {
+    width: 75%;
+}
