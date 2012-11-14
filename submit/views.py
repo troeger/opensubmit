@@ -128,6 +128,11 @@ def jobs(request, secret):
 
 @login_required
 def dashboard(request):
+    # if the user settings are not complete (e.f. adter OpenID registration), we MUST fix them first
+    if not request.user.first_name or not request.user.last_name or not request.user.email:
+        return redirect('settings')
+
+    # render dashboard
     authored=request.user.authored.order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
