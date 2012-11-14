@@ -145,6 +145,14 @@ def dashboard(request):
     )
 
 @login_required
+def details(request, subm_id):
+    subm = get_object_or_404(Submission, pk=subm_id)
+    assert (request.user in subm.authors.all())               # only authors should be able to look into submission details
+    return render(request, 'details.html', {
+        'submission': subm}
+    )
+
+@login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
     # Prepare the model form classes

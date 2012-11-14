@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - Submission Details
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Submission Details</h1>
+</div>
+
+<table class="table">
+	<tr>
+		<td>Course</td><td>{{ submission.assignment.course }}</td>
+	</tr><tr>
+		<td>Assignment</td><td>{{ submission.assignment }}</td>
+	</tr><tr>
+		<td>Submitter</td><td>{{ submission.submitter }}</td>
+	</tr><tr>
+		<td>Authors</td><td>{{ submission.authors.all|safeseq|join:", " }}</td>
+	</tr><tr>
+		<td>Notes</td><td>{{ submission.notes }}</td>
+	</tr><tr>
+		<td>Files</td><td>{{ submission.files.all|safeseq|join:"<br/>"  }}</td>
+	</tr><tr>
+		<td>State</td><td>{{ submission.get_state_display }}</td>
+	{% if submission.has_grading %}
+		</tr><tr>
+			<td>Grading</td><td>{{ submission.grading }}</td>
+		</tr><tr>
+			<td>Grading Notes</td><td>{{ submission.grading_notes }}</td>
+	{% endif %}
+	</tr>
+</table>
+{% endblock %}

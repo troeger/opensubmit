@@ -37,7 +37,6 @@ class SubmissionFilesModelFormSet(BaseModelFormSet):
 			# happens with the upload of empty files
 			raise forms.ValidationError("Please choose a file.")        	
 
-
 # creates a new fromset for submission files
 # we need this helper function to add the custom "mandatory" flag to the instance, which is needed on validation time
 def getSubmissionFilesFormset(assignment):

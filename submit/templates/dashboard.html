@@ -66,7 +66,7 @@
                     <td>{{ submission.assignment.course }}</td>
                     <td>{{ submission.assignment }}</td>
                     <td>{{ submission.submitter.get_full_name }}</td>
-                    <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
                     <td>
                         {% for file in submission.active_files %}
                             {% if file.output and not submission.is_withdrawn and not submission.passed and not submission.failed %}
@@ -86,6 +86,7 @@
                         {% endif %}
                     </td>
                     <td style="white-space: nowrap;">
+                        <a href="{% url 'details' submission.pk %}" class="btn"><i class="icon-th-list"></i> Details</a>
                         {% if submission.can_reupload %}
                             <a href="{% url 'update' submission.pk %}" class="btn"><i class="icon-upload"></i> Update files</a>
                         {% endif %}

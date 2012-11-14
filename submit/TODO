@@ -1,9 +1,12 @@
 TODO:
 
 - eigenen Upload + Notizen noch mal anschauen können
+- Statt "make run" vorgegebenes Kommando ausführen
+- Zusätzliches "Grading Script", welches Ausgaben für den Korrektor erzeugt
 
 LATER:
 
+- Separates Grading-Skript, welches eigene Notizen hinterlässt
 - Django Model Versioning Tool verwenden
 - Grading im Admin unterstützen
 - Nutzereinstellungen ändern (eMail, Name)

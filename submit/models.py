@@ -105,7 +105,7 @@ class Submission(models.Model):
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
 	submitter = models.ForeignKey(User, related_name='submitted')
 	authors = models.ManyToManyField(User, related_name='authored')
-	authors.help_text = 'Please add all additional authors beside yourself.'		
+	authors.help_text = ''		
 	notes = models.TextField(max_length=200, blank=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	grading = models.ForeignKey(Grading, blank=True, null=True)
@@ -115,8 +115,6 @@ class Submission(models.Model):
 		return unicode("Submission %u"%(self.pk))
 	def number_of_files(self):
 		return self.files.count()
-	def authors_list(self):
-		return [u.get_full_name() for u in self.authors.all()]
 	def can_withdraw(self):
 		if self.state == self.WITHDRAWN or self.state == self.SUBMITTED_UNTESTED or self.state == self.SUBMITTED_COMPILED:
 			return False
@@ -145,6 +143,8 @@ class Submission(models.Model):
 		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED]
 	def red_tag(self):
 		return self.state in [self.GRADED_FAIL, self.FAILED_COMPILE, self.FAILED_EXEC]
+	def has_grading(self):
+		return self.state in [self.GRADED_FAIL, self.GRADED_PASS]
 	def active_files(self):
 		return self.files.filter(replaced_by__isnull=True)
 
