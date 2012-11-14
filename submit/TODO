@@ -1,11 +1,11 @@
 TODO:
 
-- Statt "make run" vorgegebenes Kommando ausführen
-- Zusätzliches "Grading Script", welches Ausgaben für den Korrektor erzeugt
+- Umstellung der Tests:
+	- Compilation test (Bool Flag am Assignment)
+	- Validity test (Skript vom Kurs-Admin, führt Exec-Test durch)
+	- Full test (Skript vom Kurs-Admin, füllt nur Grading-Infos) 
 
 LATER:
 
-- Separates Grading-Skript, welches eigene Notizen hinterlässt
 - Django Model Versioning Tool verwenden
 - Grading im Admin unterstützen
-- Nutzereinstellungen ändern (eMail, Name)
