@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from forms import SettingsForm, SubmissionWithGroupsForm, SubmissionWithoutGroupsForm, getSubmissionFilesFormset
+from forms import SettingsForm, getSubmissionForm
 from models import SubmissionFile, Submission, Assignment
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
@@ -54,6 +54,13 @@ def testscript(request, ass_id, secret):
     except:
         raise Http404
 
+def filedownload(request, subm_id):
+    subm = get_object_or_404(Submission, pk=subm_id)
+    assert(request.user in subm.authors.all())
+    response=HttpResponse(subm.file_upload.attachment, content_type='application/binary')
+    response['Content-Disposition'] = 'attachment; filename="%s"'%subm.file_upload.basename()
+    return response
+
 @csrf_exempt
 def jobs(request, secret):
     #import pdb; pdb.set_trace()
@@ -74,15 +81,12 @@ def jobs(request, secret):
             if len(subm) == 0:
                 raise Http404
         for sub in subm:
-            files=sub.active_files()
-            if files:
+            if sub.file_upload:
                 # create HTTP response with file download
-                frecord=files[0]
-                f=frecord.attachment
-                fname=f.name[f.name.rfind('/')+1:]
+                f=sub.file_upload.attachment
                 response=HttpResponse(f, content_type='application/binary')
-                response['Content-Disposition'] = 'attachment; filename="%s"'%fname
-                response['SubmissionFileId'] = str(frecord.pk)
+                response['Content-Disposition'] = 'attachment; filename="%s"'%sub.file_upload.basename()
+                response['SubmissionFileId'] = str(sub.file_upload.pk)
                 response['Timeout'] = sub.assignment.test_timeout
                 if sub.state == Submission.SUBMITTED_UNTESTED:
                     response['Action'] = 'compile'
@@ -92,10 +96,11 @@ def jobs(request, secret):
                     assert(False)
                 # If the assignment has a validation script, point the executor to the download
                 if sub.assignment.test_script:
+                    # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
                     response['PostRunValidation'] = MAIN_URL+"/testscript/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
                 # store date of fetching for debugging purposes
-                frecord.fetched=timezone.now()
-                frecord.save()
+                sub.file_upload.fetched=timezone.now()
+                sub.file_upload.save()
                 return response
         # No files found in the submissions
         raise Http404
@@ -108,7 +113,7 @@ def jobs(request, secret):
         submission_file.error_code = request.POST['ErrorCode']
         submission_file.output = request.POST['Message']
         submission_file.save()
-        subm=submission_file.submission
+        subm=submission_file.submissions.all()[0]
         if request.POST['Action'] == 'compile':
             if int(submission_file.error_code) == 0:
                 subm.state = Submission.SUBMITTED_COMPILED
@@ -155,37 +160,14 @@ def details(request, subm_id):
 @login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
-    # Prepare the model form classes
-    # Assignments with only one author need no author choice
-    if ass.course.max_authors > 1:
-        SubmissionForm=SubmissionWithGroupsForm
-    else:
-        SubmissionForm=SubmissionWithoutGroupsForm
-    SubmissionFileFormSet = getSubmissionFilesFormset(ass)
+    # get submission form according to the assignment type
+    SubmissionForm=getSubmissionForm(ass)
     # Analyze submission data
     if request.POST:
         # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm=SubmissionForm(request.POST, request.FILES)
         submissionForm.removeUnwantedAuthors(request.user, ass)
-        if ass.has_attachment:
-            filesForm=SubmissionFileFormSet(request.POST, request.FILES)
-        else:
-            filesForm=None
-        all_valid=False
         if submissionForm.is_valid(): 
-        # ok, submission data is valid, but if the view has offered files, they must be valid too to start saving of all data
-        # Therefore, we first determine overal validity and then start saving
-            if ass.has_attachment:
-                if filesForm.is_valid():
-                    all_valid=True
-                else:
-                    messages.error(request, "Please specify the file to upload.")
-            else:
-                all_valid=True
-        else:
-            messages.error(request, "Please correct your submission information.")
-        if all_valid:
-            # whether files or not, it is valid now to save
             submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
             submission.submitter=request.user
             submission.assignment=ass
@@ -194,25 +176,29 @@ def new(request, ass_id):
             else:
                 submission.state=Submission.SUBMITTED
                 inform_course_owner(request, submission)
-            submission.save()
+            # take uploaded file from extra field
+            if ass.has_attachment:
+                # the strange ordering of actions here is reasoned by the file name generation approach
+                # it relies on a available "submission" link from the file
+                submissionFile=SubmissionFile()
+                submissionFile.save()
+                submission.file_upload=submissionFile                
+                submission.save()
+                submissionFile.attachment=submissionForm.cleaned_data['attachment']
+                submissionFile.save()
+            else:
+                submission.save()
             submissionForm.save_m2m()               # because of commit=False, we first need to add the form-given authors
             submission.authors.add(request.user)    # submitter is always an author
             submission.save()
-            # we can do this only after submission saving. At least we know here that it is valid
-            if ass.has_attachment:
-                files=filesForm.save(commit=False)
-                for f in files:
-                    f.submission=submission
-                    f.save()
-            # all saved
             messages.info(request, "New submission saved.")
             return redirect('dashboard')
+        else:
+            messages.error(request, "Please correct your submission information.")
     else:
         submissionForm=SubmissionForm()
         submissionForm.removeUnwantedAuthors(request.user, ass)
-        filesForm=SubmissionFileFormSet(queryset=SubmissionFile.objects.none())
     return render(request, 'new.html', {'submissionForm': submissionForm, 
-                                        'filesForm': filesForm,
                                         'assignment': ass})
 
 @login_required

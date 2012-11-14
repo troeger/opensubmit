@@ -4,7 +4,8 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMessage
-from settings import MAIN_URL
+from django.core.urlresolvers import reverse
+from settings import MAIN_URL, MEDIA_URL
 import string
 
 # helper function for creating storage paths
@@ -17,9 +18,9 @@ def fname(title):
 	return result.lower()
 
 def upload_path(instance, filename):
-	course_title=fname(instance.submission.assignment.course.title)
-	ass_title=fname(instance.submission.assignment.title)
-	subm_title=fname(instance.submission.submitter.get_full_name())
+	course_title=fname(instance.submission.all()[0].assignment.course.title)
+	ass_title=fname(instance.submission.all()[0].assignment.title)
+	subm_title=fname(instance.submission.all()[0].submitter.get_full_name())
 	return '/'.join([course_title, ass_title, subm_title, filename])
 
 # monkey patch for getting better user name stringification
@@ -78,6 +79,21 @@ class Assignment(models.Model):
 #	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
 #	students = 	models.ManyToManyField(User)
 
+class SubmissionFile(models.Model):
+	attachment = models.FileField(upload_to=upload_path) 
+	fetched = models.DateTimeField(editable=False, null=True)
+	output = models.TextField(null=True, blank=True)
+	error_code = models.IntegerField(null=True, blank=True)
+	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
+	def __unicode__(self):
+		return unicode(self.attachment.name)
+	def basename(self):
+		return self.attachment.name[self.attachment.name.rfind('/')+1:]
+	def get_absolute_url(self):
+		# to implement access protection, we implement our own download
+		# this implies that the Apache media serving is disabled
+		return reverse('filedownload', args=(self.submissions.all()[0].pk,))
+
 class Submission(models.Model):
 	RECEIVED = 'R'
 	WITHDRAWN = 'W'
@@ -107,6 +123,7 @@ class Submission(models.Model):
 	authors = models.ManyToManyField(User, related_name='authored')
 	authors.help_text = ''		
 	notes = models.TextField(max_length=200, blank=True)
+	file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	grading = models.ForeignKey(Grading, blank=True, null=True)
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
@@ -145,8 +162,6 @@ class Submission(models.Model):
 		return self.state in [self.GRADED_FAIL, self.FAILED_COMPILE, self.FAILED_EXEC]
 	def has_grading(self):
 		return self.state in [self.GRADED_FAIL, self.GRADED_PASS]
-	def active_files(self):
-		return self.files.filter(replaced_by__isnull=True)
 
 # send mail notification on successful grading
 # since this is done in the admin interface, and not in the frontend,
@@ -156,14 +171,6 @@ def postSubmissionSaveHandler(sender, **kwargs):
 	sub=kwargs['instance']
 	if sub.state == Submission.GRADED_PASS or sub.state == Submission.GRADED_FAIL:
 		inform_student(sub)
-
-class SubmissionFile(models.Model):
-	submission = models.ForeignKey(Submission, related_name='files')
-	attachment = models.FileField(upload_to=upload_path) 
-	fetched = models.DateTimeField(editable=False, null=True)
-	output = models.TextField(null=True, blank=True)
-	error_code = models.IntegerField(null=True, blank=True)
-	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
 
 # convinienvce function for email information
 # to avoid cyclic dependencies, we keep it in the models.py

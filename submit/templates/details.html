@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load projecttags %}
 {% load bootstrap %}
 
 {% block title %}
@@ -21,8 +22,10 @@
 		<td>Authors</td><td>{{ submission.authors.all|safeseq|join:", " }}</td>
 	</tr><tr>
 		<td>Notes</td><td>{{ submission.notes }}</td>
-	</tr><tr>
-		<td>Files</td><td>{{ submission.files.all|safeseq|join:"<br/>"  }}</td>
+	{% if submission.assignment.has_attachment %}
+		</tr><tr>
+			<td>Files</td><td><a href="{{ submission.file_upload.get_absolute_url }}">{{ submission.file_upload.attachment|basename }}</a></td>
+	{% endif %}
 	</tr><tr>
 		<td>State</td><td>{{ submission.get_state_display }}</td>
 	{% if submission.has_grading %}

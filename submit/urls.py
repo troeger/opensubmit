@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
+import settings
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -9,6 +10,7 @@ urlpatterns = patterns('',
     url(r'^logout/$', 'submit.views.logout', name='logout'),
     url(r'^dashboard/$', 'submit.views.dashboard', name='dashboard'),
     url(r'^details/(?P<subm_id>\d+)/$', 'submit.views.details', name='details'),
+    url(r'^details/(?P<subm_id>\d+)/file/$', 'submit.views.filedownload', name='filedownload'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', 'submit.views.new', name='new'),
     url(r'^withdraw/(?P<subm_id>\d+)/$', 'submit.views.withdraw', name='withdraw'),
     url(r'^update/(?P<subm_id>\d+)/$', 'submit.views.update', name='update'),

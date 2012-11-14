@@ -68,13 +68,11 @@
                     <td>{{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
                     <td>
-                        {% for file in submission.active_files %}
-                            {% if file.output and not submission.is_withdrawn and not submission.passed and not submission.failed %}
-                                <a href="#" class="testpopup" rel="popover" data-content="<br/>{{ file.output|linebreaks }}<br/><br>Error code: {{ file.error_code }}">Test result for {{ file.attachment|basename }}</a>
-                            {% else %}
-                                {{ file.attachment|basename }}
-                            {% endif %}
-                        {% endfor %}
+                        {% if submission.file_upload.output and not submission.is_withdrawn and not submission.passed and not submission.failed %}
+                            <a href="#" class="testpopup" rel="popover" data-content="<br/>{{ file.output|linebreaks }}<br/><br>Error code: {{ file.error_code }}">Test result for {{ submission.file_upload.attachment|basename }}</a>
+                        {% else %}
+                            {{ submission.file_upload.attachment|basename }}
+                        {% endif %}
                     </td>
                     <td>
                         {% if submission.green_tag %}
