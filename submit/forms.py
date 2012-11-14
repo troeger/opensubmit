@@ -24,13 +24,13 @@ class SubmissionWithoutGroupsForm(forms.ModelForm):
 		pass
 
 class SubmissionFilesModelFormSet(BaseModelFormSet):
-    def clean(self):
-        super(SubmissionFilesModelFormSet, self).clean()
-        for formdata in self.cleaned_data:
-        	if 'attachment' in formdata:
-        		return
+	def clean(self):
+		super(SubmissionFilesModelFormSet, self).clean()
+		for formdata in self.cleaned_data:
+			if 'attachment' in formdata:
+				return
 		# ok, no attachment found, is this a problem ?        		
-        if self.mandatory:
+		if self.mandatory:
 			raise forms.ValidationError("Please choose a file.")        	
 
 def getSubmissionFilesFormset(assignment):
@@ -40,6 +40,10 @@ def getSubmissionFilesFormset(assignment):
 	return fs
 
 class SettingsForm(forms.ModelForm):
+	email = forms.CharField(max_length=75, required=True)
+	first_name = forms.CharField(max_length=30, required=True)
+	last_name = forms.CharField(max_length=30, required=True)
+	username = forms.CharField(max_length=30, required=True)
 	class Meta:
 		model = User
 		fields = ('username','first_name','last_name','email')
