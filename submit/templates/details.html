@@ -27,10 +27,13 @@
 			<td>File</td>
 			<td>
 				<a href="{{ submission.file_upload.get_absolute_url }}">{{ submission.file_upload.attachment|basename }}</a> 
-				{% if submission.file_upload.error_code %}
-					(Error Code: {{ submission.file_upload.error_code }})
-					<br/>
-					<code>{{ submission.file_upload.output|linebreaks }}</code>
+				{% if submission.file_upload.test_compile %}
+					<h5>Compilation test result:</h5>
+					<code>{{ submission.file_upload.test_compile|linebreaks }}</code>
+				{% endif %}
+				{% if submission.file_upload.test_validity %}
+					<h5>Validity test result:</h5>
+					<code>{{ submission.file_upload.test_validity|linebreaks }}</code>
 				{% endif %}
 			</td>
 	{% endif %}

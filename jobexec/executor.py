@@ -92,11 +92,11 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	logging.debug("Process is done")
 	signal.alarm(0)
 	logging.debug("Cleaning up temporary data")
-	if action='test_compile':
+	if action=='test_compile':
 		action_title='Compilation'
-	elif action='test_validity':
+	elif action=='test_validity':
 		action_title='Validation'
-	elif action='test_full':
+	elif action=='test_full':
 		action_title='Testing'
 	else:
 		assert(False)

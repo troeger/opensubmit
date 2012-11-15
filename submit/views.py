@@ -117,12 +117,11 @@ def jobs(request, secret):
         # must be reflected here and there
         sid = request.POST['SubmissionFileId']
         submission_file=get_object_or_404(SubmissionFile, pk=sid)
-        submission_file.error_code = request.POST['ErrorCode']
-        submission_file.output = request.POST['Message']
-        submission_file.save()
         sub=submission_file.submissions.all()[0]
+        error_code = int(request.POST['ErrorCode'])
         if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
-            if int(submission_file.error_code) == 0:
+            submission_file.test_compile = request.POST['Message']
+            if error_code == 0:
                 if sub.assignment.attachment_test_validity:
                     sub.state = Submission.TEST_VALIDITY_PENDING
                 elif sub.assignment.attachment_test_full:
@@ -133,7 +132,8 @@ def jobs(request, secret):
             else:
                 sub.state = Submission.TEST_COMPILE_FAILED                
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
-            if int(submission_file.error_code) == 0:
+            submission_file.test_validity = request.POST['Message']
+            if error_code == 0:
                 if sub.assignment.attachment_test_full:
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
@@ -142,13 +142,15 @@ def jobs(request, secret):
             else:
                 sub.state = Submission.TEST_VALIDITY_FAILED                
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
-            if int(submission_file.error_code) == 0:
+            submission_file.test_full = request.POST['Message']
+            if error_code == 0:
                 sub.state = Submission.SUBMITTED_TESTED
                 inform_course_owner(request, sub)
             else:
                 sub.state = Submission.TEST_FULL_FAILED                
         else:
             mail_managers('Warning: Inconsistent job state', str(sub.pk), fail_silently=True)
+        submission_file.save()
         sub.save()
         inform_student(sub)
         return HttpResponse(status=201)

@@ -83,8 +83,9 @@ class Assignment(models.Model):
 class SubmissionFile(models.Model):
 	attachment = models.FileField(upload_to=upload_path) 
 	fetched = models.DateTimeField(editable=False, null=True)
-	output = models.TextField(null=True, blank=True)
-	error_code = models.IntegerField(null=True, blank=True)
+	test_compile = models.TextField(null=True, blank=True)
+	test_validity = models.TextField(null=True, blank=True)
+	test_full = models.TextField(null=True, blank=True)
 	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
 	def __unicode__(self):
 		return unicode(self.attachment.name)
