@@ -64,6 +64,7 @@ class Assignment(models.Model):
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
 	attachment_test_timeout = models.IntegerField(default=30)
+	attachment_test_timeout.help_text = 'Timeout must be smaller than the executor fetch intervall !'
 	attachment_test_compile = models.BooleanField(default=False)
 	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
 	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
