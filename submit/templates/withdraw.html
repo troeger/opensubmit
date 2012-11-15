@@ -9,8 +9,6 @@
 {% endblock %}
 
 
-{%block navigation_settings %}hidden{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <h1>
@@ -36,7 +34,7 @@
             <td>{{ submission.assignment }}</td>
             <td>{{ submission.created }}</td>
             <td>{{ submission.submitter.get_full_name }}</td>
-            <td>{{ submission.authors_list|safeseq|join:"<br/>" }}</td>
+            <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
         </tr>
     </tbody>
 </table>

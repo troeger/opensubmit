@@ -4,8 +4,12 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMessage
-from settings import MAIN_URL
+from django.core.urlresolvers import reverse
+from settings import MAIN_URL, MEDIA_URL
+from datetime import date
 import string
+
+# helper function for creating storage paths
 
 valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
@@ -15,10 +19,14 @@ def fname(title):
 	return result.lower()
 
 def upload_path(instance, filename):
-	course_title=fname(instance.submission.assignment.course.title)
-	ass_title=fname(instance.submission.assignment.title)
-	subm_title=fname(instance.submission.submitter.get_full_name())
-	return '/'.join([course_title, ass_title, subm_title, filename])
+	return '/'.join([str(date.today().isoformat()),filename])
+
+# monkey patch for getting better user name stringification
+# User proxies did not make the job
+# Obsolete with Django 1.5 custom User feature
+def user_unicode(self):
+	return  u'%s %s <%s>' % (self.first_name, self.last_name, self.email)
+User.__unicode__ = user_unicode
 
 class Grading(models.Model):
 	title = models.CharField(max_length=20)
@@ -55,40 +63,62 @@ class Assignment(models.Model):
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
-	test_attachment = models.BooleanField(default=False)
-	test_timeout = models.IntegerField(default=30)
-	test_script = models.FileField(upload_to="testscripts", null=True) 
+	attachment_test_timeout = models.IntegerField(default=30)
+	attachment_test_compile = models.BooleanField(default=False)
+	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	def attachment_is_tested(self):
+		return self.attachment_test_compile == True or self.attachment_test_validity or self.attachment_test_full
 
 	def __unicode__(self):
 		return unicode(self.title)
 	objects = models.Manager() # The default manager.
 	open_ones = OpenAssignmentsManager() 
 
-class Tutor(models.Model):
-	user = models.ForeignKey(User, related_name='tutor_roles')
-	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
-	students = 	models.ManyToManyField(User)
+#class Tutor(models.Model):
+#	user = models.ForeignKey(User, related_name='tutor_roles')
+#	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
+#	students = 	models.ManyToManyField(User)
+
+class SubmissionFile(models.Model):
+	attachment = models.FileField(upload_to=upload_path) 
+	fetched = models.DateTimeField(editable=False, null=True)
+	output = models.TextField(null=True, blank=True)
+	error_code = models.IntegerField(null=True, blank=True)
+	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
+	def __unicode__(self):
+		return unicode(self.attachment.name)
+	def basename(self):
+		return self.attachment.name[self.attachment.name.rfind('/')+1:]
+	def get_absolute_url(self):
+		# to implement access protection, we implement our own download
+		# this implies that the Apache media serving is disabled
+		return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
 
 class Submission(models.Model):
 	RECEIVED = 'R'
 	WITHDRAWN = 'W'
 	SUBMITTED = 'S'
-	SUBMITTED_UNTESTED = 'NT'
-	SUBMITTED_COMPILED = 'SC'
+	TEST_COMPILE_PENDING = 'PC'
+	TEST_COMPILE_FAILED = 'FC'
+	TEST_VALIDITY_PENDING = 'PV'
+	TEST_VALIDITY_FAILED = 'FV'
+	TEST_FULL_PENDING = 'PF'
+	TEST_FULL_FAILED = 'FF'
 	SUBMITTED_TESTED = 'ST'
-	FAILED_COMPILE = 'FT'
-	FAILED_EXEC = 'FE'
 	GRADED_PASS = 'GP'
 	GRADED_FAIL = 'GF'
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Waiting for grading'),
-		(SUBMITTED_TESTED, 'Waiting for grading, all tests ok'),
-		(SUBMITTED_COMPILED, 'Waiting for execution test'),
-		(SUBMITTED_UNTESTED, 'Waiting for compilation test'),
-		(FAILED_COMPILE, 'Compilation failed, please re-upload'),
-		(FAILED_EXEC, 'Execution failed, please re-upload'),
+		(TEST_COMPILE_PENDING, 'Waiting for compilation test'),
+		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
+		(TEST_VALIDITY_PENDING, 'Waiting for execution test'),
+		(TEST_VALIDITY_FAILED, 'Execution failed, please re-upload'),
+		(TEST_FULL_PENDING, 'Waiting for grading (Stage 1)'),
+		(TEST_FULL_FAILED, 'Waiting for grading (Stage 2)'),
+		(SUBMITTED_TESTED, 'Waiting for grading (Stage 2)'),
 		(GRADED_PASS, 'Graded - Passed'),
 		(GRADED_FAIL, 'Graded - Failed'),
 	)
@@ -96,20 +126,17 @@ class Submission(models.Model):
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
 	submitter = models.ForeignKey(User, related_name='submitted')
 	authors = models.ManyToManyField(User, related_name='authored')
-	authors.help_text = 'Please add all additional authors beside yourself.'		
+	authors.help_text = ''		
 	notes = models.TextField(max_length=200, blank=True)
+	file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	grading = models.ForeignKey(Grading, blank=True, null=True)
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
 	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 	def __unicode__(self):
 		return unicode("Submission %u"%(self.pk))
-	def number_of_files(self):
-		return self.files.count()
-	def authors_list(self):
-		return [u.get_full_name() for u in self.authors.all()]
 	def can_withdraw(self):
-		if self.state == self.WITHDRAWN or self.state == self.SUBMITTED_UNTESTED or self.state == self.SUBMITTED_COMPILED:
+		if self.state in [self.WITHDRAWN, self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
 			return False
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
@@ -122,22 +149,33 @@ class Submission(models.Model):
 			else:
 				# Soft deadline is not over 
 				# Allow withdrawal only if no tests are pending and no grading occured
-				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.FAILED_COMPILE, self.FAILED_EXEC]:
+				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED]:
 					return True
 				else:
 					return False
 		else:
 			return True
 	def can_reupload(self):
-		return self.state == self.FAILED_COMPILE or self.state == self.FAILED_EXEC
+		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def green_tag(self):
-		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED]
+		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
 	def red_tag(self):
-		return self.state in [self.GRADED_FAIL, self.FAILED_COMPILE, self.FAILED_EXEC]
-	def active_files(self):
-		return self.files.filter(replaced_by__isnull=True)
+		return self.state in [self.GRADED_FAIL, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
+	def has_grading(self):
+		return self.state in [self.GRADED_FAIL, self.GRADED_PASS]
+	def get_initial_state(self):
+		if not self.assignment.attachment_is_tested():
+			return Submission.SUBMITTED
+		else:
+			if self.assignment.attachment_test_compile:
+				return Submission.TEST_COMPILE_PENDING
+			elif self.assignment.attachment_test_validity:
+				return Submission.TEST_VALIDITY_PENDING
+			elif self.assignment.attachment_test_full:
+				return Submission.TEST_FULL_PENDING
+
 
 # send mail notification on successful grading
 # since this is done in the admin interface, and not in the frontend,
@@ -148,33 +186,20 @@ def postSubmissionSaveHandler(sender, **kwargs):
 	if sub.state == Submission.GRADED_PASS or sub.state == Submission.GRADED_FAIL:
 		inform_student(sub)
 
-class SubmissionFile(models.Model):
-	submission = models.ForeignKey(Submission, related_name='files')
-	attachment = models.FileField(upload_to=upload_path) 
-	fetched = models.DateTimeField(editable=False, null=True)
-	output = models.TextField(null=True, blank=True)
-	error_code = models.IntegerField(null=True, blank=True)
-	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
-
 # convinienvce function for email information
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_student(submission):
 	if submission.state == Submission.SUBMITTED_TESTED:
 		subject = 'Your submission was tested successfully'
-		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. Compilation and execution worked fine. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
+		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	elif submission.state == Submission.SUBMITTED_COMPILED:
-		subject = 'Your submission was compiled successfully'
-		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was compiled successfully. The execution test is still pending, you will get another eMail notification when it is finished.\n\n Further information can be found at %s.\n\n'
-		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
-
-	elif submission.state == Submission.FAILED_COMPILE:
+	elif submission.state == Submission.TEST_COMPILE_FAILED:
 		subject = 'Warning: Your submission did not pass the compilation test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	elif submission.state == Submission.FAILED_EXEC:
+	elif submission.state == Submission.TEST_VALIDITY_FAILED:
 		subject = 'Warning: Your submission did not pass the execution test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)

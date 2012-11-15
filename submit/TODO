@@ -1,9 +1,6 @@
 TODO:
 
-- Prüfskript unterstützen
-
 LATER:
 
 - Django Model Versioning Tool verwenden
 - Grading im Admin unterstützen
-- Nutzereinstellungen ändern (eMail, Name)

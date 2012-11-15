@@ -1,0 +1,7 @@
+This package demands the following PyPI packages:
+
+- django-bootstrap-form
+- openid2rp
+- south
+
+
