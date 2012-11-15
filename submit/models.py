@@ -83,8 +83,9 @@ class Assignment(models.Model):
 class SubmissionFile(models.Model):
 	attachment = models.FileField(upload_to=upload_path) 
 	fetched = models.DateTimeField(editable=False, null=True)
-	output = models.TextField(null=True, blank=True)
-	error_code = models.IntegerField(null=True, blank=True)
+	test_compile = models.TextField(null=True, blank=True)
+	test_validity = models.TextField(null=True, blank=True)
+	test_full = models.TextField(null=True, blank=True)
 	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
 	def __unicode__(self):
 		return unicode(self.attachment.name)
@@ -114,8 +115,8 @@ class Submission(models.Model):
 		(SUBMITTED, 'Waiting for grading'),
 		(TEST_COMPILE_PENDING, 'Waiting for compilation test'),
 		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
-		(TEST_VALIDITY_PENDING, 'Waiting for execution test'),
-		(TEST_VALIDITY_FAILED, 'Execution failed, please re-upload'),
+		(TEST_VALIDITY_PENDING, 'Waiting for validation test'),
+		(TEST_VALIDITY_FAILED, 'Validation failed, please re-upload'),
 		(TEST_FULL_PENDING, 'Waiting for grading (Stage 1)'),
 		(TEST_FULL_FAILED, 'Waiting for grading (Stage 2)'),
 		(SUBMITTED_TESTED, 'Waiting for grading (Stage 2)'),

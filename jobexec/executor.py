@@ -92,6 +92,14 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	logging.debug("Process is done")
 	signal.alarm(0)
 	logging.debug("Cleaning up temporary data")
+	if action=='test_compile':
+		action_title='Compilation'
+	elif action=='test_validity':
+		action_title='Validation'
+	elif action=='test_full':
+		action_title='Testing'
+	else:
+		assert(False)
 	if proc.returncode == 0:
 		logging.info("Executed with error code 0: \n\n"+output)
 		if not keepdata:
@@ -99,11 +107,11 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		return output
 	elif proc.returncode == 0-signal.SIGTERM:
 		shutil.rmtree(finalpath, ignore_errors=True)
-		send_result("'%s' call was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(' '.join(cmd),timeout,output), proc.returncode, submid, action)
+		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
 		exit(-1)		
 	else:
 		shutil.rmtree(finalpath, ignore_errors=True)
-		send_result("'%s' call was not successful:\n\n%s"%(str(cmd[0]),output), proc.returncode, submid, action)
+		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
 		exit(-1)		
 
 fname, submid, action, timeout, validator=fetch_job()
