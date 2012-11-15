@@ -25,7 +25,7 @@ def upload_path(instance, filename):
 # User proxies did not make the job
 # Obsolete with Django 1.5 custom User feature
 def user_unicode(self):
-    return  u'%s %s <%s>' % (self.first_name, self.last_name, self.email)
+	return  u'%s %s <%s>' % (self.first_name, self.last_name, self.email)
 User.__unicode__ = user_unicode
 
 class Grading(models.Model):
@@ -93,7 +93,7 @@ class SubmissionFile(models.Model):
 	def get_absolute_url(self):
 		# to implement access protection, we implement our own download
 		# this implies that the Apache media serving is disabled
-		return reverse('filedownload', args=(self.submissions.all()[0].pk,))
+		return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
 
 class Submission(models.Model):
 	RECEIVED = 'R'
@@ -116,9 +116,9 @@ class Submission(models.Model):
 		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
 		(TEST_VALIDITY_PENDING, 'Waiting for execution test'),
 		(TEST_VALIDITY_FAILED, 'Execution failed, please re-upload'),
-		(TEST_FULL_PENDING, 'Waiting for grading'),
-		(TEST_FULL_FAILED, 'Waiting for grading'),
-		(SUBMITTED_TESTED, 'Waiting for grading, all tests ok'),
+		(TEST_FULL_PENDING, 'Waiting for grading (Stage 1)'),
+		(TEST_FULL_FAILED, 'Waiting for grading (Stage 2)'),
+		(SUBMITTED_TESTED, 'Waiting for grading (Stage 2)'),
 		(GRADED_PASS, 'Graded - Passed'),
 		(GRADED_FAIL, 'Graded - Failed'),
 	)
@@ -160,11 +160,22 @@ class Submission(models.Model):
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def green_tag(self):
-		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED]
+		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
 	def red_tag(self):
 		return self.state in [self.GRADED_FAIL, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def has_grading(self):
 		return self.state in [self.GRADED_FAIL, self.GRADED_PASS]
+	def get_initial_state(self):
+		if not self.assignment.attachment_is_tested():
+			return Submission.SUBMITTED
+		else:
+			if self.assignment.attachment_test_compile:
+				return Submission.TEST_COMPILE_PENDING
+			elif self.assignment.attachment_test_validity:
+				return Submission.TEST_VALIDITY_PENDING
+			elif self.assignment.attachment_test_full:
+				return Submission.TEST_FULL_PENDING
+
 
 # send mail notification on successful grading
 # since this is done in the admin interface, and not in the frontend,

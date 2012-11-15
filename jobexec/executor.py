@@ -108,22 +108,18 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 
 fname, submid, action, timeout, validator=fetch_job()
 finalpath=unpack_job(fname, submid, action)
-if action == 'compile':
+if action == 'test_compile':
 	# build it and return result
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
-elif action == 'run':
+elif action == 'test_validity' or action == 'test_full':
 	# build it, execute it, validate it, return result
 	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
-	if validator:
-		run_job(finalpath,['make','run'],submid,action,timeout,keepdata=True)
-		logging.debug("Fetching validator script from "+validator)
-		# fetch validator into target directory and report it's results
-		urllib.urlretrieve(validator, finalpath+"validator.py")
-		os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
-		output=run_job(finalpath,['python', 'validator.py'],submid,action,timeout)
-	else:
-		output=run_job(finalpath,['make','run'],submid,action,timeout)
+	logging.debug("Fetching validator script from "+validator)
+	# fetch validator into target directory and report it's results
+	urllib.urlretrieve(validator, finalpath+"validator.py")
+	os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
+	output=run_job(finalpath,['python', 'validator.py'],submid,action,timeout)
 	send_result(output, 0, submid, action)
 else:
 	assert(False)

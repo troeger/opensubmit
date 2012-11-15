@@ -44,26 +44,25 @@ def settings(request):
 
 def download(request, subm_id, filetype, secret=None):
     subm = get_object_or_404(Submission, pk=subm_id)
-    if filetype="attachment":
+    if filetype=="attachment":
         assert(request.user in subm.authors.all())
-        response=HttpResponse(subm.file_upload.attachment, content_type='application/binary')
-        response['Content-Disposition'] = 'attachment; filename="%s"'%subm.file_upload.basename()
-        return response
-    elif filetype="validitytest":
+        f=subm.file_upload.attachment
+        fname=subm.file_upload.basename()
+    elif filetype=="test_validity":
         ass = subm.assignment
-        try:
-            fname=ass.test_script.name[ass.test_script.name.rfind('/')+1:]
-            response=HttpResponse(ass.test_script, content_type='application/binary')
-            response['Content-Disposition'] = 'attachment; filename="%s"'%fname
-            return response
-        except:
-            raise Http404
-
-        pass
-    elif filetype="fulltest"
-        pass
+        f=ass.attachment_test_validity
+        fname=f.name[f.name.rfind('/')+1:]
+    elif filetype=="test_full":
+        ass = subm.assignment
+        f=ass.attachment_test_full
+        fname=f.name[f.name.rfind('/')+1:]
     else:
         raise Http404        
+    response=HttpResponse(f, content_type='application/binary')
+    response['Content-Disposition'] = 'attachment; filename="%s"'%fname
+    return response
+
+
 
 @csrf_exempt
 def jobs(request, secret):
@@ -73,6 +72,7 @@ def jobs(request, secret):
     #
     # A visible shared secret in the request is no problem, since the executors come
     # from trusted networks. The secret only protects this view from outside foreigners.
+    #import pdb; pdb.set_trace()
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
@@ -100,11 +100,11 @@ def jobs(request, secret):
             elif sub.state == Submission.TEST_VALIDITY_PENDING:
                 response['Action'] = 'test_validity'
                 # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                response['PostRunValidation'] = MAIN_URL+"/test_validity/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
+                response['PostRunValidation'] = MAIN_URL+"/download/%u/test_validity/secret=%s"%(sub.pk, JOB_EXECUTOR_SECRET)
             elif sub.state == Submission.TEST_FULL_PENDING:
                 response['Action'] = 'test_full'
                 # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                response['PostRunValidation'] = MAIN_URL+"/test_full/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
+                response['PostRunValidation'] = MAIN_URL+"/download/%u/test_full/secret=%s"%(sub.pk, JOB_EXECUTOR_SECRET)
             else:
                 assert(False)
             # store date of fetching for debugging purposes
@@ -120,12 +120,12 @@ def jobs(request, secret):
         submission_file.error_code = request.POST['ErrorCode']
         submission_file.output = request.POST['Message']
         submission_file.save()
-        sub=submission_file.submission
+        sub=submission_file.submissions.all()[0]
         if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
             if int(submission_file.error_code) == 0:
-                if submission.assignment.attachment_test_validity:
+                if sub.assignment.attachment_test_validity:
                     sub.state = Submission.TEST_VALIDITY_PENDING
-                elif submission.assignment.attachment_test_full:
+                elif sub.assignment.attachment_test_full:
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
                     sub.state = Submission.SUBMITTED_TESTED
@@ -134,7 +134,7 @@ def jobs(request, secret):
                 sub.state = Submission.TEST_COMPILE_FAILED                
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             if int(submission_file.error_code) == 0:
-                if submission.assignment.attachment_test_full:
+                if sub.assignment.attachment_test_full:
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
                     sub.state = Submission.SUBMITTED_TESTED
@@ -150,7 +150,7 @@ def jobs(request, secret):
         else:
             mail_managers('Warning: Inconsistent job state', str(sub.pk), fail_silently=True)
         sub.save()
-        inform_student(subm)
+        inform_student(sub)
         return HttpResponse(status=201)
 
 @login_required
@@ -193,16 +193,7 @@ def new(request, ass_id):
             submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
             submission.submitter=request.user
             submission.assignment=ass
-            if not submission.assignment.attachment_is_tested():
-                submission.state=Submission.SUBMITTED
-                inform_course_owner(request, submission)
-            else:
-                if submission.assignment.attachment_test_compile:
-                    submission.state=Submission.TEST_COMPILE_PENDING
-                elif submission.assignment.attachment_test_validity:
-                    submission.state=Submission.TEST_VALIDITY_PENDING
-                elif submission.assignment.attachment_test_full:
-                    submission.state=Submission.TEST_FULL_PENDING
+            submission.state = submission.get_initial_state()
             # take uploaded file from extra field
             if ass.has_attachment:
                 submissionFile=SubmissionFile(attachment=submissionForm.cleaned_data['attachment'])
@@ -213,6 +204,8 @@ def new(request, ass_id):
             submission.authors.add(request.user)    # submitter is always an author
             submission.save()
             messages.info(request, "New submission saved.")
+            if submission.state == Submission.SUBMITTED:
+                inform_course_owner(request, submission)
             return redirect('dashboard')
         else:
             messages.error(request, "Please correct your submission information.")
@@ -237,7 +230,7 @@ def update(request, subm_id):
             submission.file_upload.save()
             # store new file for submissions
             submission.file_upload=f
-            submission.state = Submission.SUBMITTED_UNTESTED
+            submission.state = submission.get_initial_state()
             submission.save()
             messages.info(request, 'Submission files successfully updated.')
             return redirect('dashboard')
