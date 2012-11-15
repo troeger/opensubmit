@@ -1,10 +1,5 @@
 TODO:
 
-- Umstellung der Tests:
-	- Compilation test (Bool Flag am Assignment)
-	- Validity test (Skript vom Kurs-Admin, führt Exec-Test durch)
-	- Full test (Skript vom Kurs-Admin, füllt nur Grading-Infos) 
-
 LATER:
 
 - Django Model Versioning Tool verwenden
