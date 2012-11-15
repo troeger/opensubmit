@@ -63,9 +63,12 @@ class Assignment(models.Model):
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
-	test_attachment = models.BooleanField(default=False)
-	test_timeout = models.IntegerField(default=30)
-	test_script = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	attachment_test_timeout = models.IntegerField(default=30)
+	attachment_test_compile = models.BooleanField(default=False)
+	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	def attachment_is_tested(self):
+		return self.attachment_test_compile == True or self.attachment_test_validity or self.attachment_test_full
 
 	def __unicode__(self):
 		return unicode(self.title)
@@ -96,22 +99,26 @@ class Submission(models.Model):
 	RECEIVED = 'R'
 	WITHDRAWN = 'W'
 	SUBMITTED = 'S'
-	SUBMITTED_UNTESTED = 'NT'
-	SUBMITTED_COMPILED = 'SC'
+	TEST_COMPILE_PENDING = 'PC'
+	TEST_COMPILE_FAILED = 'FC'
+	TEST_VALIDITY_PENDING = 'PV'
+	TEST_VALIDITY_FAILED = 'FV'
+	TEST_FULL_PENDING = 'PF'
+	TEST_FULL_FAILED = 'FF'
 	SUBMITTED_TESTED = 'ST'
-	FAILED_COMPILE = 'FT'
-	FAILED_EXEC = 'FE'
 	GRADED_PASS = 'GP'
 	GRADED_FAIL = 'GF'
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Waiting for grading'),
+		(TEST_COMPILE_PENDING, 'Waiting for compilation test'),
+		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
+		(TEST_VALIDITY_PENDING, 'Waiting for execution test'),
+		(TEST_VALIDITY_FAILED, 'Execution failed, please re-upload'),
+		(TEST_FULL_PENDING, 'Waiting for grading'),
+		(TEST_FULL_FAILED, 'Waiting for grading'),
 		(SUBMITTED_TESTED, 'Waiting for grading, all tests ok'),
-		(SUBMITTED_COMPILED, 'Waiting for execution test'),
-		(SUBMITTED_UNTESTED, 'Waiting for compilation test'),
-		(FAILED_COMPILE, 'Compilation failed, please re-upload'),
-		(FAILED_EXEC, 'Execution failed, please re-upload'),
 		(GRADED_PASS, 'Graded - Passed'),
 		(GRADED_FAIL, 'Graded - Failed'),
 	)
@@ -128,10 +135,8 @@ class Submission(models.Model):
 	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 	def __unicode__(self):
 		return unicode("Submission %u"%(self.pk))
-	def number_of_files(self):
-		return self.files.count()
 	def can_withdraw(self):
-		if self.state == self.WITHDRAWN or self.state == self.SUBMITTED_UNTESTED or self.state == self.SUBMITTED_COMPILED:
+		if self.state in [self.WITHDRAWN, self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
 			return False
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
@@ -144,20 +149,20 @@ class Submission(models.Model):
 			else:
 				# Soft deadline is not over 
 				# Allow withdrawal only if no tests are pending and no grading occured
-				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.FAILED_COMPILE, self.FAILED_EXEC]:
+				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED]:
 					return True
 				else:
 					return False
 		else:
 			return True
 	def can_reupload(self):
-		return self.state == self.FAILED_COMPILE or self.state == self.FAILED_EXEC
+		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def green_tag(self):
 		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED]
 	def red_tag(self):
-		return self.state in [self.GRADED_FAIL, self.FAILED_COMPILE, self.FAILED_EXEC]
+		return self.state in [self.GRADED_FAIL, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def has_grading(self):
 		return self.state in [self.GRADED_FAIL, self.GRADED_PASS]
 
@@ -175,20 +180,15 @@ def postSubmissionSaveHandler(sender, **kwargs):
 def inform_student(submission):
 	if submission.state == Submission.SUBMITTED_TESTED:
 		subject = 'Your submission was tested successfully'
-		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. Compilation and execution worked fine. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
+		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	elif submission.state == Submission.SUBMITTED_COMPILED:
-		subject = 'Your submission was compiled successfully'
-		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was compiled successfully. The execution test is still pending, you will get another eMail notification when it is finished.\n\n Further information can be found at %s.\n\n'
-		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
-
-	elif submission.state == Submission.FAILED_COMPILE:
+	elif submission.state == Submission.TEST_COMPILE_FAILED:
 		subject = 'Warning: Your submission did not pass the compilation test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	elif submission.state == Submission.FAILED_EXEC:
+	elif submission.state == Submission.TEST_VALIDITY_FAILED:
 		subject = 'Warning: Your submission did not pass the execution test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)

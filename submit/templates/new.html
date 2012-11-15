@@ -29,26 +29,25 @@ $('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}}
 
 <div class="hero-unit">
 	<h4>Please note:</h4>
-	{% if assignment.test_attachment %}
+	{% if assignment.attachment_is_tested %}
 			Your file attachment is automatically tested for validity. Invalid submissions are
 			not accepted for grading.<br/>Validations are processed in order of arrival, you will be informed by eMail. A valid upload fulfills at least the following conditions:
 			<ul>
 				<li>The uploaded file is a TGZ or ZIP archive.</li>
-				<li>"Must build" - After unpacking, a 'make' call can be issued to build the sources.</li>
-				<li>"Must run" - After successful building, the application can be executed by 'make run'. A successful application terminates with exit code 0.</li>
-				{% if assignment.test_script %}
-				<li>"Must work" - After application execution, it is validated if your solution produced the neccessary output files, as demanded by the <a href="{{ assignment.download }}">assignment description</a>.</li>
+				{% if assignment.attachment_test_compile %}
+					<li>After unpacking, a 'make' call can be issued to build the sources.</li>
+				{% endif %}
+				{% if assignment.attachment_test_validity %}
+					<li>After successful building, the application can be executed as described in the <a href="{{ assignment.download }}">assignment description</a>.</li>
 				{% endif %}
 			</ul>
-			The console output and exit code is shown in the Dashboard.			
+			The console output and exit code for the compilation / test run is available in the submission details.			
 	{% else %}
-		<p>
 	    	You can find further information in the <a href="{{ assignment.download }}">assignment description</a>.
-	    </p>
 	{% endif %}
 	{% if assignment.course.max_authors > 1 %}
-		<p> A maximum of {{ assignment.course.max_authors }} author(s) is allowed. You are added automatically.
-		</p>
+		<br/>A maximum of {{ assignment.course.max_authors }} author(s) is allowed. You are added automatically.
+		
 	{% endif %}
 </div>
 

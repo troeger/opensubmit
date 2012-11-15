@@ -42,24 +42,28 @@ def settings(request):
         settingsForm=SettingsForm(instance=request.user)
     return render(request, 'settings.html', {'settingsForm': settingsForm})
 
-def testscript(request, ass_id, secret):
-    #import pdb; pdb.set_trace()
-    # This is the view used by the executor.py scripts for getting the test script for an assignment
-    ass = get_object_or_404(Assignment, pk=ass_id)
-    try:
-        fname=ass.test_script.name[ass.test_script.name.rfind('/')+1:]
-        response=HttpResponse(ass.test_script, content_type='application/binary')
-        response['Content-Disposition'] = 'attachment; filename="%s"'%fname
-        return response
-    except:
-        raise Http404
-
-def filedownload(request, subm_id):
+def download(request, subm_id, filetype, secret=None):
     subm = get_object_or_404(Submission, pk=subm_id)
-    assert(request.user in subm.authors.all())
-    response=HttpResponse(subm.file_upload.attachment, content_type='application/binary')
-    response['Content-Disposition'] = 'attachment; filename="%s"'%subm.file_upload.basename()
-    return response
+    if filetype="attachment":
+        assert(request.user in subm.authors.all())
+        response=HttpResponse(subm.file_upload.attachment, content_type='application/binary')
+        response['Content-Disposition'] = 'attachment; filename="%s"'%subm.file_upload.basename()
+        return response
+    elif filetype="validitytest":
+        ass = subm.assignment
+        try:
+            fname=ass.test_script.name[ass.test_script.name.rfind('/')+1:]
+            response=HttpResponse(ass.test_script, content_type='application/binary')
+            response['Content-Disposition'] = 'attachment; filename="%s"'%fname
+            return response
+        except:
+            raise Http404
+
+        pass
+    elif filetype="fulltest"
+        pass
+    else:
+        raise Http404        
 
 @csrf_exempt
 def jobs(request, secret):
@@ -73,37 +77,40 @@ def jobs(request, secret):
         raise PermissionDenied
     if request.method == "GET":
         # Hand over a pending job to be tested 
-        # Compilation jobs have precedence, th oldest one wins
-        subm = Submission.objects.filter(state=Submission.SUBMITTED_UNTESTED).order_by('created')
+        # compilation wins over validation wins over full test
+        # the assumption is that the time effort is increasing
+        subm = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('created')
         if len(subm) == 0:
-            subm = Submission.objects.filter(state=Submission.SUBMITTED_COMPILED).order_by('created')
+            subm = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('created')
             if len(subm) == 0:
-                raise Http404
+                subm = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('created')
+                if len(subm) == 0:
+                    raise Http404
         for sub in subm:
-            if sub.file_upload:
-                # create HTTP response with file download
-                f=sub.file_upload.attachment
-                assert(f)
-                response=HttpResponse(f, content_type='application/binary')
-                response['Content-Disposition'] = 'attachment; filename="%s"'%sub.file_upload.basename()
-                response['SubmissionFileId'] = str(sub.file_upload.pk)
-                response['Timeout'] = sub.assignment.test_timeout
-                if sub.state == Submission.SUBMITTED_UNTESTED:
-                    response['Action'] = 'compile'
-                elif sub.state == Submission.SUBMITTED_COMPILED:
-                    response['Action'] = 'run'
-                else:
-                    assert(False)
-                # If the assignment has a validation script, point the executor to the download
-                if sub.assignment.test_script:
-                    # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = MAIN_URL+"/testscript/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
-                # store date of fetching for debugging purposes
-                sub.file_upload.fetched=timezone.now()
-                sub.file_upload.save()
-                return response
-        # No files found in the submissions
-        raise Http404
+            assert(sub.file_upload)     # must be given when the state model is correct
+            # create HTTP response with file download
+            f=sub.file_upload.attachment
+            assert(f)                   # must be given when the "new" view works correctly
+            response=HttpResponse(f, content_type='application/binary')
+            response['Content-Disposition'] = 'attachment; filename="%s"'%sub.file_upload.basename()
+            response['SubmissionFileId'] = str(sub.file_upload.pk)
+            response['Timeout'] = sub.assignment.attachment_test_timeout
+            if sub.state == Submission.TEST_COMPILE_PENDING:
+                response['Action'] = 'test_compile'
+            elif sub.state == Submission.TEST_VALIDITY_PENDING:
+                response['Action'] = 'test_validity'
+                # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
+                response['PostRunValidation'] = MAIN_URL+"/test_validity/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
+            elif sub.state == Submission.TEST_FULL_PENDING:
+                response['Action'] = 'test_full'
+                # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
+                response['PostRunValidation'] = MAIN_URL+"/test_full/%u/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
+            else:
+                assert(False)
+            # store date of fetching for debugging purposes
+            sub.file_upload.fetched=timezone.now()
+            sub.file_upload.save()
+            return response
 
     elif request.method == "POST":
         # executor.py is providing the results as POST parameters, so changing the names 
@@ -113,21 +120,36 @@ def jobs(request, secret):
         submission_file.error_code = request.POST['ErrorCode']
         submission_file.output = request.POST['Message']
         submission_file.save()
-        subm=submission_file.submissions.all()[0]
-        if request.POST['Action'] == 'compile':
+        sub=submission_file.submission
+        if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
             if int(submission_file.error_code) == 0:
-                subm.state = Submission.SUBMITTED_COMPILED
+                if submission.assignment.attachment_test_validity:
+                    sub.state = Submission.TEST_VALIDITY_PENDING
+                elif submission.assignment.attachment_test_full:
+                    sub.state = Submission.TEST_FULL_PENDING
+                else:
+                    sub.state = Submission.SUBMITTED_TESTED
+                    inform_course_owner(request, sub)
             else:
-                subm.state = Submission.FAILED_COMPILE                
-        elif request.POST['Action'] == 'run':
+                sub.state = Submission.TEST_COMPILE_FAILED                
+        elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             if int(submission_file.error_code) == 0:
-                subm.state = Submission.SUBMITTED_TESTED
-                inform_course_owner(request, subm)
+                if submission.assignment.attachment_test_full:
+                    sub.state = Submission.TEST_FULL_PENDING
+                else:
+                    sub.state = Submission.SUBMITTED_TESTED
+                    inform_course_owner(request, sub)
             else:
-                subm.state = Submission.FAILED_EXEC
+                sub.state = Submission.TEST_VALIDITY_FAILED                
+        elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
+            if int(submission_file.error_code) == 0:
+                sub.state = Submission.SUBMITTED_TESTED
+                inform_course_owner(request, sub)
+            else:
+                sub.state = Submission.TEST_FULL_FAILED                
         else:
-            assert(False)
-        subm.save()
+            mail_managers('Warning: Inconsistent job state', str(sub.pk), fail_silently=True)
+        sub.save()
         inform_student(subm)
         return HttpResponse(status=201)
 
@@ -171,11 +193,16 @@ def new(request, ass_id):
             submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
             submission.submitter=request.user
             submission.assignment=ass
-            if submission.assignment.test_attachment:
-                submission.state=Submission.SUBMITTED_UNTESTED
-            else:
+            if not submission.assignment.attachment_is_tested():
                 submission.state=Submission.SUBMITTED
                 inform_course_owner(request, submission)
+            else:
+                if submission.assignment.attachment_test_compile:
+                    submission.state=Submission.TEST_COMPILE_PENDING
+                elif submission.assignment.attachment_test_validity:
+                    submission.state=Submission.TEST_VALIDITY_PENDING
+                elif submission.assignment.attachment_test_full:
+                    submission.state=Submission.TEST_FULL_PENDING
             # take uploaded file from extra field
             if ass.has_attachment:
                 submissionFile=SubmissionFile(attachment=submissionForm.cleaned_data['attachment'])
