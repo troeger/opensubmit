@@ -1,5 +1,8 @@
 TODO:
 
+- Full Validation Ergebnisse gehören in ein extra Feld
+- In den Details immer die Ausgaben anzeigen, wenn vorhanden
+
 LATER:
 
 - Django Model Versioning Tool verwenden
