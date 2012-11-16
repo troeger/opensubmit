@@ -42,7 +42,7 @@
                     </li>
                     {% block navigation_fields%}{%endblock%}
                      <li class="{% block navigation_settings %}{% endblock %}">
-                        <a href="/settings">
+                        <a href="{% url 'settings' %}">
                             <i class="icon-wrench icon-white"></i>
                             Settings
                         </a>

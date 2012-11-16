@@ -211,10 +211,8 @@ def inform_student(submission):
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	else:		
-		subject = 'Your submission has a new status'
-		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" has a new status.\n\n Further information can be found at %s.\n\n'
-		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)		
+	else:
+		return
 
 	subject = "[%s] %s"%(submission.assignment.course, subject)
 	from_email = submission.assignment.course.owner.email
