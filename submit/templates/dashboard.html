@@ -29,8 +29,8 @@
         <tbody>
             {% for assignment in assignments %} 
                 <tr>
-                    <td><a href="{{ assignment.course.homepage }}" target="_new">{{ assignment.course }}</a></td>
-                    <td>{{ assignment }} (<a href="{{ assignment.download }}" target="_new">Description</a>)</td>
+                    <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
+                    <td><a href="{{ assignment.download }}">{{ assignment }}</a></td>
                     <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                     <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Solution</a></td>
                 </tr>
@@ -40,7 +40,7 @@
 </section>
 
 <section>
-    <h3>Your Solutions</h3>
+    <h3>Active Submissions</h3>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -55,9 +55,9 @@
 
         <tbody>
             {% for submission in authored %} 
-                <tr {% if submission.is_withdrawn or submission.passed or submission.failed %}style="font-style: italic; color: lightgray"{%endif%}>
-                    <td>{{ submission.assignment.course }}</td>
-                    <td>{{ submission.assignment }}</td>
+                <tr {% if submission.passed or submission.failed %}style="font-style: italic"{%endif%}>
+                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+                    <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
                     <td>
@@ -79,5 +79,35 @@
         </tbody>
     </table>
 </section>
+
+<section>
+    <h3>Archive</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Assignment</th>
+                <th>Submitted by</th>
+                <th>Authors</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for submission in archived %} 
+                <tr>
+                    <td><a style="color: black" href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+                    <td><a style="color: black" href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
+                    <td>{{ submission.submitter.get_full_name }}</td>
+                    <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.get_state_display }}</td>
+                    <td><a href="{% url 'details' submission.pk %}" class="btn"><i class="icon-th-list"></i> Details</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
 
 {% endblock %}

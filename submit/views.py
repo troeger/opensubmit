@@ -162,12 +162,14 @@ def dashboard(request):
         return redirect('settings')
 
     # render dashboard
-    authored=request.user.authored.order_by('-created')
+    authored=request.user.authored.all().exclude(state=Submission.WITHDRAWN).order_by('-created')
+    archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
     openassignments=[ass for ass in Assignment.open_ones.all().order_by('soft_deadline').order_by('hard_deadline').order_by('title') if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
+        'archived': archived,
         'user': request.user,
         'username': username,
         'assignments': openassignments}
