@@ -7,18 +7,11 @@ from django.core.mail import send_mail, EmailMessage
 from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL
 from datetime import date
-import string
-
-# helper function for creating storage paths
-
-valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-
-def fname(title):
-	title=title.replace(" ","_")
-	result=''.join(c for c in title if c in valid_fname_chars)
-	return result.lower()
+import string, unicodedata
 
 def upload_path(instance, filename):
+	filename=filename.replace(" ","_")
+	filename=unicodedata.normalize('NFKD', filename).encode('ascii','ignore').lower()
 	return '/'.join([str(date.today().isoformat()),filename])
 
 # monkey patch for getting better user name stringification
