@@ -6,6 +6,7 @@ submit_server = None
 secret = None		
 targetdir=None
 
+# Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
@@ -15,6 +16,8 @@ def send_result(msg, error_code, submission_file_id, action):
 		logging.error(str(e))
 		exit(-1)
 
+# Fetch any available work from the SUBMIT server
+# returns job information from the server
 def fetch_job():
 	try:
 		result = urllib2.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
@@ -41,6 +44,8 @@ def fetch_job():
 			logging.error(str(e))
 			exit(-1)
 
+# Decompress the downloaded file into "targetdir"
+# Returns on success, or terminates the executor after notifying the SUBMIT server
 def unpack_job(fname, submid, action):
 	# os.chroot is not working with tarfile support
 	finalpath=targetdir+str(submid)+"/"
@@ -66,14 +71,18 @@ def unpack_job(fname, submid, action):
 		send_result("This is not a valid compressed file.",-1, submid, action)
 		exit(-1)		
 
+# Signal handler for timeout implementation
 def handle_alarm(signum, frame):
 	logging.info("Got alarm signal, killing due to timeout.")
+	# Needed for compatibility with both MacOS X and Linux
 	if 'self' in frame.f_locals:
 		pid=frame.f_locals['self'].pid
 	else:
 		pid=frame.f_back.f_locals['self'].pid
 	os.killpg(pid, signal.SIGTERM)
 
+# Perform some execution activity, with timeout support
+# This is used both for compilation and validator script execution
 def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
@@ -111,9 +120,10 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
 		exit(-1)		
 
-# read configuration, fill global variables
+# read configuration
 config = ConfigParser.RawConfigParser()
 config.read("executor.cfg")
+# configure logging module
 logformat=config.get("Logging","format")
 logfile=config.get("Logging","file")
 loglevel=logging._levelNames[config.get("Logging","level")]
@@ -122,26 +132,33 @@ if logtofile:
 	logging.basicConfig(format=logformat, level=loglevel, filename='/tmp/executor.log')
 else:
 	logging.basicConfig(format=logformat, level=loglevel)	
+# set global variables
 submit_server=config.get("Server","url")
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
 assert(targetdir.startswith('/'))
 assert(targetdir.endswith('/'))
+script_runner=config.get("Execution","script_runner")
 
+# fetch any available job
 fname, submid, action, timeout, validator=fetch_job()
+# decompress download, only returns on success
 finalpath=unpack_job(fname, submid, action)
+# perform action defined by the server for this download
 if action == 'test_compile':
-	# build it and return result
+	# build it, only returns on success
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
 elif action == 'test_validity' or action == 'test_full':
-	# build it, execute it, validate it, return result
+	# build it, only returns on success
 	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
+	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
-	# fetch validator into target directory and report it's results
 	urllib.urlretrieve(validator, finalpath+"validator.py")
 	os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
-	output=run_job(finalpath,['python3', 'validator.py'],submid,action,timeout)
+	# execute validator
+	output=run_job(finalpath,[script_runner, 'validator.py'],submid,action,timeout)
 	send_result(output, 0, submid, action)
 else:
+	# unknown action, programming error in the server
 	assert(False)
