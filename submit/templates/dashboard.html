@@ -16,27 +16,29 @@
 
 <section>
     <h3>Open Assignments</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Course</th>
-                <th>Assignment</th>
-                <th>Time Left</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for assignment in assignments %} 
+    {% if assignments %}
+        <table class="table">
+            <thead>
                 <tr>
-                    <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
-                    <td><a href="{{ assignment.download }}">{{ assignment }}</a></td>
-                    <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
-                    <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Solution</a></td>
+                    <th>Course</th>
+                    <th>Assignment</th>
+                    <th>Time Left</th>
+                    <th>Action</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody>
+                {% for assignment in assignments %} 
+                    <tr>
+                        <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
+                        <td><a href="{{ assignment.download }}">{{ assignment }}</a></td>
+                        <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
+                        <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Submission</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 </section>
 
 <section>
