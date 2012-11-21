@@ -16,7 +16,7 @@
 
 <section>
     <h3>Open Assignments</h3>
-    <table class="table table-bordered">
+    <table class="table">
         <thead>
             <tr>
                 <th>Course</th>
@@ -41,7 +41,7 @@
 
 <section>
     <h3>Active Submissions</h3>
-    <table class="table table-bordered">
+    <table class="table">
         <thead>
             <tr>
                 <th>Course</th>
@@ -90,19 +90,19 @@
                 <th>Created</th>
                 <th>Authors</th>
                 <th>Status</th>
-                <th>Action</th>
+                <th></th>
             </tr>
         </thead>
 
         <tbody>
             {% for submission in archived %} 
                 <tr>
-                    <td><a style="color: black" href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
-                    <td><a style="color: black" href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
+                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+                    <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.created }}</td>
                     <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
                     <td>{{ submission.get_state_display }}</td>
-                    <td><a style="color: black" href="{% url 'details' submission.pk %}">Details</a></td>
+                    <td><a href="{% url 'details' submission.pk %}">Details</a></td>
                 </tr>
             {% endfor %}
         </tbody>
