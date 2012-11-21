@@ -1,15 +1,10 @@
 #!/usr/bin/env python
-import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat
+import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, ConfigParser
 from datetime import datetime
 
-# BEGIN Configuration
-FORMAT = "%(asctime)-15s (%(levelname)s): %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.DEBUG, filename='/tmp/executor.log')
-submit_server = "http://www.dcl.hpi.uni-potsdam.de/submit"
-secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
-#targetdir=tempfile.mkdtemp()+"/"
-targetdir="/tmp/"		# with trailing slash
-# END Configuration
+submit_server = None
+secret = None		
+targetdir=None
 
 def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
@@ -115,6 +110,23 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
 		exit(-1)		
+
+# read configuration, fill global variables
+config = ConfigParser.RawConfigParser()
+config.read("executor.cfg")
+logformat=config.get("Logging","format")
+logfile=config.get("Logging","file")
+loglevel=logging._levelNames[config.get("Logging","level")]
+logtofile=config.getboolean("Logging","to_file")
+if logtofile:
+	logging.basicConfig(format=logformat, level=loglevel, filename='/tmp/executor.log')
+else:
+	logging.basicConfig(format=logformat, level=loglevel)	
+submit_server=config.get("Server","url")
+secret=config.get("Server","secret")
+targetdir=config.get("Execution","directory")
+assert(targetdir.startswith('/'))
+assert(targetdir.endswith('/'))
 
 fname, submid, action, timeout, validator=fetch_job()
 finalpath=unpack_job(fname, submid, action)
