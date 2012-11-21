@@ -5,7 +5,7 @@ from datetime import datetime
 # BEGIN Configuration
 FORMAT = "%(asctime)-15s (%(levelname)s): %(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG, filename='/tmp/executor.log')
-submit_server = "http://localhost:8000"
+submit_server = "http://www.dcl.hpi.uni-potsdam.de/submit"
 secret = "49845zut93purfh977TTTiuhgalkjfnk89"		
 #targetdir=tempfile.mkdtemp()+"/"
 targetdir="/tmp/"		# with trailing slash
@@ -110,6 +110,8 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
 		exit(-1)		
 	else:
+		dircontent = subprocess.check_output(["ls","-ln"])
+		output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
 		exit(-1)		
@@ -127,7 +129,7 @@ elif action == 'test_validity' or action == 'test_full':
 	# fetch validator into target directory and report it's results
 	urllib.urlretrieve(validator, finalpath+"validator.py")
 	os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
-	output=run_job(finalpath,['python', 'validator.py'],submid,action,timeout)
+	output=run_job(finalpath,['python3', 'validator.py'],submid,action,timeout)
 	send_result(output, 0, submid, action)
 else:
 	assert(False)
