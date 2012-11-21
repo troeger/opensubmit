@@ -195,15 +195,14 @@ def inform_student(submission):
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.TEST_VALIDITY_FAILED:
-		subject = 'Warning: Your submission did not pass the execution test'
-		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
+		subject = 'Warning: Your submission did not pass the validation test'
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.GRADED_PASS or submission.state == Submission.GRADED_FAIL:
 		subject = 'Grading completed'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
-
 	else:
 		return
 
