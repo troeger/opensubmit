@@ -139,6 +139,19 @@ targetdir=config.get("Execution","directory")
 assert(targetdir.startswith('/'))
 assert(targetdir.endswith('/'))
 script_runner=config.get("Execution","script_runner")
+serialize=config.getboolean("Execution","serialize")
+
+# If the configuration says when need to serialize, check this
+if serialize:
+	try:
+	    import socket
+	    s = socket.socket()
+	    host = socket.gethostname()
+	    port = 35636    #make sure this port is not used on this system
+	    s.bind((host, port))
+	except:
+		logging.debug("Script is already running.")
+		exit(0)
 
 # fetch any available job
 fname, submid, action, timeout, validator=fetch_job()
