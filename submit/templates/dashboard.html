@@ -82,12 +82,12 @@
 
 <section>
     <h3>Archive</h3>
-    <table class="table table-bordered">
+    <table class="table table-condensed">
         <thead>
             <tr>
                 <th>Course</th>
                 <th>Assignment</th>
-                <th>Submitted by</th>
+                <th>Created</th>
                 <th>Authors</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -99,10 +99,10 @@
                 <tr>
                     <td><a style="color: black" href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
                     <td><a style="color: black" href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
-                    <td>{{ submission.submitter.get_full_name }}</td>
+                    <td>{{ submission.created }}</td>
                     <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
                     <td>{{ submission.get_state_display }}</td>
-                    <td><a href="{% url 'details' submission.pk %}" class="btn"><i class="icon-th-list"></i> Details</a></td>
+                    <td><a style="color: black" href="{% url 'details' submission.pk %}">Details</a></td>
                 </tr>
             {% endfor %}
         </tbody>
