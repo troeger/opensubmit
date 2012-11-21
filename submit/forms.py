@@ -22,7 +22,7 @@ class SubmissionWithoutGroups(forms.ModelForm):
 	class Meta:
 		model = Submission
 		fields = ('notes',)
-	def __init__(self, *args, **kwargs):		
+	def __init__(self, current_user, ass, *args, **kwargs):		
 		super(SubmissionWithoutGroups, self).__init__(*args, **kwargs)
 
 class SubmissionWithoutGroupsWithFileForm(SubmissionWithoutGroups):
