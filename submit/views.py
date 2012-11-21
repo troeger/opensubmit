@@ -189,8 +189,7 @@ def new(request, ass_id):
     # Analyze submission data
     if request.POST:
         # we need to fill all forms here, so that they can be rendered on validation errors
-        submissionForm=SubmissionForm(request.POST, request.FILES)
-        submissionForm.removeUnwantedAuthors(request.user, ass)
+        submissionForm=SubmissionForm(request.user, ass, request.POST, request.FILES)
         if submissionForm.is_valid(): 
             submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
             submission.submitter=request.user
@@ -212,8 +211,7 @@ def new(request, ass_id):
         else:
             messages.error(request, "Please correct your submission information.")
     else:
-        submissionForm=SubmissionForm()
-        submissionForm.removeUnwantedAuthors(request.user, ass)
+        submissionForm=SubmissionForm(request.user, ass)
     return render(request, 'new.html', {'submissionForm': submissionForm, 
                                         'assignment': ass})
 

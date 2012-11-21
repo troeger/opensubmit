@@ -8,13 +8,16 @@ class SubmissionWithGroupsWithFileForm(forms.ModelForm):
 	class Meta:
 		model = Submission
 		fields = ('authors', 'notes')
-	def removeUnwantedAuthors(self, current_user, ass):
+	def __init__(self, current_user, ass, *args, **kwargs):		
+		super(SubmissionWithGroupsWithFileForm, self).__init__(*args, **kwargs)
 		# removes all users already having a submission for the assignment + the current user
 		havingSubmissions=[]
 		for submission in ass.submissions.all().exclude(state=Submission.WITHDRAWN):
 			for author in submission.authors.all():
 				havingSubmissions.append(author.pk)
 		self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions).exclude(pk=current_user.pk)
+		# since the submitter is added automatically, the number of co-authors may be zero
+		self.fields['authors'].required = False
 
 class SubmissionWithGroupsWithoutFileForm(forms.ModelForm):
 	class Meta:
