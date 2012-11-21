@@ -19,12 +19,12 @@ if is_production:
         }
     }
     MEDIA_ROOT = '/data/submit/'
-    MEDIA_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/files/'
+    MEDIA_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/files/'
     STATIC_ROOT = '/var/www/submit/submit/static/'
-    STATIC_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit/static/'
+    STATIC_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/static/'
     STATICFILES_DIRS = ("/var/www/submit/submit/static")
     FORCE_SCRIPT_NAME="/submit"
-    MAIN_URL = 'http://www.dcl.hpi.uni-potsdam.de/submit' 
+    MAIN_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit' 
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
 else:
     DEBUG = True

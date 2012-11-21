@@ -7,18 +7,11 @@ from django.core.mail import send_mail, EmailMessage
 from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL
 from datetime import date
-import string
-
-# helper function for creating storage paths
-
-valid_fname_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-
-def fname(title):
-	title=title.replace(" ","_")
-	result=''.join(c for c in title if c in valid_fname_chars)
-	return result.lower()
+import string, unicodedata
 
 def upload_path(instance, filename):
+	filename=filename.replace(" ","_")
+	filename=unicodedata.normalize('NFKD', filename).encode('ascii','ignore').lower()
 	return '/'.join([str(date.today().isoformat()),filename])
 
 # monkey patch for getting better user name stringification
@@ -64,6 +57,7 @@ class Assignment(models.Model):
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
 	attachment_test_timeout = models.IntegerField(default=30)
+	attachment_test_timeout.help_text = 'Timeout must be smaller than the executor fetch intervall !'
 	attachment_test_compile = models.BooleanField(default=False)
 	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
 	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
@@ -201,23 +195,20 @@ def inform_student(submission):
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.TEST_VALIDITY_FAILED:
-		subject = 'Warning: Your submission did not pass the execution test'
-		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated execution test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
+		subject = 'Warning: Your submission did not pass the validation test'
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
 	elif submission.state == Submission.GRADED_PASS or submission.state == Submission.GRADED_FAIL:
 		subject = 'Grading completed'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
-
-	else:		
-		subject = 'Your submission has a new status'
-		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" has a new status.\n\n Further information can be found at %s.\n\n'
-		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)		
+	else:
+		return
 
 	subject = "[%s] %s"%(submission.assignment.course, subject)
 	from_email = submission.assignment.course.owner.email
-	recipients = submission.authors.values_list('email', flat=True).order_by('email')
+	recipients = submission.authors.values_list('email', flat=True).distinct().order_by('email')
 	send_mail(subject, message, from_email, recipients, fail_silently=True)
 	# send student email with BCC to course owner. This might be configurable later
 	email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
