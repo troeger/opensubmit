@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, ConfigParser
+import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, ConfigParser, sys
 from datetime import datetime
 
 submit_server = None
@@ -122,7 +122,10 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 
 # read configuration
 config = ConfigParser.RawConfigParser()
-config.read("executor.cfg")
+if len(sys.argv) > 1:
+	config.read(sys.argv[1])
+else:
+	config.read("./executor.cfg")
 # configure logging module
 logformat=config.get("Logging","format")
 logfile=config.get("Logging","file")
