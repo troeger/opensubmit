@@ -70,9 +70,11 @@
                         {% if submission.can_reupload or submission.can_withdraw %}
                         {% endif %}
                         {% if submission.can_reupload %}
+                            <p></p>
                             <a href="{% url 'update' submission.pk %}" class="btn"><i class="icon-upload"></i> Re-upload</a>
                         {% endif %}
                         {% if submission.can_withdraw %}
+                            <p></p>
                             <a href="{% url 'withdraw' submission.pk %}" class="btn"><i class="icon-trash"></i> Withdraw</a>
                         {% endif %}
                     </td>
