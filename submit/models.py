@@ -74,6 +74,10 @@ class Assignment(models.Model):
 #	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
 #	students = 	models.ManyToManyField(User)
 
+class ValidSubmissionFileManager(models.Manager):
+	def get_query_set(self):
+		return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)
+
 class SubmissionFile(models.Model):
 	attachment = models.FileField(upload_to=upload_path) 
 	fetched = models.DateTimeField(editable=False, null=True)
@@ -89,6 +93,9 @@ class SubmissionFile(models.Model):
 		# to implement access protection, we implement our own download
 		# this implies that the Apache media serving is disabled
 		return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
+
+	objects = models.Manager()
+	valid_ones = ValidSubmissionFileManager()
 
 class Submission(models.Model):
 	RECEIVED = 'R'
@@ -111,9 +118,9 @@ class Submission(models.Model):
 		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
 		(TEST_VALIDITY_PENDING, 'Waiting for validation test'),
 		(TEST_VALIDITY_FAILED, 'Validation failed, please re-upload'),
-		(TEST_FULL_PENDING, 'Waiting for grading (Stage 1)'),
-		(TEST_FULL_FAILED, 'Waiting for grading (Stage 2)'),
-		(SUBMITTED_TESTED, 'Waiting for grading (Stage 2)'),
+		(TEST_FULL_PENDING, 'Waiting for grading (full test)'),
+		(TEST_FULL_FAILED, 'Waiting for final grading'),
+		(SUBMITTED_TESTED, 'Waiting for final grading'),
 		(GRADED_PASS, 'Graded - Passed'),
 		(GRADED_FAIL, 'Graded - Failed'),
 	)
