@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.1
 import urllib, urllib.request, urllib.error, urllib.parse, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, configparser, sys
 from datetime import datetime
 
@@ -11,7 +10,8 @@ def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
-		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
+		post_data = urllib.parse.urlencode(post_data).encode('ascii')
+		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
 	except urllib.error.HTTPError as e:
 		logging.error(str(e))
 		exit(-1)
@@ -150,6 +150,7 @@ else:
 	logging.basicConfig(format=logformat, level=loglevel)	
 # set global variables
 submit_server=config.get("Server","url")
+logging.debug("SUBMIT server is "+submit_server)
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
 assert(targetdir.startswith('/'))
