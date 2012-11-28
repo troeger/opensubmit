@@ -10,8 +10,7 @@ def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
-		post_data = urllib.parse.urlencode(post_data).encode('ascii')
-		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
+		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
 	except urllib.error.HTTPError as e:
 		logging.error(str(e))
 		exit(-1)
@@ -81,12 +80,12 @@ def unpack_job(fname, submid, action):
 
 # Signal handler for timeout implementation
 def handle_alarm(signum, frame):
-	logging.info("Got alarm signal, killing due to timeout.")
 	# Needed for compatibility with both MacOS X and Linux
 	if 'self' in frame.f_locals:
 		pid=frame.f_locals['self'].pid
 	else:
 		pid=frame.f_back.f_locals['self'].pid
+	logging.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
 	os.killpg(pid, signal.SIGTERM)
 
 # Perform some execution activity, with timeout support
@@ -100,11 +99,20 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
 	logging.debug("Starting timeout counter")
 	signal.alarm(timeout)
-	output, stderr = proc.communicate()
+	output=None
+	stderr=None
+	try:
+		output, stderr = proc.communicate()
+	except:
+		logging.debug("Seems like the process got killed by the timeout handler")
 	if output != None:
 		output=output.decode("utf-8")
+	else:
+		output=""
 	if stderr != None:
 		stderr=stderr.decode("utf-8")
+	else:
+		stderr=""
 	logging.debug("Process is done")
 	signal.alarm(0)
 	logging.debug("Cleaning up temporary data")
@@ -150,7 +158,6 @@ else:
 	logging.basicConfig(format=logformat, level=loglevel)	
 # set global variables
 submit_server=config.get("Server","url")
-logging.debug("SUBMIT server is "+submit_server)
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
 assert(targetdir.startswith('/'))
