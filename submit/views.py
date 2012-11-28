@@ -15,7 +15,7 @@ from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 from models import inform_student, inform_course_owner
 from datetime import timedelta
-import urllib
+import urllib, os
 
 
 def index(request):
@@ -98,7 +98,10 @@ def jobs(request, secret):
             if (not sub.file_upload.fetched) or (sub.file_upload.fetched + timedelta(seconds=sub.assignment.attachment_test_timeout) < timezone.now()):
                 # create HTTP response with file download
                 f=sub.file_upload.attachment
-                assert(f)                   # must be given when the "new" view works correctly
+                # on dev server, we sometimes have stale database entries
+                if not os.access(f.path, os.F_OK):
+                    mail_managers('Warning: Missing file','Missing file on storage for submission file entry %u: %s'%(sub.file_upload.pk, str(sub.file_upload.attachment)), fail_silently=True)
+                    continue
                 response=HttpResponse(f, content_type='application/binary')
                 response['Content-Disposition'] = 'attachment; filename="%s"'%sub.file_upload.basename()
                 response['SubmissionFileId'] = str(sub.file_upload.pk)
