@@ -223,10 +223,9 @@ def inform_student(submission):
 	subject = "[%s] %s"%(submission.assignment.course, subject)
 	from_email = submission.assignment.course.owner.email
 	recipients = submission.authors.values_list('email', flat=True).distinct().order_by('email')
-	send_mail(subject, message, from_email, recipients, fail_silently=True)
 	# send student email with BCC to course owner. This might be configurable later
 	email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
-	email.send(fail_silently=False)
+	email.send(fail_silently=True)
 
 # convinienvce function for email information to the course owner
 # to avoid cyclic dependencies, we keep it in the models.py
