@@ -258,7 +258,7 @@ def update(request, subm_id):
 def withdraw(request, subm_id):
     # submission should only be deletable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
-    if request.user not in submission.authors.all():
+    if (request.user not in submission.authors.all()) or (not submission.can_withdraw()):
         return redirect('dashboard')        
     if "confirm" in request.POST:
         submission.state=Submission.WITHDRAWN
