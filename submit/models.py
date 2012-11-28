@@ -74,6 +74,10 @@ class Assignment(models.Model):
 #	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
 #	students = 	models.ManyToManyField(User)
 
+class ValidSubmissionFileManager(models.Manager):
+	def get_query_set(self):
+		return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)
+
 class SubmissionFile(models.Model):
 	attachment = models.FileField(upload_to=upload_path) 
 	fetched = models.DateTimeField(editable=False, null=True)
@@ -89,6 +93,10 @@ class SubmissionFile(models.Model):
 		# to implement access protection, we implement our own download
 		# this implies that the Apache media serving is disabled
 		return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
+	def is_executed(self):
+		return self.fetched != None
+	objects = models.Manager()
+	valid_ones = ValidSubmissionFileManager()
 
 class Submission(models.Model):
 	RECEIVED = 'R'
@@ -111,9 +119,9 @@ class Submission(models.Model):
 		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
 		(TEST_VALIDITY_PENDING, 'Waiting for validation test'),
 		(TEST_VALIDITY_FAILED, 'Validation failed, please re-upload'),
-		(TEST_FULL_PENDING, 'Waiting for grading (Stage 1)'),
-		(TEST_FULL_FAILED, 'Waiting for grading (Stage 2)'),
-		(SUBMITTED_TESTED, 'Waiting for grading (Stage 2)'),
+		(TEST_FULL_PENDING, 'Waiting for grading (full test)'),
+		(TEST_FULL_FAILED, 'Waiting for final grading'),
+		(SUBMITTED_TESTED, 'Waiting for final grading'),
 		(GRADED_PASS, 'Graded - Passed'),
 		(GRADED_FAIL, 'Graded - Failed'),
 	)
@@ -129,10 +137,23 @@ class Submission(models.Model):
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
 	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 	def __unicode__(self):
-		return unicode("Submission %u"%(self.pk))
+		return unicode("%u"%(self.pk))
 	def can_withdraw(self):
-		if self.state in [self.WITHDRAWN, self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
+		# No double withdraw
+		if self.state == self.WITHDRAWN: 
 			return False
+		# No withdraw for executed jobs
+		# This smells like race condition (page withdraw button rendering -> clicking)
+		# Therefore, the withdraw view has to do this check again
+		if self.state in [self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
+			assert(self.file_upload)	# otherwise, the state model is broken
+			if self.file_upload.is_executed():
+				return False
+		# No withdraw for graded jobs
+		if self.state in [self.GRADED_PASS, self.GRADED_FAIL]:
+			return False				
+		# In principle, it can be withdrawn
+		# Now consider the deadlines
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
 			return False
@@ -141,15 +162,8 @@ class Submission(models.Model):
 			if self.assignment.soft_deadline < timezone.now():
 				# soft deadline is over, allowance of withdrawal here may become configurable later
 				return False
-			else:
-				# Soft deadline is not over 
-				# Allow withdrawal only if no tests are pending and no grading occured
-				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED]:
-					return True
-				else:
-					return False
-		else:
-			return True
+		# Soft deadline is not over, or there is no soft deadline 
+		return True
 	def can_reupload(self):
 		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def is_withdrawn(self):
@@ -209,10 +223,9 @@ def inform_student(submission):
 	subject = "[%s] %s"%(submission.assignment.course, subject)
 	from_email = submission.assignment.course.owner.email
 	recipients = submission.authors.values_list('email', flat=True).distinct().order_by('email')
-	send_mail(subject, message, from_email, recipients, fail_silently=True)
 	# send student email with BCC to course owner. This might be configurable later
 	email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
-	email.send(fail_silently=False)
+	email.send(fail_silently=True)
 
 # convinienvce function for email information to the course owner
 # to avoid cyclic dependencies, we keep it in the models.py

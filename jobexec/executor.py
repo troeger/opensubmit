@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-import urllib, urllib2, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, ConfigParser
+import urllib, urllib.request, urllib.error, urllib.parse, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, configparser, sys
 from datetime import datetime
 
 submit_server = None
@@ -11,8 +10,9 @@ def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
-		urllib2.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.urlencode(post_data))	
-	except urllib2.HTTPError, e:
+		post_data = urllib.parse.urlencode(post_data).encode('ascii')
+		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
+	except urllib.error.HTTPError as e:
 		logging.error(str(e))
 		exit(-1)
 
@@ -20,7 +20,7 @@ def send_result(msg, error_code, submission_file_id, action):
 # returns job information from the server
 def fetch_job():
 	try:
-		result = urllib2.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
+		result = urllib.request.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
 		fname=targetdir+datetime.now().isoformat()
 		headers=result.info()
 		submid=headers['SubmissionFileId']
@@ -36,7 +36,7 @@ def fetch_job():
 		target.write(result.read())
 		target.close()
 		return fname, submid, action, timeout, validator
-	except urllib2.HTTPError, e:
+	except urllib.error.HTTPError as e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
 			exit(0)
@@ -54,9 +54,9 @@ def unpack_job(fname, submid, action):
 	if zipfile.is_zipfile(fname):
 		logging.debug("Valid ZIP file")
 		f=zipfile.ZipFile(fname, 'r')
+		logging.debug("Extracting ZIP file.")
 		f.extractall(finalpath)
 		os.remove(fname)
-		return finalpath
 	elif tarfile.is_tarfile(fname):
 		logging.debug("Valid TAR file")
 		tar = tarfile.open(fname)
@@ -64,12 +64,20 @@ def unpack_job(fname, submid, action):
 		tar.extractall(finalpath)
 		tar.close()
 		os.remove(fname)
-		return finalpath
 	else:
 		os.remove(fname)
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("This is not a valid compressed file.",-1, submid, action)
 		exit(-1)		
+	dircontent=os.listdir(finalpath)
+	logging.debug("Content after decompression: "+str(dircontent))
+	if len(dircontent)==0:
+		send_result("Your compressed upload is empty - no files in there.",-1, submid, action)
+	elif len(dircontent)==1 and os.path.isdir(finalpath+os.sep+dircontent[0]):
+		logging.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..."%(dircontent[0]))
+		finalpath=finalpath+os.sep+dircontent[0]
+	return finalpath
+
 
 # Signal handler for timeout implementation
 def handle_alarm(signum, frame):
@@ -93,6 +101,10 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	logging.debug("Starting timeout counter")
 	signal.alarm(timeout)
 	output, stderr = proc.communicate()
+	if output != None:
+		output=output.decode("utf-8")
+	if stderr != None:
+		stderr=stderr.decode("utf-8")
 	logging.debug("Process is done")
 	signal.alarm(0)
 	logging.debug("Cleaning up temporary data")
@@ -115,14 +127,18 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		exit(-1)		
 	else:
 		dircontent = subprocess.check_output(["ls","-ln"])
+		dircontent = dircontent.decode("utf-8")
 		output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
 		exit(-1)		
 
 # read configuration
-config = ConfigParser.RawConfigParser()
-config.read("executor.cfg")
+config = configparser.RawConfigParser()
+if len(sys.argv) > 1:
+	config.read(sys.argv[1])
+else:
+	config.read("./executor.cfg")
 # configure logging module
 logformat=config.get("Logging","format")
 logfile=config.get("Logging","file")
@@ -134,6 +150,7 @@ else:
 	logging.basicConfig(format=logformat, level=loglevel)	
 # set global variables
 submit_server=config.get("Server","url")
+logging.debug("SUBMIT server is "+submit_server)
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
 assert(targetdir.startswith('/'))
@@ -167,8 +184,11 @@ elif action == 'test_validity' or action == 'test_full':
 	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
 	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
-	urllib.urlretrieve(validator, finalpath+"validator.py")
+	urllib.request.urlretrieve(validator, finalpath+"validator.py")
 	os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
+	# Allow submission to load their own libraries
+	logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
+	os.environ['LD_LIBRARY_PATH']=finalpath
 	# execute validator
 	output=run_job(finalpath,[script_runner, 'validator.py'],submid,action,timeout)
 	send_result(output, 0, submid, action)

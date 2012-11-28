@@ -51,6 +51,8 @@ LANGUAGE_CODE = 'en-en'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = False
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -69,7 +71,9 @@ MIDDLEWARE_CLASSES = (
 )
 ROOT_URLCONF = 'submit.urls'
 WSGI_APPLICATION = 'submit.wsgi.application'
-TEMPLATE_DIRS = ()
+TEMPLATE_DIRS = (
+    'submit/templates/'
+)
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
