@@ -136,7 +136,7 @@ class Submission(models.Model):
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
 	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 	def __unicode__(self):
-		return unicode("Submission %u"%(self.pk))
+		return unicode("%u"%(self.pk))
 	def can_withdraw(self):
 		if self.state in [self.WITHDRAWN, self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
 			return False
