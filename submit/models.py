@@ -93,7 +93,8 @@ class SubmissionFile(models.Model):
 		# to implement access protection, we implement our own download
 		# this implies that the Apache media serving is disabled
 		return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
-
+	def is_executed(self):
+		return self.fetched != None
 	objects = models.Manager()
 	valid_ones = ValidSubmissionFileManager()
 
@@ -138,8 +139,21 @@ class Submission(models.Model):
 	def __unicode__(self):
 		return unicode("%u"%(self.pk))
 	def can_withdraw(self):
-		if self.state in [self.WITHDRAWN, self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
+		# No double withdraw
+		if self.state == self.WITHDRAWN: 
 			return False
+		# No withdraw for executed jobs
+		# This smells like race condition (page withdraw button rendering -> clicking)
+		# Therefore, the withdraw view has to do this check again
+		if self.state in [self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
+			assert(self.file_upload)	# otherwise, the state model is broken
+			if self.file_upload.is_executed():
+				return False
+		# No withdraw for graded jobs
+		if self.state in [self.GRADED_PASS, self.GRADED_FAIL]:
+			return False				
+		# In principle, it can be withdrawn
+		# Now consider the deadlines
 		if self.assignment.hard_deadline < timezone.now():
 			# Assignment is over
 			return False
@@ -148,15 +162,8 @@ class Submission(models.Model):
 			if self.assignment.soft_deadline < timezone.now():
 				# soft deadline is over, allowance of withdrawal here may become configurable later
 				return False
-			else:
-				# Soft deadline is not over 
-				# Allow withdrawal only if no tests are pending and no grading occured
-				if self.state in [self.SUBMITTED, self.SUBMITTED_TESTED, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED]:
-					return True
-				else:
-					return False
-		else:
-			return True
+		# Soft deadline is not over, or there is no soft deadline 
+		return True
 	def can_reupload(self):
 		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def is_withdrawn(self):
