@@ -8,7 +8,7 @@ targetdir=None
 # Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
-	if error_code=None:
+	if error_code==None:
 		error_code=-9999	# avoid special case handling on server side
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
@@ -124,7 +124,7 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		if not keepdata:
 			shutil.rmtree(finalpath, ignore_errors=True)
 		return output
-	elif proc.returncode == 0-signal.SIGTERM:
+	elif (proc.returncode == 0-signal.SIGTERM) or (pro.returncode == None):
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
 		exit(-1)		
