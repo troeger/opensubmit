@@ -101,15 +101,21 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
 	logging.debug("Starting timeout counter: %u seconds"%timeout)
 	signal.alarm(timeout)
-	output=""
-	stderr=""
+	output=None
+	stderr=None
 	try:
 		output, stderr = proc.communicate()
 		logging.debug("Process terminated")
 	except:
 		logging.debug("Seems like the process got killed by the timeout handler")
-	output=output.decode("utf-8")
-	stderr=stderr.decode("utf-8")
+	if output == None:
+		output = ""
+	else:
+		output=output.decode("utf-8")
+	if stderr == None:
+		stderr = ""
+	else:
+		stderr=stderr.decode("utf-8")
 	signal.alarm(0)
 	if action=='test_compile':
 		action_title='Compilation'
@@ -124,7 +130,7 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		if not keepdata:
 			shutil.rmtree(finalpath, ignore_errors=True)
 		return output
-	elif (proc.returncode == 0-signal.SIGTERM) or (pro.returncode == None):
+	elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
 		exit(-1)		
