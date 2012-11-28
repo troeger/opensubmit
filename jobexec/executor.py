@@ -8,6 +8,8 @@ targetdir=None
 # Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
+	if error_code=None:
+		error_code=-9999	# avoid special case handling on server side
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
 		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
@@ -97,25 +99,18 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	signal.signal(signal.SIGALRM, handle_alarm)
 	logging.info("Spawning process for "+str(cmd))
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-	logging.debug("Starting timeout counter")
+	logging.debug("Starting timeout counter: %u seconds"%timeout)
 	signal.alarm(timeout)
-	output=None
-	stderr=None
+	output=""
+	stderr=""
 	try:
 		output, stderr = proc.communicate()
+		logging.debug("Process terminated")
 	except:
 		logging.debug("Seems like the process got killed by the timeout handler")
-	if output != None:
-		output=output.decode("utf-8")
-	else:
-		output=""
-	if stderr != None:
-		stderr=stderr.decode("utf-8")
-	else:
-		stderr=""
-	logging.debug("Process is done")
+	output=output.decode("utf-8")
+	stderr=stderr.decode("utf-8")
 	signal.alarm(0)
-	logging.debug("Cleaning up temporary data")
 	if action=='test_compile':
 		action_title='Compilation'
 	elif action=='test_validity':
