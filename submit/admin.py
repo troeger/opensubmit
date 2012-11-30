@@ -6,7 +6,7 @@ from django.contrib.admin import SimpleListFilter
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-admin.site.register(Grading)
+### Submission admin interface ###
 
 class SubmissionStateFilter(SimpleListFilter):
 	title = _('submission status')
@@ -54,7 +54,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 	def render(self, name, value, attrs=None):
 		try:
 			sfile = SubmissionFile.objects.get(pk=self.subFileId)
-			text = u'<a href="%s">%s</a><br/><table border=1>'%(sfile.get_absolute_url(), sfile.basename())
+			text = u'<table border=1><tr><td colspan="2"><a href="%s">%s</a></td></tr>'%(sfile.get_absolute_url(), sfile.basename())
 			text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>'%(sfile.test_compile)
 			text += u'<tr>'
 			text += u'<td><h3>Validation test</h3><pre>%s</pre></td>'%(sfile.test_validity)
@@ -92,10 +92,14 @@ class SubmissionAdmin(admin.ModelAdmin):
 
 admin.site.register(Submission, SubmissionAdmin)
 
+### Assignment admin interface ###
+
 class AssignmentAdmin(admin.ModelAdmin):
 	list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline']
 
 admin.site.register(Assignment, AssignmentAdmin)
+
+### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
 	return ", ".join([str(grading) for grading in gradingScheme.gradings.all()])
@@ -109,7 +113,10 @@ def courses(gradingScheme):
 class GradingSchemeAdmin(admin.ModelAdmin):
 	list_display = ['__unicode__', gradings, courses]
 
+admin.site.register(Grading)
 admin.site.register(GradingScheme, GradingSchemeAdmin)
+
+### Course admin interface ###
 
 def assignments(course):
 	return ",\n".join([str(ass) for ass in course.assignments.all()])
