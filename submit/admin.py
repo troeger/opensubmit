@@ -7,9 +7,6 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 admin.site.register(Grading)
-admin.site.register(GradingScheme)
-admin.site.register(Course)
-admin.site.register(Assignment)
 
 class SubmissionStateFilter(SimpleListFilter):
 	title = _('submission status')
@@ -30,8 +27,11 @@ class SubmissionStateFilter(SimpleListFilter):
 def authors(submission):
 	return ",\n".join([author.get_full_name() for author in submission.authors.all()])
 
-def course(submission):
-	return submission.assignment.course
+def course(obj):
+	if type(obj) == Submission:
+		return obj.assignment.course
+	elif type(obj) == Assignment:
+		return obj.course
 
 def upload(submission):
 	return submission.file_upload
@@ -72,23 +72,49 @@ class SubmissionAdmin(admin.ModelAdmin):
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
 	actions=[setFullPendingStateAction]
-	def formfield_for_choice_field(self, db_field, request, **kwargs):
+	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "state":
 			kwargs['choices'] = (
 				(Submission.GRADED_PASS, 'Graded - Passed'),
 				(Submission.GRADED_FAIL, 'Graded - Failed'),
 				(Submission.TEST_FULL_PENDING, 'Restart full test'),
 			)
-		return super(SubmissionAdmin, self).formfield_for_choice_field(db_field, request, **kwargs)
+		return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+
 	def get_form(self, request, obj=None):
 		form = super(SubmissionAdmin, self).get_form(request, obj)
 		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
 		form.base_fields['file_upload'].required = False
-		form.base_fields['state'].required = False
+		form.base_fields['state'].required = True
 		form.base_fields['state'].label = "Decision"
 		form.base_fields['grading_notes'].label = "Message for students"
 		return form
 
-
 admin.site.register(Submission, SubmissionAdmin)
 
+class AssignmentAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline']
+
+admin.site.register(Assignment, AssignmentAdmin)
+
+def gradings(gradingScheme):
+	return ", ".join([str(grading) for grading in gradingScheme.gradings.all()])
+
+def courses(gradingScheme):
+	# determine the courses that use this grading scheme in one of their assignments
+	course_ids = gradingScheme.assignments.all().values_list('course',flat=True)
+	courses = Course.objects.filter(pk__in=course_ids)
+	return ",\n".join([str(course) for course in courses])
+
+class GradingSchemeAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', gradings, courses]
+
+admin.site.register(GradingScheme, GradingSchemeAdmin)
+
+def assignments(course):
+	return ",\n".join([str(ass) for ass in course.assignments.all()])
+
+class CourseAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
+
+admin.site.register(Course, CourseAdmin)

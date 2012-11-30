@@ -51,7 +51,7 @@ class Assignment(models.Model):
 	course = models.ForeignKey(Course, related_name='assignments')
 	download = models.URLField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
-	gradingScheme = models.ForeignKey(GradingScheme)
+	gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments")
 	published = models.DateTimeField(blank=True, null=True)
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
