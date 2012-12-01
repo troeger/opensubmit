@@ -8,10 +8,11 @@ targetdir=None
 # Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
+	if error_code==None:
+		error_code=-9999	# avoid special case handling on server side
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
-		post_data = urllib.parse.urlencode(post_data).encode('ascii')
-		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
+		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
 	except urllib.error.HTTPError as e:
 		logging.error(str(e))
 		exit(-1)
@@ -81,12 +82,12 @@ def unpack_job(fname, submid, action):
 
 # Signal handler for timeout implementation
 def handle_alarm(signum, frame):
-	logging.info("Got alarm signal, killing due to timeout.")
 	# Needed for compatibility with both MacOS X and Linux
 	if 'self' in frame.f_locals:
 		pid=frame.f_locals['self'].pid
 	else:
 		pid=frame.f_back.f_locals['self'].pid
+	logging.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
 	os.killpg(pid, signal.SIGTERM)
 
 # Perform some execution activity, with timeout support
@@ -98,16 +99,24 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 	signal.signal(signal.SIGALRM, handle_alarm)
 	logging.info("Spawning process for "+str(cmd))
 	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-	logging.debug("Starting timeout counter")
+	logging.debug("Starting timeout counter: %u seconds"%timeout)
 	signal.alarm(timeout)
-	output, stderr = proc.communicate()
-	if output != None:
+	output=None
+	stderr=None
+	try:
+		output, stderr = proc.communicate()
+		logging.debug("Process terminated")
+	except:
+		logging.debug("Seems like the process got killed by the timeout handler")
+	if output == None:
+		output = ""
+	else:
 		output=output.decode("utf-8")
-	if stderr != None:
+	if stderr == None:
+		stderr = ""
+	else:
 		stderr=stderr.decode("utf-8")
-	logging.debug("Process is done")
 	signal.alarm(0)
-	logging.debug("Cleaning up temporary data")
 	if action=='test_compile':
 		action_title='Compilation'
 	elif action=='test_validity':
@@ -121,7 +130,7 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		if not keepdata:
 			shutil.rmtree(finalpath, ignore_errors=True)
 		return output
-	elif proc.returncode == 0-signal.SIGTERM:
+	elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
 		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
 		exit(-1)		
@@ -150,7 +159,6 @@ else:
 	logging.basicConfig(format=logformat, level=loglevel)	
 # set global variables
 submit_server=config.get("Server","url")
-logging.debug("SUBMIT server is "+submit_server)
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
 assert(targetdir.startswith('/'))

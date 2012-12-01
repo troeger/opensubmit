@@ -6,10 +6,7 @@ from django.contrib.admin import SimpleListFilter
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-admin.site.register(Grading)
-admin.site.register(GradingScheme)
-admin.site.register(Course)
-admin.site.register(Assignment)
+### Submission admin interface ###
 
 class SubmissionStateFilter(SimpleListFilter):
 	title = _('submission status')
@@ -30,8 +27,11 @@ class SubmissionStateFilter(SimpleListFilter):
 def authors(submission):
 	return ",\n".join([author.get_full_name() for author in submission.authors.all()])
 
-def course(submission):
-	return submission.assignment.course
+def course(obj):
+	if type(obj) == Submission:
+		return obj.assignment.course
+	elif type(obj) == Assignment:
+		return obj.course
 
 def upload(submission):
 	return submission.file_upload
@@ -54,7 +54,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 	def render(self, name, value, attrs=None):
 		try:
 			sfile = SubmissionFile.objects.get(pk=self.subFileId)
-			text = u'<a href="%s">%s</a><br/><table border=1>'%(sfile.get_absolute_url(), sfile.basename())
+			text = u'<table border=1><tr><td colspan="2"><a href="%s">%s</a></td></tr>'%(sfile.get_absolute_url(), sfile.basename())
 			text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>'%(sfile.test_compile)
 			text += u'<tr>'
 			text += u'<td><h3>Validation test</h3><pre>%s</pre></td>'%(sfile.test_validity)
@@ -72,23 +72,60 @@ class SubmissionAdmin(admin.ModelAdmin):
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
 	actions=[setFullPendingStateAction]
-	def formfield_for_choice_field(self, db_field, request, **kwargs):
+
+	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "state":
 			kwargs['choices'] = (
 				(Submission.GRADED_PASS, 'Graded - Passed'),
 				(Submission.GRADED_FAIL, 'Graded - Failed'),
 				(Submission.TEST_FULL_PENDING, 'Restart full test'),
 			)
-		return super(SubmissionAdmin, self).formfield_for_choice_field(db_field, request, **kwargs)
+		elif db_field.name == "grading":
+			kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
+		return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+
 	def get_form(self, request, obj=None):
+		self.obj = obj
 		form = super(SubmissionAdmin, self).get_form(request, obj)
 		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
 		form.base_fields['file_upload'].required = False
-		form.base_fields['state'].required = False
+		form.base_fields['state'].required = True
 		form.base_fields['state'].label = "Decision"
 		form.base_fields['grading_notes'].label = "Message for students"
 		return form
 
-
 admin.site.register(Submission, SubmissionAdmin)
 
+### Assignment admin interface ###
+
+class AssignmentAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline']
+
+admin.site.register(Assignment, AssignmentAdmin)
+
+### Grading scheme admin interface ###
+
+def gradings(gradingScheme):
+	return ", ".join([str(grading) for grading in gradingScheme.gradings.all()])
+
+def courses(gradingScheme):
+	# determine the courses that use this grading scheme in one of their assignments
+	course_ids = gradingScheme.assignments.all().values_list('course',flat=True)
+	courses = Course.objects.filter(pk__in=course_ids)
+	return ",\n".join([str(course) for course in courses])
+
+class GradingSchemeAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', gradings, courses]
+
+admin.site.register(Grading)
+admin.site.register(GradingScheme, GradingSchemeAdmin)
+
+### Course admin interface ###
+
+def assignments(course):
+	return ",\n".join([str(ass) for ass in course.assignments.all()])
+
+class CourseAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
+
+admin.site.register(Course, CourseAdmin)

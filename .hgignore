@@ -9,3 +9,5 @@ lib
 .Python
 .DS_Store
 *.sublime-*
+executor.cfg
+
