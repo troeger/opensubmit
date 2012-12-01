@@ -72,6 +72,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
 	actions=[setFullPendingStateAction]
+
 	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "state":
 			kwargs['choices'] = (
@@ -79,9 +80,12 @@ class SubmissionAdmin(admin.ModelAdmin):
 				(Submission.GRADED_FAIL, 'Graded - Failed'),
 				(Submission.TEST_FULL_PENDING, 'Restart full test'),
 			)
+		elif db_field.name == "grading":
+			kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 		return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
 	def get_form(self, request, obj=None):
+		self.obj = obj
 		form = super(SubmissionAdmin, self).get_form(request, obj)
 		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
 		form.base_fields['file_upload'].required = False

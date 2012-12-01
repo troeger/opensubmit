@@ -28,7 +28,7 @@ class Grading(models.Model):
 
 class GradingScheme(models.Model):
 	title = models.CharField(max_length=200)
-	gradings = models.ManyToManyField(Grading)
+	gradings = models.ManyToManyField(Grading, related_name='schemes')
 	def __unicode__(self):
 		return unicode(self.title)
 
