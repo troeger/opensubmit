@@ -47,7 +47,7 @@ def settings(request):
 def download(request, subm_id, filetype, secret=None):
     subm = get_object_or_404(Submission, pk=subm_id)
     if filetype=="attachment":
-        assert(request.user in subm.authors.all())
+        assert(request.user in subm.authors.all() or request.user.is_staff)
         f=subm.file_upload.attachment
         fname=subm.file_upload.basename()
     elif filetype=="test_validity":
@@ -191,7 +191,7 @@ def dashboard(request):
 @login_required
 def details(request, subm_id):
     subm = get_object_or_404(Submission, pk=subm_id)
-    assert (request.user in subm.authors.all())               # only authors should be able to look into submission details
+    assert (request.user in subm.authors.all() or request.user.is_staff)               # only authors should be able to look into submission details
     return render(request, 'details.html', {
         'submission': subm}
     )
