@@ -114,6 +114,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'openid2rp.django.auth.Backend'
 )
-JOB_EXECUTOR_SECRET="49845zut93purfh977TTTiuhgalkjfnk89"
+JOB_EXECUTOR_SECRET="49846zut93purfh977TTTiuhgalkjfnk89"
 assert(JOB_EXECUTOR_SECRET is not "")
 
