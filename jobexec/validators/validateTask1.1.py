@@ -1,8 +1,6 @@
 import os, sys, re, time, subprocess
 from multiprocessing import Process, Value, Array, Pipe
 
-maximalthreadcount=Value('i',0)
-
 #------------------------------------------------
 # constants  ------------------------------------
 #------------------------------------------------
@@ -12,6 +10,12 @@ parameters = ['30', '1',  '1000000000']
 
 outputFile = 'output.txt'
 outputFormat = '^500000000500000000$'
+
+#------------------------------------------------
+# global variables ------------------------------
+#------------------------------------------------
+
+maximalthreadcount=Value('i',0)
 
 #------------------------------------------------
 # functions -------------------------------------
@@ -87,7 +91,6 @@ def checkfile(file, contentformat):
 #------------------------------------------------
 
 if __name__ == '__main__':
-    print("Starting validator")
     pipeRecv, pipeSend = Pipe(duplex=False)
     pollingthread = Process(target=pollingthreadbody, args=(pipeRecv,))
 
