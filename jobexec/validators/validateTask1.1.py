@@ -1,5 +1,7 @@
 import os, sys, re, time, subprocess
-from multiprocessing import Process, Value, Array
+from multiprocessing import Process, Value, Array, Pipe
+
+maximalthreadcount=Value('i',0)
 
 #------------------------------------------------
 # constants  ------------------------------------
@@ -15,40 +17,36 @@ outputFormat = '^500000000500000000$'
 # functions -------------------------------------
 #------------------------------------------------
 
-# get thread count of process
-def threadcount(processid):
-    if processid == 0:
-        return 0
-    prog = os.popen('cat /proc/' + str(processid) + '/status | grep Thread')
-    threadline = prog.read()
-    if not threadline.startswith('Threads:'):
-        return 0
-    return int(threadline.replace("Threads:", "").strip())
-
 # polling thread body
-def pollingthreadbody(currentprocessid, maximalthreadcount):
+def pollingthreadbody(pipeRecv):
+    #print("Waiting for PID")
+    processid=pipeRecv.recv()[0]
+    #print("Got PID "+str(processid))
     while True:
-        currentthreadcount = threadcount(currentprocessid.value)
+        #print("Poll")
+        prog = os.popen('cat /proc/' + str(processid) + '/status | grep Thread')
+        threadline = prog.read()
+        if not threadline.startswith('Threads:'):
+            return 0
+        #print("#"+threadline+"#")
+        currentthreadcount=int(threadline.replace("Threads:", "").strip())
         if currentthreadcount > maximalthreadcount.value:
+            print("Found %u threads in application"%currentthreadcount)
             maximalthreadcount.value = currentthreadcount
         time.sleep(100)
 
 # execute command
-def execute(command, parameters):
+def execute(command, parameters, pipeSend):
     pollingthread.start()
     start = time.time()
-    proc = subprocess.Popen([command] + parameters, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-    currentprocessid.value = proc.pid
-    output, stderr = proc.communicate()
+    proc = subprocess.Popen([command] + parameters)
+    pipeSend.send([proc.pid])
+    proc.communicate()
     end = time.time()
     pollingthread.terminate()
     threadcount = maximalthreadcount.value
     print("Runtime:      %.4fs" % (end - start))
-    print("Thread count: " + str(threadcount))
-    print()
-    print("stdout: \n" + str(output))
-    print()
-    print("stderr: \n" + str(stderr))
+    print("Max thread count: " + str(threadcount))
 
 # check if file exists
 def ensurefileexists(file):
@@ -89,12 +87,12 @@ def checkfile(file, contentformat):
 #------------------------------------------------
 
 if __name__ == '__main__':
-    currentprocessid = Value('i', 0)
-    maximalthreadcount = Value('i', 0)
-    pollingthread = Process(target=pollingthreadbody, args=(currentprocessid, maximalthreadcount))
+    print("Starting validator")
+    pipeRecv, pipeSend = Pipe(duplex=False)
+    pollingthread = Process(target=pollingthreadbody, args=(pipeRecv,))
 
     ensurefileexists(executeable)
-    execute(executeable, parameters)
+    execute(executeable, parameters, pipeSend)
 
     ensurefileexists(outputFile)    
     checkfile(outputFile, outputFormat)

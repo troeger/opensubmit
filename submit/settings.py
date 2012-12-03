@@ -34,7 +34,7 @@ else:
         'NAME':     'submit/database.sqlite',
         }
     }
-    MEDIA_ROOT = 'media/'
+    MEDIA_ROOT = '/tmp/media/'
     MEDIA_URL = '/media/'
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'

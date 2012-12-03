@@ -1,9 +1,14 @@
+<<<<<<< local
 import urllib, urllib.request, urllib.error, urllib.parse, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, configparser, sys
+=======
+import urllib, urllib.request, urllib.error, urllib.parse, logging, zipfile, tarfile, tempfile, os, shutil, subprocess, signal, stat, configparser, sys, fcntl
+>>>>>>> other
 from datetime import datetime
 
 submit_server = None
 secret = None		
 targetdir=None
+pidfile=None
 
 # Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
@@ -161,6 +166,7 @@ else:
 submit_server=config.get("Server","url")
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
+pidfile=config.get("Execution","pidfile")
 assert(targetdir.startswith('/'))
 assert(targetdir.endswith('/'))
 script_runner=config.get("Execution","script_runner")
@@ -168,13 +174,11 @@ serialize=config.getboolean("Execution","serialize")
 
 # If the configuration says when need to serialize, check this
 if serialize:
+	fp = open(pidfile, 'w')
 	try:
-	    import socket
-	    s = socket.socket()
-	    host = socket.gethostname()
-	    port = 35636    #make sure this port is not used on this system
-	    s.bind((host, port))
-	except:
+		fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+		logging.debug("Got the script lock")
+	except IOError:
 		logging.debug("Script is already running.")
 		exit(0)
 
