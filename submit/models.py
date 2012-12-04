@@ -18,7 +18,7 @@ def upload_path(instance, filename):
 # User proxies did not make the job
 # Obsolete with Django 1.5 custom User feature
 def user_unicode(self):
-	return  u'%s %s <%s>' % (self.first_name, self.last_name, self.email)
+	return  u'%s %s' % (self.first_name, self.last_name)
 User.__unicode__ = user_unicode
 
 class Grading(models.Model):
@@ -198,12 +198,12 @@ def postSubmissionSaveHandler(sender, **kwargs):
 # convinienvce function for email information
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_student(submission):
-	if submission.state == Submission.SUBMITTED_TESTED:
-		subject = 'Your submission was tested successfully'
-		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
-		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
-
-	elif submission.state == Submission.TEST_COMPILE_FAILED:
+#	if submission.state == Submission.SUBMITTED_TESTED:
+#		subject = 'Your submission was tested successfully'
+#		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
+#		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+#
+	if submission.state == Submission.TEST_COMPILE_FAILED:
 		subject = 'Warning: Your submission did not pass the compilation test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
