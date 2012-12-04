@@ -280,6 +280,8 @@ def login(request):
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
             return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"/login?openidreturn")
+        else:
+            return redirect('index')
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)
@@ -334,5 +336,8 @@ def login(request):
             messages.info(request, 'We created a new account for you. Please click again to enter the system.')
             return redirect('index')
 
-    auth.login(request, user)
-    return redirect('dashboard')
+        auth.login(request, user)
+        return redirect('dashboard')
+    else:
+        return redirect('index')
+
