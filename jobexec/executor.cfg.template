@@ -4,7 +4,7 @@
 url=http://localhost:8000								
 
 # Shared secret, must match to settings.py on the server
-secret=49845zut93purfh977TTTiuhgalkjfnk89				
+secret=49846zut93purfh977TTTiuhgalkjfnk89				
 
 [Execution]
 
@@ -21,10 +21,15 @@ script_runner=python
 serialize=True
 pidfile=/tmp/executor.pid
 
+# Whatver runs under this account is not allowed to run longer than this time
+# This is the ultimate safeguard for deadlocks and submission processes going mad
+# This also means that you should not use this account for interactive work
+timeout=3600
+
 [Logging]
 
 # Logging format, as described in the Python logging module documentation
-format=%(asctime)-15s (%(levelname)s): %(message)s
+format=%(asctime)-15s (%(process)d): %(message)s
 
 # Target file for logging information
 # only needed if to_file=True
@@ -35,6 +40,7 @@ to_file=False
 
 # Log level, as described in the Python logging module documentation
 level=DEBUG
+
 
 
 

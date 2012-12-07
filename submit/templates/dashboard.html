@@ -61,7 +61,7 @@
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
                     <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.submitter.get_full_name }}</td>
-                    <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.authors.all|join:"<br/>" }}</td>
                     <td>
                             <a href="#" class="label {% if submission.green_tag %}label-success{% endif %}{% if submission.red_tag %}label-important{% endif %}">{{ submission.get_state_display }}</a>
                     </td>
@@ -104,7 +104,7 @@
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
                     <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.created }}</td>
-                    <td>{{ submission.authors.all|safeseq|join:"<br/>" }}</td>
+                    <td>{{ submission.authors.all|join:"<br/>" }}</td>
                     <td>{{ submission.get_state_display }}</td>
                     <td><a href="{% url 'details' submission.pk %}">Details</a></td>
                 </tr>

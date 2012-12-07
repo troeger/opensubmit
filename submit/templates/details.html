@@ -19,7 +19,7 @@
 	</tr><tr>
 		<td>Submitter</td><td>{{ submission.submitter }}</td>
 	</tr><tr>
-		<td>Authors</td><td>{{ submission.authors.all|safeseq|join:", " }}</td>
+		<td>Authors</td><td>{{ submission.authors.all|join:", " }}</td>
 	</tr><tr>
 		<td>Notes</td><td>{{ submission.notes }}</td>
 	{% if submission.assignment.has_attachment %}
