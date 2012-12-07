@@ -66,7 +66,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 			return mark_safe(u'Nothing stored')
 
 class SubmissionAdmin(admin.ModelAdmin):	
-	list_display = ['__unicode__', authors, course, 'assignment', 'state']
+	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state']
 	list_filter = (SubmissionStateFilter,'assignment')
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
@@ -75,11 +75,14 @@ class SubmissionAdmin(admin.ModelAdmin):
 
 	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "state":
-			kwargs['choices'] = (
-				(Submission.GRADED_PASS, 'Graded - Passed'),
-				(Submission.GRADED_FAIL, 'Graded - Failed'),
-				(Submission.TEST_FULL_PENDING, 'Restart full test'),
-			)
+			if kwargs.get('request', None).user.username == "admin":
+				pass
+			else:
+				kwargs['choices'] = (
+					(Submission.GRADED_PASS, 'Graded - Passed'),
+					(Submission.GRADED_FAIL, 'Graded - Failed'),
+					(Submission.TEST_FULL_PENDING, 'Restart full test'),
+				)
 		elif db_field.name == "grading":
 			kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 		return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
