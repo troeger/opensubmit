@@ -37,7 +37,7 @@ def upload(submission):
 	return submission.file_upload
 
 def setFullPendingStateAction(modeladmin, request, queryset):
-	queryset.update(state=Submission.TEST_FULL_PENDING)
+	queryset.exclude(state=Submission.WITHDRAWN).update(state=Submission.TEST_FULL_PENDING)
 setFullPendingStateAction.short_description = "Restart full test for selected submissions"
 
 class SubmissionFileLinkWidget(forms.Widget):
