@@ -8,6 +8,23 @@ from django.utils.translation import ugettext_lazy as _
 
 ### Submission admin interface ###
 
+
+class GradingNotesFilter(SimpleListFilter):
+	title = _('grading notes')
+	parameter_name = 'gradingnotes'
+
+	def lookups(self, request, model_admin):
+		return (
+			('hasnotes', _('With grading notes')),
+			('nonotes', _('Without grading notes')),
+		)
+
+	def queryset(self, request, queryset):
+		if self.value() == 'hasnotes':
+			return queryset.exclude(grading_notes__exact=None)
+		if self.value() == 'nonotes':
+			return queryset.filter(grading_notes__exact=None)
+
 class SubmissionStateFilter(SimpleListFilter):
 	title = _('submission status')
 	parameter_name = 'statefilter'
@@ -67,7 +84,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 
 class SubmissionAdmin(admin.ModelAdmin):	
 	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state']
-	list_filter = (SubmissionStateFilter,'assignment')
+	list_filter = (SubmissionStateFilter,'assignment',GradingNotesFilter)
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
@@ -94,7 +111,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 		form.base_fields['file_upload'].required = False
 		form.base_fields['state'].required = True
 		form.base_fields['state'].label = "Decision"
-		form.base_fields['grading_notes'].label = "Message for students"
+		form.base_fields['grading_notes'].label = "Grading notes for students"
 		return form
 
 admin.site.register(Submission, SubmissionAdmin)
