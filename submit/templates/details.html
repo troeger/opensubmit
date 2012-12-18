@@ -39,7 +39,7 @@
 	{% endif %}
 	</tr><tr>
 		<td>State</td><td>{{ submission.get_state_display }}</td>
-	{% if submission.has_grading %}
+	{% if submission.show_grading %}
 		</tr><tr>
 			<td>Grading</td><td>{{ submission.grading }}</td>
 		</tr><tr>

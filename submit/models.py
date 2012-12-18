@@ -23,6 +23,7 @@ User.__unicode__ = user_unicode
 
 class Grading(models.Model):
 	title = models.CharField(max_length=20)
+	means_passed = models.BooleanField(default=True)
 	def __unicode__(self):
 		return unicode(self.title)
 
@@ -107,10 +108,10 @@ class Submission(models.Model):
 	TEST_VALIDITY_PENDING = 'PV'
 	TEST_VALIDITY_FAILED = 'FV'
 	TEST_FULL_PENDING = 'PF'
-	TEST_FULL_FAILED = 'FF'
-	SUBMITTED_TESTED = 'ST'
-	GRADED_PASS = 'GP'
-	GRADED_FAIL = 'GF'
+	TEST_FULL_FAILED = 'FF'				
+	SUBMITTED_TESTED = 'ST'				# All tests ok, waiting for manual grading
+	GRADED = 'G'						# Grade and grading notes added, notification pending
+	CLOSED = 'C'						# Graded, and students are notified
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
@@ -122,8 +123,8 @@ class Submission(models.Model):
 		(TEST_FULL_PENDING, 'Waiting for grading (full test)'),
 		(TEST_FULL_FAILED, 'Waiting for final grading'),
 		(SUBMITTED_TESTED, 'Waiting for final grading'),
-		(GRADED_PASS, 'Graded - Passed'),
-		(GRADED_FAIL, 'Graded - Failed'),
+		(GRADED, 'Grading in progress'),
+		(CLOSED, 'Closed'),
 	)
 
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
@@ -150,7 +151,7 @@ class Submission(models.Model):
 			if self.file_upload.is_executed():
 				return False
 		# No withdraw for graded jobs
-		if self.state in [self.GRADED_PASS, self.GRADED_FAIL]:
+		if self.state in [self.GRADED, self.CLOSED]:
 			return False				
 		# In principle, it can be withdrawn
 		# Now consider the deadlines
@@ -169,11 +170,11 @@ class Submission(models.Model):
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def green_tag(self):
-		return self.state in [self.GRADED_PASS, self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
+		return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
 	def red_tag(self):
-		return self.state in [self.GRADED_FAIL, self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
-	def has_grading(self):
-		return self.state in [self.GRADED_FAIL, self.GRADED_PASS]
+		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
+	def show_grading(self):	
+		return self.state == self.CLOSED
 	def get_initial_state(self):
 		if not self.assignment.attachment_is_tested():
 			return Submission.SUBMITTED
@@ -185,24 +186,10 @@ class Submission(models.Model):
 			elif self.assignment.attachment_test_full:
 				return Submission.TEST_FULL_PENDING
 
-
-# send mail notification on successful grading
-# since this is done in the admin interface, and not in the frontend,
-# we trigger it by a save signal
-@receiver(post_save, sender=Submission)
-def postSubmissionSaveHandler(sender, **kwargs):
-	sub=kwargs['instance']
-	if sub.state == Submission.GRADED_PASS or sub.state == Submission.GRADED_FAIL:
-		inform_student(sub)
-
 # convinienvce function for email information
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_student(submission):
-#	if submission.state == Submission.SUBMITTED_TESTED:
-#		subject = 'Your submission was tested successfully'
-#		message = u'Hi,\n\nthis a short notice that your submission for "%s" in "%s" was tested successfully. No further action is needed.\n\nYou will get another eMail notification when the grading is finished.\n\nFurther information can be found at %s.\n\n'
-#		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
-#
+	# we cannot send eMail on SUBMITTED_TESTED, since this may have been triggered by test repitition in the backend
 	if submission.state == Submission.TEST_COMPILE_FAILED:
 		subject = 'Warning: Your submission did not pass the compilation test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
@@ -213,10 +200,10 @@ def inform_student(submission):
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	elif submission.state == Submission.GRADED_PASS or submission.state == Submission.GRADED_FAIL:
-		subject = 'Grading completed'
-		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
-		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+#	elif submission.state == Submission.GRADED or submission.state == Submission.GRADED_FAIL:#
+#		subject = 'Grading completed'
+#		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
+#		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 	else:
 		return
 

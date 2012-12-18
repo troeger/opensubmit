@@ -22,7 +22,7 @@ class SubmissionStateFilter(SimpleListFilter):
 		if self.value() == 'tobegraded':
 			return queryset.filter(state__in=[Submission.SUBMITTED_TESTED,Submission.SUBMITTED])
 		if self.value() == 'graded':
-			return queryset.filter(state__in=[Submission.GRADED_FAIL,Submission.GRADED_PASS])
+			return queryset.filter(state__in=[Submission.GRADED,Submission.CLOSED])
 
 def authors(submission):
 	return ",\n".join([author.get_full_name() for author in submission.authors.all()])
@@ -78,16 +78,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 	actions=[setFullPendingStateAction]
 
 	def formfield_for_dbfield(self, db_field, **kwargs):
-		if db_field.name == "state":
-			if kwargs.get('request', None).user.username == "admin":
-				pass
-			else:
-				kwargs['choices'] = (
-					(Submission.GRADED_PASS, 'Graded - Passed'),
-					(Submission.GRADED_FAIL, 'Graded - Failed'),
-					(Submission.TEST_FULL_PENDING, 'Restart full test'),
-				)
-		elif db_field.name == "grading":
+		if db_field.name == "grading":
 			kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 		return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
