@@ -124,7 +124,7 @@ class Submission(models.Model):
 		(TEST_FULL_FAILED, 'Waiting for final grading (full test failed)'),
 		(SUBMITTED_TESTED, 'Waiting for final grading'),
 		(GRADED, 'Grading in progress'),
-		(CLOSED, 'Closed'),
+		(CLOSED, 'Done'),
 	)
 
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
@@ -170,9 +170,15 @@ class Submission(models.Model):
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def green_tag(self):
-		return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
+		if self.state == self.CLOSED:
+			return self.grading.means_passed
+		else:
+			return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
 	def red_tag(self):
-		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
+		if self.state == self.CLOSED:
+			return not self.grading.means_passed
+		else:
+			return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def show_grading(self):	
 		return self.state == self.CLOSED
 	def get_initial_state(self):

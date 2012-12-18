@@ -1,6 +1,7 @@
 from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student
 from django import forms
 from django.db import models
+from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.utils.safestring import mark_safe
@@ -43,20 +44,6 @@ def student_message(submission):
 		return False
 student_message.boolean = True			# show nice little icon
 
-def setFullPendingStateAction(modeladmin, request, queryset):
-	# do not restart tests for withdrawn solutions
-	queryset.exclude(state=Submission.WITHDRAWN).update(state=Submission.TEST_FULL_PENDING)
-setFullPendingStateAction.short_description = "Restart full test for selected submissions"
-
-def closeAndNotifyAction(modeladmin, request, queryset):
-	# only notify for graded solutions
-	qs = queryset.filter(state=Submission.GRADED)
-	for subm in qs:
-		inform_student(subm, Submission.CLOSED)
-	qs.update(state=Submission.CLOSED)		# works in bulk because inform_student never fails
-closeAndNotifyAction.short_description = "Close and send grading notification for selected submissions"
-
-
 class SubmissionFileLinkWidget(forms.Widget):
 	def __init__(self, subFile):
 		if subFile:
@@ -88,7 +75,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
-	actions=[setFullPendingStateAction, closeAndNotifyAction]
+	actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction']
 
 	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "grading":
@@ -104,6 +91,32 @@ class SubmissionAdmin(admin.ModelAdmin):
 		form.base_fields['state'].label = "Decision"
 		form.base_fields['grading_notes'].label = "Message for students"
 		return form
+
+	def setFullPendingStateAction(self, request, queryset):
+		# do not restart tests for withdrawn solutions
+		qs = queryset.exclude(state=Submission.WITHDRAWN).exclude(state=Submission.CLOSED)
+		numchanged = qs.count()
+		if numchanged == 0:
+			self.message_user(request, "Nothing changed, no testable submission found.")
+		else:
+			self.message_user(request, "Changed status of %u submissions."%numchanged)
+		qs.update(state=Submission.TEST_FULL_PENDING)
+	setFullPendingStateAction.short_description = "Restart full test without notification"
+
+	def closeAndNotifyAction(self, request, queryset):
+		# only notify for graded solutions
+		mails=[]
+		# Corrector may have set "Closed" status, so we include them in the notification
+		qs = queryset.filter(Q(state=Submission.GRADED)|Q(state=Submission.CLOSED))
+		for subm in qs:
+			inform_student(subm, Submission.CLOSED)
+			mails.append(str(subm.pk))
+		qs.update(state=Submission.CLOSED)		# works in bulk because inform_student never fails
+		if len(mails) == 0:
+			self.message_user(request, "Nothing closed, no mails sent.")
+		else:
+			self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
+	closeAndNotifyAction.short_description = "Close + send grading notification"
 
 admin.site.register(Submission, SubmissionAdmin)
 
