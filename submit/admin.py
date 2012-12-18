@@ -36,6 +36,10 @@ def course(obj):
 def upload(submission):
 	return submission.file_upload
 
+def grading_comment(submission):
+	return submission.grading_notes != None
+grading_comment.boolean = True			# show nice little icon
+
 def setFullPendingStateAction(modeladmin, request, queryset):
 	queryset.exclude(state=Submission.WITHDRAWN).update(state=Submission.TEST_FULL_PENDING)
 setFullPendingStateAction.short_description = "Restart full test for selected submissions"
@@ -66,7 +70,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 			return mark_safe(u'Nothing stored')
 
 class SubmissionAdmin(admin.ModelAdmin):	
-	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state']
+	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', grading_comment]
 	list_filter = (SubmissionStateFilter,'assignment')
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
