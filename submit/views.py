@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers, send_mail
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -47,7 +47,8 @@ def settings(request):
 def download(request, subm_id, filetype, secret=None):
     subm = get_object_or_404(Submission, pk=subm_id)
     if filetype=="attachment":
-        assert(request.user in subm.authors.all())
+        if not (request.user in subm.authors.all() or request.user.is_staff):
+		return HttpResponseForbidden()
         f=subm.file_upload.attachment
         fname=subm.file_upload.basename()
     elif filetype=="test_validity":
@@ -165,7 +166,7 @@ def jobs(request, secret):
         submission_file.fetched=None            # makes the file fetchable again by executors, but now in a different state
         submission_file.save()
         sub.save()
-        inform_student(sub)
+        inform_student(sub, sub.state)
         return HttpResponse(status=201)
 
 @login_required
@@ -191,7 +192,8 @@ def dashboard(request):
 @login_required
 def details(request, subm_id):
     subm = get_object_or_404(Submission, pk=subm_id)
-    assert (request.user in subm.authors.all())               # only authors should be able to look into submission details
+    if not (request.user in subm.authors.all() or request.user.is_staff):               # only authors should be able to look into submission details
+	return HttpResponseForbidden()
     return render(request, 'details.html', {
         'submission': subm}
     )
@@ -278,6 +280,8 @@ def login(request):
         # first stage of OpenID authentication
         if request.GET['authmethod']=="hpi":
             return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"/login?openidreturn")
+        else:
+            return redirect('index')
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)
@@ -332,5 +336,8 @@ def login(request):
             messages.info(request, 'We created a new account for you. Please click again to enter the system.')
             return redirect('index')
 
-    auth.login(request, user)
-    return redirect('dashboard')
+        auth.login(request, user)
+        return redirect('dashboard')
+    else:
+        return redirect('index')
+

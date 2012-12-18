@@ -13,7 +13,7 @@
         <small>{{ submission.assignment.course }}, {{ submission.assignment }}</small><br/>
         <small> Submission by {{ submission.submitter.get_full_name }} on {{ submission.created }}</small><br/>
 
-        <small>Authors: {{ submission.authors.all|safeseq|join:",&nbsp;" }}</small>
+        <small>Authors: {{ submission.authors.all|join:",&nbsp;" }}</small>
     </h1>
 </div>
 

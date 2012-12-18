@@ -19,7 +19,7 @@
 	</tr><tr>
 		<td>Submitter</td><td>{{ submission.submitter }}</td>
 	</tr><tr>
-		<td>Authors</td><td>{{ submission.authors.all|safeseq|join:", " }}</td>
+		<td>Authors</td><td>{{ submission.authors.all|join:", " }}</td>
 	</tr><tr>
 		<td>Notes</td><td>{{ submission.notes }}</td>
 	{% if submission.assignment.has_attachment %}
@@ -39,7 +39,7 @@
 	{% endif %}
 	</tr><tr>
 		<td>State</td><td>{{ submission.get_state_display }}</td>
-	{% if submission.has_grading %}
+	{% if submission.show_grading %}
 		</tr><tr>
 			<td>Grading</td><td>{{ submission.grading }}</td>
 		</tr><tr>
