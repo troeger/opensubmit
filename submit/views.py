@@ -166,7 +166,7 @@ def jobs(request, secret):
         submission_file.fetched=None            # makes the file fetchable again by executors, but now in a different state
         submission_file.save()
         sub.save()
-        inform_student(sub)
+        inform_student(sub, sub.state)
         return HttpResponse(status=201)
 
 @login_required

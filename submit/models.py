@@ -121,7 +121,7 @@ class Submission(models.Model):
 		(TEST_VALIDITY_PENDING, 'Waiting for validation test'),
 		(TEST_VALIDITY_FAILED, 'Validation failed, please re-upload'),
 		(TEST_FULL_PENDING, 'Waiting for grading (full test)'),
-		(TEST_FULL_FAILED, 'Waiting for final grading'),
+		(TEST_FULL_FAILED, 'Waiting for final grading (full test failed)'),
 		(SUBMITTED_TESTED, 'Waiting for final grading'),
 		(GRADED, 'Grading in progress'),
 		(CLOSED, 'Closed'),
@@ -186,24 +186,25 @@ class Submission(models.Model):
 			elif self.assignment.attachment_test_full:
 				return Submission.TEST_FULL_PENDING
 
-# convinienvce function for email information
 # to avoid cyclic dependencies, we keep it in the models.py
-def inform_student(submission):
+# we hand-in explicitely about which new state we want to inform, since this may not be reflected
+# in the model at the moment
+def inform_student(submission, state):
 	# we cannot send eMail on SUBMITTED_TESTED, since this may have been triggered by test repitition in the backend
-	if submission.state == Submission.TEST_COMPILE_FAILED:
+	if state == Submission.TEST_COMPILE_FAILED:
 		subject = 'Warning: Your submission did not pass the compilation test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-	elif submission.state == Submission.TEST_VALIDITY_FAILED:
+	elif state == Submission.TEST_VALIDITY_FAILED:
 		subject = 'Warning: Your submission did not pass the validation test'
 		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
 		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 
-#	elif submission.state == Submission.GRADED or submission.state == Submission.GRADED_FAIL:#
-#		subject = 'Grading completed'
-#		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
-#		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+	elif state == Submission.CLOSED:
+		subject = 'Grading completed'
+		message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
+		message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
 	else:
 		return
 
@@ -214,7 +215,6 @@ def inform_student(submission):
 	email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
 	email.send(fail_silently=True)
 
-# convinienvce function for email information to the course owner
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_course_owner(request, submission):
 	if submission.state == Submission.WITHDRAWN:
