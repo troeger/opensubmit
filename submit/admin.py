@@ -120,6 +120,24 @@ class SubmissionAdmin(admin.ModelAdmin):
 
 admin.site.register(Submission, SubmissionAdmin)
 
+
+### Submission File admin interface ###
+
+def submissions(submfile):
+	while submfile.replaced_by != None:
+		submfile = submfile.replaced_by
+	subms=submfile.submissions.all()
+	return ','.join([str(sub) for sub in subms])
+
+def not_withdrawn(submfile):
+	return submfile.replaced_by == None
+not_withdrawn.boolean = True
+
+class SubmissionFileAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
+
+admin.site.register(SubmissionFile, SubmissionFileAdmin)
+
 ### Assignment admin interface ###
 
 class AssignmentAdmin(admin.ModelAdmin):
