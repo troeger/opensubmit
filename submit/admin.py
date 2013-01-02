@@ -1,6 +1,7 @@
-from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile
+from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student
 from django import forms
 from django.db import models
+from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.utils.safestring import mark_safe
@@ -15,14 +16,14 @@ class SubmissionStateFilter(SimpleListFilter):
 	def lookups(self, request, model_admin):
 		return (
 			('tobegraded', _('To be graded')),
-			('graded', _('Graded')),
+			('graded', _('Grading in progress')),
 		)
 
 	def queryset(self, request, queryset):
 		if self.value() == 'tobegraded':
-			return queryset.filter(state__in=[Submission.SUBMITTED_TESTED,Submission.SUBMITTED])
+			return queryset.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
 		if self.value() == 'graded':
-			return queryset.filter(state__in=[Submission.GRADED_FAIL,Submission.GRADED_PASS])
+			return queryset.filter(state__in=[Submission.GRADED])
 
 def authors(submission):
 	return ",\n".join([author.get_full_name() for author in submission.authors.all()])
@@ -36,9 +37,12 @@ def course(obj):
 def upload(submission):
 	return submission.file_upload
 
-def setFullPendingStateAction(modeladmin, request, queryset):
-	queryset.update(state=Submission.TEST_FULL_PENDING)
-setFullPendingStateAction.short_description = "Restart full test for selected submissions"
+def student_message(submission):
+	if submission.grading_notes != None:
+		return len(submission.grading_notes) > 0
+	else:
+		return False
+student_message.boolean = True			# show nice little icon
 
 class SubmissionFileLinkWidget(forms.Widget):
 	def __init__(self, subFile):
@@ -66,21 +70,15 @@ class SubmissionFileLinkWidget(forms.Widget):
 			return mark_safe(u'Nothing stored')
 
 class SubmissionAdmin(admin.ModelAdmin):	
-	list_display = ['__unicode__', authors, course, 'assignment', 'state']
+	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', student_message]
 	list_filter = (SubmissionStateFilter,'assignment')
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
-	actions=[setFullPendingStateAction]
+	actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction']
 
 	def formfield_for_dbfield(self, db_field, **kwargs):
-		if db_field.name == "state":
-			kwargs['choices'] = (
-				(Submission.GRADED_PASS, 'Graded - Passed'),
-				(Submission.GRADED_FAIL, 'Graded - Failed'),
-				(Submission.TEST_FULL_PENDING, 'Restart full test'),
-			)
-		elif db_field.name == "grading":
+		if db_field.name == "grading":
 			kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 		return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
@@ -93,6 +91,32 @@ class SubmissionAdmin(admin.ModelAdmin):
 		form.base_fields['state'].label = "Decision"
 		form.base_fields['grading_notes'].label = "Message for students"
 		return form
+
+	def setFullPendingStateAction(self, request, queryset):
+		# do not restart tests for withdrawn solutions
+		qs = queryset.exclude(state=Submission.WITHDRAWN).exclude(state=Submission.CLOSED)
+		numchanged = qs.count()
+		if numchanged == 0:
+			self.message_user(request, "Nothing changed, no testable submission found.")
+		else:
+			self.message_user(request, "Changed status of %u submissions."%numchanged)
+		qs.update(state=Submission.TEST_FULL_PENDING)
+	setFullPendingStateAction.short_description = "Restart full test without notification"
+
+	def closeAndNotifyAction(self, request, queryset):
+		# only notify for graded solutions
+		mails=[]
+		# Corrector may have set "Closed" status, so we include them in the notification
+		qs = queryset.filter(Q(state=Submission.GRADED)|Q(state=Submission.CLOSED))
+		for subm in qs:
+			inform_student(subm, Submission.CLOSED)
+			mails.append(str(subm.pk))
+		qs.update(state=Submission.CLOSED)		# works in bulk because inform_student never fails
+		if len(mails) == 0:
+			self.message_user(request, "Nothing closed, no mails sent.")
+		else:
+			self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
+	closeAndNotifyAction.short_description = "Close + send grading notification"
 
 admin.site.register(Submission, SubmissionAdmin)
 
