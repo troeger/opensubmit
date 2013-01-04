@@ -88,7 +88,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
 		form.base_fields['file_upload'].required = False
 		form.base_fields['state'].required = True
-		form.base_fields['state'].label = "Decision"
+		form.base_fields['state'].label = "New state"
 		form.base_fields['grading_notes'].label = "Message for students"
 		return form
 
