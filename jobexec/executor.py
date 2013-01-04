@@ -1,8 +1,14 @@
 import urllib, urllib.request, urllib.error, urllib.parse
 import logging
 import zipfile, tarfile
-import tempfile, os, shutil, subprocess, signal, stat, configparser, sys, fcntl, pickle, psutil
+import tempfile, os, shutil, subprocess, signal, stat, configparser, sys, fcntl, pickle
 import time
+try:
+	import psutil		# compiled version for Py3 is crashing on MacOS X
+	havePsUtil=True
+except:
+	pass
+	havePsUtil=False
 from datetime import datetime, timedelta
 
 submit_server = None
@@ -180,18 +186,19 @@ assert(targetdir.endswith('/'))
 script_runner=config.get("Execution","script_runner")
 serialize=config.getboolean("Execution","serialize")
 
-# terminate everything under this account that runs too long
-# this is a final safeguard if the SIGALRM stuff is not working
-ourpid=os.getpid()
-username=psutil.Process(ourpid).username
-# check for other processes running under this account
-for proc in psutil.process_iter():
-	if proc.username == username and proc.pid != ourpid:
-		runtime=time.time()-proc.create_time
-		logging.debug("This user already runs %u for %u seconds."%(proc.pid,runtime))
-		if runtime > maxruntime:
-			logging.debug("Killing %u due to exceeded runtime."%proc.pid)
-			proc.kill()
+if havePsUtil:
+	# terminate everything under this account that runs too long
+	# this is a final safeguard if the SIGALRM stuff is not working
+	ourpid=os.getpid()
+	username=psutil.Process(ourpid).username
+	# check for other processes running under this account
+	for proc in psutil.process_iter():
+		if proc.username == username and proc.pid != ourpid:
+			runtime=time.time()-proc.create_time
+			logging.debug("This user already runs %u for %u seconds."%(proc.pid,runtime))
+			if runtime > maxruntime:
+				logging.debug("Killing %u due to exceeded runtime."%proc.pid)
+				proc.kill()
 
 # If the configuration says when need to serialize, check this
 # long-runners may have being killed already, together with their lock
