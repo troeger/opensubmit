@@ -12,12 +12,16 @@ pidfile=None
 
 # Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
+	# We need to truncate excessive console output, since this goes into the database
 	if len(msg)>10000:
 		msg=msg[1:10000]
 		msg+="\n[Output truncated]"
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
+	# There are cases where the program was not finished, but we still deliver a result
+	# Transmitting "None" is a bad idea, so we use a special code instead
 	if error_code==None:
-		error_code=-9999	# avoid special case handling on server side
+		error_code=-9999	
+	# Prepare response HTTP package
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
 		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
@@ -26,7 +30,7 @@ def send_result(msg, error_code, submission_file_id, action):
 		exit(-1)
 
 # Fetch any available work from the SUBMIT server
-# returns job information from the server
+# returns job information as function result
 def fetch_job():
 	try:
 		result = urllib.request.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
