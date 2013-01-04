@@ -30,7 +30,9 @@ def send_result(msg, error_code, submission_file_id, action):
 	# Prepare response HTTP package
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
 	try:
-		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
+		post_data = urllib.parse.urlencode(post_data)
+		post_data = post_data.encode('utf-8')
+		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
 	except urllib.error.HTTPError as e:
 		logging.error(str(e))
 		exit(-1)
