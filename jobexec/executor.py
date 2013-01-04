@@ -12,6 +12,9 @@ pidfile=None
 
 # Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action):
+	if len(msg)>10000:
+		msg=msg[1:10000]
+		msg+="\n[Output truncated]"
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	if error_code==None:
 		error_code=-9999	# avoid special case handling on server side
@@ -211,8 +214,8 @@ elif action == 'test_validity' or action == 'test_full':
 	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
 	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
-	urllib.request.urlretrieve(validator, finalpath+"validator.py")
-	os.chmod(finalpath+"validator.py", stat.S_IXUSR|stat.S_IRUSR)
+	urllib.request.urlretrieve(validator, finalpath+"/validator.py")
+	os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
 	# Allow submission to load their own libraries
 	logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
 	os.environ['LD_LIBRARY_PATH']=finalpath
