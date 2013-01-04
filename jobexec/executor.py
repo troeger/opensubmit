@@ -10,12 +10,18 @@ secret = None
 targetdir=None
 pidfile=None
 
+def cleanup_quit(finalpath, exit_code):
+	shutil.rmtree(finalpath, ignore_errors=True)
+	exit(exit_code)
+
 # Send some result to the SUBMIT server
-def send_result(msg, error_code, submission_file_id, action):
+def send_result(msg, error_code, submission_file_id, action, perfresult=None):
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	if error_code==None:
 		error_code=-9999	# avoid special case handling on server side
 	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
+	if perfresult:
+		post_data.append(('PerfResult',perfresult))
 	try:
 		urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), urllib.parse.urlencode(post_data))	
 	except urllib.error.HTTPError as e:
@@ -72,9 +78,8 @@ def unpack_job(fname, submid, action):
 		os.remove(fname)
 	else:
 		os.remove(fname)
-		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("This is not a valid compressed file.",-1, submid, action)
-		exit(-1)		
+		cleanup_quit(finalpath, -1)
 	dircontent=os.listdir(finalpath)
 	logging.debug("Content after decompression: "+str(dircontent))
 	if len(dircontent)==0:
@@ -97,7 +102,7 @@ def handle_alarm(signum, frame):
 
 # Perform some execution activity, with timeout support
 # This is used both for compilation and validator script execution
-def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
+def run_job(finalpath, cmd, submid, action, timeout):
 	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
 	logging.debug("Installing signal handler for timeout")
@@ -132,20 +137,17 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		assert(False)
 	if proc.returncode == 0:
 		logging.info("Executed with error code 0: \n\n"+output)
-		if not keepdata:
-			shutil.rmtree(finalpath, ignore_errors=True)
 		return output
 	elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
-		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
+		cleanup_quit(finalpath, -1)
 		exit(-1)		
 	else:
 		dircontent = subprocess.check_output(["ls","-ln"])
 		dircontent = dircontent.decode("utf-8")
 		output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
-		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
-		exit(-1)		
+		cleanup_quit(finalpath, -1)
 
 # read configuration
 config = configparser.RawConfigParser()
@@ -208,7 +210,7 @@ if action == 'test_compile':
 	send_result(output, 0, submid, action)
 elif action == 'test_validity' or action == 'test_full':
 	# build it, only returns on success
-	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
+	run_job(finalpath,['make'],submid,action,timeout)
 	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
 	urllib.request.urlretrieve(validator, finalpath+"validator.py")
@@ -216,9 +218,11 @@ elif action == 'test_validity' or action == 'test_full':
 	# Allow submission to load their own libraries
 	logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
 	os.environ['LD_LIBRARY_PATH']=finalpath
-	# execute validator
-	output=run_job(finalpath,[script_runner, 'validator.py'],submid,action,timeout)
-	send_result(output, 0, submid, action)
+	# execute validator, hand over path to performance result file
+	perfresultfile=finalpath+os.sep+"perfresult.csv"
+	output=run_job(finalpath,[script_runner, 'validator.py', perfresult],submid,action,timeout)
+	perfresult=open(perfresultfile).read()
+	send_result(output, 0, submid, action, perfresult)
 else:
 	# unknown action, programming error in the server
 	assert(False)
