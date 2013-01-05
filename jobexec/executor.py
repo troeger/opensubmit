@@ -7,7 +7,6 @@ try:
 	import psutil		# compiled version for Py3 is crashing on MacOS X
 	havePsUtil=True
 except:
-	pass
 	havePsUtil=False
 from datetime import datetime, timedelta
 
@@ -16,19 +15,25 @@ secret = None
 targetdir=None
 pidfile=None
 
+def cleanup_and_exit(path, exit_code):
+	shutil.rmtree(finalpath, ignore_errors=True)
+	exit(exit_code)
+
 # Send some result to the SUBMIT server
-def send_result(msg, error_code, submission_file_id, action):
+def send_result(msg, error_code, submission_file_id, action, perfdata=None):
 	# We need to truncate excessive console output, since this goes into the database
 	if len(msg)>10000:
 		msg=msg[1:10000]
 		msg+="\n[Output truncated]"
+	if not perfdata:
+		perfdata=""
 	logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
 	# There are cases where the program was not finished, but we still deliver a result
 	# Transmitting "None" is a bad idea, so we use a special code instead
 	if error_code==None:
 		error_code=-9999	
 	# Prepare response HTTP package
-	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action)]    
+	post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action),('PerfData',perfdata)]    
 	try:
 		post_data = urllib.parse.urlencode(post_data)
 		post_data = post_data.encode('utf-8')
@@ -87,9 +92,8 @@ def unpack_job(fname, submid, action):
 		os.remove(fname)
 	else:
 		os.remove(fname)
-		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("This is not a valid compressed file.",-1, submid, action)
-		exit(-1)		
+		cleanup_and_exit(finalpath, -1)
 	dircontent=os.listdir(finalpath)
 	logging.debug("Content after decompression: "+str(dircontent))
 	if len(dircontent)==0:
@@ -112,7 +116,7 @@ def handle_alarm(signum, frame):
 
 # Perform some execution activity, with timeout support
 # This is used both for compilation and validator script execution
-def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
+def run_job(finalpath, cmd, submid, action, timeout):
 	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
 	logging.debug("Installing signal handler for timeout")
@@ -147,20 +151,16 @@ def run_job(finalpath, cmd, submid, action, timeout, keepdata=False):
 		assert(False)
 	if proc.returncode == 0:
 		logging.info("Executed with error code 0: \n\n"+output)
-		if not keepdata:
-			shutil.rmtree(finalpath, ignore_errors=True)
 		return output
 	elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
-		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
-		exit(-1)		
+		cleanup_and_exit(finalpath, -1)
 	else:
 		dircontent = subprocess.check_output(["ls","-ln"])
 		dircontent = dircontent.decode("utf-8")
 		output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
-		shutil.rmtree(finalpath, ignore_errors=True)
 		send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
-		exit(-1)		
+		cleanup_and_exit(finalpath, -1)
 
 # read configuration
 config = configparser.RawConfigParser()
@@ -168,7 +168,7 @@ if len(sys.argv) > 1:
 	config.read(sys.argv[1])
 else:
 	config.read("./executor.cfg")
-# configure logging module
+# configure logging module from what we see in the config file
 logformat=config.get("Logging","format")
 logfile=config.get("Logging","file")
 loglevel=logging._levelNames[config.get("Logging","level")]
@@ -177,7 +177,7 @@ if logtofile:
 	logging.basicConfig(format=logformat, level=loglevel, filename='/tmp/executor.log')
 else:
 	logging.basicConfig(format=logformat, level=loglevel)	
-# set global variables
+# set global variables from config file
 submit_server=config.get("Server","url")
 secret=config.get("Server","secret")
 targetdir=config.get("Execution","directory")
@@ -203,7 +203,7 @@ if havePsUtil:
 				proc.kill()
 
 # If the configuration says when need to serialize, check this
-# long-runners may have being killed already, together with their lock
+# long-runners may have being killed already before, together with their lock
 if serialize:
 	fp = open(pidfile, 'w')
 	try:
@@ -222,9 +222,13 @@ if action == 'test_compile':
 	# build it, only returns on success
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
+	cleanup_and_exit(finalpath, 0)
 elif action == 'test_validity' or action == 'test_full':
+	# prepare the output file for validator performance results
+	perfdata_fname = finalpath+"/perfresults.csv" 
+	open(perfdata_fname,"w").close()
 	# build it, only returns on success
-	run_job(finalpath,['make'],submid,action,timeout,keepdata=True)
+	run_job(finalpath,['make'],submid,action,timeout)
 	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
 	urllib.request.urlretrieve(validator, finalpath+"/validator.py")
@@ -233,8 +237,10 @@ elif action == 'test_validity' or action == 'test_full':
 	logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
 	os.environ['LD_LIBRARY_PATH']=finalpath
 	# execute validator
-	output=run_job(finalpath,[script_runner, 'validator.py'],submid,action,timeout)
-	send_result(output, 0, submid, action)
+	output=run_job(finalpath,[script_runner, 'validator.py', perfdata_fname],submid,action,timeout)
+	perfdata= open(perfdata_fname,"r").read()
+	send_result(output, 0, submid, action, perfdata)
+	cleanup_and_exit(finalpath, 0)
 else:
 	# unknown action, programming error in the server
 	assert(False)

@@ -84,6 +84,7 @@ class SubmissionFile(models.Model):
 	test_compile = models.TextField(null=True, blank=True)
 	test_validity = models.TextField(null=True, blank=True)
 	test_full = models.TextField(null=True, blank=True)
+	perf_data = models.TextField(null=True, blank=True)
 	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
 	def __unicode__(self):
 		return unicode(self.attachment.name)
