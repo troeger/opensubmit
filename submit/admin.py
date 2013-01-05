@@ -63,6 +63,8 @@ class SubmissionFileLinkWidget(forms.Widget):
 			text += u'<tr>'
 			text += u'<td><h3>Validation test</h3><pre>%s</pre></td>'%(sfile.test_validity)
 			text += u'<td><h3>Full test</h3><pre>%s</pre></td>'%(sfile.test_full)
+			text += u'<tr>'
+			text += u'<td><h3>Performance data</h3><pre>%s</pre></td>'%(sfile.perf_data)
 			text += u'</tr></table>'
 			# TODO: This is not safe, since the script output can be influenced by students
 			return mark_safe(text)

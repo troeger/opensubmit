@@ -164,6 +164,9 @@ def jobs(request, secret):
         else:
             mail_managers('Warning: Inconsistent job state', str(sub.pk), fail_silently=True)
         submission_file.fetched=None            # makes the file fetchable again by executors, but now in a different state
+        perf_data = request.POST['PerfData'].strip()
+        if perf_data != "":
+            submission_file.perf_data = perf_data
         submission_file.save()
         sub.save()
         inform_student(sub, sub.state)
