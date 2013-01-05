@@ -58,7 +58,6 @@ class Assignment(models.Model):
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
 	attachment_test_timeout = models.IntegerField(default=30)
-	attachment_test_timeout.help_text = 'Timeout must be smaller than the executor fetch intervall !'
 	attachment_test_compile = models.BooleanField(default=False)
 	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
 	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
@@ -85,6 +84,7 @@ class SubmissionFile(models.Model):
 	test_compile = models.TextField(null=True, blank=True)
 	test_validity = models.TextField(null=True, blank=True)
 	test_full = models.TextField(null=True, blank=True)
+	perf_data = models.TextField(null=True, blank=True)
 	replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
 	def __unicode__(self):
 		return unicode(self.attachment.name)
@@ -115,14 +115,28 @@ class Submission(models.Model):
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
+		(SUBMITTED, 'Submitted'),
+		(TEST_COMPILE_PENDING, 'Compilation test pending'),
+		(TEST_COMPILE_FAILED, 'Compilation test failed'),
+		(TEST_VALIDITY_PENDING, 'Validity test pending'),
+		(TEST_VALIDITY_FAILED, 'Validity test failed'),
+		(TEST_FULL_PENDING, 'Full test pending'),
+		(TEST_FULL_FAILED, 'Full test failed'),
+		(SUBMITTED_TESTED, 'All tests passed'),
+		(GRADED, 'Grading in progress'),
+		(CLOSED, 'Done'),
+	)
+	STUDENT_STATES = (
+		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
+		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Waiting for grading'),
 		(TEST_COMPILE_PENDING, 'Waiting for compilation test'),
 		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
 		(TEST_VALIDITY_PENDING, 'Waiting for validation test'),
 		(TEST_VALIDITY_FAILED, 'Validation failed, please re-upload'),
-		(TEST_FULL_PENDING, 'Waiting for grading (full test)'),
-		(TEST_FULL_FAILED, 'Waiting for final grading (full test failed)'),
-		(SUBMITTED_TESTED, 'Waiting for final grading'),
+		(TEST_FULL_PENDING, 'Waiting for grading'),
+		(TEST_FULL_FAILED, 'Waiting for grading'),
+		(SUBMITTED_TESTED, 'Waiting for grading'),
 		(GRADED, 'Grading in progress'),
 		(CLOSED, 'Done'),
 	)
@@ -191,6 +205,8 @@ class Submission(models.Model):
 				return Submission.TEST_VALIDITY_PENDING
 			elif self.assignment.attachment_test_full:
 				return Submission.TEST_FULL_PENDING
+	def state_for_students(self):
+		return dict(self.STUDENT_STATES)[self.state]
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected

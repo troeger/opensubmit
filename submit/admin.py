@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -63,6 +64,8 @@ class SubmissionFileLinkWidget(forms.Widget):
 			text += u'<tr>'
 			text += u'<td><h3>Validation test</h3><pre>%s</pre></td>'%(sfile.test_validity)
 			text += u'<td><h3>Full test</h3><pre>%s</pre></td>'%(sfile.test_full)
+			text += u'<tr>'
+			text += u'<td><h3>Performance data</h3><pre>%s</pre></td>'%(sfile.perf_data)
 			text += u'</tr></table>'
 			# TODO: This is not safe, since the script output can be influenced by students
 			return mark_safe(text)
@@ -75,7 +78,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
-	actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction']
+	actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
 	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "grading":
@@ -88,7 +91,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
 		form.base_fields['file_upload'].required = False
 		form.base_fields['state'].required = True
-		form.base_fields['state'].label = "Decision"
+		form.base_fields['state'].label = "New state"
 		form.base_fields['grading_notes'].label = "Message for students"
 		return form
 
@@ -118,7 +121,36 @@ class SubmissionAdmin(admin.ModelAdmin):
 			self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
 	closeAndNotifyAction.short_description = "Close + send grading notification"
 
+	def getPerformanceResultsAction(self, request, queryset):
+		qs = queryset.exclude(state=Submission.WITHDRAWN)	#avoid accidental addition of withdrawn solutions
+		response=HttpResponse(mimetype="text/csv")
+		response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
+		for subm in qs:
+			response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,authors(subm) ))			
+			response.write(subm.file_upload.perf_data)
+			response.write("\n")			
+		return response
+	getPerformanceResultsAction.short_description = "Download performance data as CSV"
+
 admin.site.register(Submission, SubmissionAdmin)
+
+
+### Submission File admin interface ###
+
+def submissions(submfile):
+	while submfile.replaced_by != None:
+		submfile = submfile.replaced_by
+	subms=submfile.submissions.all()
+	return ','.join([str(sub) for sub in subms])
+
+def not_withdrawn(submfile):
+	return submfile.replaced_by == None
+not_withdrawn.boolean = True
+
+class SubmissionFileAdmin(admin.ModelAdmin):
+	list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
+
+admin.site.register(SubmissionFile, SubmissionFileAdmin)
 
 ### Assignment admin interface ###
 

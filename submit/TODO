@@ -1,9 +1,1 @@
-TODO:
-
-- Damit umgehen, das Executor Intervall kleiner als Assignment Timeout ist
-  (Mailflut fuer immer gleiche Tests)
-
-LATER:
-
 - Django Model Versioning Tool verwenden
-- Grading im Admin unterstützen
