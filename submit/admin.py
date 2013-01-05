@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -77,7 +78,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
 	fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
-	actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction']
+	actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
 	def formfield_for_dbfield(self, db_field, **kwargs):
 		if db_field.name == "grading":
@@ -119,6 +120,17 @@ class SubmissionAdmin(admin.ModelAdmin):
 		else:
 			self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
 	closeAndNotifyAction.short_description = "Close + send grading notification"
+
+	def getPerformanceResultsAction(self, request, queryset):
+		qs = queryset.exclude(state=Submission.WITHDRAWN)	#avoid accidental addition of withdrawn solutions
+		response=HttpResponse(mimetype="text/csv")
+		response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
+		for subm in qs:
+			response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,authors(subm) ))			
+			response.write(subm.file_upload.perf_data)
+			response.write("\n")			
+		return response
+	getPerformanceResultsAction.short_description = "Download performance data as CSV"
 
 admin.site.register(Submission, SubmissionAdmin)
 
