@@ -113,5 +113,14 @@
     </table>
 </section>
 
+<section>
+    <h3>Test machine</h3>
+    <p>
+    {% if pending_count %}
+        There are {{ pending_count }} submissions in the system to be tested.
+    {% endif %} 
+</p>
+</section>   
+
 
 {% endblock %}
