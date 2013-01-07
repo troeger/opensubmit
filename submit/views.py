@@ -79,8 +79,8 @@ def jobs(request, secret):
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
-        subm = Submission.pendingTests
-        if not subm:
+        subm = Submission.pending_tests.all()
+        if subm.count() == 0:
             raise Http404
         for sub in subm:
             assert(sub.file_upload)     # must be given when the state model is correct
@@ -184,12 +184,14 @@ def dashboard(request):
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
     openassignments=[ass for ass in Assignment.open_ones.all().order_by('soft_deadline').order_by('hard_deadline').order_by('title') if ass not in waiting_for_action]
+    pending_count = Submission.pending_tests.count()
     return render(request, 'dashboard.html', {
         'authored': authored,
         'archived': archived,
         'user': request.user,
         'username': username,
-        'assignments': openassignments}
+        'assignments': openassignments,
+        'pending_count': pending_count}
     )
 
 @login_required

@@ -114,11 +114,12 @@ class PendingTestsManager(models.Manager):
 		if len(subm) == 0:
 			subm = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('modified')
 			if len(subm) == 0:
-				subm = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('modifief')
+				subm = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('modified')
 				if len(subm) == 0:
 					subm = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('modified')
 					if len(subm) == 0:
-						return None
+						subm = Submission.objects.none()
+		return subm
 
 class Submission(models.Model):
 	RECEIVED = 'R'
@@ -237,6 +238,8 @@ class Submission(models.Model):
 				return Submission.TEST_FULL_PENDING
 	def state_for_students(self):
 		return dict(self.STUDENT_STATES)[self.state]
+	objects = models.Manager()
+	pending_tests = PendingTestsManager()
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected
