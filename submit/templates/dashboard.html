@@ -116,10 +116,8 @@
 <section>
     <h3>Test machine</h3>
     <p>
-    {% if pending_count %}
-        There are {{ pending_count }} submissions in the system to be tested.
-    {% endif %} 
-</p>
+        There are {{ pending_tests.count }} submission{{ pending_tests.count|pluralize }} in the system to be tested.
+    </p>
 </section>   
 
 
