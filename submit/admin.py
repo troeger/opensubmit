@@ -38,12 +38,12 @@ def course(obj):
 def upload(submission):
 	return submission.file_upload
 
-def student_message(submission):
+def has_grading_notes(submission):
 	if submission.grading_notes != None:
 		return len(submission.grading_notes) > 0
 	else:
 		return False
-student_message.boolean = True			# show nice little icon
+has_grading_notes.boolean = True			# show nice little icon
 
 class SubmissionFileLinkWidget(forms.Widget):
 	def __init__(self, subFile):
@@ -73,7 +73,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 			return mark_safe(u'Nothing stored')
 
 class SubmissionAdmin(admin.ModelAdmin):	
-	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', student_message]
+	list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
 	list_filter = (SubmissionStateFilter,'assignment')
 	filter_horizontal = ('authors',)
 	readonly_fields = ('assignment','submitter','authors','notes')
@@ -91,26 +91,32 @@ class SubmissionAdmin(admin.ModelAdmin):
 		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
 		form.base_fields['file_upload'].required = False
 		form.base_fields['state'].required = True
-		form.base_fields['state'].label = "New state"
-		form.base_fields['grading_notes'].label = "Message for students"
+		form.base_fields['state'].label = "New state (no email notification)"
+		form.base_fields['grading_notes'].label = "Grading notes"
 		return form
 
 	def setFullPendingStateAction(self, request, queryset):
-		# do not restart tests for withdrawn solutions
-		qs = queryset.exclude(state=Submission.WITHDRAWN).exclude(state=Submission.CLOSED)
-		numchanged = qs.count()
+		# do not restart tests for withdrawn solutions, or for solutions in the middle of grading
+		qs = queryset.exclude(state=Submission.WITHDRAWN).exclude(state=Submission.GRADED)
+		numchanged = 0
+		for subm in qs:
+			if subm.assignment.has_full_test():
+				if subm.state == Submission.CLOSED:
+					subm.state = Submission.CLOSED_TEST_FULL_PENDING
+				else:
+					subm.state = Submission.TEST_FULL_PENDING
+				subm.save()
+				numchanged += 1
 		if numchanged == 0:
 			self.message_user(request, "Nothing changed, no testable submission found.")
 		else:
 			self.message_user(request, "Changed status of %u submissions."%numchanged)
-		qs.update(state=Submission.TEST_FULL_PENDING)
 	setFullPendingStateAction.short_description = "Restart full test without notification"
 
 	def closeAndNotifyAction(self, request, queryset):
 		# only notify for graded solutions
 		mails=[]
-		# Corrector may have set "Closed" status, so we include them in the notification
-		qs = queryset.filter(Q(state=Submission.GRADED)|Q(state=Submission.CLOSED))
+		qs = queryset.filter(Q(state=Submission.GRADED))
 		for subm in qs:
 			inform_student(subm, Submission.CLOSED)
 			mails.append(str(subm.pk))
@@ -119,16 +125,17 @@ class SubmissionAdmin(admin.ModelAdmin):
 			self.message_user(request, "Nothing closed, no mails sent.")
 		else:
 			self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
-	closeAndNotifyAction.short_description = "Close + send grading notification"
+	closeAndNotifyAction.short_description = "Close graded submissions + send notification"
 
 	def getPerformanceResultsAction(self, request, queryset):
 		qs = queryset.exclude(state=Submission.WITHDRAWN)	#avoid accidental addition of withdrawn solutions
 		response=HttpResponse(mimetype="text/csv")
 		response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
 		for subm in qs:
-			response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,authors(subm) ))			
-			response.write(subm.file_upload.perf_data)
-			response.write("\n")			
+			if subm.file_upload.perf_data != None:
+				response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,authors(subm) ))			
+				response.write(subm.file_upload.perf_data)
+				response.write("\n")			
 		return response
 	getPerformanceResultsAction.short_description = "Download performance data as CSV"
 

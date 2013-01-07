@@ -61,8 +61,13 @@ class Assignment(models.Model):
 	attachment_test_compile = models.BooleanField(default=False)
 	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
 	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
+
+	def has_validity_test(self):
+		return str(self.attachment_test_validity).strip() != ""
+	def has_full_test(self):
+		return str(self.attachment_test_full).strip() != ""
 	def attachment_is_tested(self):
-		return self.attachment_test_compile == True or self.attachment_test_validity or self.attachment_test_full
+		return self.attachment_test_compile == True or self.has_validity_test() or self.has_full_test()
 
 	def __unicode__(self):
 		return unicode(self.title)
@@ -99,6 +104,22 @@ class SubmissionFile(models.Model):
 	objects = models.Manager()
 	valid_ones = ValidSubmissionFileManager()
 
+class PendingTestsManager(models.Manager):
+	def get_query_set(self):
+		# Hand over a pending job to be tested 
+		# compilation wins over validation wins over full test
+		# the assumption is that the time effort is increasing
+		#TODO: Make this one query
+		subm = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('modified')
+		if len(subm) == 0:
+			subm = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('modified')
+			if len(subm) == 0:
+				subm = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('modifief')
+				if len(subm) == 0:
+					subm = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('modified')
+					if len(subm) == 0:
+						return None
+
 class Submission(models.Model):
 	RECEIVED = 'R'
 	WITHDRAWN = 'W'
@@ -112,6 +133,7 @@ class Submission(models.Model):
 	SUBMITTED_TESTED = 'ST'				# All tests ok, waiting for manual grading
 	GRADED = 'G'						# Grade and grading notes added, notification pending
 	CLOSED = 'C'						# Graded, and students are notified
+	CLOSED_TEST_FULL_PENDING = 'CT'		# Keep grading status, but re-run full tests silently
 	STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
 		(WITHDRAWN, 'Withdrawn'),
@@ -125,6 +147,7 @@ class Submission(models.Model):
 		(SUBMITTED_TESTED, 'All tests passed'),
 		(GRADED, 'Grading in progress'),
 		(CLOSED, 'Done'),
+		(CLOSED_TEST_FULL_PENDING, 'Done, full test pending')
 	)
 	STUDENT_STATES = (
 		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
@@ -137,8 +160,9 @@ class Submission(models.Model):
 		(TEST_FULL_PENDING, 'Waiting for grading'),
 		(TEST_FULL_FAILED, 'Waiting for grading'),
 		(SUBMITTED_TESTED, 'Waiting for grading'),
-		(GRADED, 'Grading in progress'),
-		(CLOSED, 'Done'),
+		(GRADED, 'Waiting for grading'),
+		(CLOSED, 'Graded'),
+		(CLOSED_TEST_FULL_PENDING, 'Graded')
 	)
 
 	assignment = models.ForeignKey(Assignment, related_name='submissions')
@@ -148,6 +172,7 @@ class Submission(models.Model):
 	notes = models.TextField(max_length=200, blank=True)
 	file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
+	modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
 	grading = models.ForeignKey(Grading, blank=True, null=True)
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
 	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
@@ -165,8 +190,11 @@ class Submission(models.Model):
 			if self.file_upload.is_executed():
 				return False
 		# No withdraw for graded jobs
-		if self.state in [self.GRADED, self.CLOSED]:
-			return False				
+		if self.state == self.GRADED:
+			return False			
+		# No withdraw for closed jobs
+		if self.is_closed():
+			return False	
 		# In principle, it can be withdrawn
 		# Now consider the deadlines
 		if self.assignment.hard_deadline < timezone.now():
@@ -183,18 +211,20 @@ class Submission(models.Model):
 		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
+	def is_closed(self):
+		return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
 	def green_tag(self):
-		if self.state == self.CLOSED:
+		if self.is_closed():
 			return self.grading.means_passed
 		else:
-			return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING]
+			return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING, self.GRADED, self.TEST_FULL_FAILED]
 	def red_tag(self):
-		if self.state == self.CLOSED:
+		if self.is_closed():
 			return not self.grading.means_passed
 		else:
 			return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
 	def show_grading(self):	
-		return self.state == self.CLOSED
+		return self.is_closed()
 	def get_initial_state(self):
 		if not self.assignment.attachment_is_tested():
 			return Submission.SUBMITTED
@@ -239,17 +269,18 @@ def inform_student(submission, state):
 
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_course_owner(request, submission):
+	user = request.user.get_full_name()
 	if submission.state == Submission.WITHDRAWN:
 		subject = "Submission withdrawn"
-		message = "User %s withdrawed solution %u for '%s'"%(request.user, submission.pk, submission.assignment)	
+		message = "User %s withdrawed solution %u for '%s'"%(user, submission.pk, submission.assignment)	
 
 	elif submission.state == Submission.SUBMITTED:
 		subject = "Submission ready for grading"
-		message = "User %s submitted a solution for '%s' that is ready for grading."%(request.user, submission.assignment)	
+		message = "User %s submitted a solution for '%s' that is ready for grading."%(user, submission.assignment)	
 
 	elif submission.state == Submission.SUBMITTED_TESTED:
 		subject = "Submission tested and ready for grading"
-		message = "User %s submitted a solution for '%s' that was tested and is ready for grading."%(request.user, submission.assignment)	
+		message = "User %s submitted a solution for '%s' that was tested and is ready for grading."%(user, submission.assignment)	
 
 	else:
 		subject = "Submission changed state"

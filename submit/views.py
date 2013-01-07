@@ -79,17 +79,9 @@ def jobs(request, secret):
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
-        # Hand over a pending job to be tested 
-        # compilation wins over validation wins over full test
-        # the assumption is that the time effort is increasing
-        #TODO: Make this one query
-        subm = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('created')
-        if len(subm) == 0:
-            subm = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('created')
-            if len(subm) == 0:
-                subm = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('created')
-                if len(subm) == 0:
-                    raise Http404
+        subm = Submission.pendingTests
+        if not subm:
+            raise Http404
         for sub in subm:
             assert(sub.file_upload)     # must be given when the state model is correct
             # only deliver jobs that are unfetched so far, or where the executor should have finished meanwhile
@@ -113,7 +105,7 @@ def jobs(request, secret):
                     response['Action'] = 'test_validity'
                     # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
                     response['PostRunValidation'] = MAIN_URL+"/download/%u/test_validity/secret=%s"%(sub.pk, JOB_EXECUTOR_SECRET)
-                elif sub.state == Submission.TEST_FULL_PENDING:
+                elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
                     response['Action'] = 'test_full'
                     # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
                     response['PostRunValidation'] = MAIN_URL+"/download/%u/test_full/secret=%s"%(sub.pk, JOB_EXECUTOR_SECRET)
@@ -144,6 +136,7 @@ def jobs(request, secret):
                     inform_course_owner(request, sub)
             else:
                 sub.state = Submission.TEST_COMPILE_FAILED                
+            inform_student(sub, sub.state)
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             submission_file.test_validity = request.POST['Message']
             if error_code == 0:
@@ -153,7 +146,8 @@ def jobs(request, secret):
                     sub.state = Submission.SUBMITTED_TESTED
                     inform_course_owner(request, sub)
             else:
-                sub.state = Submission.TEST_VALIDITY_FAILED                
+                sub.state = Submission.TEST_VALIDITY_FAILED         
+            inform_student(sub, sub.state)
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
             submission_file.test_full = request.POST['Message']
             if error_code == 0:
@@ -161,6 +155,13 @@ def jobs(request, secret):
                 inform_course_owner(request, sub)
             else:
                 sub.state = Submission.TEST_FULL_FAILED                
+            # full tests may be performed several times and are meant to be a silent activity
+            # therefore, we send no mail to the student here
+        elif request.POST['Action'] == 'test_full' and sub.state == Submission.CLOSED_TEST_FULL_PENDING:
+            submission_file.test_full = request.POST['Message']
+            sub.state = Submission.CLOSED
+            # full tests may be performed several times and are meant to be a silent activity
+            # therefore, we send no mail to the student here
         else:
             mail_managers('Warning: Inconsistent job state', str(sub.pk), fail_silently=True)
         submission_file.fetched=None            # makes the file fetchable again by executors, but now in a different state
@@ -169,7 +170,6 @@ def jobs(request, secret):
             submission_file.perf_data = perf_data
         submission_file.save()
         sub.save()
-        inform_student(sub, sub.state)
         return HttpResponse(status=201)
 
 @login_required
