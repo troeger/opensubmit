@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load projecttags %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - Test Machine Details
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Test Machine Details</h1>
+</div>
+
+<h3>Last contact</h3>
+{{ machine.last_contact }}
+
+{% endblock %}
