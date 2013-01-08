@@ -266,7 +266,8 @@ def update(request, subm_id):
 @login_required
 def machine(request, machine_id):
     machine = get_object_or_404(TestMachine, pk=machine_id)
-    return render(request, 'machine.html', {'machine': machine})
+    queue = Submission.pending_tests.all()
+    return render(request, 'machine.html', {'machine': machine, 'queue': queue})
 
 @login_required
 def withdraw(request, subm_id):

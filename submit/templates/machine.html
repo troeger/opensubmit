@@ -14,4 +14,11 @@
 <h3>Last contact</h3>
 {{ machine.last_contact }}
 
+<h3>Current job queue</h3>
+<table class="table">
+{% for subm in queue %}
+	<tr><td>{{ subm.assignment.course }}</td><td>{{ subm.assignment }}</td><td>{{ submission.authors.all|join:", " }}</td></tr>
+{% endfor %}
+</table>
+
 {% endblock %}
