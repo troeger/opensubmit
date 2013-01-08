@@ -241,6 +241,10 @@ class Submission(models.Model):
 	objects = models.Manager()
 	pending_tests = PendingTestsManager()
 
+class TestMachine(models.Model):
+	host = models.TextField(null=True)
+	last_contact = 	models.DateTimeField(editable=False)
+
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected
 # in the model at the moment
