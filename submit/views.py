@@ -82,9 +82,11 @@ def jobs(request, secret):
         machine = TestMachine.objects.get_or_create(host=request.get_host(), defaults={'last_contact': datetime.now()})
         machine[0].last_contact=datetime.now()
         machine[0].save()
-        subm = Submission.pending_tests.all()
-        if subm.count() == 0:
-            raise Http404
+        subm = Submission.pending_student_tests.all()
+        if len(subm) == 0:
+            subm = Submission.pending_full_tests.all()
+            if len(subm) == 0:
+                raise Http404
         for sub in subm:
             assert(sub.file_upload)     # must be given when the state model is correct
             # only deliver jobs that are unfetched so far, or where the executor should have finished meanwhile
@@ -193,7 +195,7 @@ def dashboard(request):
         'user': request.user,
         'username': username,
         'assignments': openassignments,
-	'pending_tests': Submission.pending_tests}
+        'machines': TestMachine.objects.all()}
     )
 
 @login_required
@@ -266,8 +268,9 @@ def update(request, subm_id):
 @login_required
 def machine(request, machine_id):
     machine = get_object_or_404(TestMachine, pk=machine_id)
-    queue = Submission.pending_tests.all()
-    return render(request, 'machine.html', {'machine': machine, 'queue': queue})
+    queue = Submission.pending_student_tests.all()
+    additional = len(Submission.pending_full_tests.all())
+    return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional})
 
 @login_required
 def withdraw(request, subm_id):

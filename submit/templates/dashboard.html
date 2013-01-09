@@ -114,11 +114,13 @@
 </section>
 
 <section>
-    <h3>Test machine</h3>
-    <p>
-        There are {{ pending_tests.count }} submission{{ pending_tests.count|pluralize }} in the system to be tested.
-    </p>
-</section>   
+    <h3>Test Machines</h3>
+    <ul class="list">
+    {% for machine in machines %}
+        <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+    {% endfor %}
+</ul>
+</section>
 
 
 {% endblock %}
