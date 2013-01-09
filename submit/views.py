@@ -10,11 +10,11 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
-from models import SubmissionFile, Submission, Assignment
+from models import SubmissionFile, Submission, Assignment, TestMachine
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 from models import inform_student, inform_course_owner
-from datetime import timedelta
+from datetime import timedelta, datetime
 import urllib, os
 
 
@@ -79,9 +79,14 @@ def jobs(request, secret):
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
-        subm = Submission.pending_tests.all()
-        if subm.count() == 0:
-            raise Http404
+        machine = TestMachine.objects.get_or_create(host=request.get_host(), defaults={'last_contact': datetime.now()})
+        machine[0].last_contact=datetime.now()
+        machine[0].save()
+        subm = Submission.pending_student_tests.all()
+        if len(subm) == 0:
+            subm = Submission.pending_full_tests.all()
+            if len(subm) == 0:
+                raise Http404
         for sub in subm:
             assert(sub.file_upload)     # must be given when the state model is correct
             # only deliver jobs that are unfetched so far, or where the executor should have finished meanwhile
@@ -184,14 +189,13 @@ def dashboard(request):
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
     openassignments=[ass for ass in Assignment.open_ones.all().order_by('soft_deadline').order_by('hard_deadline').order_by('title') if ass not in waiting_for_action]
-    pending_count = Submission.pending_tests.count()
     return render(request, 'dashboard.html', {
         'authored': authored,
         'archived': archived,
         'user': request.user,
         'username': username,
         'assignments': openassignments,
-        'pending_count': pending_count}
+        'machines': TestMachine.objects.all()}
     )
 
 @login_required
@@ -260,6 +264,13 @@ def update(request, subm_id):
         fileForm=SubmissionFileForm()
     return render(request, 'update.html', {'fileForm': fileForm,
                                            'submission': submission})
+
+@login_required
+def machine(request, machine_id):
+    machine = get_object_or_404(TestMachine, pk=machine_id)
+    queue = Submission.pending_student_tests.all()
+    additional = len(Submission.pending_full_tests.all())
+    return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional})
 
 @login_required
 def withdraw(request, subm_id):

@@ -218,7 +218,12 @@ fname, submid, action, timeout, validator=fetch_job()
 # decompress download, only returns on success
 finalpath=unpack_job(fname, submid, action)
 # perform action defined by the server for this download
-if action == 'test_compile':
+if action == 'get_config':
+	# send the execution host configuration details
+	conf = os.uname()
+	output = "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
+	send_result(output, 0, submid, action)
+elif action == 'test_compile':
 	# build it, only returns on success
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)

@@ -97,7 +97,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 
 	def setFullPendingStateAction(self, request, queryset):
 		# do not restart tests for withdrawn solutions, or for solutions in the middle of grading
-		qs = queryset.exclude(state=Submission.WITHDRAWN).exclude(state=Submission.GRADED)
+		qs = queryset.filter(Q(state=Submission.SUBMITTED_TESTED)|Q(state=Submission.TEST_FULL_FAILED)|Q(state=Submission.CLOSED))
 		numchanged = 0
 		for subm in qs:
 			if subm.assignment.has_full_test():

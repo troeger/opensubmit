@@ -7,6 +7,7 @@ from django.core.mail import send_mail, EmailMessage
 from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL
 from datetime import date
+from itertools import chain
 import string, unicodedata
 
 def upload_path(instance, filename):
@@ -104,22 +105,21 @@ class SubmissionFile(models.Model):
 	objects = models.Manager()
 	valid_ones = ValidSubmissionFileManager()
 
-class PendingTestsManager(models.Manager):
+class PendingStudentTestsManager(models.Manager):
 	def get_query_set(self):
-		# Hand over a pending job to be tested 
-		# compilation wins over validation wins over full test
+		# compilation wins over validation 
 		# the assumption is that the time effort is increasing
 		#TODO: Make this one query
-		subm = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('modified')
-		if len(subm) == 0:
-			subm = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('modified')
-			if len(subm) == 0:
-				subm = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('modified')
-				if len(subm) == 0:
-					subm = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('modified')
-					if len(subm) == 0:
-						subm = Submission.objects.none()
-		return subm
+		compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('modified')
+		validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('modified')
+		return list(chain(compileJobs, validationJobs))
+
+class PendingFullTestsManager(models.Manager):
+	def get_query_set(self):
+		# Non-graded job validatin wins over closed job re-evaluation
+		fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('modified')
+		closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('modified')
+		return list(chain(fullJobs, closedFullJobs))
 
 class Submission(models.Model):
 	RECEIVED = 'R'
@@ -239,7 +239,12 @@ class Submission(models.Model):
 	def state_for_students(self):
 		return dict(self.STUDENT_STATES)[self.state]
 	objects = models.Manager()
-	pending_tests = PendingTestsManager()
+	pending_student_tests = PendingStudentTestsManager()
+	pending_full_tests = PendingFullTestsManager()
+
+class TestMachine(models.Model):
+	host = models.TextField(null=True)
+	last_contact = 	models.DateTimeField(editable=False)
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected
@@ -272,22 +277,21 @@ def inform_student(submission, state):
 
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_course_owner(request, submission):
-	user = request.user.get_full_name()
 	if submission.state == Submission.WITHDRAWN:
 		subject = "Submission withdrawn"
-		message = "User %s withdrawed solution %u for '%s'"%(user, submission.pk, submission.assignment)	
+		message = "Withdrawn solution %u for '%s'"%(submission.pk, submission.assignment)	
 
 	elif submission.state == Submission.SUBMITTED:
 		subject = "Submission ready for grading"
-		message = "User %s submitted a solution for '%s' that is ready for grading."%(user, submission.assignment)	
+		message = "Solution for '%s' that is ready for grading."%(submission.assignment)	
 
 	elif submission.state == Submission.SUBMITTED_TESTED:
 		subject = "Submission tested and ready for grading"
-		message = "User %s submitted a solution for '%s' that was tested and is ready for grading."%(user, submission.assignment)	
+		message = "Solution for '%s' that was tested and is ready for grading."%(submission.assignment)	
 
 	else:
 		subject = "Submission changed state"
-		message = "Submission %u has now the state '%s'."%(submission.pk, submission.STATES[submission.state])	
+		message = "Submission has now the state '%s'."%(submission.STATES[submission.state])	
 
 	from_email = submission.assignment.course.owner.email
 	recipients = [submission.assignment.course.owner.email]

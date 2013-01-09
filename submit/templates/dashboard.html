@@ -114,13 +114,13 @@
 </section>
 
 <section>
-    <h3>Test machine</h3>
-    <p>
-    {% if pending_count %}
-        There are {{ pending_count }} submissions in the system to be tested.
-    {% endif %} 
-</p>
-</section>   
+    <h3>Test Machines</h3>
+    <ul class="list">
+    {% for machine in machines %}
+        <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+    {% endfor %}
+</ul>
+</section>
 
 
 {% endblock %}
