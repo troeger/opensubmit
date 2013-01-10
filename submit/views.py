@@ -93,7 +93,26 @@ def jobs(request, secret):
             # it may happen in special cases that stucked executors deliver their result after the timeout
             # this is not really a problem, since the result remains the same for the same file
             #TODO: Make this a part of the original query
+            #TODO: Count number of attempts to leave the same state, mark as finally failed in case; alternatively, the executor must always deliver a re.
             if (not sub.file_upload.fetched) or (sub.file_upload.fetched + timedelta(seconds=sub.assignment.attachment_test_timeout) < timezone.now()):
+                if sub.file_upload.fetched:
+                    # Stuff that has timed out
+                    # we mark it as failed so that the user gets informed
+                    #TODO:  Late delivery for such a submission by the executor witll break everything
+		    sub.file_upload.fetched = None
+                    if sub.state == Submission.TEST_COMPILE_PENDING:
+                        sub.state = Submission.TEST_COMPILE_FAILED
+                        sub.file_upload.test_compile = "Killed due to non-reaction on signals and timeout. Please check your application"
+                    if sub.state == Submission.TEST_VALIDITY_PENDING:
+                        sub.file_upload.test_validity = "Killed due to non-reaction on signals and timeout. Please check your application"
+                        sub.state = Submission.TEST_VALIDITY_FAILED
+                    if sub.state == Submission.TEST_FULL_PENDING:
+                        sub.file_upload.test_full = "Killed due to non-reaction on signals and timeout. Please check your application"
+                        sub.state = Submission.TEST_FULL_FAILED
+                    sub.file_upload.save()
+                    sub.save()
+                    inform_student(sub, sub.state)
+                    continue
                 # create HTTP response with file download
                 f=sub.file_upload.attachment
                 # on dev server, we sometimes have stale database entries
@@ -119,6 +138,9 @@ def jobs(request, secret):
                 # store date of fetching for determining jobs stucked at the executor
                 sub.file_upload.fetched=timezone.now()
                 sub.file_upload.save()
+		# 'touch' submission so that it becomes sorted to the end of the queue if something goes wrong
+		sub.modified = timezone.now()
+		sub.save()
                 return response
         # no feasible match in the list of possible jobs
         raise Http404

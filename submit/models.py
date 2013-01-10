@@ -110,15 +110,15 @@ class PendingStudentTestsManager(models.Manager):
 		# compilation wins over validation 
 		# the assumption is that the time effort is increasing
 		#TODO: Make this one query
-		compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('modified')
-		validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('modified')
+		compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('-modified')
+		validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
 		return list(chain(compileJobs, validationJobs))
 
 class PendingFullTestsManager(models.Manager):
 	def get_query_set(self):
 		# Non-graded job validatin wins over closed job re-evaluation
-		fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('modified')
-		closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('modified')
+		fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('-modified')
+		closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('-modified')
 		return list(chain(fullJobs, closedFullJobs))
 
 class Submission(models.Model):
