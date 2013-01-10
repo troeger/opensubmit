@@ -51,16 +51,25 @@ def fetch_job():
 		headers=result.info()
 		submid=headers['SubmissionFileId']
 		action=headers['Action']
-		timeout=int(headers['Timeout'])
-		logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
-		if 'PostRunValidation' in headers:
-			validator=headers['PostRunValidation']
+		if action != "get_config":
+			timeout=int(headers['Timeout'])
+			logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
+			if 'PostRunValidation' in headers:
+				validator=headers['PostRunValidation']
+			else:
+				validator=None
+			target=open(fname,"wb")
+			target.write(result.read())
+			target.close()
+			return fname, submid, action, timeout, validator
 		else:
-			validator=None
-		target=open(fname,"wb")
-		target.write(result.read())
-		target.close()
-		return fname, submid, action, timeout, validator
+			#TODO: Ugly hack
+			conf = os.uname()
+			output = "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
+			post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
+			post_data = urllib.parse.urlencode(post_data)
+			post_data = post_data.encode('utf-8')
+			urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
 	except urllib.error.HTTPError as e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
@@ -217,12 +226,7 @@ fname, submid, action, timeout, validator=fetch_job()
 # decompress download, only returns on success
 finalpath=unpack_job(fname, submid, action)
 # perform action defined by the server for this download
-if action == 'get_config':
-	# send the execution host configuration details
-	conf = os.uname()
-	output = "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
-	send_result(output, 0, submid, action)
-elif action == 'test_compile':
+if action == 'test_compile':
 	# build it, only returns on success
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)

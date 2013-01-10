@@ -45,7 +45,13 @@
 <p>There are {{ additional }} additional jobs being queued.</p>
 {% endif %}
 
+{% if machine.config %}
+<h3>Machine configuration</h3>
+{{ machine.config }}
+{% endif %}
+
 <br/><br/>
+
 <p>Last contact: {{ machine.last_contact }}</p>
 
 
