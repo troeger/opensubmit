@@ -51,17 +51,30 @@ def fetch_job():
 		headers=result.info()
 		submid=headers['SubmissionFileId']
 		action=headers['Action']
-		timeout=int(headers['Timeout'])
-		logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
-		if 'PostRunValidation' in headers:
-			validator=headers['PostRunValidation']
-			logging.debug("Using validator from "+validator)
+		if action != "get_config":
+			timeout=int(headers['Timeout'])
+			logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
+			if 'PostRunValidation' in headers:
+				validator=headers['PostRunValidation']
+			else:
+				validator=None
+			target=open(fname,"wb")
+			target.write(result.read())
+			target.close()
+			return fname, submid, action, timeout, validator
 		else:
-			validator=None
-		target=open(fname,"wb")
-		target.write(result.read())
-		target.close()
-		return fname, submid, action, timeout, validator
+			#TODO: Ugly hack
+			conf = os.uname()
+			output =  "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
+			proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			javainfo = proc.communicate()[0]
+			javainfo=javainfo.decode("utf-8")
+			output += javainfo
+			post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
+			post_data = urllib.parse.urlencode(post_data)
+			post_data = post_data.encode('utf-8')
+			urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)
+			exit(-1)	
 	except urllib.error.HTTPError as e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
@@ -218,12 +231,7 @@ fname, submid, action, timeout, validator=fetch_job()
 # decompress download, only returns on success
 finalpath=unpack_job(fname, submid, action)
 # perform action defined by the server for this download
-if action == 'get_config':
-	# send the execution host configuration details
-	conf = os.uname()
-	output = "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
-	send_result(output, 0, submid, action)
-elif action == 'test_compile':
+if action == 'test_compile':
 	# build it, only returns on success
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
@@ -236,7 +244,16 @@ elif action == 'test_validity' or action == 'test_full':
 	run_job(finalpath,['make'],submid,action,timeout)
 	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
-	urllib.request.urlretrieve(validator, finalpath+"/validator.py")
+	urllib.request.urlretrieve(validator, finalpath+"/download")
+	if zipfile.is_zipfile(finalpath+"/download"):
+		logging.debug("Validator is a ZIP file, unpacking it.")
+		f=zipfile.ZipFile(finalpath+"/download", 'r')
+		f.extractall(finalpath)
+		os.remove(finalpath+"/download")
+		# ZIP file is expected to contain 'validator.py'
+		assert(os.path.exists(finalpath+"/validator.py"))
+	else:
+		os.rename(finalpath+"/download",finalpath+"/validator.py")
 	os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
 	# Allow submission to load their own libraries
 	logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)

@@ -79,9 +79,18 @@ def jobs(request, secret):
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
-        machine = TestMachine.objects.get_or_create(host=request.get_host(), defaults={'last_contact': datetime.now()})
-        machine[0].last_contact=datetime.now()
-        machine[0].save()
+        try:
+            machine = TestMachine.objects.get(host=request.get_host())
+            machine.last_contact=datetime.now()
+            machine.save()
+        except:
+            # ask for configuration of new execution hosts by returning the according action
+            machine = TestMachine( host=request.get_host(), last_contact=datetime.now() )
+            machine.save()
+            response=HttpResponse()
+            response['Action'] = 'get_config'
+            response['MachineId'] = machine.pk
+            return response
         subm = Submission.pending_student_tests.all()
         if len(subm) == 0:
             subm = Submission.pending_full_tests.all()
@@ -146,6 +155,13 @@ def jobs(request, secret):
         raise Http404
 
     elif request.method == "POST":
+        # first check if this is just configuration data, and not a job result
+        if request.POST['Action'] == 'get_config':
+            machine = TestMachine.objects.get(pk=int(request.POST['MachineId']))
+            machine.config = request.POST['Config']
+            machine.save()
+            return HttpResponse(status=201)
+
         # executor.py is providing the results as POST parameters
         sid = request.POST['SubmissionFileId']
         submission_file=get_object_or_404(SubmissionFile, pk=sid)

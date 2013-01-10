@@ -246,6 +246,7 @@ class Submission(models.Model):
 class TestMachine(models.Model):
 	host = models.TextField(null=True)
 	last_contact = 	models.DateTimeField(editable=False)
+	config = models.TextField(null=True)
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected

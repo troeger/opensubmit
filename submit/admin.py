@@ -1,4 +1,4 @@
-from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student
+from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
 from django.db import models
 from django.db.models import Q
@@ -192,3 +192,6 @@ class CourseAdmin(admin.ModelAdmin):
 	list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
 
 admin.site.register(Course, CourseAdmin)
+
+admin.site.register(TestMachine)
+
