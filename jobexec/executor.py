@@ -55,7 +55,6 @@ def fetch_job():
 		logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
 		if 'PostRunValidation' in headers:
 			validator=headers['PostRunValidation']
-			logging.debug("Using validator from "+validator)
 		else:
 			validator=None
 		target=open(fname,"wb")
@@ -236,7 +235,16 @@ elif action == 'test_validity' or action == 'test_full':
 	run_job(finalpath,['make'],submid,action,timeout)
 	# fetch validator into target directory 
 	logging.debug("Fetching validator script from "+validator)
-	urllib.request.urlretrieve(validator, finalpath+"/validator.py")
+	urllib.request.urlretrieve(validator, finalpath+"/download")
+	if zipfile.is_zipfile(finalpath+"/download"):
+		logging.debug("Validator is a ZIP file, unpacking it.")
+		f=zipfile.ZipFile(finalpath+"/download", 'r')
+		f.extractall(finalpath)
+		os.remove(finalpath+"/download")
+		# ZIP file is expected to contain 'validator.py'
+		assert(os.path.exists(finalpath+"/validator.py"))
+	else:
+		os.rename(finalpath+"/download",finalpath+"/validator.py")
 	os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
 	# Allow submission to load their own libraries
 	logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
