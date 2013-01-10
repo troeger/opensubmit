@@ -65,11 +65,16 @@ def fetch_job():
 		else:
 			#TODO: Ugly hack
 			conf = os.uname()
-			output = "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
+			output =  "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
+			proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			javainfo = proc.communicate()[0]
+			javainfo=javainfo.decode("utf-8")
+			output += javainfo
 			post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
 			post_data = urllib.parse.urlencode(post_data)
 			post_data = post_data.encode('utf-8')
-			urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)	
+			urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)
+			exit(-1)	
 	except urllib.error.HTTPError as e:
 		if e.code == 404:
 			logging.debug("Nothing to do.")
