@@ -155,9 +155,9 @@ class Submission(models.Model):
 		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Waiting for grading'),
 		(TEST_COMPILE_PENDING, 'Waiting for compilation test'),
-		(TEST_COMPILE_FAILED, 'Compilation failed, please re-upload'),
+		(TEST_COMPILE_FAILED, 'Compilation failed'),
 		(TEST_VALIDITY_PENDING, 'Waiting for validation test'),
-		(TEST_VALIDITY_FAILED, 'Validation failed, please re-upload'),
+		(TEST_VALIDITY_FAILED, 'Validation failed'),
 		(TEST_FULL_PENDING, 'Waiting for grading'),
 		(TEST_FULL_FAILED, 'Waiting for grading'),
 		(SUBMITTED_TESTED, 'Waiting for grading'),
@@ -209,7 +209,8 @@ class Submission(models.Model):
 		# Soft deadline is not over, or there is no soft deadline 
 		return True
 	def can_reupload(self):
-		return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
+		# Re-upload should only be possible if the deadlines are not over, which is part of the withdrawal check
+		return (self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]) and self.can_withdraw()
 	def is_withdrawn(self):
 		return self.state == self.WITHDRAWN
 	def is_closed(self):
