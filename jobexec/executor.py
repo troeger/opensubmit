@@ -66,10 +66,14 @@ def fetch_job():
 			#TODO: Ugly hack
 			conf = os.uname()
 			output =  "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
-			proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			javainfo = proc.communicate()[0]
-			javainfo=javainfo.decode("utf-8")
-			output += javainfo
+			try:
+				proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				javainfo = proc.communicate()[0]
+				javainfo=javainfo.decode("utf-8")
+				output += javainfo
+			except:
+				pass
+			logging.debug("Sending config data: "+output)
 			post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
 			post_data = urllib.parse.urlencode(post_data)
 			post_data = post_data.encode('utf-8')
