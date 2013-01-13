@@ -255,8 +255,12 @@ elif action == 'test_validity' or action == 'test_full':
 		f.extractall(finalpath)
 		os.remove(finalpath+"/download")
 		# ZIP file is expected to contain 'validator.py'
-		assert(os.path.exists(finalpath+"/validator.py"))
+		if not os.path.exists(finalpath+"/validator.py"):
+			logging.error("Validator ZIP package does not contain validator.py")
+			#TODO: Ugly hack, make error reporting better
+			send_result("Internal error, please consult the course administrators.", -1, submid, action, "")
 	else:
+		logging.debug("Validator is a single file, renaming it.")
 		os.rename(finalpath+"/download",finalpath+"/validator.py")
 	os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
 	# Allow submission to load their own libraries
