@@ -209,6 +209,8 @@ def jobs(request, secret):
         perf_data = request.POST['PerfData'].strip()
         if perf_data != "":
             submission_file.perf_data = perf_data
+        else:
+            submission_file.perf_data = None
         submission_file.save()
         sub.save()
         return HttpResponse(status=201)
