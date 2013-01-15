@@ -216,7 +216,7 @@ class Submission(models.Model):
 	def is_closed(self):
 		return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
 	def green_tag(self):
-		if self.is_closed():
+		if self.is_closed() and self.grading:
 			return self.grading.means_passed
 		else:
 			return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING, self.GRADED, self.TEST_FULL_FAILED]

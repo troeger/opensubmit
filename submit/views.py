@@ -110,15 +110,16 @@ def jobs(request, secret):
                     if sub.state == Submission.TEST_COMPILE_PENDING:
                         sub.state = Submission.TEST_COMPILE_FAILED
                         sub.file_upload.test_compile = "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input."
+                        inform_student(sub, sub.state)
                     if sub.state == Submission.TEST_VALIDITY_PENDING:
                         sub.file_upload.test_validity = "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input."
                         sub.state = Submission.TEST_VALIDITY_FAILED
+                        inform_student(sub, sub.state)
                     if sub.state == Submission.TEST_FULL_PENDING:
-                        sub.file_upload.test_full = "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input."
+                        sub.file_upload.test_full = "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test."
                         sub.state = Submission.TEST_FULL_FAILED
                     sub.file_upload.save()
                     sub.save()
-                    inform_student(sub, sub.state)
                     continue
                 # create HTTP response with file download
                 f=sub.file_upload.attachment
