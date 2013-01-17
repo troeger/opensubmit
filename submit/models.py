@@ -61,6 +61,7 @@ class Assignment(models.Model):
 	attachment_test_timeout = models.IntegerField(default=30)
 	attachment_test_compile = models.BooleanField(default=False)
 	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	validity_script_download = models.BooleanField(default=False)
 	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
 
 	def has_validity_test(self):
