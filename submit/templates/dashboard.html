@@ -22,6 +22,8 @@
                 <tr>
                     <th>Course</th>
                     <th>Assignment</th>
+                    <th>Start</th>
+                    <th>Deadline</th>
                     <th>Time Left</th>
                     <th>Action</th>
                 </tr>
@@ -36,6 +38,8 @@
 				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation skript)</a>
 			{% endif %}
 			</td>
+                        <td>{{ assignment.publish_at }}</td>
+                        <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline }}{%else %}{{ assignment.hard_deadline }}{% endif %}</td>
                         <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                         <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Submission</a></td>
                     </tr>

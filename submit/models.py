@@ -44,17 +44,13 @@ class Course(models.Model):
 	def __unicode__(self):
 		return unicode(self.title)
 
-class OpenAssignmentsManager(models.Manager):
-	def get_query_set(self):
-		return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = timezone.now()).filter(course__active__exact=True)
-
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)
 	course = models.ForeignKey(Course, related_name='assignments')
 	download = models.URLField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments")
-	published = models.DateTimeField(blank=True, null=True)
+	publish_at = models.DateTimeField(default=timezone.now())
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
@@ -73,8 +69,6 @@ class Assignment(models.Model):
 
 	def __unicode__(self):
 		return unicode(self.title)
-	objects = models.Manager() # The default manager.
-	open_ones = OpenAssignmentsManager() 
 
 #class Tutor(models.Model):
 #	user = models.ForeignKey(User, related_name='tutor_roles')
