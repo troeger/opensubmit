@@ -10,4 +10,5 @@ lib
 .DS_Store
 *.sublime-*
 executor.cfg
+*.orig
 

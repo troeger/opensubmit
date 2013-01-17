@@ -66,10 +66,14 @@ def fetch_job():
 			#TODO: Ugly hack
 			conf = os.uname()
 			output =  "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
-			proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			javainfo = proc.communicate()[0]
-			javainfo=javainfo.decode("utf-8")
-			output += javainfo
+			try:
+				proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				javainfo = proc.communicate()[0]
+				javainfo=javainfo.decode("utf-8")
+				output += javainfo
+			except:
+				pass
+			logging.debug("Sending config data: "+output)
 			post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
 			post_data = urllib.parse.urlencode(post_data)
 			post_data = post_data.encode('utf-8')
@@ -251,8 +255,12 @@ elif action == 'test_validity' or action == 'test_full':
 		f.extractall(finalpath)
 		os.remove(finalpath+"/download")
 		# ZIP file is expected to contain 'validator.py'
-		assert(os.path.exists(finalpath+"/validator.py"))
+		if not os.path.exists(finalpath+"/validator.py"):
+			logging.error("Validator ZIP package does not contain validator.py")
+			#TODO: Ugly hack, make error reporting better
+			send_result("Internal error, please consult the course administrators.", -1, submid, action, "")
 	else:
+		logging.debug("Validator is a single file, renaming it.")
 		os.rename(finalpath+"/download",finalpath+"/validator.py")
 	os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
 	# Allow submission to load their own libraries

@@ -31,7 +31,11 @@
                 {% for assignment in assignments %} 
                     <tr>
                         <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
-                        <td><a href="{{ assignment.download }}">{{ assignment }}</a></td>
+                        <td><a href="{{ assignment.download }}">{{ assignment }}</a>
+			{% if assignment.attachment_test_validity %}
+				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation skript)</a>
+			{% endif %}
+			</td>
                         <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                         <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Submission</a></td>
                     </tr>
@@ -117,7 +121,7 @@
     <h3>Test Machines</h3>
     <ul class="list">
     {% for machine in machines %}
-        <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+        <li><a href="{% url 'machine' machine.pk %}">Test machine</a></li>
     {% endfor %}
 </ul>
 </section>

@@ -44,19 +44,19 @@ def settings(request):
         settingsForm=SettingsForm(instance=request.user)
     return render(request, 'settings.html', {'settingsForm': settingsForm})
 
-def download(request, subm_id, filetype, secret=None):
-    subm = get_object_or_404(Submission, pk=subm_id)
+def download(request, obj_id, filetype, secret=None):
     if filetype=="attachment":
+        subm = get_object_or_404(Submission, pk=obj_id)
         if not (request.user in subm.authors.all() or request.user.is_staff):
 		return HttpResponseForbidden()
         f=subm.file_upload.attachment
         fname=subm.file_upload.basename()
-    elif filetype=="test_validity":
-        ass = subm.assignment
+    elif filetype=="validity_testscript":
+        ass = get_object_or_404(Assignment, pk=obj_id)
         f=ass.attachment_test_validity
         fname=f.name[f.name.rfind('/')+1:]
-    elif filetype=="test_full":
-        ass = subm.assignment
+    elif filetype=="full_testscript":
+        ass = get_object_or_404(Assignment, pk=obj_id)
         f=ass.attachment_test_full
         fname=f.name[f.name.rfind('/')+1:]
     else:
@@ -64,8 +64,6 @@ def download(request, subm_id, filetype, secret=None):
     response=HttpResponse(f, content_type='application/binary')
     response['Content-Disposition'] = 'attachment; filename="%s"'%fname
     return response
-
-
 
 @csrf_exempt
 def jobs(request, secret):
@@ -111,16 +109,17 @@ def jobs(request, secret):
 		    sub.file_upload.fetched = None
                     if sub.state == Submission.TEST_COMPILE_PENDING:
                         sub.state = Submission.TEST_COMPILE_FAILED
-                        sub.file_upload.test_compile = "Killed due to non-reaction on signals and timeout. Please check your application"
+                        sub.file_upload.test_compile = "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input."
+                        inform_student(sub, sub.state)
                     if sub.state == Submission.TEST_VALIDITY_PENDING:
-                        sub.file_upload.test_validity = "Killed due to non-reaction on signals and timeout. Please check your application"
+                        sub.file_upload.test_validity = "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input."
                         sub.state = Submission.TEST_VALIDITY_FAILED
+                        inform_student(sub, sub.state)
                     if sub.state == Submission.TEST_FULL_PENDING:
-                        sub.file_upload.test_full = "Killed due to non-reaction on signals and timeout. Please check your application"
+                        sub.file_upload.test_full = "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test."
                         sub.state = Submission.TEST_FULL_FAILED
                     sub.file_upload.save()
                     sub.save()
-                    inform_student(sub, sub.state)
                     continue
                 # create HTTP response with file download
                 f=sub.file_upload.attachment
@@ -137,11 +136,11 @@ def jobs(request, secret):
                 elif sub.state == Submission.TEST_VALIDITY_PENDING:
                     response['Action'] = 'test_validity'
                     # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = MAIN_URL+"/download/%u/test_validity/secret=%s"%(sub.pk, JOB_EXECUTOR_SECRET)
+                    response['PostRunValidation'] = MAIN_URL+"/download/%u/validity_testscript/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
                 elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
                     response['Action'] = 'test_full'
                     # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = MAIN_URL+"/download/%u/test_full/secret=%s"%(sub.pk, JOB_EXECUTOR_SECRET)
+                    response['PostRunValidation'] = MAIN_URL+"/download/%u/full_testscript/secret=%s"%(sub.assignment.pk, JOB_EXECUTOR_SECRET)
                 else:
                     assert(False)
                 # store date of fetching for determining jobs stucked at the executor
@@ -211,6 +210,8 @@ def jobs(request, secret):
         perf_data = request.POST['PerfData'].strip()
         if perf_data != "":
             submission_file.perf_data = perf_data
+        else:
+            submission_file.perf_data = None
         submission_file.save()
         sub.save()
         return HttpResponse(status=201)
