@@ -7,7 +7,7 @@ if cwd.startswith('/usr/local'):
     is_production = True
 
 if is_production:
-    DEBUG = False
+    DEBUG = True
     DATABASES = {
         'default': {
             'ENGINE':   'django.db.backends.postgresql_psycopg2', 

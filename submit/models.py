@@ -44,23 +44,20 @@ class Course(models.Model):
 	def __unicode__(self):
 		return unicode(self.title)
 
-class OpenAssignmentsManager(models.Manager):
-	def get_query_set(self):
-		return super(OpenAssignmentsManager, self).get_query_set().filter(hard_deadline__gt = timezone.now()).filter(course__active__exact=True)
-
 class Assignment(models.Model):
 	title = models.CharField(max_length=200)
 	course = models.ForeignKey(Course, related_name='assignments')
 	download = models.URLField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments")
-	published = models.DateTimeField(blank=True, null=True)
+	publish_at = models.DateTimeField(default=timezone.now())
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
 	has_attachment = models.BooleanField(default=False)
 	attachment_test_timeout = models.IntegerField(default=30)
 	attachment_test_compile = models.BooleanField(default=False)
 	attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
+	validity_script_download = models.BooleanField(default=False)
 	attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
 
 	def has_validity_test(self):
@@ -72,8 +69,6 @@ class Assignment(models.Model):
 
 	def __unicode__(self):
 		return unicode(self.title)
-	objects = models.Manager() # The default manager.
-	open_ones = OpenAssignmentsManager() 
 
 #class Tutor(models.Model):
 #	user = models.ForeignKey(User, related_name='tutor_roles')
@@ -216,7 +211,7 @@ class Submission(models.Model):
 	def is_closed(self):
 		return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
 	def green_tag(self):
-		if self.is_closed():
+		if self.is_closed() and self.grading:
 			return self.grading.means_passed
 		else:
 			return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING, self.GRADED, self.TEST_FULL_FAILED]

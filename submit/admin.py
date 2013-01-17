@@ -133,7 +133,8 @@ class SubmissionAdmin(admin.ModelAdmin):
 		response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
 		for subm in qs:
 			if subm.file_upload.perf_data != None:
-				response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,authors(subm) ))			
+				auth =  ", ".join([author.get_full_name() for author in subm.authors.all()])
+				response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,auth ))			
 				response.write(subm.file_upload.perf_data)
 				response.write("\n")			
 		return response
