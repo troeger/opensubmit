@@ -73,6 +73,13 @@ def fetch_job():
 				output += javainfo
 			except:
 				pass
+			try:
+				proc=subprocess.Popen(["nvidia-smi","-q"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				nvidiainfo = proc.communicate()[0]
+				nvidiainfo=nvidiainfo.decode("utf-8")
+				output += nvidiainfo
+			except:
+				pass
 			logging.debug("Sending config data: "+output)
 			post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
 			post_data = urllib.parse.urlencode(post_data)
@@ -244,6 +251,9 @@ elif action == 'test_validity' or action == 'test_full':
 	# prepare the output file for validator performance results
 	perfdata_fname = finalpath+"/perfresults.csv" 
 	open(perfdata_fname,"w").close()
+	# run configure script, if available.
+	#TODO: document this in the front-end
+	os.system("./configure")
 	# build it, only returns on success
 	run_job(finalpath,['make'],submid,action,timeout)
 	# fetch validator into target directory 
