@@ -140,39 +140,46 @@ def handle_alarm(signum, frame):
 
 # Perform some execution activity, with timeout support
 # This is used both for compilation and validator script execution
-def run_job(finalpath, cmd, submid, action, timeout):
+def run_job(finalpath, cmd, submid, action, timeout, ignore_errors=False):
 	logging.debug("Changing to target directory.")
 	os.chdir(finalpath)
 	logging.debug("Installing signal handler for timeout")
 	signal.signal(signal.SIGALRM, handle_alarm)
 	logging.info("Spawning process for "+str(cmd))
-	proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-	logging.debug("Starting timeout counter: %u seconds"%timeout)
-	signal.alarm(timeout)
-	output=None
-	stderr=None
 	try:
-		output, stderr = proc.communicate()
-		logging.debug("Process terminated")
+		proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
+		logging.debug("Starting timeout counter: %u seconds"%timeout)
+		signal.alarm(timeout)
+		output=None
+		stderr=None
+		try:
+			output, stderr = proc.communicate()
+			logging.debug("Process terminated")
+		except:
+			logging.debug("Seems like the process got killed by the timeout handler")
+		if output == None:
+			output = ""
+		else:
+			output=output.decode("utf-8")
+		if stderr == None:
+			stderr = ""
+		else:
+			stderr=stderr.decode("utf-8")
+		signal.alarm(0)
+		if action=='test_compile':
+			action_title='Compilation'
+		elif action=='test_validity':
+			action_title='Validation'
+		elif action=='test_full':
+			action_title='Testing'
+		else:
+			assert(False)
 	except:
-		logging.debug("Seems like the process got killed by the timeout handler")
-	if output == None:
-		output = ""
-	else:
-		output=output.decode("utf-8")
-	if stderr == None:
-		stderr = ""
-	else:
-		stderr=stderr.decode("utf-8")
-	signal.alarm(0)
-	if action=='test_compile':
-		action_title='Compilation'
-	elif action=='test_validity':
-		action_title='Validation'
-	elif action=='test_full':
-		action_title='Testing'
-	else:
-		assert(False)
+		if ignore_errors:
+			return ""
+		else:
+			logging.info("Exception on process execution: "+str(e))
+			cleanup_and_exit(finalpath, -1)	
 	if proc.returncode == 0:
 		logging.info("Executed with error code 0: \n\n"+output)
 		return output
@@ -243,6 +250,9 @@ fname, submid, action, timeout, validator=fetch_job()
 finalpath=unpack_job(fname, submid, action)
 # perform action defined by the server for this download
 if action == 'test_compile':
+	# run configure script, if available.
+	#TODO: document this in the front-end
+	run_job(finalpath,['./configure'],submid, action, timeout, True)
 	# build it, only returns on success
 	output=run_job(finalpath,['make'],submid, action, timeout)
 	send_result(output, 0, submid, action)
@@ -253,7 +263,7 @@ elif action == 'test_validity' or action == 'test_full':
 	open(perfdata_fname,"w").close()
 	# run configure script, if available.
 	#TODO: document this in the front-end
-	os.system("./configure")
+	run_job(finalpath,['./configure'],submid, action, timeout, True)
 	# build it, only returns on success
 	run_job(finalpath,['make'],submid,action,timeout)
 	# fetch validator into target directory 
