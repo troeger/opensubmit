@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
-from models import SubmissionFile, Submission, Assignment, TestMachine
+from models import SubmissionFile, Submission, Assignment, TestMachine, Course
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 from models import inform_student, inform_course_owner
@@ -308,6 +308,38 @@ def update(request, subm_id):
         fileForm=SubmissionFileForm()
     return render(request, 'update.html', {'fileForm': fileForm,
                                            'submission': submission})
+
+@login_required
+def gradingtable(request, course_id):
+    assert(request.user.is_staff)       #TODO: Decorator ?
+    gradings={}
+    course = get_object_or_404(Course, pk=course_id)
+    assignments = course.assignments.all().order_by('title')
+    # find all gradings per author and assignment
+    for assignment in assignments:        
+        for submission in assignment.submissions.all():
+            for author in submission.authors.all():
+                if author not in gradings.keys():
+                    gradings[author] = {assignment.pk : submission.grading}
+                else:
+                    gradings[author][assignment.pk] = submission.grading
+    # prepare gradings per author + assignment for rendering
+    resulttable=[]
+    for author, gradlist in gradings.iteritems():
+        columns=[]
+        numpassed=0
+        columns.append(author)
+        for assignment in assignments:
+            if assignment.pk in gradlist:
+                passed = gradlist[assignment.pk].means_passed
+                columns.append(gradlist[assignment.pk])
+                if passed:
+                    numpassed += 1
+            else:
+                columns.append('-')
+        columns.append("%s / %s"%(numpassed, len(assignments)))
+        resulttable.append(columns)
+    return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments,'resulttable': resulttable})
 
 @login_required
 def machine(request, machine_id):
