@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -191,6 +192,13 @@ def assignments(course):
 
 class CourseAdmin(admin.ModelAdmin):
 	list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
+	actions=['showGradingTable']
+
+	def showGradingTable(self, request, queryset):
+		course = queryset.all()[0]
+		return redirect('gradingtable', course_id=course.pk)
+	showGradingTable.short_description = "Show grading table"
+
 
 admin.site.register(Course, CourseAdmin)
 
