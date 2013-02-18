@@ -328,18 +328,22 @@ def gradingtable(request, course_id):
     for author, gradlist in gradings.iteritems():
         columns=[]
         numpassed=0
-        columns.append(author)
+        columns.append(author.last_name)
+        columns.append(author.first_name)
         for assignment in assignments:
             if assignment.pk in gradlist:
-                passed = gradlist[assignment.pk].means_passed
-                columns.append(gradlist[assignment.pk])
-                if passed:
-                    numpassed += 1
+                if gradlist[assignment.pk] != None:
+			passed = gradlist[assignment.pk].means_passed
+			columns.append(gradlist[assignment.pk])
+			if passed:
+			    numpassed += 1
+                else:
+                        columns.append('-')		
             else:
                 columns.append('-')
         columns.append("%s / %s"%(numpassed, len(assignments)))
         resulttable.append(columns)
-    return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments,'resulttable': resulttable})
+    return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments,'resulttable': sorted(resulttable)})
 
 @login_required
 def machine(request, machine_id):
