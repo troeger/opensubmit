@@ -192,12 +192,17 @@ def assignments(course):
 
 class CourseAdmin(admin.ModelAdmin):
 	list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
-	actions=['showGradingTable']
+	actions=['showGradingTable', 'downloadArchive']
 
 	def showGradingTable(self, request, queryset):
 		course = queryset.all()[0]
 		return redirect('gradingtable', course_id=course.pk)
 	showGradingTable.short_description = "Show grading table"
+
+	def downloadArchive(self, request, queryset):
+		course = queryset.all()[0]
+		return redirect('coursearchive', course_id=course.pk)
+	downloadArchive.short_description = "Download course archive file"
 
 
 admin.site.register(Course, CourseAdmin)
