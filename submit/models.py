@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMessage
 from django.core.urlresolvers import reverse
-from settings import MAIN_URL, MEDIA_URL
+from settings import MAIN_URL, MEDIA_URL, MEDIA_ROOT
 from datetime import date
 from itertools import chain
 import string, unicodedata
@@ -95,6 +95,8 @@ class SubmissionFile(models.Model):
 		# to implement access protection, we implement our own download
 		# this implies that the Apache media serving is disabled
 		return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
+	def absolute_path(self):
+		return MEDIA_ROOT + "/" + self.attachment.name
 	def is_executed(self):
 		return self.fetched != None
 	objects = models.Manager()
