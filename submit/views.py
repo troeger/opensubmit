@@ -375,66 +375,6 @@ def coursearchive(request, course_id):
             else:
                 # unpacking not possible, just copy it
                 shutil.copyfile(sub.file_upload.absolute_path(), tempdir+"/"+sub.file_upload.basename())
-            print tempdir
-            # Create final ZIP file
-            state = sub.state_for_students().replace(" ","_").lower()
-            modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
-            submdir = "%s/%s/%s_%s/"%(assdir, str(sub.submitter), modified, state )
-            for root, dirs, files in os.walk(tempdir):
-                for f in files:
-                    z.write(root+"/"+f, submdir+'student_files/'+f, zipfile.ZIP_DEFLATED)
-            # add text file with additional information
-            info = tempfile.NamedTemporaryFile()
-            info.write("Status: %s\n"%sub.state_for_students())
-            info.write("Submitter: %s\n"%sub.submitter)
-            info.write("Last modification: %s\n"%modified)
-            info.write("Authors:\n")
-            for auth in sub.authors.all():
-                info.write("\t%s\n"%str(auth))
-            if sub.grading:
-                info.write("Grading: %s\n"%str(sub.grading))
-            if sub.notes:
-                info.write("Author notes:\n%s\n"%sub.notes)
-            if sub.grading_notes:
-                info.write("Grading notes:\n%s\n"%sub.grading_notes)
-            info.flush()    # no closing here, because it disappears then
-            z.write(info.name, submdir+"info.txt")
-    z.close()
-    # go back to start in ZIP file so that Django can deliver it
-    output.seek(0)
-    response = HttpResponse(output, mimetype = "application/x-zip-compressed")
-    response['Content-Disposition'] = 'attachment; filename=%s.zip'%coursename
-    return response
-
-@login_required
-def coursearchive(request, course_id):
-    assert(request.user.is_staff)       #TODO: Decorator ?
-    course = get_object_or_404(Course, pk=course_id)
-    coursename = course.title.replace(" ","_").lower()
-
-    # we need to create the result ZIP file in memory to not leave garbage on the server
-    output = StringIO.StringIO()
-    z = zipfile.ZipFile(output, 'w') 
-
-    # recurse through database and add according submitted files to in-memory archive
-    coursedir = coursename
-    assignments = course.assignments.order_by('title')
-    for ass in assignments:
-        assdir = coursedir+'/'+ass.title.replace(" ","_").lower()
-        for sub in ass.submissions.all().order_by('submitter'):
-            # unpack student data to temporary directory
-            # os.chroot is not working with tarfile support
-            tempdir=tempfile.mkdtemp()
-            if zipfile.is_zipfile(sub.file_upload.absolute_path()):
-                f=zipfile.ZipFile(sub.file_upload.absolute_path(), 'r')
-                f.extractall(tempdir)
-            elif tarfile.is_tarfile(sub.file_upload.absolute_path()):
-                tar = tarfile.open(sub.file_upload.absolute_path())
-                tar.extractall(tempdir)
-                tar.close()
-            else:
-                # unpacking not possible, just copy it
-                shutil.copyfile(sub.file_upload.absolute_path(), tempdir+"/"+sub.file_upload.basename())
             # Create final ZIP file
             state = sub.state_for_students().replace(" ","_").lower()
             submitter = "user"+str(sub.submitter.pk) 
@@ -448,20 +388,22 @@ def coursearchive(request, course_id):
                     z.write(root+"/"+f, submdir+'student_files/'+f, zipfile.ZIP_DEFLATED)
             # add text file with additional information
             info = tempfile.NamedTemporaryFile()
-            info.write("Status: %s\n"%sub.state_for_students())
-            info.write("Submitter: %s\n"%submitter)
-            info.write("Last modification: %s\n"%modified)
-            info.write("Authors:\n")
+            info.write("Status: %s\n\n"%sub.state_for_students())
+            info.write("Submitter: %s\n\n"%submitter)
+            info.write("Last modification: %s\n\n"%modified)
+            info.write("Authors: ")
             for auth in sub.authors.all():
-                info.write("\t%s\n"%str(auth))
+                author="user"+str(auth.pk)	
+                info.write("%s,"%author)
+            info.write("\n")
             if sub.grading:
-                info.write("Grading: %s\n"%str(sub.grading))
+                info.write("Grading: %s\n\n"%str(sub.grading))
             if sub.notes:
 		notes=smart_text(sub.notes).encode('utf8')
-                info.write("Author notes:\n%s\n"%notes)
+                info.write("Author notes:\n-------------\n%s\n\n"%notes)
             if sub.grading_notes:
 		notes=smart_text(sub.grading_notes).encode('utf8')
-                info.write("Grading notes:\n%s\n"%notes)
+                info.write("Grading notes:\n--------------\n%s\n\n"%notes)
             info.flush()    # no closing here, because it disappears then
             z.write(info.name, submdir+"info.txt")
     z.close()
