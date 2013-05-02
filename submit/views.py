@@ -15,7 +15,7 @@ from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 from models import inform_student, inform_course_owner
 from datetime import timedelta, datetime
-import urllib, os, tempfile, shutil, StringIO, zipfile
+import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
 
 
 def index(request):
@@ -357,12 +357,27 @@ def coursearchive(request, course_id):
     for ass in assignments:
         assdir = coursedir+'/'+ass.title.replace(" ","_").lower()
         for sub in ass.submissions.all().order_by('submitter'):
+            # unpack student data to temporary directory
+            # os.chroot is not working with tarfile support
+            tempdir=tempfile.mkdtemp()
+            if zipfile.is_zipfile(sub.file_upload.absolute_path()):
+                f=zipfile.ZipFile(sub.file_upload.absolute_path(), 'r')
+                f.extractall(tempdir)
+            elif tarfile.is_tarfile(sub.file_upload.absolute_path()):
+                tar = tarfile.open(sub.file_upload.absolute_path())
+                tar.extractall(tempdir)
+                tar.close()
+            else:
+                # unpacking not possible, just copy it
+                shutil.copyfile(sub.file_upload.absolute_path(), tempdir+"/"+sub.file_upload.basename())
+            print tempdir
+            # Create final ZIP file
             state = sub.state_for_students().replace(" ","_").lower()
-            modified = sub.modified.isoformat()
-            subdir = "%s/%s/%s_%s"%(assdir, str(sub.submitter), state, modified )
-            z.write(  sub.file_upload.absolute_path(), 
-                      subdir+"/"+sub.file_upload.basename(), 
-                      zipfile.ZIP_DEFLATED)
+            modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
+            submdir = "%s/%s/%s_%s/"%(assdir, str(sub.submitter), modified, state )
+            for root, dirs, files in os.walk(tempdir):
+                for f in files:
+                    z.write(root+"/"+f, submdir+'student_files/'+f, zipfile.ZIP_DEFLATED)
             # add text file with additional information
             info = tempfile.NamedTemporaryFile()
             info.write("Status: %s\n"%sub.state_for_students())
@@ -378,7 +393,7 @@ def coursearchive(request, course_id):
             if sub.grading_notes:
                 info.write("Grading notes:\n%s\n"%sub.grading_notes)
             info.flush()    # no closing here, because it disappears then
-            z.write(info.name, subdir+"/info.txt")
+            z.write(info.name, submdir+"info.txt")
     z.close()
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
