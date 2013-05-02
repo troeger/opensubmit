@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.encoding import smart_text
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
@@ -434,18 +435,21 @@ def coursearchive(request, course_id):
             else:
                 # unpacking not possible, just copy it
                 shutil.copyfile(sub.file_upload.absolute_path(), tempdir+"/"+sub.file_upload.basename())
-            print tempdir
             # Create final ZIP file
             state = sub.state_for_students().replace(" ","_").lower()
-            modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
-            submdir = "%s/%s/%s_%s/"%(assdir, str(sub.submitter), modified, state )
+            submitter = "user"+str(sub.submitter.pk) 
+            if sub.modified:
+                modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
+            else:
+                modified = sub.created.strftime("%Y_%m_%d_%H_%M_%S")
+            submdir = "%s/%s/%s_%s/"%(assdir, submitter, modified, state )
             for root, dirs, files in os.walk(tempdir):
                 for f in files:
                     z.write(root+"/"+f, submdir+'student_files/'+f, zipfile.ZIP_DEFLATED)
             # add text file with additional information
             info = tempfile.NamedTemporaryFile()
             info.write("Status: %s\n"%sub.state_for_students())
-            info.write("Submitter: %s\n"%sub.submitter)
+            info.write("Submitter: %s\n"%submitter)
             info.write("Last modification: %s\n"%modified)
             info.write("Authors:\n")
             for auth in sub.authors.all():
@@ -453,9 +457,11 @@ def coursearchive(request, course_id):
             if sub.grading:
                 info.write("Grading: %s\n"%str(sub.grading))
             if sub.notes:
-                info.write("Author notes:\n%s\n"%sub.notes)
+		notes=smart_text(sub.notes).encode('utf8')
+                info.write("Author notes:\n%s\n"%notes)
             if sub.grading_notes:
-                info.write("Grading notes:\n%s\n"%sub.grading_notes)
+		notes=smart_text(sub.grading_notes).encode('utf8')
+                info.write("Grading notes:\n%s\n"%notes)
             info.flush()    # no closing here, because it disappears then
             z.write(info.name, submdir+"info.txt")
     z.close()
