@@ -14,7 +14,7 @@
 <table class='table'>
 	<thead>
 		<tr>
-			<th>Student</th>
+			<th colspan='2'>Student</th>
 			{% for assignment in assignments %}
 				<th>{{ assignment.title }}</th>
 			{% endfor %}
@@ -25,10 +25,10 @@
 	{% for row in resulttable %}
 		<tr>
 			{% for col in row %}
-			<td>
+			<td nowrap>
 				{{ col }}
 				{% if col.means_passed %}
-					(<img src="/static/admin/img/icon-yes.gif"/>)
+					(<img src="{{ STATIC_URL }}admin/img/icon-yes.gif"/>)
 				{% endif %}
 			</td>
 			{% endfor %}
