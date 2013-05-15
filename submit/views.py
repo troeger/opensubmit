@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.encoding import smart_text
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
@@ -317,7 +318,7 @@ def gradingtable(request, course_id):
     assignments = course.assignments.all().order_by('title')
     # find all gradings per author and assignment
     for assignment in assignments:        
-        for submission in assignment.submissions.all():
+        for submission in assignment.submissions.all().filter(state=Submission.CLOSED):
             for author in submission.authors.all():
                 if author not in gradings.keys():
                     gradings[author] = {assignment.pk : submission.grading}
@@ -328,18 +329,22 @@ def gradingtable(request, course_id):
     for author, gradlist in gradings.iteritems():
         columns=[]
         numpassed=0
-        columns.append(author)
+        columns.append(author.last_name)
+        columns.append(author.first_name)
         for assignment in assignments:
             if assignment.pk in gradlist:
-                passed = gradlist[assignment.pk].means_passed
-                columns.append(gradlist[assignment.pk])
-                if passed:
-                    numpassed += 1
+                if gradlist[assignment.pk] != None:
+			passed = gradlist[assignment.pk].means_passed
+			columns.append(gradlist[assignment.pk])
+			if passed:
+			    numpassed += 1
+                else:
+                        columns.append('-')		
             else:
                 columns.append('-')
         columns.append("%s / %s"%(numpassed, len(assignments)))
         resulttable.append(columns)
-    return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments,'resulttable': resulttable})
+    return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments,'resulttable': sorted(resulttable)})
 
 @login_required
 def coursearchive(request, course_id):
@@ -370,28 +375,35 @@ def coursearchive(request, course_id):
             else:
                 # unpacking not possible, just copy it
                 shutil.copyfile(sub.file_upload.absolute_path(), tempdir+"/"+sub.file_upload.basename())
-            print tempdir
             # Create final ZIP file
             state = sub.state_for_students().replace(" ","_").lower()
-            modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
-            submdir = "%s/%s/%s_%s/"%(assdir, str(sub.submitter), modified, state )
+            submitter = "user"+str(sub.submitter.pk) 
+            if sub.modified:
+                modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
+            else:
+                modified = sub.created.strftime("%Y_%m_%d_%H_%M_%S")
+            submdir = "%s/%s/%s_%s/"%(assdir, submitter, modified, state )
             for root, dirs, files in os.walk(tempdir):
                 for f in files:
                     z.write(root+"/"+f, submdir+'student_files/'+f, zipfile.ZIP_DEFLATED)
             # add text file with additional information
             info = tempfile.NamedTemporaryFile()
-            info.write("Status: %s\n"%sub.state_for_students())
-            info.write("Submitter: %s\n"%sub.submitter)
-            info.write("Last modification: %s\n"%modified)
-            info.write("Authors:\n")
+            info.write("Status: %s\n\n"%sub.state_for_students())
+            info.write("Submitter: %s\n\n"%submitter)
+            info.write("Last modification: %s\n\n"%modified)
+            info.write("Authors: ")
             for auth in sub.authors.all():
-                info.write("\t%s\n"%str(auth))
+                author="user"+str(auth.pk)	
+                info.write("%s,"%author)
+            info.write("\n")
             if sub.grading:
-                info.write("Grading: %s\n"%str(sub.grading))
+                info.write("Grading: %s\n\n"%str(sub.grading))
             if sub.notes:
-                info.write("Author notes:\n%s\n"%sub.notes)
+		notes=smart_text(sub.notes).encode('utf8')
+                info.write("Author notes:\n-------------\n%s\n\n"%notes)
             if sub.grading_notes:
-                info.write("Grading notes:\n%s\n"%sub.grading_notes)
+		notes=smart_text(sub.grading_notes).encode('utf8')
+                info.write("Grading notes:\n--------------\n%s\n\n"%notes)
             info.flush()    # no closing here, because it disappears then
             z.write(info.name, submdir+"info.txt")
     z.close()

@@ -1,0 +1,7 @@
+django>=1.5
+south
+openid2rp
+psycopg2
+django-bootstrap-form
+psutil
+
