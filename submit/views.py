@@ -228,12 +228,8 @@ def dashboard(request):
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    # Show inactive assignments from active courses for tutors 
-    if request.user.is_staff:
-        openassignments = Assignment.objects.filter(course__active__exact=True)
-    else:
-        qs = Assignment.objects.filter(hard_deadline__gt = timezone.now()).filter(publish_at__lt = timezone.now()).filter(course__active__exact=True).order_by('soft_deadline').order_by('hard_deadline').order_by('title')
-        openassignments = [ass for ass in qs if ass not in waiting_for_action]
+    qs = Assignment.objects.filter(hard_deadline__gt = timezone.now()).filter(publish_at__lt = timezone.now()).filter(course__active__exact=True).order_by('soft_deadline').order_by('hard_deadline').order_by('title')
+    openassignments = [ass for ass in qs if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
         'archived': archived,
