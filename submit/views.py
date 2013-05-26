@@ -13,7 +13,7 @@ from django.views.decorators.http import require_http_methods
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
 from models import SubmissionFile, Submission, Assignment, TestMachine, Course
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
-from settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
 from models import inform_student, inform_course_owner
 from datetime import timedelta, datetime
 import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
@@ -23,7 +23,7 @@ def index(request):
     if request.user.is_authenticated():
         return redirect('dashboard')
 
-    return render(request, 'index.html')
+    return render(request, 'index.html', {'login_description': LOGIN_DESCRIPTION})
 
 def about(request):
     return render(request, 'about.html')
@@ -438,8 +438,8 @@ def login(request):
 
     if 'authmethod' in GET:
         # first stage of OpenID authentication
-        if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"/login?openidreturn")
+        if request.GET['authmethod']=="openid":
+            return preAuthenticate(OPENID_PROVIDER, MAIN_URL+"/login?openidreturn")
         else:
             return redirect('index')
 

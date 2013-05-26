@@ -68,6 +68,9 @@ if not is_production:
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
+LOGIN_DESCRIPTION = config.get('login','LOGIN_DESCRIPTION')
+OPENID_PROVIDER = config.get('login','OPENID_PROVIDER')
+
 ADMINS = ( (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL')),)
 MANAGERS = ADMINS
 EMAIL_SUBJECT_PREFIX = '[Submit] '
