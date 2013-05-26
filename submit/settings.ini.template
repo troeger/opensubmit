@@ -4,7 +4,6 @@
 # It is expected to be located at /etc/submit/settings.ini.
 
 [general]
-
 # Enabling this will lead to detailed developer error information as result page 
 # whenever something goes wrong on server side.
 # In production systems, you never want that to be enabled for obvious security reasons.
