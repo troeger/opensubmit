@@ -4,22 +4,15 @@ from ConfigParser import RawConfigParser
 config = RawConfigParser()
 
 try:
-    config.read('/etc/submit/settings.ini')
-    #TODO: Fix the paths in the install script
-    SCRIPTS_ROOT = "/usr/local/submit"
-    is_production = True
-except:    
-    config.read('settings_dev.ini')
-    SCRIPTS_ROOT = os.getcwd()
-    is_production = False
-
-if is_production:
-    DEBUG = False
-    FORCE_SCRIPT_NAME="/submit"
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
-else:
-    DEBUG = True
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    # production system
+    config.readfp(open('/etc/submit/settings.ini')) 
+except IOError:
+    try:
+        # development machine
+        config.readfp(open('submit/settings_dev.ini'))
+    except:
+        print("No configuration file found.")
+        exit(-1)
 
 # Global settings
 DATABASES = {
@@ -32,7 +25,10 @@ DATABASES = {
         'PORT':     config.get('database', 'DATABASE_PORT'),                           
     }
 }
-
+SCRIPTS_ROOT = os.getcwd()
+DEBUG = bool(config.get('general', 'DEBUG'))
+FORCE_SCRIPT_NAME = config.get('server', 'FORCE_SCRIPT_NAME')
+EMAIL_BACKEND = 'django.core.mail.'+config.get('server', 'EMAIL_BACKEND')+'.smtp.EmailBackend'    
 MAIN_URL = config.get('server', 'MAIN_URL') 
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
