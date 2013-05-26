@@ -6,10 +6,12 @@ config = RawConfigParser()
 try:
     # production system
     config.readfp(open('/etc/submit/settings.ini')) 
+    is_production = True
 except IOError:
     try:
         # development machine
         config.readfp(open('submit/settings_dev.ini'))
+        is_production = False
     except:
         print("No configuration file found.")
         exit(-1)
@@ -27,9 +29,15 @@ DATABASES = {
 }
 SCRIPTS_ROOT = os.getcwd()
 DEBUG = bool(config.get('general', 'DEBUG'))
-FORCE_SCRIPT_NAME = config.get('server', 'FORCE_SCRIPT_NAME')
-EMAIL_BACKEND = 'django.core.mail.'+config.get('server', 'EMAIL_BACKEND')+'.smtp.EmailBackend'    
-MAIN_URL = config.get('server', 'MAIN_URL') 
+# Let the user specify the complete URL, and split it up accordingly
+# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
+url = config.get('server', 'MAIN_URL').split('/') 
+MAIN_URL = url[0]+'//'+url[2]
+if url[3]:
+    FORCE_SCRIPT_NAME = url[3]
+# Print emails in console in dev mode
+if not is_production:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 STATIC_ROOT = SCRIPTS_ROOT + '/static/'
