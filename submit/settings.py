@@ -3,6 +3,8 @@ from ConfigParser import RawConfigParser
 
 config = RawConfigParser()
 
+# Determine dev mode based on the existence of the dev settings file,
+# since this is excluded from the source code distribution.
 try:
     # production system
     config.readfp(open('/etc/submit/settings.ini')) 
@@ -31,20 +33,41 @@ SCRIPTS_ROOT = os.getcwd()
 DEBUG = bool(config.get('general', 'DEBUG'))
 # Let the user specify the complete URL, and split it up accordingly
 # FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-url = config.get('server', 'MAIN_URL').split('/') 
+url = config.get('server', 'URL').split('/') 
 MAIN_URL = url[0]+'//'+url[2]
-if url[3]:
+if len(url)>3:
     FORCE_SCRIPT_NAME = url[3]
 # Print emails in console in dev mode
 if not is_production:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
+
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
-STATIC_ROOT = SCRIPTS_ROOT + '/static/'
-STATIC_URL = MAIN_URL + '/static/'
-STATICFILES_DIRS = (STATIC_ROOT)
 
+if is_production:
+    STATIC_ROOT = SCRIPTS_ROOT + 'static/'
+    STATIC_URL = MAIN_URL + '/static/'
+else:
+    STATIC_ROOT = 'static/'
+    STATIC_URL = '/static/'    
+
+DEBUG = bool(config.get('general', 'DEBUG'))
 TEMPLATE_DEBUG = DEBUG
+
+# Let the user specify the complete URL, and split it up accordingly
+# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
+url = config.get('server', 'URL').split('/') 
+MAIN_URL = url[0]+'//'+url[2]
+if len(url) > 3:
+    FORCE_SCRIPT_NAME = url[3]
+
+# Print emails in console in dev mode
+if not is_production:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
+
+MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
+MEDIA_URL = MAIN_URL + '/files/'
+
 ADMINS = ( (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL')),)
 MANAGERS = ADMINS
 EMAIL_SUBJECT_PREFIX = '[Submit] '
