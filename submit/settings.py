@@ -15,8 +15,14 @@ except IOError:
         config.readfp(open('submit/settings_dev.ini'))
         is_production = False
     except:
-        print("No configuration file found.")
-        exit(-1)
+        # See if the user just forgot to edit and rename the template
+        try:
+            config.readfp(open('submit/settings_dev.ini.template'))
+            print("No configuration file found. Please edit /etc/submit/settings.ini.template and rename it to /etc/submit/settings.ini.")
+            exit(-1)
+        except:
+            print("Error - Configuration file /etc/submit/settings.ini does not exist.")
+            exit(-1)
 
 # Global settings
 DATABASES = {
