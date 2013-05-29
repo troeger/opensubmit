@@ -1,0 +1,6 @@
+- LICENCE Datei hinzufuegen
+- setup_dev.ini beim Packaging weglassen
+- Dafuer sorgen, das /etc/submit/settings.ini existiert ?
+- INSTALL Datei mit Dokumentation fuer den Webserver schreiben
+- README Datei mit allgemeiner Dokumentation bauen
+
