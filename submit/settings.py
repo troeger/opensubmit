@@ -35,14 +35,18 @@ DATABASES = {
         'PORT':     config.get('database', 'DATABASE_PORT'),                           
     }
 }
+
 SCRIPTS_ROOT = os.getcwd()
 DEBUG = bool(config.get('general', 'DEBUG'))
+TEMPLATE_DEBUG = DEBUG
+
 # Let the user specify the complete URL, and split it up accordingly
 # FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-url = config.get('server', 'URL').split('/') 
-MAIN_URL = url[0]+'//'+url[2]
+MAIN_URL = config.get('server', 'URL')
+url = MAIN_URL.split('/')
 if len(url)>3:
     FORCE_SCRIPT_NAME = url[3]
+
 # Print emails in console in dev mode
 if not is_production:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
@@ -56,23 +60,6 @@ if is_production:
 else:
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'    
-
-DEBUG = bool(config.get('general', 'DEBUG'))
-TEMPLATE_DEBUG = DEBUG
-
-# Let the user specify the complete URL, and split it up accordingly
-# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-url = config.get('server', 'URL').split('/') 
-MAIN_URL = url[0]+'//'+url[2]
-if len(url) > 3:
-    FORCE_SCRIPT_NAME = url[3]
-
-# Print emails in console in dev mode
-if not is_production:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
-
-MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
-MEDIA_URL = MAIN_URL + '/files/'
 
 LOGIN_DESCRIPTION = config.get('login','LOGIN_DESCRIPTION')
 OPENID_PROVIDER = config.get('login','OPENID_PROVIDER')

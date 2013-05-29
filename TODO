@@ -1,2 +1,4 @@
 - Add LICENCE file
 - Add README with end user manual
+- Determine sys.path extension in wsgi.py from configuration file
+- Debug FORCE_SCRIPT Problems on DFW
