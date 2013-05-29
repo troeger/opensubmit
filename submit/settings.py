@@ -1,52 +1,80 @@
 import os
+from ConfigParser import RawConfigParser
 
-is_production = False
-cwd = os.path.dirname(__file__)
+config = RawConfigParser()
 
-if cwd.startswith('/usr/local'):
+# Determine dev mode based on the existence of the dev settings file,
+# since this is excluded from the source code distribution.
+try:
+    # production system
+    config.readfp(open('/etc/submit/settings.ini')) 
     is_production = True
-
-if is_production:
-    DEBUG = True
-    DATABASES = {
-        'default': {
-            'ENGINE':   'django.db.backends.postgresql_psycopg2', 
-            'NAME':     'submit',
-            'USER':     'submit',                           
-            'PASSWORD': 'submit',                           
-            'HOST':     '',                           
-            'PORT':     '',                           
-        }
-    }
-    MEDIA_ROOT = '/data/submit/'
-    MEDIA_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/files/'
-    STATIC_ROOT = '/var/www/submit/submit/static/'
-    STATIC_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/static/'
-    STATICFILES_DIRS = ("/var/www/submit/submit/static")
-    FORCE_SCRIPT_NAME="/submit"
-    MAIN_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit' 
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
-else:
-    DEBUG = True
-    DATABASES = {
-        'default': {
-        'ENGINE':   'django.db.backends.sqlite3', 
-        'NAME':     'submit/database.sqlite',
-        }
-    }
-    MEDIA_ROOT = '/tmp/media/'
-    MEDIA_URL = '/media/'
-    STATIC_ROOT = 'static/'
-    STATIC_URL = '/static/'
-    MAIN_URL = 'http://localhost:8000' 
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+except IOError:
+    try:
+        # development machine
+        config.readfp(open('submit/settings_dev.ini'))
+        is_production = False
+    except:
+        print("No configuration file found.")
+        exit(-1)
 
 # Global settings
+DATABASES = {
+    'default': {
+        'ENGINE':   'django.db.backends.'+config.get('database', 'DATABASE_ENGINE'), 
+        'NAME':     config.get('database', 'DATABASE_NAME') ,
+        'USER':     config.get('database', 'DATABASE_USER') ,                           
+        'PASSWORD': config.get('database', 'DATABASE_PASSWORD') ,                           
+        'HOST':     config.get('database', 'DATABASE_HOST'),                           
+        'PORT':     config.get('database', 'DATABASE_PORT'),                           
+    }
+}
+SCRIPTS_ROOT = os.getcwd()
+DEBUG = bool(config.get('general', 'DEBUG'))
+# Let the user specify the complete URL, and split it up accordingly
+# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
+url = config.get('server', 'URL').split('/') 
+MAIN_URL = url[0]+'//'+url[2]
+if len(url)>3:
+    FORCE_SCRIPT_NAME = url[3]
+# Print emails in console in dev mode
+if not is_production:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
+
+MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
+MEDIA_URL = MAIN_URL + '/files/'
+
+if is_production:
+    STATIC_ROOT = SCRIPTS_ROOT + 'static/'
+    STATIC_URL = MAIN_URL + '/static/'
+else:
+    STATIC_ROOT = 'static/'
+    STATIC_URL = '/static/'    
+
+DEBUG = bool(config.get('general', 'DEBUG'))
 TEMPLATE_DEBUG = DEBUG
-ADMINS = (('Peter Troeger', 'peter.troeger@hpi.uni-potsdam.de'),)
+
+# Let the user specify the complete URL, and split it up accordingly
+# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
+url = config.get('server', 'URL').split('/') 
+MAIN_URL = url[0]+'//'+url[2]
+if len(url) > 3:
+    FORCE_SCRIPT_NAME = url[3]
+
+# Print emails in console in dev mode
+if not is_production:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
+
+MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
+MEDIA_URL = MAIN_URL + '/files/'
+
+LOGIN_DESCRIPTION = config.get('login','LOGIN_DESCRIPTION')
+OPENID_PROVIDER = config.get('login','OPENID_PROVIDER')
+
+ADMINS = ( (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL')),)
 MANAGERS = ADMINS
 EMAIL_SUBJECT_PREFIX = '[Submit] '
-TIME_ZONE = "Europe/Berlin"
+TIME_ZONE = config.get("server", "TIME_ZONE")
 LANGUAGE_CODE = 'en-en'
 USE_I18N = True
 USE_L10N = True
@@ -57,7 +85,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-SECRET_KEY = 'uzfp=4gv1u((#hb*#o3*4^v#u#g9k8-)us2nw^)@rz0-$2-23)'
+SECRET_KEY = config.get("server","SECRET_KEY")
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
@@ -114,6 +142,14 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'openid2rp.django.auth.Backend'
 )
-JOB_EXECUTOR_SECRET="49846zut93purfh977TTTiuhgalkjfnk89"
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.core.context_processors.static',
+    'django.contrib.auth.context_processors.auth',
+    'django.contrib.messages.context_processors.messages',
+    'submit.contextprocessors.footer'
+)
+
+JOB_EXECUTOR_SECRET=config.get("executor","SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
 

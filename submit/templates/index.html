@@ -30,9 +30,9 @@
 <section>
     <div style="text-align: center;">
         <form action="{% url 'login' %}" method="GET">
-            <input type="hidden" name="authmethod" value="hpi" />
-            <img src="{{ STATIC_URL }}images/hpi_small.png" width="51" height="51"/>
-            <input type="submit" value="Sign in with your HPI account" class="btn"/>
+            <input type="hidden" name="authmethod" value="openid" />
+            <img src="{{ STATIC_URL }}images/openid-logo.png" width="51" height="51"/>
+            <input type="submit" value="{{ login_description }}" class="btn"/>
         </form>
     </div>
 </section>
