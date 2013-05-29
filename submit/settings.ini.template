@@ -84,6 +84,16 @@ SHARED_SECRET: 49846zut93purfh977TTTiuhgalkjfnk89
 ADMIN_NAME: Super Admin
 ADMIN_EMAIL: root@<my domain>
 
+[login]
+# Text shown beside the login icon.
+# Default: 
+# LOGIN_DESCRIPTION: Sign in with Google
+LOGIN_DESCRIPTION: Sign in with Google
+
+# OpenID provider URL to be used for login.
+# Default:
+# OPENID_PROVIDER: https://www.google.com/accounts/o8/id
+OPENID_PROVIDER: https://www.google.com/accounts/o8/id
 
 
 
