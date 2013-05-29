@@ -17,8 +17,8 @@ except IOError:
     except:
         # See if the user just forgot to edit and rename the template
         try:
-            config.readfp(open('submit/settings_dev.ini.template'))
-            print("No configuration file found. Please edit /etc/submit/settings.ini.template and rename it to /etc/submit/settings.ini.")
+            config.readfp(open('submit/settings.ini.template'))
+            print("No configuration file found. Please copy .../submit/settings.ini.template to /etc/submit/settings.ini and edit it.")
             exit(-1)
         except:
             print("Error - Configuration file /etc/submit/settings.ini does not exist.")

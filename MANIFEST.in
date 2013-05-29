@@ -1,6 +1,6 @@
 include manage.py
 include setup.py
-include submit/settings.ini.template
+include README
 recursive-include submit *.py
 graft submit/migrations
 graft submit/static

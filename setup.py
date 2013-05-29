@@ -7,6 +7,8 @@ from distutils.command.clean import clean as _clean
 # check FuzzEd/__init__.py for the project version number
 from submit import __version__
 
+#TODO: Support packaging executor, must include dependency to psutil
+
 def check_python_version():
     version_message = 'This Django project requires Python 2.6+'
 

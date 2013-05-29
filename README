@@ -1,0 +1,16 @@
+How to install Submit
+#####################
+
+- Download the source code distribution.
+- Unpack it somehwere in a folder that your web server can access.
+- Copy settings.ini.template to /etc/settings.ini and edit it according to your local needs. 
+- Run "manage.py syncdb" and "manage.py migrate" to create / update the configured database.
+- Configure your web server to serve Submit as WSGI application. Typically, we would expect some snippet like this inside a VirtualHost definition:
+
+WSGIScriptAlias /submit <src_dir>/submit/wsgi.py
+WSGIDaemonProcess submit
+WSGIProcessGroup  submit
+Alias /submit/static/admin /usr/local/lib/python2.6/dist-packages/Django-1.4.2-py2.6.egg/django/contrib/admin/static/admin
+Alias /submit/static       <src_dir>/submit/static
+
+- Cross fingers ...
