@@ -7,7 +7,7 @@ if cwd.startswith('/usr/local'):
     is_production = True
 
 if is_production:
-    DEBUG = True
+    DEBUG = False
     DATABASES = {
         'default': {
             'ENGINE':   'django.db.backends.postgresql_psycopg2', 
@@ -26,6 +26,7 @@ if is_production:
     FORCE_SCRIPT_NAME="/submit"
     MAIN_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit' 
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
+    ALLOWED_HOSTS = ['www.dcl.hpi.uni-potsdam.de']
 else:
     DEBUG = True
     DATABASES = {
