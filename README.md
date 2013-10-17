@@ -5,44 +5,33 @@ Peter Tröger <peter.troeger@hpi.uni-potsdam.de>
 
 This is Submit, a small web application for managing student assignment solutions in a university environment.
 
-Other tools, such as Moodle, are more powerful and support assignments, the management of learning material,
-course progress organization and access management at the same time. If you want the all-inclusive solution, this is the wrong project.
+Other tools, such as Moodle, are more powerful and support assignments, the management of learning material, course progress organization and access management at the same time. If you want the all-inclusive solution, this is the wrong project.
 
-Submit offers a trivial web page were students can login and submit their assignment solutions.
-Teachers and their personal use the backend interface to manage the list of available assignments, deadlines,
-and the gradings. Students are informed about the progress of their correction and their final grade via
-eMail and the frontend page.
+Submit offers a trivial web page were students can login and submit their assignment solutions. Teachers and their personal use the backend interface to manage the list of available assignments, deadlines, and the gradings. Students are informed about the progress of their correction and their final grade via eMail and the frontend page.
 
-The unique capability of Submit is the support for coding assignments, were students upload their programming
-excercise solution as source code archive. Submit offers a separate executor daemon, which runs on another machine and
-downloads submitted solutions from the web server. These archives are unpacked and tested for compilation, 
-so that non-compiling assignment solutions are rejected by the system before the deadline. 
-This makes the life of the corrector less miserable, because at the point of the assignment deadline, 
-all gradable solutions are 'valid' (e.g. compile). Students also seem to like the idea of having a validated solution,
-so that they do not fail due to technical difficulties at the correctors side.
+The unique capability of Submit is the support for coding assignments, were students upload their programming excercise solution as source code archive. Submit offers a separate executor daemon, which runs on another machine and downloads submitted solutions from the web server. These archives are unpacked and tested for compilation,  so that non-compiling assignment solutions are rejected by the system before the deadline. 
+This makes the life of the corrector less miserable, because at the point of the assignment deadline, all gradable solutions are 'valid' (e.g. compile). Students also seem to like the idea of having a validated solution, so that they do not fail due to technical difficulties at the correctors side.
 
-Since Submit is only for assignment submission, it has no management of course participants. Everbody who can perform
-a successful login can submit solutions. We expect you to have an institute-specific OpenID provider, otherwise you
-need to contributre your own patches.
+Since Submit is only for assignment submission, it has no management of course participants. Everbody who can perform a successful login can submit solutions. We expect you to have an institute-specific OpenID provider, otherwise you need to contributre your own patches.
 
 Installation of the web application
 -----------------------------------
 
 - Download the source code distribution of the web application.
 - Unpack it somehwere in a folder that your web server can access.
+- Run "pip install -r requirements.txt".
 - Copy settings.ini.template to /etc/submit/settings.ini and edit it according to your local needs. 
 - Run "manage.py syncdb" and "manage.py migrate" to create / update the configured database. On creation,
   this will also establish an administrator account.
 - Configure your web server to serve Submit as WSGI application. Typically, we would expect some snippet like this inside a VirtualHost definition:
 
-	WSGIScriptAlias /submit <src_dir>/submit/wsgi.py
-	WSGIDaemonProcess submit
-	WSGIProcessGroup  submit
-	Alias /submit/static/admin /usr/local/lib/python2.6/dist-packages/Django-1.4.2-py2.6.egg/django/contrib/admin/static/admin
-	Alias /submit/static       <src_dir>/submit/static
+	    WSGIScriptAlias /submit <src_dir>/submit/wsgi.py
+    	WSGIDaemonProcess submit
+    	WSGIProcessGroup  submit
+    	Alias /submit/static/admin /usr/local/lib/python2.6/dist-packages/Django-1.4.2-py2.6.egg/django/contrib/admin/static/admin
+    	Alias /submit/static       <src_dir>/submit/static
 
-- Perform a login into the teacher backend. Create some teacher accounts with "staff status" and according roles. 
-  Student logins are created automatically by the OpenID login functionality.
+- Perform a login into the teacher backend. Create some teacher accounts with "staff status" and according roles. Student logins are created automatically by the OpenID login functionality.
 
 Submit runs happily without code validation as simple assignment submission tool. 
 
@@ -120,18 +109,3 @@ State Model (TODO)
 
 To be continued ...
 
-
-Known Issues
-============
-- Course admins should be able to add submissions manually, for students who still send eMail.
-- Course admins should only see things that belong to their courses.
-- Tutors should be assigned to courses, and only see their resources. 
-- Currently all students see all assignments from all courses. Allow to hide courses from the overview.
-- Code documentation is non-existent. This thing was never intended for the public.
-- We need a LICENCE file.
-- Notes should be updated on re-upload.
-- We need to support some kind of course archiving.
-- The job executor should support AUTOCONF.
-- Mail to all course participants, based on the people who submitted solutions so far.
-- Send grading notification also to people with submission status DONE. Some tutors get that wrong.
-- Determine sys.path extension in wsgi.py from configuration file.
