@@ -24,10 +24,11 @@ so that they do not fail due to technical difficulties at the correctors side.
 Installation of the web application
 -----------------------------------
 
-- Download the source code distribution.
+- Download the source code distribution of the web application.
 - Unpack it somehwere in a folder that your web server can access.
 - Copy settings.ini.template to /etc/submit/settings.ini and edit it according to your local needs. 
-- Run "manage.py syncdb" and "manage.py migrate" to create / update the configured database.
+- Run "manage.py syncdb" and "manage.py migrate" to create / update the configured database. On creation,
+  this will also establish an administrator account.
 - Configure your web server to serve Submit as WSGI application. Typically, we would expect some snippet like this inside a VirtualHost definition:
 
 	WSGIScriptAlias /submit <src_dir>/submit/wsgi.py
@@ -36,13 +37,89 @@ Installation of the web application
 	Alias /submit/static/admin /usr/local/lib/python2.6/dist-packages/Django-1.4.2-py2.6.egg/django/contrib/admin/static/admin
 	Alias /submit/static       <src_dir>/submit/static
 
+- Perform a login into the teacher backend. Create some teacher accounts with "staff status" and according roles. 
+  Student logins are created automatically by the OpenID login functionality.
+
 Submit runs happily without code validation as simple assignment submission tool. 
 
 Installation of code executor
 ------------------------------
 
+- Download the source code distribution of the executor application.
 - Choose a dedicated machine beside the web server. This will compile (and run) the student submissions.
 - Install the script from '/jobexec' there.
 - Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.
 - Adjust executor.cfg according to your needs.
 - Add executor.py to cron, so that it regulary asks the web server for fresh work.
+
+Creating an assignment
+----------------------
+- Create a course.
+- Create a grading scheme for your course.
+- Create an assignment for a course and grading scheme.
+
+Assignment types
+================
+
+Any assignment can be configured in different ways with repsect to the expected student submission:
+
+(A) No solution attachment, only text notes:
+--------------------------------------------
+Assignment.has_attachment = False
+Assignment.attachment_test_compile = False
+Assignment.attachment_test_validity = False
+Assignment.attachment_test_full = False
+
+(B) Submission of non-testable attachment (e.g. PDF file):
+----------------------------------------------------------
+Assignment.has_attachment = True
+Assignment.attachment_test_compile = False
+Assignment.attachment_test_validity = False
+Assignment.attachment_test_full = False
+
+(C) Submission of testable attachment, only compilation:
+----------------------------------------------------------
+Assignment.has_attachment = True
+Assignment.attachment_test_compile = True
+Assignment.attachment_test_validity = False
+Assignment.attachment_test_full = False
+
+(D) Submission of testable attachment, compilation and validation script run:
+------------------------------------------------------------------------------
+Assignment.has_attachment = True
+Assignment.attachment_test_compile = True
+Assignment.attachment_test_validity = True
+Assignment.attachment_test_full = False
+
+(E) Submission of testable attachment, compilation, validation and full test script run:
+-----------------------------------------------------------------------------------------
+Assignment.has_attachment = True
+Assignment.attachment_test_compile = True
+Assignment.attachment_test_validity = True
+Assignment.attachment_test_full = True
+
+State Model (TODO)
+==================
+	() ----> RECEIVED
+	RECEIVED ----> SUBMITTED
+	SUBMITTED --(*2)--> WITHDRAWN
+	SUBMITTED_TESTED --(*2)--> WITHDRAWN
+	TEST_COMPILE_PENDING --(*1)--> WITHDRAWN
+	TEST_COMPILE_FAILED --(*2)--> WITHDRAWN
+	TEST_VALIDITY_PENDING --(*1)--> WITHDRAWN
+	TEST_VALIDITY_FAILED --(*2)--> WITHDRAWN
+	TEST_FULL_PENDING--(*1)--> WITHDRAWN
+	TEST_FULL_FAILED --(*2)--> WITHDRAWN
+
+*1: Only if test is not currently executed, which would demand remote killing of test runs
+*2: Only if assignment deadline is not over
+
+To be continued ...
+
+
+Known Issues
+============
+- Currently all students see all assignments from all courses.
+- Code documentation is non-existent. This thing was never intended for the public.
+- Add a LICENCE file.
+- Determine sys.path extension in wsgi.py from configuration file.
