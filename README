@@ -21,6 +21,10 @@ This makes the life of the corrector less miserable, because at the point of the
 all gradable solutions are 'valid' (e.g. compile). Students also seem to like the idea of having a validated solution,
 so that they do not fail due to technical difficulties at the correctors side.
 
+Since Submit is only for assignment submission, it has no management of course participants. Everbody who can perform
+a successful login can submit solutions. We expect you to have an institute-specific OpenID provider, otherwise you
+need to contributre your own patches.
+
 Installation of the web application
 -----------------------------------
 
@@ -119,7 +123,15 @@ To be continued ...
 
 Known Issues
 ============
-- Currently all students see all assignments from all courses.
+- Course admins should be able to add submissions manually, for students who still send eMail.
+- Course admins should only see things that belong to their courses.
+- Tutors should be assigned to courses, and only see their resources. 
+- Currently all students see all assignments from all courses. Allow to hide courses from the overview.
 - Code documentation is non-existent. This thing was never intended for the public.
-- Add a LICENCE file.
+- We need a LICENCE file.
+- Notes should be updated on re-upload.
+- We need to support some kind of course archiving.
+- The job executor should support AUTOCONF.
+- Mail to all course participants, based on the people who submitted solutions so far.
+- Send grading notification also to people with submission status DONE. Some tutors get that wrong.
 - Determine sys.path extension in wsgi.py from configuration file.

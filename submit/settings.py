@@ -36,7 +36,6 @@ DATABASES = {
     }
 }
 
-SCRIPTS_ROOT = os.getcwd()
 DEBUG = bool(config.get('general', 'DEBUG'))
 TEMPLATE_DEBUG = DEBUG
 
@@ -47,37 +46,20 @@ url = MAIN_URL.split('/')
 if len(url)>3:
     FORCE_SCRIPT_NAME = url[3]
 
-# Print emails in console in dev mode
-if not is_production:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
-
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
 if is_production:
-    DEBUG = False
-    DATABASES = {
-        'default': {
-            'ENGINE':   'django.db.backends.postgresql_psycopg2', 
-            'NAME':     'submit',
-            'USER':     'submit',                           
-            'PASSWORD': 'submit',                           
-            'HOST':     '',                           
-            'PORT':     '',                           
-        }
-    }
-    MEDIA_ROOT = '/data/submit/'
-    MEDIA_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/files/'
-    STATIC_ROOT = '/var/www/submit/submit/static/'
-    STATIC_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/static/'
-    STATICFILES_DIRS = ("/var/www/submit/submit/static")
-    FORCE_SCRIPT_NAME="/submit"
-    MAIN_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit' 
+    STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') +'static/'
+    STATIC_URL = MAIN_URL+'/static/'
+    STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') +'static',)
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
-    ALLOWED_HOSTS = ['www.dcl.hpi.uni-potsdam.de']
+    ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
 else:
     STATIC_ROOT = 'static/'
-    STATIC_URL = '/static/'    
+    STATIC_URL = '/static/'
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
+    ALLOWED_HOSTS = ['localhost']
 
 LOGIN_DESCRIPTION = config.get('login','LOGIN_DESCRIPTION')
 OPENID_PROVIDER = config.get('login','OPENID_PROVIDER')

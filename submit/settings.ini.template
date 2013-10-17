@@ -17,6 +17,11 @@ DEBUG: False
 # URL: https://<this machine>/submit
 URL: https://<this machine>/submit
 
+# This is the source directory of the scripts.
+# Default:
+# SCRIPT_ROOT: ./
+SCRIPT_ROOT: ./
+
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
 # Default:

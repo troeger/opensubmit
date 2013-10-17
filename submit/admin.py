@@ -175,6 +175,13 @@ admin.site.register(SubmissionFile, SubmissionFileAdmin)
 class AssignmentAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
     filter_horizontal = ('correctors',)
+    actions=['addSubmissionManually']
+
+    def addSubmissionManually(self, request, queryset):
+        assignment = queryset.all()[0]
+        return redirect('manual_submit', ass_id=assignment.pk)
+    addSubmissionManually.short_description = "Add student submission manually"
+
 
 admin.site.register(Assignment, AssignmentAdmin)
 
