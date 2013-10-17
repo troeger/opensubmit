@@ -173,7 +173,7 @@ admin.site.register(SubmissionFile, SubmissionFileAdmin)
 ### Assignment admin interface ###
 
 class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline']
+    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
     filter_horizontal = ('correctors',)
 
 admin.site.register(Assignment, AssignmentAdmin)

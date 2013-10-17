@@ -55,8 +55,26 @@ MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
 if is_production:
-    STATIC_ROOT = SCRIPTS_ROOT + 'static/'
-    STATIC_URL = MAIN_URL + '/static/'
+    DEBUG = False
+    DATABASES = {
+        'default': {
+            'ENGINE':   'django.db.backends.postgresql_psycopg2', 
+            'NAME':     'submit',
+            'USER':     'submit',                           
+            'PASSWORD': 'submit',                           
+            'HOST':     '',                           
+            'PORT':     '',                           
+        }
+    }
+    MEDIA_ROOT = '/data/submit/'
+    MEDIA_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/files/'
+    STATIC_ROOT = '/var/www/submit/submit/static/'
+    STATIC_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit/static/'
+    STATICFILES_DIRS = ("/var/www/submit/submit/static")
+    FORCE_SCRIPT_NAME="/submit"
+    MAIN_URL = 'https://www.dcl.hpi.uni-potsdam.de/submit' 
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
+    ALLOWED_HOSTS = ['www.dcl.hpi.uni-potsdam.de']
 else:
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'    

@@ -219,7 +219,7 @@ class Submission(models.Model):
 		else:
 			return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING, self.GRADED, self.TEST_FULL_FAILED]
 	def red_tag(self):
-		if self.is_closed():
+		if self.is_closed() and self.grading:
 			return not self.grading.means_passed
 		else:
 			return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
