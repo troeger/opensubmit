@@ -41,10 +41,9 @@ TEMPLATE_DEBUG = DEBUG
 
 # Let the user specify the complete URL, and split it up accordingly
 # FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-MAIN_URL = config.get('server', 'URL')
+MAIN_URL = config.get('server', 'HOST') + config.get('server','HOST_DIR')
 url = MAIN_URL.split('/')
-if len(url)>3:
-    FORCE_SCRIPT_NAME = url[3]
+FORCE_SCRIPT_NAME = config.get('server','HOST_DIR')
 
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
