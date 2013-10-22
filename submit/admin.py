@@ -79,20 +79,32 @@ class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
     list_filter = (SubmissionStateFilter,'assignment')
     filter_horizontal = ('authors',)
-    readonly_fields = ('assignment','submitter','authors','notes')
     fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
     actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
-    def queryset(self, request):     
+    def queryset(self, request):
+        ''' Restrict the listed submission for the current user.'''
+        qs = super(SubmissionAdmin, self).queryset(request)
         if request.user.is_superuser:
-            return Submission.objects.all()
+            return qs
         else:
-            assignments_correctable = Assignment.objects.filter(correctors__in = [request.user])
-            return Submission.objects.filter(assignment__in = assignments_correctable)
+            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)) 
+
+    def get_readonly_fields(self, request, obj=None):
+        # The idea is to make some fields readonly only on modification
+        # The trick is to override the getter for the according ModelAdmin attribute
+        if obj:
+            # Modification
+            return ('assignment','submitter','authors','notes')
+        else:
+            # New manual submission
+            return ()
 
     def formfield_for_dbfield(self, db_field, **kwargs):
-        if db_field.name == "grading":
+        if self.obj and db_field.name == "grading":
+            # Offer grading choices from the assignment definition for this submission
             kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
+
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def get_form(self, request, obj=None):
@@ -101,7 +113,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
         form.base_fields['file_upload'].required = False
         form.base_fields['state'].required = True
-        form.base_fields['state'].label = "New state (no email notification)"
+        form.base_fields['state'].label = "New state (no email)"
         form.base_fields['grading_notes'].label = "Grading notes"
         return form
 
@@ -165,15 +177,52 @@ def not_withdrawn(submfile):
     return submfile.replaced_by == None
 not_withdrawn.boolean = True
 
+# In case the backend user creates manually a SubmissionFile entry,
+# we want to offer the according creation of a new submission entry.
+# This is the interface or manually adding submissions
+class InlineSubmissionAdmin(admin.StackedInline):
+    model = Submission
+    max_num = 1
+    can_delete = False
+
 class SubmissionFileAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
+    inlines = [InlineSubmissionAdmin, ]
+
+    def queryset(self, request):
+        ''' Restrict the listed submission files for the current user.'''
+        qs = super(SubmissionFileAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)) 
+
+    def get_readonly_fields(self, request, obj=None):
+        # The idea is to make some fields readonly only on modification
+        # The trick is to override the getter for the according ModelAdmin attribute
+        if obj:
+            # Modification
+            return ()
+        else:
+            # New manual submission
+            return ('test_compile', 'test_validity', 'test_full', 'replaced_by', 'perf_data')
+
 
 admin.site.register(SubmissionFile, SubmissionFileAdmin)
 
 ### Assignment admin interface ###
 
 class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline']
+    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
+
+    def queryset(self, request):
+        ''' Restrict the listed assignments for the current user.'''
+        qs = super(AssignmentAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)) 
+
 
 admin.site.register(Assignment, AssignmentAdmin)
 
@@ -202,6 +251,14 @@ def assignments(course):
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
     actions=['showGradingTable', 'downloadArchive']
+
+    def queryset(self, request):
+        ''' Restrict the listed courses for the current user.'''
+        qs = super(CourseAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)) 
 
     def showGradingTable(self, request, queryset):
         course = queryset.all()[0]

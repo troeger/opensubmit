@@ -10,10 +10,11 @@ from django.utils import timezone
 from django.utils.encoding import smart_text
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.contrib.admin.views.decorators import staff_member_required
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
 from models import SubmissionFile, Submission, Assignment, TestMachine, Course
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
-from settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
 from models import inform_student, inform_course_owner
 from datetime import timedelta, datetime
 import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
@@ -23,7 +24,7 @@ def index(request):
     if request.user.is_authenticated():
         return redirect('dashboard')
 
-    return render(request, 'index.html')
+    return render(request, 'index.html', {'login_description': LOGIN_DESCRIPTION})
 
 def about(request):
     return render(request, 'about.html')
@@ -228,12 +229,8 @@ def dashboard(request):
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    # Show inactive assignments from active courses for tutors 
-    if request.user.is_staff:
-        openassignments = Assignment.objects.filter(course__active__exact=True)
-    else:
-        qs = Assignment.objects.filter(hard_deadline__gt = timezone.now()).filter(publish_at__lt = timezone.now()).filter(course__active__exact=True).order_by('soft_deadline').order_by('hard_deadline').order_by('title')
-        openassignments = [ass for ass in qs if ass not in waiting_for_action]
+    qs = Assignment.objects.filter(hard_deadline__gt = timezone.now()).filter(publish_at__lt = timezone.now()).filter(course__active__exact=True).order_by('soft_deadline').order_by('hard_deadline').order_by('title')
+    openassignments = [ass for ass in qs if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
         'archived': archived,
@@ -311,8 +308,8 @@ def update(request, subm_id):
                                            'submission': submission})
 
 @login_required
+@staff_member_required
 def gradingtable(request, course_id):
-    assert(request.user.is_staff)       #TODO: Decorator ?
     gradings={}
     course = get_object_or_404(Course, pk=course_id)
     assignments = course.assignments.all().order_by('title')
@@ -347,8 +344,8 @@ def gradingtable(request, course_id):
     return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments,'resulttable': sorted(resulttable)})
 
 @login_required
+@staff_member_required
 def coursearchive(request, course_id):
-    assert(request.user.is_staff)       #TODO: Decorator ?
     course = get_object_or_404(Course, pk=course_id)
     coursename = course.title.replace(" ","_").lower()
 
@@ -442,8 +439,8 @@ def login(request):
 
     if 'authmethod' in GET:
         # first stage of OpenID authentication
-        if request.GET['authmethod']=="hpi":
-            return preAuthenticate("http://openid.hpi.uni-potsdam.de", MAIN_URL+"/login?openidreturn")
+        if request.GET['authmethod']=="openid":
+            return preAuthenticate(OPENID_PROVIDER, MAIN_URL+"/login?openidreturn")
         else:
             return redirect('index')
 
@@ -504,4 +501,15 @@ def login(request):
         return redirect('dashboard')
     else:
         return redirect('index')
+
+@staff_member_required
+def manual_submit(request, ass_id):
+    ''' Manual submission of assignment solutions by the course administrator.'''
+
+    from forms import getSubmissionForm
+    assignment = get_object_or_404(Assignment, pk=ass_id)
+    SubmissionForm = getSubmissionForm(assignment)
+    submissionForm = SubmissionForm(request.user, assignment)
+    return render(request, 'manual_submit.html', {'submissionForm': submissionForm, 
+                                        'assignment': assignment})
 
