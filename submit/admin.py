@@ -82,12 +82,13 @@ class SubmissionAdmin(admin.ModelAdmin):
     fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
     actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
-    def queryset(self, request):     
+    def queryset(self, request):
+        ''' Restrict the listed submission for the current user.'''
+        qs = super(SubmissionAdmin, self).queryset(request)
         if request.user.is_superuser:
-            return Submission.objects.all()
+            return qs
         else:
-            assignments_correctable = Assignment.objects.filter(correctors__in = [request.user])
-            return Submission.objects.filter(assignment__in = assignments_correctable)
+            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)) 
 
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
@@ -188,6 +189,14 @@ class SubmissionFileAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
     inlines = [InlineSubmissionAdmin, ]
 
+    def queryset(self, request):
+        ''' Restrict the listed submission files for the current user.'''
+        qs = super(SubmissionFileAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)) 
+
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
         # The trick is to override the getter for the according ModelAdmin attribute
@@ -205,7 +214,15 @@ admin.site.register(SubmissionFile, SubmissionFileAdmin)
 
 class AssignmentAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
-    filter_horizontal = ('correctors',)
+
+    def queryset(self, request):
+        ''' Restrict the listed assignments for the current user.'''
+        qs = super(AssignmentAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)) 
+
 
 admin.site.register(Assignment, AssignmentAdmin)
 
@@ -234,6 +251,14 @@ def assignments(course):
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
     actions=['showGradingTable', 'downloadArchive']
+
+    def queryset(self, request):
+        ''' Restrict the listed courses for the current user.'''
+        qs = super(CourseAdmin, self).queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)) 
 
     def showGradingTable(self, request, queryset):
         course = queryset.all()[0]

@@ -45,10 +45,26 @@ Installation of code executor
 - Adjust executor.cfg according to your needs.
 - Add executor.py to cron, so that it regulary asks the web server for fresh work.
 
+Managing security
+-----------------
+The application relies on a combination of users roles and course-specific settings. Please consider carefully who you give which permissions, especially when students are involved.
+
+If you want to enable a teacher or teaching assistant to access the backend, you need to enable the "Staff status" flag for this user. Otherwise, he/she has no chance to enter the teacher backend at all.
+
+The next step is to assign the user to a general backend user group, regardless of the specific course or assignment. If you ommit that, than the backend is empty for him.
+
+There are only two pre-defined groups, namely "Course Owners" and "Student Tutors". Course owners can do nasty things, such as re-defining grading schemes and modifying assignments. You typically never want a student to have these rights, even though he might act as corrector for you. "Student tutors" only have the generic right to edit submissions, especially for grading.
+
+If you finished the role assignment, then it is time to create a course. For each course, you specify the owner and the list of tutors in terms of existing system users. Only after this step, the users can see something useful in their backend.
+
+In summary: Student tutors need to be in the "Student Tutors" group and must be configured as tutor for a specific course. Faculty must be in the "Course Owners" group and must be configured as owner for a specific course.
+
+Security is complicated. 
+
 Creating an assignment
 ----------------------
-- Create a course.
-- Create a grading scheme for your course.
+- Make sure you have an existing course that you own.
+- Make sure you have a grading scheme for your course.
 - Create an assignment for a course and grading scheme.
 
 Assignment types

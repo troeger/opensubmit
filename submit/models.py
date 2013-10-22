@@ -38,6 +38,7 @@ class Course(models.Model):
 	title = models.CharField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	owner   = models.ForeignKey(User, related_name='courses')
+	tutors = models.ManyToManyField(User, related_name='courses_tutoring')
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
 	max_authors = models.PositiveSmallIntegerField(default=1)
@@ -53,7 +54,6 @@ class Assignment(models.Model):
 	publish_at = models.DateTimeField(default=timezone.now())
 	soft_deadline = models.DateTimeField(blank=True, null=True)
 	hard_deadline = models.DateTimeField()		# when should the assignment dissappear
-	correctors = models.ManyToManyField(User, related_name="to_correct")
 	has_attachment = models.BooleanField(default=False)
 	attachment_test_timeout = models.IntegerField(default=30)
 	attachment_test_compile = models.BooleanField(default=False)
