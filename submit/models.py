@@ -295,5 +295,6 @@ def inform_course_owner(request, submission):
 
 	from_email = submission.assignment.course.owner.email
 	recipients = [submission.assignment.course.owner.email]
-	send_mail(subject, message, from_email, recipients, fail_silently=True)
+	#TODO: Make this configurable, some course owners got annoyed by this
+	#send_mail(subject, message, from_email, recipients, fail_silently=True)
 

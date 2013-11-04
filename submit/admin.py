@@ -88,7 +88,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)) 
+            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
@@ -195,7 +195,7 @@ class SubmissionFileAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)) 
+            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
@@ -221,7 +221,7 @@ class AssignmentAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)) 
+            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct() 
 
 
 admin.site.register(Assignment, AssignmentAdmin)
@@ -229,7 +229,7 @@ admin.site.register(Assignment, AssignmentAdmin)
 ### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
-    return ", ".join([str(grading) for grading in gradingScheme.gradings.all()])
+    return " - ".join([str(grading) for grading in gradingScheme.gradings.all()])
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
@@ -258,7 +258,7 @@ class CourseAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)) 
+            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)).distinct() 
 
     def showGradingTable(self, request, queryset):
         course = queryset.all()[0]
