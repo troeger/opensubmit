@@ -11,17 +11,18 @@ from django.utils.encoding import smart_text
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
+from django.forms.models import modelform_factory
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
-from models import SubmissionFile, Submission, Assignment, TestMachine, Course
+from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
 from models import inform_student, inform_course_owner
 from datetime import timedelta, datetime
 import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
 
-
 def index(request):
     if request.user.is_authenticated():
+        db_fixes(request.user)
         return redirect('dashboard')
 
     return render(request, 'index.html', {'login_description': LOGIN_DESCRIPTION})
@@ -45,6 +46,20 @@ def settings(request):
     else:
         settingsForm=SettingsForm(instance=request.user)
     return render(request, 'settings.html', {'settingsForm': settingsForm})
+
+@login_required
+def courses(request):
+    UserProfileForm = modelform_factory(UserProfile, fields=['courses'])
+    profile = UserProfile.objects.get(user=request.user)
+    if request.POST:
+        coursesForm=UserProfileForm(request.POST, instance=profile)
+        if coursesForm.is_valid():
+            coursesForm.save()
+            messages.info(request, 'You choice was saved.')
+            return redirect('dashboard')
+    else:
+        coursesForm=UserProfileForm(instance=profile)
+    return render(request, 'courses.html', {'coursesForm': coursesForm})    
 
 def download(request, obj_id, filetype, secret=None):
     if filetype=="attachment":
@@ -229,7 +244,12 @@ def dashboard(request):
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    qs = Assignment.objects.filter(hard_deadline__gt = timezone.now()).filter(publish_at__lt = timezone.now()).filter(course__active__exact=True).order_by('soft_deadline').order_by('hard_deadline').order_by('title')
+    user_courses = UserProfile.objects.get(user=request.user).courses.all()
+    qs = Assignment.objects.filter(hard_deadline__gt = timezone.now())
+    qs = qs.filter(publish_at__lt = timezone.now())
+    qs = qs.filter(course__active__exact=True)
+    qs = qs.filter(course__in=user_courses)
+    qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
     openassignments = [ass for ass in qs if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,

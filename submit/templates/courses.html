@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - Your Courses
+{% endblock %}
+
+{% block style %}
+{{ block.super }}
+@import url("{{ STATIC_URL }}chosen/chosen.css");
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="text/javascript" src="{{ STATIC_URL }}chosen/chosen.jquery.min.js"></script>
+{% endblock %}
+
+
+{% block docready %}
+$('#id_courses').chosen({width: "95%"});
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Your Courses</h1>
+</div>
+
+<form action="." method="post" class="form-horizontal">
+ {% csrf_token %}
+<table>
+{{ coursesForm|bootstrap }}
+</table>
+<p>
+<button type="submit" href="." class="btn"><i class="icon icon-ok"></i> Save</button>
+</p>
+</form>
+
+{% endblock %}
+
+
+

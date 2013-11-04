@@ -15,13 +15,6 @@ def upload_path(instance, filename):
 	filename=unicodedata.normalize('NFKD', filename).encode('ascii','ignore').lower()
 	return '/'.join([str(date.today().isoformat()),filename])
 
-# monkey patch for getting better user name stringification
-# User proxies did not make the job
-# Obsolete with Django 1.5 custom User feature
-def user_unicode(self):
-	return  u'%s %s' % (self.first_name, self.last_name)
-User.__unicode__ = user_unicode
-
 class Grading(models.Model):
 	title = models.CharField(max_length=20)
 	means_passed = models.BooleanField(default=True)
@@ -38,7 +31,7 @@ class Course(models.Model):
 	title = models.CharField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	owner   = models.ForeignKey(User, related_name='courses')
-	tutors = models.ManyToManyField(User, related_name='courses_tutoring')
+	tutors = models.ManyToManyField(User, blank=True, null=True, related_name='courses_tutoring')
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
 	max_authors = models.PositiveSmallIntegerField(default=1)
@@ -71,10 +64,17 @@ class Assignment(models.Model):
 	def __unicode__(self):
 		return unicode(self.title)
 
-#class Tutor(models.Model):
-#	user = models.ForeignKey(User, related_name='tutor_roles')
-#	course = models.ForeignKey(Course, related_name='tutors')		# new course, same tutor -> new record with new students
-#	students = 	models.ManyToManyField(User)
+# monkey patch for getting better user name stringification
+# User proxies did not make the job
+# Django's custom user model feature would have needed to be introduced
+# before the first syncdb, whcih does not work for existing installations 
+def user_unicode(self):
+	return  u'%s %s' % (self.first_name, self.last_name)
+User.__unicode__ = user_unicode
+
+class UserProfile(models.Model):
+	user = models.OneToOneField(User)
+	courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants')
 
 class ValidSubmissionFileManager(models.Manager):
 	def get_query_set(self):
@@ -271,8 +271,10 @@ def inform_student(submission, state):
 	subject = "[%s] %s"%(submission.assignment.course, subject)
 	from_email = submission.assignment.course.owner.email
 	recipients = submission.authors.values_list('email', flat=True).distinct().order_by('email')
-	# send student email with BCC to course owner. This might be configurable later
-	email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
+	# send student email with BCC to course owner.
+	#TODO: This might be configurable later
+	# email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
+	email = EmailMessage(subject, message, from_email, recipients)
 	email.send(fail_silently=True)
 
 # to avoid cyclic dependencies, we keep it in the models.py
@@ -295,5 +297,25 @@ def inform_course_owner(request, submission):
 
 	from_email = submission.assignment.course.owner.email
 	recipients = [submission.assignment.course.owner.email]
-	send_mail(subject, message, from_email, recipients, fail_silently=True)
+	#TODO: Make this configurable, some course owners got annoyed by this
+	#send_mail(subject, message, from_email, recipients, fail_silently=True)
+
+def db_fixes(user):
+	''' 
+	This is a monkey patch function called after login, which allows to deal with 
+	schema change issues I was too lazy to formulate in a South script.
+	It is also the easiest alternative to a User instance post_save() handler.
+	'''
+	# Fix users that already exist and never got a user profile attached
+	# This may be legacy users after the v0.28 introduction of UserProfile,
+	# or users accounts that were created by the OpenID library or the admin.
+	# TODO: The latter two belong into a User post_save handler. If we have this,
+	#       then this code becomes obsolete for fresh installations of submit.
+	#
+	# Users should start with all courses being visible, which was the behavior until v0.27
+	profile, created = UserProfile.objects.get_or_create(user=user)
+	if created:
+		profile.courses = Course.objects.all()
+		profile.save()
+
 

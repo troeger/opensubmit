@@ -1,14 +1,15 @@
-from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
+from submit.models import Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
 from django.db import models
 from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
 
 
 ### Submission admin interface ###
@@ -88,7 +89,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)) 
+            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
@@ -195,7 +196,7 @@ class SubmissionFileAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)) 
+            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
@@ -221,7 +222,7 @@ class AssignmentAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)) 
+            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct() 
 
 
 admin.site.register(Assignment, AssignmentAdmin)
@@ -229,7 +230,7 @@ admin.site.register(Assignment, AssignmentAdmin)
 ### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
-    return ", ".join([str(grading) for grading in gradingScheme.gradings.all()])
+    return " - ".join([str(grading) for grading in gradingScheme.gradings.all()])
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
@@ -243,6 +244,17 @@ class GradingSchemeAdmin(admin.ModelAdmin):
 admin.site.register(Grading)
 admin.site.register(GradingScheme, GradingSchemeAdmin)
 
+
+### User admin interface ###
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+
+class UserAdmin(UserAdmin):
+    inlines = (UserProfileInline, )
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+
 ### Course admin interface ###
 
 def assignments(course):
@@ -251,6 +263,7 @@ def assignments(course):
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
     actions=['showGradingTable', 'downloadArchive']
+    filter_horizontal=['tutors']
 
     def queryset(self, request):
         ''' Restrict the listed courses for the current user.'''
@@ -258,7 +271,7 @@ class CourseAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)) 
+            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)).distinct() 
 
     def showGradingTable(self, request, queryset):
         course = queryset.all()[0]
