@@ -229,7 +229,7 @@ admin.site.register(Assignment, AssignmentAdmin)
 ### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
-    return ", ".join([str(grading) for grading in gradingScheme.gradings.all()])
+    return " - ".join([str(grading) for grading in gradingScheme.gradings.all()])
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
