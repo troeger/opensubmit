@@ -14,6 +14,7 @@ except IOError:
         # development machine
         config.readfp(open('submit/settings_dev.ini'))
         is_production = False
+        print "Using submit/settings_dev.ini"
     except:
         # See if the user just forgot to edit and rename the template
         try:

@@ -251,6 +251,7 @@ def assignments(course):
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
     actions=['showGradingTable', 'downloadArchive']
+    filter_horizontal=['tutors']
 
     def queryset(self, request):
         ''' Restrict the listed courses for the current user.'''
