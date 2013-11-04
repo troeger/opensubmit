@@ -1,14 +1,15 @@
-from submit.models import Grading, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
+from submit.models import Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
 from django.db import models
 from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
 
 
 ### Submission admin interface ###
@@ -242,6 +243,17 @@ class GradingSchemeAdmin(admin.ModelAdmin):
 
 admin.site.register(Grading)
 admin.site.register(GradingScheme, GradingSchemeAdmin)
+
+
+### User admin interface ###
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+
+class UserAdmin(UserAdmin):
+    inlines = (UserProfileInline, )
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 ### Course admin interface ###
 

@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', 'submit.views.download', name='download'),
     url(r'^machine/(?P<machine_id>\d+)/$', 'submit.views.machine', name='machine'),
     url(r'^settings/$', 'submit.views.settings', name='settings'),
+    url(r'^courses/$', 'submit.views.courses', name='courses'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )
