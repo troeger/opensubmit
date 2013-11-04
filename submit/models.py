@@ -38,7 +38,7 @@ class Course(models.Model):
 	title = models.CharField(max_length=200)
 	created = models.DateTimeField(auto_now_add=True, editable=False)
 	owner   = models.ForeignKey(User, related_name='courses')
-	tutors = models.ManyToManyField(User, related_name='courses_tutoring')
+	tutors = models.ManyToManyField(User, blank=True, null=True, related_name='courses_tutoring')
 	homepage = models.URLField(max_length=200)
 	active = models.BooleanField(default=True)
 	max_authors = models.PositiveSmallIntegerField(default=1)
