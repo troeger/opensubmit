@@ -244,7 +244,7 @@ def dashboard(request):
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    user_courses = UserProfile.objects.get(user=request.user).courses.all()
+    user_courses = UserProfile.objects.get(user=request.user).courses.filter(active__exact=True)
     qs = Assignment.objects.filter(hard_deadline__gt = timezone.now())
     qs = qs.filter(publish_at__lt = timezone.now())
     qs = qs.filter(course__active__exact=True)
