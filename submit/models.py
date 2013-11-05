@@ -74,7 +74,7 @@ User.__unicode__ = user_unicode
 
 class UserProfile(models.Model):
 	user = models.OneToOneField(User)
-	courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants')
+	courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact':True})
 
 class ValidSubmissionFileManager(models.Manager):
 	def get_query_set(self):
