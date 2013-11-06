@@ -22,7 +22,6 @@ import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
 
 def index(request):
     if request.user.is_authenticated():
-        db_fixes(request.user)
         return redirect('dashboard')
 
     return render(request, 'index.html', {'login_description': LOGIN_DESCRIPTION})
@@ -235,6 +234,8 @@ def jobs(request, secret):
 
 @login_required
 def dashboard(request):
+    db_fixes(request.user)
+
     # if the user settings are not complete (e.f. adter OpenID registration), we MUST fix them first
     if not request.user.first_name or not request.user.last_name or not request.user.email:
         return redirect('settings')
@@ -244,7 +245,7 @@ def dashboard(request):
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    user_courses = UserProfile.objects.get(user=request.user).courses.all()
+    user_courses = UserProfile.objects.get(user=request.user).courses.filter(active__exact=True)
     qs = Assignment.objects.filter(hard_deadline__gt = timezone.now())
     qs = qs.filter(publish_at__lt = timezone.now())
     qs = qs.filter(course__active__exact=True)
