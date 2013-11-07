@@ -15,6 +15,9 @@ from django.utils.translation import ugettext_lazy as _
 ### Submission admin interface ###
 
 class SubmissionStateFilter(SimpleListFilter):
+    ''' This custom filter allows to filter the submissions according to their state.
+        Additionally, only submissions the user is tutor for are shown.
+    '''
     title = _('Submission Status')
     parameter_name = 'statefilter'
 
@@ -28,8 +31,28 @@ class SubmissionStateFilter(SimpleListFilter):
         qs=qs.filter(assignment__course__in=tutor_courses(request.user))
         if self.value() == 'tobegraded':
             return qs.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
-        if self.value() == 'graded':
+        elif self.value() == 'graded':
             return qs.filter(state__in=[Submission.GRADED])
+        else:
+            return qs
+
+class SubmissionAssignmentFilter(SimpleListFilter):
+    ''' This custom filter allows to filter the submissions according to their
+        assignment. Only submissions from courses were the user is tutor are
+        considered.
+    '''
+    title = _('Assignment')
+    parameter_name = 'assignmentfilter'
+
+    def lookups(self, request, model_admin):
+        tutor_assignments = Assignment.objects.filter(course__in=tutor_courses(request.user))
+        return ((ass.pk, ass.title) for ass in tutor_assignments)
+
+    def queryset(self, request, qs):
+        if self.value():
+            return qs.filter(assignment__exact = self.value())
+        else:
+            return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 class SubmissionCourseFilter(SimpleListFilter):
     ''' This custom filter allows to filter the submissions according to 
@@ -96,7 +119,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 
 class SubmissionAdmin(admin.ModelAdmin):    
     list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
-    list_filter = (SubmissionStateFilter, SubmissionCourseFilter, 'assignment')
+    list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
     actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
