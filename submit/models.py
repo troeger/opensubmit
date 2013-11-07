@@ -80,7 +80,7 @@ def user_courses(user):
 	return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
 
 def tutor_courses(user):
-	return user.courses_tutoring.all().filter(active__exact=True)
+	return list(chain(user.courses_tutoring.all().filter(active__exact=True),user.courses.all().filter(active__exact=True)))
 
 class ValidSubmissionFileManager(models.Manager):
 	def get_query_set(self):
