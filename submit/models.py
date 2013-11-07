@@ -76,6 +76,12 @@ class UserProfile(models.Model):
 	user = models.OneToOneField(User)
 	courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact':True})
 
+def user_courses(user):
+	return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
+
+def tutor_courses(user):
+	return user.courses_tutoring.all().filter(active__exact=True)
+
 class ValidSubmissionFileManager(models.Manager):
 	def get_query_set(self):
 		return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)
@@ -120,21 +126,22 @@ class PendingFullTestsManager(models.Manager):
 		return list(chain(fullJobs, closedFullJobs))
 
 class Submission(models.Model):
-	RECEIVED = 'R'
-	WITHDRAWN = 'W'
-	SUBMITTED = 'S'
-	TEST_COMPILE_PENDING = 'PC'
-	TEST_COMPILE_FAILED = 'FC'
-	TEST_VALIDITY_PENDING = 'PV'
-	TEST_VALIDITY_FAILED = 'FV'
-	TEST_FULL_PENDING = 'PF'
-	TEST_FULL_FAILED = 'FF'				
-	SUBMITTED_TESTED = 'ST'				# All tests ok, waiting for manual grading
-	GRADED = 'G'						# Grade and grading notes added, notification pending
-	CLOSED = 'C'						# Graded, and students are notified
-	CLOSED_TEST_FULL_PENDING = 'CT'		# Keep grading status, but re-run full tests silently
-	STATES = (
-		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
+	RECEIVED = 'R'					# Only for initialization, this should never persist
+	WITHDRAWN = 'W'					# Withdrawn by the student
+	SUBMITTED = 'S'					# Submitted, no tests so far
+	TEST_COMPILE_PENDING = 'PC'		# Submitted, compile test planned
+	TEST_COMPILE_FAILED = 'FC'		# Submitted, compile test failed 
+	TEST_VALIDITY_PENDING = 'PV'	# Submitted, validity test planned
+	TEST_VALIDITY_FAILED = 'FV'		# Submitted, validity test failed
+	TEST_FULL_PENDING = 'PF'		# Submitted, full test planned
+	TEST_FULL_FAILED = 'FF'			# Submitted, full test failed
+	SUBMITTED_TESTED = 'ST'			# Submitted, all tests performed, grading planned
+	GRADING_IN_PROGRESS = 'GP'		# Grading in progress, but not finished
+	GRADED = 'G'					# Graded, student notification not done
+	CLOSED = 'C'					# Graded, student notification done
+	CLOSED_TEST_FULL_PENDING = 'CT'	# Keep grading status, full test planned
+	STATES = (						# States from the backend point of view
+		(RECEIVED, 'Received'),		
 		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Submitted'),
 		(TEST_COMPILE_PENDING, 'Compilation test pending'),
@@ -142,14 +149,15 @@ class Submission(models.Model):
 		(TEST_VALIDITY_PENDING, 'Validity test pending'),
 		(TEST_VALIDITY_FAILED, 'Validity test failed'),
 		(TEST_FULL_PENDING, 'Full test pending'),
-		(TEST_FULL_FAILED, 'Full test failed'),
-		(SUBMITTED_TESTED, 'All tests passed'),
-		(GRADED, 'Grading in progress'),
-		(CLOSED, 'Done'),
-		(CLOSED_TEST_FULL_PENDING, 'Done, full test pending')
+		(TEST_FULL_FAILED, 'All but full test passed, grading pending'),
+		(SUBMITTED_TESTED, 'All tests passed, grading pending'),
+		(GRADING_IN_PROGRESS, 'Grading not finished'),
+		(GRADED, 'Grading finished'),
+		(CLOSED, 'Closed, student notified'),
+		(CLOSED_TEST_FULL_PENDING, 'Closed, full test pending')
 	)
-	STUDENT_STATES = (
-		(RECEIVED, 'Received'),		# only for initialization, should never shwop up
+	STUDENT_STATES = (				# States from the student point of view
+		(RECEIVED, 'Received'),		
 		(WITHDRAWN, 'Withdrawn'),
 		(SUBMITTED, 'Waiting for grading'),
 		(TEST_COMPILE_PENDING, 'Waiting for compilation test'),
@@ -159,6 +167,7 @@ class Submission(models.Model):
 		(TEST_FULL_PENDING, 'Waiting for grading'),
 		(TEST_FULL_FAILED, 'Waiting for grading'),
 		(SUBMITTED_TESTED, 'Waiting for grading'),
+		(GRADING_IN_PROGRESS, 'Waiting for grading'),		
 		(GRADED, 'Waiting for grading'),
 		(CLOSED, 'Graded'),
 		(CLOSED_TEST_FULL_PENDING, 'Graded')
@@ -179,8 +188,12 @@ class Submission(models.Model):
 		return unicode("%u"%(self.pk))
 	def can_withdraw(self):
 		# No double withdraw
-		if self.state == self.WITHDRAWN: 
+		# No withdraw for graded jobs or jobs in the middle of grading
+		if self.state in [self.GRADED, self.GRADING_IN_PROGRESS, self.WITHDRAWN]: 
 			return False
+		# No withdraw for closed jobs
+		if self.is_closed():
+			return False	
 		# No withdraw for executed jobs
 		# This smells like race condition (page withdraw button rendering -> clicking)
 		# Therefore, the withdraw view has to do this check again
@@ -188,12 +201,6 @@ class Submission(models.Model):
 			assert(self.file_upload)	# otherwise, the state model is broken
 			if self.file_upload.is_executed():
 				return False
-		# No withdraw for graded jobs
-		if self.state == self.GRADED:
-			return False			
-		# No withdraw for closed jobs
-		if self.is_closed():
-			return False	
 		# In principle, it can be withdrawn
 		# Now consider the deadlines
 		if self.assignment.hard_deadline < timezone.now():

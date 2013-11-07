@@ -1,4 +1,4 @@
-from submit.models import Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
+from submit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
 from django.db import models
 from django.db.models import Q
@@ -15,20 +15,61 @@ from django.utils.translation import ugettext_lazy as _
 ### Submission admin interface ###
 
 class SubmissionStateFilter(SimpleListFilter):
-    title = _('submission status')
+    ''' This custom filter allows to filter the submissions according to their state.
+        Additionally, only submissions the user is tutor for are shown.
+    '''
+    title = _('Submission Status')
     parameter_name = 'statefilter'
 
     def lookups(self, request, model_admin):
         return (
             ('tobegraded', _('To be graded')),
-            ('graded', _('Grading in progress')),
+            ('graded', _('Grading finished')),
         )
 
-    def queryset(self, request, queryset):
+    def queryset(self, request, qs):
+        qs=qs.filter(assignment__course__in=tutor_courses(request.user))
         if self.value() == 'tobegraded':
-            return queryset.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
-        if self.value() == 'graded':
-            return queryset.filter(state__in=[Submission.GRADED])
+            return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+        elif self.value() == 'graded':
+            return qs.filter(state__in=[Submission.GRADED])
+        else:
+            return qs
+
+class SubmissionAssignmentFilter(SimpleListFilter):
+    ''' This custom filter allows to filter the submissions according to their
+        assignment. Only submissions from courses were the user is tutor are
+        considered.
+    '''
+    title = _('Assignment')
+    parameter_name = 'assignmentfilter'
+
+    def lookups(self, request, model_admin):
+        tutor_assignments = Assignment.objects.filter(course__in=tutor_courses(request.user))
+        return ((ass.pk, ass.title) for ass in tutor_assignments)
+
+    def queryset(self, request, qs):
+        if self.value():
+            return qs.filter(assignment__exact = self.value())
+        else:
+            return qs.filter(assignment__course__in = tutor_courses(request.user))
+
+class SubmissionCourseFilter(SimpleListFilter):
+    ''' This custom filter allows to filter the submissions according to 
+        the course they belong to. Additionally, only submission that the
+        user is a tutor for are returned in any of the filter settings.
+    '''
+    title = _('Course')
+    parameter_name = 'coursefilter'
+
+    def lookups(self, request, model_admin):
+        return ((c.pk, c.title) for c in tutor_courses(request.user) )
+
+    def queryset(self, request, qs):
+        if self.value():
+            return qs.filter(assignment__course__exact = self.value())
+        else:
+            return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 def authors(submission):
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
@@ -63,24 +104,28 @@ class SubmissionFileLinkWidget(forms.Widget):
     def render(self, name, value, attrs=None):
         try:
             sfile = SubmissionFile.objects.get(pk=self.subFileId)
-            text = u'<table border=1><tr><td colspan="2"><a href="%s">%s</a></td></tr>'%(sfile.get_absolute_url(), sfile.basename())
-            text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>'%(sfile.test_compile)
-            text += u'<tr>'
-            text += u'<td><h3>Validation test</h3><pre>%s</pre></td>'%(sfile.test_validity)
-            text += u'<td><h3>Full test</h3><pre>%s</pre></td>'%(sfile.test_full)
-            text += u'<tr>'
-            text += u'<td><h3>Performance data</h3><pre>%s</pre></td>'%(sfile.perf_data)
-            text += u'</tr></table>'
+            text = u'<a href="%s">%s</a><table border=1>'%(sfile.get_absolute_url(), sfile.basename())
+            if sfile.test_compile:
+                text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>'%(sfile.test_compile)
+            if sfile.test_validity:                
+                text += u'<tr><td><h3>Validation test</h3><pre>%s</pre></td></tr>'%(sfile.test_validity)
+            if sfile.test_full:                
+                text += u'<tr><td><h3>Full test</h3><pre>%s</pre></td></tr>'%(sfile.test_full)
+            if sfile.perf_data:
+                text += u'<tr><td><h3>Performance data</h3><pre>%s</pre></td></tr>'%(sfile.perf_data)
+            text += u'</table>'
             # TODO: This is not safe, since the script output can be influenced by students
             return mark_safe(text)
         except:
             return mark_safe(u'Nothing stored')
 
 class SubmissionAdmin(admin.ModelAdmin):    
+    ''' This is our version of the admin view for a single submission.
+    '''
     list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
-    list_filter = (SubmissionStateFilter,'assignment')
+    list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
+    fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes'))
     actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     def queryset(self, request):
@@ -92,31 +137,49 @@ class SubmissionAdmin(admin.ModelAdmin):
             return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
-        # The idea is to make some fields readonly only on modification
-        # The trick is to override the getter for the according ModelAdmin attribute
+        ''' Make some of the form fields read-only, but only if the view used to 
+            modify an existing submission. Overriding the ModelAdmin getter
+            is the documented way to do that.
+        '''
         if obj:
-            # Modification
             return ('assignment','submitter','authors','notes')
         else:
             # New manual submission
             return ()
 
     def formfield_for_dbfield(self, db_field, **kwargs):
+        ''' Offer grading choices from the assignment definition as potential form
+            field values for 'grading'.
+        '''
         if self.obj and db_field.name == "grading":
-            # Offer grading choices from the assignment definition for this submission
             kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def get_form(self, request, obj=None):
+        ''' Establish our own renderer for the file upload field, and adjust some labels.
+        '''
         self.obj = obj
         form = super(SubmissionAdmin, self).get_form(request, obj)
         form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
         form.base_fields['file_upload'].required = False
-        form.base_fields['state'].required = True
-        form.base_fields['state'].label = "New state (no email)"
         form.base_fields['grading_notes'].label = "Grading notes"
         return form
+
+    def save_model(self, request, obj, form, change):
+        ''' Our custom addition to the view HTML in templates/admin/submit/submission/change_form.HTML
+            adds an easy radio button choice for the new state. This is meant to be for tutors.
+            We need to peel this choice from the form data and set the state accordingly.
+            The radio buttons have no default, so that we can keep the existing state
+            if the user makes no explicit choice.
+            Everything else can be managed as prepared by the framework.
+        '''
+        if 'newstate' in request.POST:
+            if request.POST['newstate'] == 'finished':
+                obj.state = Submission.GRADED
+            elif request.POST['newstate'] == 'unfinished':
+                obj.state = Submission.GRADING_IN_PROGRESS
+        obj.save()
 
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions, or for solutions in the middle of grading
@@ -137,7 +200,10 @@ class SubmissionAdmin(admin.ModelAdmin):
     setFullPendingStateAction.short_description = "Restart full test without notification"
 
     def closeAndNotifyAction(self, request, queryset):
-        # only notify for graded solutions
+        ''' CLose all submissions were the tutor sayed that the grading is finished,
+            and inform the student. CLosing only graded submissions is a safeguard,
+            since backend users tend to checkbox-mark all submissions without thinking.
+        '''
         mails=[]
         qs = queryset.filter(Q(state=Submission.GRADED))
         for subm in qs:
