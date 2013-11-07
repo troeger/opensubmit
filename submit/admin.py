@@ -1,4 +1,4 @@
-from submit.models import Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
+from submit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
 from django.db import models
 from django.db.models import Q
@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 ### Submission admin interface ###
 
 class SubmissionStateFilter(SimpleListFilter):
-    title = _('submission status')
+    title = _('Submission Status')
     parameter_name = 'statefilter'
 
     def lookups(self, request, model_admin):
@@ -24,11 +24,29 @@ class SubmissionStateFilter(SimpleListFilter):
             ('graded', _('Grading in progress')),
         )
 
-    def queryset(self, request, queryset):
+    def queryset(self, request, qs):
+        qs=qs.filter(assignment__course__in=tutor_courses(request.user))
         if self.value() == 'tobegraded':
-            return queryset.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+            return qs.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         if self.value() == 'graded':
-            return queryset.filter(state__in=[Submission.GRADED])
+            return qs.filter(state__in=[Submission.GRADED])
+
+class SubmissionCourseFilter(SimpleListFilter):
+    ''' This custom filter allows to filter the submissions according to 
+        the course they belong to. Additionally, only submission that the
+        user is a tutor for are returned in any of the filter settings.
+    '''
+    title = _('Course')
+    parameter_name = 'coursefilter'
+
+    def lookups(self, request, model_admin):
+        return ((c.pk, c.title) for c in tutor_courses(request.user) )
+
+    def queryset(self, request, qs):
+        if self.value():
+            return qs.filter(assignment__course__exact = self.value())
+        else:
+            return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 def authors(submission):
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
@@ -78,7 +96,7 @@ class SubmissionFileLinkWidget(forms.Widget):
 
 class SubmissionAdmin(admin.ModelAdmin):    
     list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
-    list_filter = (SubmissionStateFilter,'assignment')
+    list_filter = (SubmissionStateFilter, SubmissionCourseFilter, 'assignment')
     filter_horizontal = ('authors',)
     fields = ('assignment','authors',('submitter','notes'),'file_upload','state',('grading','grading_notes'))
     actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']

@@ -76,6 +76,12 @@ class UserProfile(models.Model):
 	user = models.OneToOneField(User)
 	courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact':True})
 
+def user_courses(user):
+	return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
+
+def tutor_courses(user):
+	return user.courses_tutoring.all().filter(active__exact=True)
+
 class ValidSubmissionFileManager(models.Manager):
 	def get_query_set(self):
 		return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)

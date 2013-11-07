@@ -13,7 +13,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
 from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
-from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
+from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
 from models import inform_student, inform_course_owner
@@ -245,11 +245,9 @@ def dashboard(request):
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
     waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    user_courses = UserProfile.objects.get(user=request.user).courses.filter(active__exact=True)
     qs = Assignment.objects.filter(hard_deadline__gt = timezone.now())
     qs = qs.filter(publish_at__lt = timezone.now())
-    qs = qs.filter(course__active__exact=True)
-    qs = qs.filter(course__in=user_courses)
+    qs = qs.filter(course__in=user_courses(request.user))
     qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
     openassignments = [ass for ass in qs if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
