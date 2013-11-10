@@ -150,20 +150,25 @@ class SubmissionAdmin(admin.ModelAdmin):
     def formfield_for_dbfield(self, db_field, **kwargs):
         ''' Offer grading choices from the assignment definition as potential form
             field values for 'grading'.
+            When no object is given in the form, the this is a new manual submission
         '''
-        if self.obj and db_field.name == "grading":
-            kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
+	if hasattr(self, 'obj'):
+		if self.obj and db_field.name == "grading":
+		    kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def get_form(self, request, obj=None):
         ''' Establish our own renderer for the file upload field, and adjust some labels.
         '''
-        self.obj = obj
-        form = super(SubmissionAdmin, self).get_form(request, obj)
-        form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
-        form.base_fields['file_upload'].required = False
-        form.base_fields['grading_notes'].label = "Grading notes"
+	form = super(SubmissionAdmin, self).get_form(request, obj)
+	if obj:
+		self.obj = obj
+		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
+		form.base_fields['file_upload'].required = False
+		form.base_fields['grading_notes'].label = "Grading notes"
+	else:
+		self.obj = None
         return form
 
     def save_model(self, request, obj, form, change):
