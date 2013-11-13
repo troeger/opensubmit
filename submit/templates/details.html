@@ -34,6 +34,9 @@
 				{% if submission.file_upload.test_validity %}
 					<h5>Validity test result:</h5>
 					<code>{{ submission.file_upload.test_validity|linebreaks }}</code>
+					{% if submission.assignment.validity_script_download %}
+						<br/>(<a href="{% url 'download' submission.assignment.pk 'validity_testscript' %}">Download</a> the validation script)
+					{% endif %}
 				{% endif %}
 			</td>
 	{% endif %}
