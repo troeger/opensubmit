@@ -1,9 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMessage
+from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL, MEDIA_ROOT
 from datetime import date
@@ -77,9 +78,11 @@ class UserProfile(models.Model):
 	courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact':True})
 
 def user_courses(user):
+	''' Returns the list of courses this user is subscribed for.'''
 	return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
 
 def tutor_courses(user):
+	''' Returns the list of courses this user is tutor or owner for.'''
 	return list(chain(user.courses_tutoring.all().filter(active__exact=True),user.courses.all().filter(active__exact=True)))
 
 class ValidSubmissionFileManager(models.Manager):
@@ -185,7 +188,10 @@ class Submission(models.Model):
 	grading_notes = models.TextField(max_length=1000, blank=True, null=True)
 	state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 	def __unicode__(self):
-		return unicode("%u"%(self.pk))
+		if self.pk:
+			return unicode("%u"%(self.pk))
+		else:
+			return unicode("New Submission instance")
 	def can_withdraw(self):
 		# No double withdraw
 		# No withdraw for graded jobs or jobs in the middle of grading
@@ -325,4 +331,20 @@ def db_fixes(user):
 		profile.courses = Course.objects.all()
 		profile.save()
 
+@receiver(post_save, sender=Submission)
+def submission_post_save(sender, instance, **kwargs):
+	''' Several sanity checks after we got a valid submission object.'''
+	# Make the submitter an author
+	if instance.submitter not in instance.authors.all():
+		instance.authors.add(instance.submitter)
+		instance.save()
+	# Mark all existing submissions for this assignment by these authors as invalid. 
+	# This fixes a race condition with parallel new submissions in multiple browser windows by the same user.
+	# Solving this as pre_save security exception does not work, since we have no valid instance to check there.
+	if instance.state == instance.get_initial_state():
+		for author in instance.authors.all():
+			same_author_subm = User.objects.get(pk=author.pk).authored.all().exclude(pk=instance.pk).filter(assignment=instance.assignment)
+			for subm in same_author_subm:
+				subm.state = Submission.WITHDRAWN
+				subm.save()
 

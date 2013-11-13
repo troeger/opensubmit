@@ -289,7 +289,6 @@ def new(request, ass_id):
                 submission.file_upload=submissionFile                
             submission.save()
             submissionForm.save_m2m()               # because of commit=False, we first need to add the form-given authors
-            submission.authors.add(request.user)    # submitter is always an author
             submission.save()
             messages.info(request, "New submission saved.")
             if submission.state == Submission.SUBMITTED:
