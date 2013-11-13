@@ -122,11 +122,11 @@ class SubmissionFileLinkWidget(forms.Widget):
 class SubmissionAdmin(admin.ModelAdmin):    
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
+    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes'))
-    actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    actions=['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     def queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
@@ -150,20 +150,25 @@ class SubmissionAdmin(admin.ModelAdmin):
     def formfield_for_dbfield(self, db_field, **kwargs):
         ''' Offer grading choices from the assignment definition as potential form
             field values for 'grading'.
+            When no object is given in the form, the this is a new manual submission
         '''
-        if self.obj and db_field.name == "grading":
-            kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
+	if hasattr(self, 'obj'):
+		if self.obj and db_field.name == "grading":
+		    kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def get_form(self, request, obj=None):
         ''' Establish our own renderer for the file upload field, and adjust some labels.
         '''
-        self.obj = obj
-        form = super(SubmissionAdmin, self).get_form(request, obj)
-        form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
-        form.base_fields['file_upload'].required = False
-        form.base_fields['grading_notes'].label = "Grading notes"
+	form = super(SubmissionAdmin, self).get_form(request, obj)
+	if obj:
+		self.obj = obj
+		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
+		form.base_fields['file_upload'].required = False
+		form.base_fields['grading_notes'].label = "Grading notes"
+	else:
+		self.obj = None
         return form
 
     def save_model(self, request, obj, form, change):
@@ -180,6 +185,12 @@ class SubmissionAdmin(admin.ModelAdmin):
             elif request.POST['newstate'] == 'unfinished':
                 obj.state = Submission.GRADING_IN_PROGRESS
         obj.save()
+
+    def setInitialStateAction(self, request, queryset):
+        for subm in queryset:
+		subm.state = subm.get_initial_state()
+		subm.save() 
+    setInitialStateAction.short_description = "Mark as new incoming submission"
 
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions, or for solutions in the middle of grading
