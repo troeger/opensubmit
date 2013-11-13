@@ -1,7 +1,7 @@
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.core.mail import mail_managers, send_mail
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponse, HttpResponseForbidden
@@ -16,7 +16,7 @@ from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
-from models import inform_student, inform_course_owner
+from models import inform_student, inform_course_owner, open_assignments
 from datetime import timedelta, datetime
 import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
 
@@ -244,18 +244,12 @@ def dashboard(request):
     authored=request.user.authored.all().exclude(state=Submission.WITHDRAWN).order_by('-created')
     archived=request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username=request.user.get_full_name() + " <" + request.user.email + ">"
-    waiting_for_action=[subm.assignment for subm in request.user.authored.all().exclude(state=Submission.WITHDRAWN)]
-    qs = Assignment.objects.filter(hard_deadline__gt = timezone.now())
-    qs = qs.filter(publish_at__lt = timezone.now())
-    qs = qs.filter(course__in=user_courses(request.user))
-    qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
-    openassignments = [ass for ass in qs if ass not in waiting_for_action]
     return render(request, 'dashboard.html', {
         'authored': authored,
         'archived': archived,
         'user': request.user,
         'username': username,
-        'assignments': openassignments,
+        'assignments': open_assignments(request.user),
         'machines': TestMachine.objects.all()}
     )
 
@@ -303,8 +297,11 @@ def new(request, ass_id):
 
 @login_required
 def update(request, subm_id):
-    # submission should only be editable by their creators
+    # Submission should only be editable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
+    # Somebody may bypass the template check by sending direct POST form data
+    if not submission.can_reupload():
+        raise SuspiciousOperation("Updating your submission is not allowed at this time.")
     if request.user not in submission.authors.all():
         return redirect('dashboard')        
     if request.POST:
