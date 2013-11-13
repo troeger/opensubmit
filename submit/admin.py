@@ -122,11 +122,11 @@ class SubmissionFileLinkWidget(forms.Widget):
 class SubmissionAdmin(admin.ModelAdmin):    
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
+    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes'))
-    actions=['setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    actions=['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     def queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
@@ -185,6 +185,12 @@ class SubmissionAdmin(admin.ModelAdmin):
             elif request.POST['newstate'] == 'unfinished':
                 obj.state = Submission.GRADING_IN_PROGRESS
         obj.save()
+
+    def setInitialStateAction(self, request, queryset):
+        for subm in queryset:
+		subm.state = subm.get_initial_state()
+		subm.save() 
+    setInitialStateAction.short_description = "Mark as new incoming submission"
 
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions, or for solutions in the middle of grading
