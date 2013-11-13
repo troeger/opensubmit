@@ -7,17 +7,17 @@
 
 {% block style %}
 {{ block.super }}
-@import url("{{ STATIC_URL }}chosen/chosen.css");
+@import url("{{ STATIC_URL }}multiselect/css/bootstrap-multiselect.css");
 {% endblock %}
 
 {% block scripts %}
 {{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}chosen/chosen.jquery.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}multiselect/js/bootstrap-multiselect.js"></script>
 {% endblock %}
 
 
 {% block docready %}
-$('#id_courses').chosen({width: "95%"});
+$('#id_courses').multiselect();
 {% endblock %}
 
 {% block content %}
