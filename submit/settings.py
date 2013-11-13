@@ -121,7 +121,11 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+         'console': {
+            'level':   'DEBUG',
+            'class':   'logging.StreamHandler'
+        }       
     },
     'loggers': {
         'django.request': {
@@ -129,6 +133,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'Submit': {
+            'handlers':  ['console'],
+            'level':     'DEBUG',
+            'propagate': True,
+        }
     }
 }
 AUTHENTICATION_BACKENDS = (
