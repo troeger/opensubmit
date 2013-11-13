@@ -6,18 +6,8 @@
     {{ block.super }} - New Submission
 {% endblock %}
 
-{% block style %}
-{{ block.super }}
-@import url("{{ STATIC_URL }}chosen/chosen.css");
-{% endblock %}
-
-{% block scripts %}
-{{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}chosen/chosen.jquery.min.js"></script>
-{% endblock %}
-
 {% block docready %}
-$('#id_authors').chosen({max_selected_options: {{assignment.course.max_authors}} });
+$('#id_authors').multiselect({enableFiltering: true});
 {% endblock %}
 
 {% block content %}

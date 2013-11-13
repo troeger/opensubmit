@@ -5,17 +5,6 @@
     {{ block.super }} - Your Courses
 {% endblock %}
 
-{% block style %}
-{{ block.super }}
-@import url("{{ STATIC_URL }}multiselect/css/bootstrap-multiselect.css");
-{% endblock %}
-
-{% block scripts %}
-{{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}multiselect/js/bootstrap-multiselect.js"></script>
-{% endblock %}
-
-
 {% block docready %}
 $('#id_courses').multiselect();
 {% endblock %}
