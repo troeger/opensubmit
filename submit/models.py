@@ -258,6 +258,7 @@ class Submission(models.Model):
                 return Submission.TEST_FULL_PENDING
     def state_for_students(self):
         return dict(self.STUDENT_STATES)[self.state]
+
     objects = models.Manager()
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
@@ -339,7 +340,7 @@ def db_fixes(user):
         profile.courses = Course.objects.all()
         profile.save()
 
-def open_assignments(user, ignore_submissions=False):
+def open_assignments(user):
     ''' Returns the list of open assignments from the viewpoint of this user.
         The caller can request the information under consideration of existing submission
         from this user (the dashboard case) or under ignorance of them (the signal handler case).
@@ -348,19 +349,8 @@ def open_assignments(user, ignore_submissions=False):
     qs = qs.filter(publish_at__lt = timezone.now())
     qs = qs.filter(course__in=user_courses(user))
     qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
-    if ignore_submissions:
-        return qs
-    else:
-        waiting_for_action=[subm.assignment for subm in user.authored.all().exclude(state=Submission.WITHDRAWN)]
-        return [ass for ass in qs if ass not in waiting_for_action]
-
-@receiver(pre_save, sender=Submission)
-def submission_pre_save(sender, instance, **kwargs):
-    '''Several santiy checks that work without a completely valid submission object.'''
-    # We ignore the known submissions, since timing-wise it is not clear if at this point 
-    # the signalled publication was already safed.
-    if instance.assignment not in open_assignments(instance.submitter, ignore_submissions=True):
-        raise SuspiciousOperation("You are currently / no longer allowed to submit for this assignment.")
+    waiting_for_action=[subm.assignment for subm in user.authored.all().exclude(state=Submission.WITHDRAWN)]
+    return [ass for ass in qs if ass not in waiting_for_action]
 
 @receiver(post_save, sender=Submission)
 def submission_post_save(sender, instance, **kwargs):
@@ -371,7 +361,9 @@ def submission_post_save(sender, instance, **kwargs):
         instance.save()
     # Mark all existing submissions for this assignment by these authors as invalid. 
     # This fixes a race condition with parallel new submissions in multiple browser windows by the same user.
-    # Solving this as pre_save security exception does not work, since we have no valid instance to check there.
+    # Solving this as pre_save security exception does not work, since we have no instance with valid foreign keys to check there.
+    # Considering that this runs also on tutor correction backend activities, it also serves as kind-of cleanup functionality
+    # for multiplse submissions by the same students for the same assignment - however they got in here.
     if instance.state == instance.get_initial_state():
         for author in instance.authors.all():
             same_author_subm = User.objects.get(pk=author.pk).authored.all().exclude(pk=instance.pk).filter(assignment=instance.assignment)

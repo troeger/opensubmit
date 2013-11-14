@@ -60,11 +60,13 @@ def courses(request):
         coursesForm=UserProfileForm(instance=profile)
     return render(request, 'courses.html', {'coursesForm': coursesForm})    
 
+@login_required
 def download(request, obj_id, filetype, secret=None):
+    ''' Download for students, either of their submitted files or the validation scripts.'''
     if filetype=="attachment":
         subm = get_object_or_404(Submission, pk=obj_id)
         if not (request.user in subm.authors.all() or request.user.is_staff):
-		return HttpResponseForbidden()
+		    return HttpResponseForbidden()
         f=subm.file_upload.attachment
         fname=subm.file_upload.basename()
     elif filetype=="validity_testscript":
@@ -83,13 +85,11 @@ def download(request, obj_id, filetype, secret=None):
 
 @csrf_exempt
 def jobs(request, secret):
-    # This is the view used by the executor.py scripts for getting / putting the test results.
-    #
-    # Fetching some file for testing is changing the database, so using GET here is not really RESTish. Whatever.
-    #
-    # A visible shared secret in the request is no problem, since the executors come
-    # from trusted networks. The secret only protects this view from outside foreigners.
-    #import pdb; pdb.set_trace()
+    ''' This is the view used by the executor.py scripts for getting / putting the test results.
+        Fetching some file for testing is changing the database, so using GET here is not really RESTish. Whatever.
+        A visible shared secret in the request is no problem, since the executors come
+        from trusted networks. The secret only protects this view from outside foreigners.
+    '''
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "GET":
@@ -257,7 +257,7 @@ def dashboard(request):
 def details(request, subm_id):
     subm = get_object_or_404(Submission, pk=subm_id)
     if not (request.user in subm.authors.all() or request.user.is_staff):               # only authors should be able to look into submission details
-	return HttpResponseForbidden()
+	    return HttpResponseForbidden()
     return render(request, 'details.html', {
         'submission': subm}
     )
@@ -269,6 +269,11 @@ def new(request, ass_id):
     SubmissionForm=getSubmissionForm(ass)
     # Analyze submission data
     if request.POST:
+        # Make sure that the submission is still possible, since web page rendering
+        # and POST data sending may be indefinitly delayed
+        if ass not in open_assignments(request.user):
+            messages.error(request, "New submissions for this assignment are no longer possible.")
+            return redirect('dashboard')
         # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm=SubmissionForm(request.user, ass, request.POST, request.FILES)
         if submissionForm.is_valid(): 
@@ -438,6 +443,9 @@ def withdraw(request, subm_id):
     submission = get_object_or_404(Submission, pk=subm_id)
     if (request.user not in submission.authors.all()) or (not submission.can_withdraw()):
         return redirect('dashboard')        
+    if not submission.can_withdraw():
+        messages.error(request, "Withdrawal for this assignment is no longer possible.")
+        return redirect('dashboard')
     if "confirm" in request.POST:
         submission.state=Submission.WITHDRAWN
         submission.save()
