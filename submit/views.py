@@ -60,9 +60,8 @@ def courses(request):
         coursesForm=UserProfileForm(instance=profile)
     return render(request, 'courses.html', {'coursesForm': coursesForm})    
 
-@login_required
 def download(request, obj_id, filetype, secret=None):
-    ''' Download for students, either of their submitted files or the validation scripts.'''
+    ''' Download for students or a validator script, either of their submitted files or the validation scripts.'''
     if filetype=="attachment":
         subm = get_object_or_404(Submission, pk=obj_id)
         if not (request.user in subm.authors.all() or request.user.is_staff):
