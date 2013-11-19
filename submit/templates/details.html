@@ -46,7 +46,7 @@
 		</tr><tr>
 			<td>Grading</td><td>{{ submission.grading }}</td>
 		</tr><tr>
-			<td>Grading Notes</td><td>{{ submission.grading_notes }}</td>
+			<td>Grading Notes</td><td>{{ submission.grading_notes|linebreaks }}</td>
 	{% endif %}
 	</tr>
 </table>
