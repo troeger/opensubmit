@@ -305,7 +305,7 @@ def update(request, subm_id):
     submission = get_object_or_404(Submission, pk=subm_id)
     # Somebody may bypass the template check by sending direct POST form data
     if not submission.can_reupload():
-        raise SuspiciousOperation("Updating your submission is not allowed at this time.")
+        raise SuspiciousOperation("Update of submission %s is not allowed at this time."%str(subm_id))
     if request.user not in submission.authors.all():
         return redirect('dashboard')        
     if request.POST:
