@@ -190,7 +190,7 @@ class Submission(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey(Grading, blank=True, null=True)
     grading_notes = models.TextField(max_length=1000, blank=True, null=True)
-    grading_file = models.FileField(upload_to=upload_path, null=True) 
+    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True) 
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
     def __unicode__(self):
         if self.pk:
