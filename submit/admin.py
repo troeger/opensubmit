@@ -75,6 +75,14 @@ def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
 
+def grading_schemes(grading):
+    ''' The list of grading schemes using this grading.'''
+    return ",\n".join([str(scheme) for scheme in grading.schemes.all()])
+
+def means_passed(grading):
+    return grading.means_passed
+means_passed.boolean = True
+
 def course(obj):
     ''' The course name as string, both for assignment and submission objects.'''
     if type(obj) == Submission:
@@ -322,7 +330,16 @@ admin.site.register(Assignment, AssignmentAdmin)
 ### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
-    return " - ".join([str(grading) for grading in gradingScheme.gradings.all()])
+    ''' Determine the list of gradings in this scheme as rendered string.
+        TODO: Use nice little icons instead of (p) / (f) marking.
+    '''
+    result = []
+    for grading in gradingScheme.gradings.all():
+        if grading.means_passed:
+            result.append(str(grading)+" (pass)")
+        else:
+            result.append(str(grading)+" (fail)")
+    return '  -  '.join(result)
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
@@ -333,7 +350,17 @@ def courses(gradingScheme):
 class GradingSchemeAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', gradings, courses]
 
-admin.site.register(Grading)
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        ''' Offer only gradings that are not already used by other schemes.'''
+        grad_filter = Q(schemes=None)
+        if db_field.name == "gradings":
+            kwargs['queryset'] = Grading.objects.filter(grad_filter).distinct() 
+        return super(GradingSchemeAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+
+class GradingAdmin(admin.ModelAdmin):
+    list_display = ['__unicode__', grading_schemes, means_passed]
+
+admin.site.register(Grading, GradingAdmin)
 admin.site.register(GradingScheme, GradingSchemeAdmin)
 
 

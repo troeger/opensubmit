@@ -2,6 +2,8 @@ from django.test import LiveServerTestCase
 from django.test.client import Client
 from submit.models import Course, Submission
 
+#TODO: Test directly against view functions
+
 class SubmitTestCase(LiveServerTestCase):
     def setUp(self):
         self.c=Client()
