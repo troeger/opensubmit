@@ -229,7 +229,7 @@ class Submission(models.Model):
         return True
     def can_reupload(self):
         # Re-upload should only be possible if the deadlines are not over, which is part of the withdrawal check
-        return (self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]) and self.can_withdraw()
+        return (self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED]) and self.can_withdraw()
     def is_withdrawn(self):
         return self.state == self.WITHDRAWN
     def is_closed(self):
