@@ -72,9 +72,11 @@ class SubmissionCourseFilter(SimpleListFilter):
             return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 def authors(submission):
+    ''' The list of authors als text, for submission list overview.'''
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
 
 def course(obj):
+    ''' The course name as string, both for assignment and submission objects.'''
     if type(obj) == Submission:
         return obj.assignment.course
     elif type(obj) == Assignment:
@@ -165,24 +167,24 @@ class SubmissionAdmin(admin.ModelAdmin):
             field values for 'grading'.
             When no object is given in the form, the this is a new manual submission
         '''
-	if hasattr(self, 'obj'):
-		if self.obj and db_field.name == "grading":
-		    kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
+        if hasattr(self, 'obj'):
+            if self.obj and db_field.name == "grading":
+                kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def get_form(self, request, obj=None):
         ''' Establish our own renderer for the file upload field, and adjust some labels.
         '''
-	form = super(SubmissionAdmin, self).get_form(request, obj)
-	if obj:
-		self.obj = obj
-		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
-		form.base_fields['file_upload'].required = False
-		form.base_fields['grading_notes'].label = "Grading notes"
-	else:
-		self.obj = None
-        return form
+        form = super(SubmissionAdmin, self).get_form(request, obj)
+        if obj:
+            self.obj = obj
+            form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
+            form.base_fields['file_upload'].required = False
+            form.base_fields['grading_notes'].label = "Grading notes"
+        else:
+            self.obj = None
+            return form
 
     def save_model(self, request, obj, form, change):
         ''' Our custom addition to the view HTML in templates/admin/submit/submission/change_form.HTML
@@ -201,8 +203,8 @@ class SubmissionAdmin(admin.ModelAdmin):
 
     def setInitialStateAction(self, request, queryset):
         for subm in queryset:
-		subm.state = subm.get_initial_state()
-		subm.save() 
+        subm.state = subm.get_initial_state()
+        subm.save() 
     setInitialStateAction.short_description = "Mark as new incoming submission"
 
     def setFullPendingStateAction(self, request, queryset):
