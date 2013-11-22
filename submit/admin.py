@@ -83,12 +83,25 @@ def course(obj):
 def upload(submission):
     return submission.file_upload
 
-def has_grading_notes(submission):
+def grading_notes(submission):
+    ''' Determines if the submission has grading notes,
+        leads to nice little icon in the submission overview.
+    '''
     if submission.grading_notes != None:
         return len(submission.grading_notes) > 0
     else:
         return False
-has_grading_notes.boolean = True            # show nice little icon
+grading_notes.boolean = True            # show nice little icon
+
+def grading_file(submission):
+    ''' Determines if the submission has a grading file,
+        leads to nice little icon in the submission overview.
+    '''
+    if submission.grading_file != None:
+        return True
+    else:
+        return False
+grading_file.boolean = True            # show nice little icon
 
 class SubmissionFileLinkWidget(forms.Widget):
     def __init__(self, subFile):
@@ -122,10 +135,10 @@ class SubmissionFileLinkWidget(forms.Widget):
 class SubmissionAdmin(admin.ModelAdmin):    
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
+    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes'))
+    fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes', 'grading_file'))
     actions=['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     def queryset(self, request):

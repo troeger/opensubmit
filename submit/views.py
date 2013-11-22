@@ -61,18 +61,40 @@ def courses(request):
     return render(request, 'courses.html', {'coursesForm': coursesForm})    
 
 def download(request, obj_id, filetype, secret=None):
-    ''' Download for students or a validator script, either of their submitted files or the validation scripts.'''
+    ''' 
+    Download facilility for files on the server.
+    This view is intentionally not login-protected, since the
+    security happens on a more fine-grained level:
+    - A requestor who wants a submission attachment or grading notes must be author 
+     (student front page) or staff (correctors).
+    - A requestor who wants a validation script gets it with a secret (executor script)
+      or if public download is enabled for it.
+    '''
     if filetype=="attachment":
         subm = get_object_or_404(Submission, pk=obj_id)
         if not (request.user in subm.authors.all() or request.user.is_staff):
 		    return HttpResponseForbidden()
         f=subm.file_upload.attachment
         fname=subm.file_upload.basename()
+    elif filetype=="grading_file":
+        subm = get_object_or_404(Submission, pk=obj_id)
+        if not (request.user in subm.authors.all() or request.user.is_staff):
+            return HttpResponseForbidden()
+        f=subm.grading_file
+        fname=os.path.basename(subm.grading_file.name)
     elif filetype=="validity_testscript":
+        if secret:
+            if secret != JOB_EXECUTOR_SECRET:
+                raise PermissionDenied
+        else:
+            if not subm.assignment.validity_script_download:
+                raise PermissionDenied                
         ass = get_object_or_404(Assignment, pk=obj_id)
         f=ass.attachment_test_validity
         fname=f.name[f.name.rfind('/')+1:]
     elif filetype=="full_testscript":
+        if secret != JOB_EXECUTOR_SECRET:
+            raise PermissionDenied
         ass = get_object_or_404(Assignment, pk=obj_id)
         f=ass.attachment_test_full
         fname=f.name[f.name.rfind('/')+1:]

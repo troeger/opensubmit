@@ -15,6 +15,7 @@ import logging
 logger = logging.getLogger('Submit')
 
 def upload_path(instance, filename):
+    ''' Sanitize the user-provided file name, add timestamp for uniqness. '''
     filename=filename.replace(" ","_")
     filename=unicodedata.normalize('NFKD', filename).encode('ascii','ignore').lower()
     return '/'.join([str(date.today().isoformat()),filename])
@@ -189,6 +190,7 @@ class Submission(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey(Grading, blank=True, null=True)
     grading_notes = models.TextField(max_length=1000, blank=True, null=True)
+    grading_file = models.FileField(upload_to=upload_path, null=True) 
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
     def __unicode__(self):
         if self.pk:
@@ -258,6 +260,10 @@ class Submission(models.Model):
                 return Submission.TEST_FULL_PENDING
     def state_for_students(self):
         return dict(self.STUDENT_STATES)[self.state]
+    def grading_file_url(self):
+        # to implement access protection, we implement our own download
+        # this implies that the Apache media serving is disabled
+        return reverse('download', args=(self.pk,'grading_file'))
 
     objects = models.Manager()
     pending_student_tests = PendingStudentTestsManager()
