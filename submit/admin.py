@@ -72,9 +72,19 @@ class SubmissionCourseFilter(SimpleListFilter):
             return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 def authors(submission):
+    ''' The list of authors als text, for submission list overview.'''
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
 
+def grading_schemes(grading):
+    ''' The list of grading schemes using this grading.'''
+    return ",\n".join([str(scheme) for scheme in grading.schemes.all()])
+
+def means_passed(grading):
+    return grading.means_passed
+means_passed.boolean = True
+
 def course(obj):
+    ''' The course name as string, both for assignment and submission objects.'''
     if type(obj) == Submission:
         return obj.assignment.course
     elif type(obj) == Assignment:
@@ -83,12 +93,25 @@ def course(obj):
 def upload(submission):
     return submission.file_upload
 
-def has_grading_notes(submission):
+def grading_notes(submission):
+    ''' Determines if the submission has grading notes,
+        leads to nice little icon in the submission overview.
+    '''
     if submission.grading_notes != None:
         return len(submission.grading_notes) > 0
     else:
         return False
-has_grading_notes.boolean = True            # show nice little icon
+grading_notes.boolean = True            # show nice little icon
+
+def grading_file(submission):
+    ''' Determines if the submission has a grading file,
+        leads to nice little icon in the submission overview.
+    '''
+    if submission.grading_file != None:
+        return True
+    else:
+        return False
+grading_file.boolean = True            # show nice little icon
 
 class SubmissionFileLinkWidget(forms.Widget):
     def __init__(self, subFile):
@@ -122,10 +145,10 @@ class SubmissionFileLinkWidget(forms.Widget):
 class SubmissionAdmin(admin.ModelAdmin):    
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', has_grading_notes]
+    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes'))
+    fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes', 'grading_file'))
     actions=['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     def queryset(self, request):
@@ -152,23 +175,23 @@ class SubmissionAdmin(admin.ModelAdmin):
             field values for 'grading'.
             When no object is given in the form, the this is a new manual submission
         '''
-	if hasattr(self, 'obj'):
-		if self.obj and db_field.name == "grading":
-		    kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
+        if hasattr(self, 'obj'):
+            if self.obj and db_field.name == "grading":
+                kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def get_form(self, request, obj=None):
         ''' Establish our own renderer for the file upload field, and adjust some labels.
         '''
-	form = super(SubmissionAdmin, self).get_form(request, obj)
-	if obj:
-		self.obj = obj
-		form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
-		form.base_fields['file_upload'].required = False
-		form.base_fields['grading_notes'].label = "Grading notes"
-	else:
-		self.obj = None
+        form = super(SubmissionAdmin, self).get_form(request, obj)
+        if obj:
+            self.obj = obj
+            form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
+            form.base_fields['file_upload'].required = False
+            form.base_fields['grading_notes'].label = "Grading notes"
+        else:
+            self.obj = None
         return form
 
     def save_model(self, request, obj, form, change):
@@ -188,8 +211,8 @@ class SubmissionAdmin(admin.ModelAdmin):
 
     def setInitialStateAction(self, request, queryset):
         for subm in queryset:
-		subm.state = subm.get_initial_state()
-		subm.save() 
+            subm.state = subm.get_initial_state()
+            subm.save() 
     setInitialStateAction.short_description = "Mark as new incoming submission"
 
     def setFullPendingStateAction(self, request, queryset):
@@ -307,7 +330,16 @@ admin.site.register(Assignment, AssignmentAdmin)
 ### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
-    return " - ".join([str(grading) for grading in gradingScheme.gradings.all()])
+    ''' Determine the list of gradings in this scheme as rendered string.
+        TODO: Use nice little icons instead of (p) / (f) marking.
+    '''
+    result = []
+    for grading in gradingScheme.gradings.all():
+        if grading.means_passed:
+            result.append(str(grading)+" (pass)")
+        else:
+            result.append(str(grading)+" (fail)")
+    return '  -  '.join(result)
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
@@ -318,7 +350,17 @@ def courses(gradingScheme):
 class GradingSchemeAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', gradings, courses]
 
-admin.site.register(Grading)
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        ''' Offer only gradings that are not already used by other schemes.'''
+        grad_filter = Q(schemes=None)
+        if db_field.name == "gradings":
+            kwargs['queryset'] = Grading.objects.filter(grad_filter).distinct() 
+        return super(GradingSchemeAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+
+class GradingAdmin(admin.ModelAdmin):
+    list_display = ['__unicode__', grading_schemes, means_passed]
+
+admin.site.register(Grading, GradingAdmin)
 admin.site.register(GradingScheme, GradingSchemeAdmin)
 
 

@@ -46,7 +46,11 @@
 		</tr><tr>
 			<td>Grading</td><td>{{ submission.grading }}</td>
 		</tr><tr>
-			<td>Grading Notes</td><td>{{ submission.grading_notes }}</td>
+			<td>Grading Notes</td><td>{{ submission.grading_notes|linebreaks }}</td>
+		{% if submission.grading_file %}
+			</tr><tr>
+				<td>Grading Attachment</td><td><a href="{{ submission.grading_file_url }}">{{ submission.grading_file|basename }}</a></td>
+		{% endif %}
 	{% endif %}
 	</tr>
 </table>
