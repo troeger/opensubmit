@@ -184,7 +184,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             form.base_fields['grading_notes'].label = "Grading notes"
         else:
             self.obj = None
-            return form
+        return form
 
     def save_model(self, request, obj, form, change):
         ''' Our custom addition to the view HTML in templates/admin/submit/submission/change_form.HTML
@@ -203,8 +203,8 @@ class SubmissionAdmin(admin.ModelAdmin):
 
     def setInitialStateAction(self, request, queryset):
         for subm in queryset:
-        subm.state = subm.get_initial_state()
-        subm.save() 
+            subm.state = subm.get_initial_state()
+            subm.save() 
     setInitialStateAction.short_description = "Mark as new incoming submission"
 
     def setFullPendingStateAction(self, request, queryset):
