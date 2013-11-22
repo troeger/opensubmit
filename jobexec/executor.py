@@ -15,7 +15,7 @@ secret = None
 targetdir=None
 pidfile=None
 
-def cleanup_and_exit(path, exit_code):
+def cleanup_and_exit(finalpath, exit_code):
 	shutil.rmtree(finalpath, ignore_errors=True)
 	exit(exit_code)
 
@@ -65,19 +65,36 @@ def fetch_job():
 		else:
 			#TODO: Ugly hack
 			conf = os.uname()
-			output =  "Operating system: %s %s (%s)\n"%(conf[0], conf[2], conf[4])
+			output =  "Operating system: %s %s (%s)\n\n"%(conf[0], conf[2], conf[4])
+			try:
+				proc=subprocess.Popen(["cpuid"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				cpuidinfo = proc.communicate()[0]
+				cpuidinfo = cpuidinfo.decode("utf-8")
+				output += cpuidinfo + "\n\n"
+			except:
+				pass
+			try:
+				proc=subprocess.Popen(["cc","-v"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+				ccinfo = proc.communicate()[0]
+				ccinfo = ccinfo.decode("utf-8")
+				output += ccinfo + "\n\n"
+			except:
+				pass
 			try:
 				proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				javainfo = proc.communicate()[0]
 				javainfo=javainfo.decode("utf-8")
-				output += javainfo
+				output += javainfo + "\n\n"
 			except:
 				pass
 			try:
 				proc=subprocess.Popen(["nvidia-smi","-q"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				nvidiainfo = proc.communicate()[0]
 				nvidiainfo=nvidiainfo.decode("utf-8")
-				output += nvidiainfo
+				lines = nvidiainfo.split('\n')
+				for line in lines:
+					if not line.endswith('N/A'):
+						output += line + '\n'
 			except:
 				pass
 			logging.debug("Sending config data: "+output)
