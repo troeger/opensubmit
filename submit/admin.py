@@ -165,7 +165,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             is the documented way to do that.
         '''
         if obj:
-            return ('assignment','submitter','authors','notes')
+            return ('assignment','submitter','notes')
         else:
             # New manual submission
             return ()
