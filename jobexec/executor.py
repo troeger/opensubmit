@@ -70,6 +70,7 @@ def fetch_job():
 				proc=subprocess.Popen(["cpuid"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				cpuidinfo = proc.communicate()[0]
 				cpuidinfo = cpuidinfo.decode("utf-8")
+				output += "------------------- CPUID information -------------------\n\n"
 				output += cpuidinfo + "\n\n"
 			except:
 				pass
@@ -77,6 +78,7 @@ def fetch_job():
 				proc=subprocess.Popen(["cc","-v"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				ccinfo = proc.communicate()[0]
 				ccinfo = ccinfo.decode("utf-8")
+				output += "------------------- CC information ----------------\n\n"
 				output += ccinfo + "\n\n"
 			except:
 				pass
@@ -84,13 +86,24 @@ def fetch_job():
 				proc=subprocess.Popen(["java","-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				javainfo = proc.communicate()[0]
 				javainfo=javainfo.decode("utf-8")
+				output += "------------------- JVM information -----------------\n\n"
 				output += javainfo + "\n\n"
+			except:
+				pass
+			try:
+				out = subprocess.check_output("find /usr/include|grep opencl.h", shell=True)
+				out = out.decode("utf-8")
+				out2 = subprocess.check_output("find /usr/lib/ -iname '*opencl*'", shell=True)
+				out2 = out2.decode("utf-8")
+				output += "------------------- OpenCL location -----------------\n\n"
+				output += out + "\n" + out2 + "\n\n"
 			except:
 				pass
 			try:
 				proc=subprocess.Popen(["nvidia-smi","-q"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 				nvidiainfo = proc.communicate()[0]
 				nvidiainfo=nvidiainfo.decode("utf-8")
+				output += "------------------- GPU information -----------------\n\n"
 				lines = nvidiainfo.split('\n')
 				for line in lines:
 					if not line.endswith('N/A'):
