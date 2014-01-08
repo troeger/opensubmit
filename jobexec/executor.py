@@ -94,6 +94,8 @@ def fetch_job():
             output += infos_cmd("CPUID information", "cpuid")
             output += infos_cmd("CC information", "cc -v")
             output += infos_cmd("JDK information", "java -version")
+            output += infos_cmd("MPI information", "mpirun -version")
+            output += infos_cmd("Scala information", "scala -version")
             output += infos_cmd("OpenCL headers", "find /usr/include|grep opencl.h")
             output += infos_cmd("OpenCL libraries", "find /usr/lib/ -iname '*opencl*'")
             output += infos_cmd("NVidia SMI", "nvidia-smi -q")
