@@ -83,13 +83,13 @@ def download(request, obj_id, filetype, secret=None):
         f=subm.grading_file
         fname=os.path.basename(subm.grading_file.name)
     elif filetype=="validity_testscript":
+        ass = get_object_or_404(Assignment, pk=obj_id)
         if secret:
             if secret != JOB_EXECUTOR_SECRET:
                 raise PermissionDenied
         else:
-            if not subm.assignment.validity_script_download:
+            if not ass.validity_script_download:
                 raise PermissionDenied                
-        ass = get_object_or_404(Assignment, pk=obj_id)
         f=ass.attachment_test_validity
         fname=f.name[f.name.rfind('/')+1:]
     elif filetype=="full_testscript":
