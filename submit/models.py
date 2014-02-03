@@ -224,8 +224,8 @@ class Submission(models.Model):
         if self.assignment.soft_deadline:
             if self.assignment.soft_deadline < timezone.now():
                 # soft deadline is over, allowance of withdrawal here may become configurable later
-                logger.debug("Submission cannot be withdrawn, soft deadline is over")
-                return False
+                logger.debug("Submission can be withdrawn, but soft deadline is over")
+                return True
         # Soft deadline is not over, or there is no soft deadline 
         logger.debug("Submission could be withdrawn")
         return True
