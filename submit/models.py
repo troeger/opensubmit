@@ -43,6 +43,11 @@ class Course(models.Model):
     def __unicode__(self):
         return unicode(self.title)
 
+class TestMachine(models.Model):
+    host = models.TextField(null=True)
+    last_contact =  models.DateTimeField(editable=False)
+    config = models.TextField(null=True)
+
 class Assignment(models.Model):
     title = models.CharField(max_length=200)
     course = models.ForeignKey(Course, related_name='assignments')
@@ -58,6 +63,7 @@ class Assignment(models.Model):
     attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
     validity_script_download = models.BooleanField(default=False)
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
+    test_machines = models.ManyToManyField(TestMachine, blank=True, null=True)
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""
@@ -268,11 +274,6 @@ class Submission(models.Model):
     objects = models.Manager()
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
-
-class TestMachine(models.Model):
-    host = models.TextField(null=True)
-    last_contact =  models.DateTimeField(editable=False)
-    config = models.TextField(null=True)
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected

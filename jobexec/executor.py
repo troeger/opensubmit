@@ -1,5 +1,11 @@
+"""
+This is the executor script for the Submit system.
+It is intended to run on a dedicated host, in order to download
+and check student code.
+"""
+
 import urllib, urllib.request, urllib.error, urllib.parse
-import logging
+import logging, json
 import zipfile, tarfile
 import tempfile, os, shutil, subprocess, signal, stat, configparser, sys, fcntl, pickle
 import time
@@ -10,19 +16,27 @@ except:
     havePsUtil=False
 from datetime import datetime, timedelta
 
+# Global configuration for the script, filled from the config file
 submit_server = None
 secret = None       
 targetdir=None
 pidfile=None
 
 def cleanup_and_exit(finalpath, exit_code):
+    ''' 
+        Exit this script, clean any student code or generated
+        data before.
+    '''
     shutil.rmtree(finalpath, ignore_errors=True)
     exit(exit_code)
 
-# Send some result to the SUBMIT server
 def send_result(msg, error_code, submission_file_id, action, perfdata=None):
-    # We need to truncate excessive console output, since this goes into the database
+    ''' 
+        Send some result to the Submit web server.
+    '''
     if len(msg)>10000:
+        # We need to truncate excessive console output, 
+        # since this goes into the database.
         msg=msg[1:10000]
         msg+="\n[Output truncated]"
     if not perfdata:
@@ -42,7 +56,10 @@ def send_result(msg, error_code, submission_file_id, action, perfdata=None):
         logging.error(str(e))
         exit(-1)
 
-def infos_opencl(title):
+def infos_opencl():
+    '''
+        Determine some system information about the installed OpenCL device.
+    '''
     result=[]
     try:
         import pyopencl as ocl
@@ -56,58 +73,70 @@ def infos_opencl(title):
                         result.append("        %s: %s"%(attr.strip(), getattr(device, attr).strip()))
                     except:
                         pass
-        return "#################### %s ####################\n%s\n"%(title, "\n".join(result))
+        return "\n".join(result)
     except:
         return ""
 
-def infos_cmd(title, cmd):
+def infos_cmd(cmd):
+    '''
+        Determine some system information based on a shell command.
+    '''
     try:
         out = subprocess.check_output(cmd+" 2>&1", shell=True)
         out = out.decode("utf-8")
-        return "#################### %s ####################\n%s\n"%(title, out)
+        return out
     except:
         return ""
 
-# Fetch any available work from the SUBMIT server
-# returns job information as function result
+def send_config():
+    '''
+        Sends the configuration of this machine to the Submit web server.
+    '''
+    conf = os.uname()
+    output = []
+    output.append(["Operating system","%s %s (%s)"%(conf[0], conf[2], conf[4])])
+    output.append(["CPUID information", infos_cmd("cpuid")])
+    output.append(["CC information", infos_cmd("cc -v")])
+    output.append(["JDK information", infos_cmd("java -version")])
+    output.append(["MPI information", infos_cmd("mpirun -version")])
+    output.append(["Scala information", infos_cmd("scala -version")])
+    output.append(["OpenCL headers", infos_cmd("find /usr/include|grep opencl.h")])
+    output.append(["OpenCL libraries", infos_cmd("find /usr/lib/ -iname '*opencl*'")])
+    output.append(["NVidia SMI", infos_cmd("nvidia-smi -q")])
+    output.append(["OpenCL Details", infos_opencl()])
+    logging.debug("Sending config data: "+str(output))
+    post_data = [('Config',json.dumps(output))]
+    post_data = urllib.parse.urlencode(post_data)
+    post_data = post_data.encode('utf-8')
+    urllib.request.urlopen('%s/machines/secret=%s'%(submit_server, secret), post_data)
+
 def fetch_job():
+    '''
+        Fetch any available work from the SUBMIT server.
+        Returns job information as function result tuple:
+            fname     - Fully qualified temporary file name for the job file
+            submid    - ID of this file on the submit server
+            action    - What should be done with this file
+            timeout   - What is the timeout for running this job
+            validator - URL of the validator script
+
+    '''
     try:
         result = urllib.request.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
         fname=targetdir+datetime.now().isoformat()
         headers=result.info()
         submid=headers['SubmissionFileId']
         action=headers['Action']
-        if action != "get_config":
-            timeout=int(headers['Timeout'])
-            logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
-            if 'PostRunValidation' in headers:
-                validator=headers['PostRunValidation']
-            else:
-                validator=None
-            target=open(fname,"wb")
-            target.write(result.read())
-            target.close()
-            return fname, submid, action, timeout, validator
+        timeout=int(headers['Timeout'])
+        logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
+        if 'PostRunValidation' in headers:
+            validator=headers['PostRunValidation']
         else:
-            conf = os.uname()
-            output =  "Operating system: %s %s (%s)\n\n"%(conf[0], conf[2], conf[4])
-            output += infos_cmd("CPUID information", "cpuid")
-            output += infos_cmd("CC information", "cc -v")
-            output += infos_cmd("JDK information", "java -version")
-            output += infos_cmd("MPI information", "mpirun -version")
-            output += infos_cmd("Scala information", "scala -version")
-            output += infos_cmd("OpenCL headers", "find /usr/include|grep opencl.h")
-            output += infos_cmd("OpenCL libraries", "find /usr/lib/ -iname '*opencl*'")
-            output += infos_cmd("NVidia SMI", "nvidia-smi -q")
-            output += infos_opencl("OpenCL Details")
-            print(output)
-
-            logging.debug("Sending config data: "+output)
-            post_data = [('Action', 'get_config'),('Config',output),('MachineId',headers['MachineId'])]
-            post_data = urllib.parse.urlencode(post_data)
-            post_data = post_data.encode('utf-8')
-            urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)
-            exit(-1)    
+            validator=None
+        target=open(fname,"wb")
+        target.write(result.read())
+        target.close()
+        return fname, submid, action, timeout, validator
     except urllib.error.HTTPError as e:
         if e.code == 404:
             logging.debug("Nothing to do.")
@@ -116,9 +145,12 @@ def fetch_job():
             logging.error(str(e))
             exit(-1)
 
-# Decompress the downloaded file into "targetdir"
-# Returns on success, or terminates the executor after notifying the SUBMIT server
 def unpack_job(fname, submid, action):
+    '''
+        Decompress the downloaded file "fname" into the globally defined "targetdir".
+        Returns on success, or terminates the executor after notifying the SUBMIT server
+        about the problem.
+    '''
     # os.chroot is not working with tarfile support
     finalpath=targetdir+str(submid)+"/"
     shutil.rmtree(finalpath, ignore_errors=True)
@@ -149,9 +181,10 @@ def unpack_job(fname, submid, action):
         finalpath=finalpath+os.sep+dircontent[0]
     return finalpath
 
-
-# Signal handler for timeout implementation
 def handle_alarm(signum, frame):
+    '''
+        Signal handler for timeout implementation
+    '''
     # Needed for compatibility with both MacOS X and Linux
     if 'self' in frame.f_locals:
         pid=frame.f_locals['self'].pid
@@ -160,9 +193,11 @@ def handle_alarm(signum, frame):
     logging.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
     os.killpg(pid, signal.SIGTERM)
 
-# Perform some execution activity, with timeout support
-# This is used both for compilation and validator script execution
 def run_job(finalpath, cmd, submid, action, timeout, ignore_errors=False):
+    '''
+        Perform some execution activity with timeout support.
+        This is used both for compilation and validator script execution.
+    '''
     logging.debug("Changing to target directory.")
     os.chdir(finalpath)
     logging.debug("Installing signal handler for timeout")
@@ -215,13 +250,17 @@ def run_job(finalpath, cmd, submid, action, timeout, ignore_errors=False):
         send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
         cleanup_and_exit(finalpath, -1)
 
-# read configuration
+
+'''
+    Read configuration file, either as specified on command-line, or from
+    the default location. Set global config variables accordingly.
+'''
+if len(sys.argv) < 3 or sys.argv[1] not in ["register","run"]:
+    print("%s [register|run] <config_file>"%sys.argv[0])
+    exit(-1)
+
 config = configparser.RawConfigParser()
-if len(sys.argv) > 1:
-    config.read(sys.argv[1])
-else:
-    config.read("./executor.cfg")
-# configure logging module from what we see in the config file
+config.read(sys.argv[2])
 logformat=config.get("Logging","format")
 logfile=config.get("Logging","file")
 loglevel=logging._levelNames[config.get("Logging","level")]
@@ -240,6 +279,11 @@ assert(targetdir.startswith('/'))
 assert(targetdir.endswith('/'))
 script_runner=config.get("Execution","script_runner")
 serialize=config.getboolean("Execution","serialize")
+
+if sys.argv[1] == "register":
+    # Determine machine configuration and send it
+    send_config()
+    exit(0)
 
 if havePsUtil:
     # terminate everything under this account that runs too long
@@ -265,6 +309,7 @@ if serialize:
     except IOError:
         logging.debug("Script is already running.")
         exit(0)
+
 
 # fetch any available job
 fname, submid, action, timeout, validator=fetch_job()

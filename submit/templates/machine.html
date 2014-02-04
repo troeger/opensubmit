@@ -45,12 +45,13 @@
 <p>There are {{ additional }} additional jobs being queued.</p>
 {% endif %}
 
-{% if machine.config %}
 <h3>Machine configuration</h3>
-{{ machine.config|linebreaksbr }}
-{% endif %}
-
-<br/><br/>
+<dl class="dl-horizontal">
+{% for title, text in config %}
+<dt>{{ title }}</dt>
+<dd>{{ text|linebreaksbr }}</dd>
+{% endfor %}
+</dl>
 
 <p>Last contact: {{ machine.last_contact }}</p>
 

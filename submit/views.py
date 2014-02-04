@@ -18,7 +18,7 @@ from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
 from models import inform_student, inform_course_owner, open_assignments
 from datetime import timedelta, datetime
-import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile
+import urllib, os, tempfile, shutil, StringIO, zipfile, tarfile, json
 
 def index(request):
     if request.user.is_authenticated():
@@ -454,9 +454,36 @@ def coursearchive(request, course_id):
 @login_required
 def machine(request, machine_id):
     machine = get_object_or_404(TestMachine, pk=machine_id)
+    print machine.config
+    config = filter(lambda x: x[1] != "", json.loads(machine.config))
     queue = Submission.pending_student_tests.all()
     additional = len(Submission.pending_full_tests.all())
-    return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional})
+    return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
+
+@csrf_exempt
+def machines(request, secret):
+    ''' This is the view used by the executor.py scripts for putting machine details.
+        A visible shared secret in the request is no problem, since the executors come
+        from trusted networks. The secret only protects this view from outside foreigners.
+    '''
+    if secret != JOB_EXECUTOR_SECRET:
+        raise PermissionDenied
+    if request.method == "POST":
+        try:
+            # Find machine database entry for this host
+            machine = TestMachine.objects.get(host=request.get_host())
+            machine.last_contact=datetime.now()
+            machine.save()
+        except:
+            # Machine is not known so far, create new record
+            machine = TestMachine( host=request.get_host(), last_contact=datetime.now() )
+            machine.save()
+        # POST request contains all relevant machine information
+        machine.config = request.POST['Config']
+        machine.save()
+        return HttpResponse(status=201)
+    else:
+        return HttpResponse(status=500)
 
 @login_required
 def withdraw(request, subm_id):
