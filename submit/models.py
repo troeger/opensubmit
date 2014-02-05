@@ -47,6 +47,8 @@ class TestMachine(models.Model):
     host = models.TextField(null=True)
     last_contact =  models.DateTimeField(editable=False)
     config = models.TextField(null=True)
+    def __unicode__(self):
+        return unicode(self.host)
 
 class Assignment(models.Model):
     title = models.CharField(max_length=200)

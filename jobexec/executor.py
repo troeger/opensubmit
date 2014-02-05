@@ -105,7 +105,7 @@ def send_config():
     output.append(["NVidia SMI", infos_cmd("nvidia-smi -q")])
     output.append(["OpenCL Details", infos_opencl()])
     logging.debug("Sending config data: "+str(output))
-    post_data = [('Config',json.dumps(output))]
+    post_data = [('Config',json.dumps(output)),('Name',infos_cmd("hostname"))]
     post_data = urllib.parse.urlencode(post_data)
     post_data = post_data.encode('utf-8')
     urllib.request.urlopen('%s/machines/secret=%s'%(submit_server, secret), post_data)

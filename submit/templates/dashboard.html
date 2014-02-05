@@ -125,7 +125,7 @@
     <h3>Test Machines</h3>
     <ul class="list">
     {% for machine in machines %}
-        <li><a href="{% url 'machine' machine.pk %}">Test machine</a></li>
+        <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
     {% endfor %}
 </ul>
 </section>

@@ -471,12 +471,12 @@ def machines(request, secret):
     if request.method == "POST":
         try:
             # Find machine database entry for this host
-            machine = TestMachine.objects.get(host=request.get_host())
+            machine = TestMachine.objects.get(host=request.POST['Name'])
             machine.last_contact=datetime.now()
             machine.save()
         except:
             # Machine is not known so far, create new record
-            machine = TestMachine( host=request.get_host(), last_contact=datetime.now() )
+            machine = TestMachine( host=request.POST['Name'], last_contact=datetime.now() )
             machine.save()
         # POST request contains all relevant machine information
         machine.config = request.POST['Config']
