@@ -224,8 +224,8 @@ class Submission(models.Model):
         if self.assignment.soft_deadline:
             if self.assignment.soft_deadline < timezone.now():
                 # soft deadline is over, allowance of withdrawal here may become configurable later
-                logger.debug("Submission cannot be withdrawn, soft deadline is over")
-                return False
+                logger.debug("Submission can be withdrawn, but soft deadline is over")
+                return True
         # Soft deadline is not over, or there is no soft deadline 
         logger.debug("Submission could be withdrawn")
         return True
@@ -236,6 +236,9 @@ class Submission(models.Model):
         return self.state == self.WITHDRAWN
     def is_closed(self):
         return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
+    def is_graded(self):
+        ''' Is the submission graded (meaning done) from a tutor / course owner point of view ?'''
+        return self.state == self.GRADED or self.is_closed()
     def green_tag(self):
         if self.is_closed() and self.grading:
             return self.grading.means_passed

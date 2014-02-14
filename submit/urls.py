@@ -1,9 +1,8 @@
 from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth.decorators import login_required
-from django.contrib import admin
+from submit.admin import admin_site
 import settings
-admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^$', 'submit.views.index', name='index'),
@@ -24,7 +23,7 @@ urlpatterns = patterns('',
     url(r'^settings/$', 'submit.views.settings', name='settings'),
     url(r'^courses/$', 'submit.views.courses', name='courses'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin_site.urls)),
 )
 
 # disables itself when DEBUG==FALSE
