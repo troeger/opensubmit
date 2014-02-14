@@ -4,13 +4,49 @@ from django.db import models
 from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.utils.importlib import import_module
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.utils.text import capfirst    
+from django.views.decorators.cache import never_cache
+from django.core.urlresolvers import reverse, NoReverseMatch
+from django.template.response import TemplateResponse
 
+### Our custom AdminSite implementation ###
+
+class SubmitAdminSite(AdminSite):
+    ''' 
+        Our custom admin site implementation. This is needed (beside the custom model admins)
+        to render additional content on the index page of the admin view.
+    '''
+    @never_cache
+    def index(self, request, extra_context=None):
+        """
+            Displays the main admin index page, which lists all of the installed
+            apps that have been registered in this site.
+
+            Defining some extra context data is good enough for us here, since the template
+            is a copy of the original one + additional data.
+        """
+        stats = []
+        courses = tutor_courses(request.user)
+        for course in courses:
+            for assignment in course.assignments.all():
+                stat = {}
+                stat['course'] = course
+                stat['assignment'] = assignment
+                stat['not_graded'] = assignment.submissions.all().filter(~Q(state__in=[Submission.GRADED, Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])).count()
+                stat['not_closed'] = assignment.submissions.all().filter(state=Submission.GRADED).count()
+                stat['closed'] = assignment.submissions.all().filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING]).count()
+                stats.append(stat)
+        return super(SubmitAdminSite, self).index(request, extra_context={'stats':stats})
+
+admin_site = SubmitAdminSite()
 
 ### Submission admin interface ###
 
@@ -263,8 +299,6 @@ class SubmissionAdmin(admin.ModelAdmin):
         return response
     getPerformanceResultsAction.short_description = "Download performance data as CSV"
 
-admin.site.register(Submission, SubmissionAdmin)
-
 
 ### Submission File admin interface ###
 
@@ -309,7 +343,6 @@ class SubmissionFileAdmin(admin.ModelAdmin):
             return ('test_compile', 'test_validity', 'test_full', 'replaced_by', 'perf_data')
 
 
-admin.site.register(SubmissionFile, SubmissionFileAdmin)
 
 ### Assignment admin interface ###
 
@@ -325,7 +358,6 @@ class AssignmentAdmin(admin.ModelAdmin):
             return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct() 
 
 
-admin.site.register(Assignment, AssignmentAdmin)
 
 ### Grading scheme admin interface ###
 
@@ -360,8 +392,6 @@ class GradingSchemeAdmin(admin.ModelAdmin):
 class GradingAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', grading_schemes, means_passed]
 
-admin.site.register(Grading, GradingAdmin)
-admin.site.register(GradingScheme, GradingSchemeAdmin)
 
 
 ### User admin interface ###
@@ -371,8 +401,6 @@ class UserProfileInline(admin.StackedInline):
 class UserAdmin(UserAdmin):
     inlines = (UserProfileInline, )
 
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
 
 ### Course admin interface ###
 
@@ -403,7 +431,11 @@ class CourseAdmin(admin.ModelAdmin):
     downloadArchive.short_description = "Download course archive file"
 
 
-admin.site.register(Course, CourseAdmin)
-
-admin.site.register(TestMachine)
-
+admin_site.register(Course, CourseAdmin)
+admin_site.register(TestMachine)
+admin_site.register(Submission, SubmissionAdmin)
+admin_site.register(SubmissionFile, SubmissionFileAdmin)
+admin_site.register(Assignment, AssignmentAdmin)
+admin_site.register(Grading, GradingAdmin)
+admin_site.register(GradingScheme, GradingSchemeAdmin)
+admin_site.register(User, UserAdmin)

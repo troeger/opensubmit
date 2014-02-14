@@ -236,6 +236,9 @@ class Submission(models.Model):
         return self.state == self.WITHDRAWN
     def is_closed(self):
         return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
+    def is_graded(self):
+        ''' Is the submission graded (meaning done) from a tutor / course owner point of view ?'''
+        return self.state == self.GRADED or self.is_closed()
     def green_tag(self):
         if self.is_closed() and self.grading:
             return self.grading.means_passed
