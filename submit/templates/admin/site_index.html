@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />
 <style type="text/css">
 #stats td { padding: 10px; text-align:center;}
+#stats th { text-align:center;}
 </style>
 {% endblock %}
 
@@ -52,7 +53,7 @@
         </div>
     {% endfor %}
     <p>
-        <h3>Statistics</h3>
+        <h3>Things to be done:</h3>
         <table id="stats">
             <tr>
                 <th>Course</th><th>Assignment</th><th>Not graded</th><th>Graded, not closed</th><th>Closed</th>
