@@ -1,61 +1,16 @@
+from submit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
+from django.db import models
 from django.db.models import Q
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.views.decorators.cache import never_cache
 
-from submit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, \
-    SubmissionFile, inform_student, TestMachine
-
-
-
-### Our custom AdminSite implementation ###
-
-class SubmitAdminSite(AdminSite):
-    ''' 
-        Our custom admin site implementation. This is needed (beside the custom model admins)
-        to render additional content on the index page of the admin view.
-    '''
-    index_template = "admin/site_index.html"
-
-    @never_cache
-    def index(self, request, extra_context=None):
-        """
-            Displays the main admin index page, which lists all of the installed
-            apps that have been registered in this site.
-
-            Defining some extra context data is good enough for us here, since the template
-            is a copy of the original one + additional data.
-        """
-        stats = []
-        courses = tutor_courses(request.user)
-        for course in courses:
-            for assignment in course.assignments.all():
-                stat = {}
-                stat['course'] = course
-                stat['assignment'] = assignment
-                not_graded = assignment.submissions.all().filter(
-                    state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED,
-                               Submission.SUBMITTED]).count()
-                not_closed = assignment.submissions.all().filter(state=Submission.GRADED).count()
-                closed = assignment.submissions.all().filter(
-                    state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING]).count()
-                if not_graded > 0 or not_closed > 0:
-                    stat['not_graded'] = not_graded
-                    stat['not_closed'] = not_closed
-                    stat['closed'] = closed
-                    stats.append(stat)
-        return super(SubmitAdminSite, self).index(request, extra_context={'stats': stats})
-
-
-admin_site = SubmitAdminSite()
 
 ### Submission admin interface ###
 
@@ -73,16 +28,13 @@ class SubmissionStateFilter(SimpleListFilter):
         )
 
     def queryset(self, request, qs):
-        qs = qs.filter(assignment__course__in=tutor_courses(request.user))
+        qs=qs.filter(assignment__course__in=tutor_courses(request.user))
         if self.value() == 'tobegraded':
-            return qs.filter(
-                state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED,
-                           Submission.SUBMITTED])
+            return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         elif self.value() == 'graded':
             return qs.filter(state__in=[Submission.GRADED])
         else:
             return qs
-
 
 class SubmissionAssignmentFilter(SimpleListFilter):
     ''' This custom filter allows to filter the submissions according to their
@@ -98,10 +50,9 @@ class SubmissionAssignmentFilter(SimpleListFilter):
 
     def queryset(self, request, qs):
         if self.value():
-            return qs.filter(assignment__exact=self.value())
+            return qs.filter(assignment__exact = self.value())
         else:
-            return qs.filter(assignment__course__in=tutor_courses(request.user))
-
+            return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 class SubmissionCourseFilter(SimpleListFilter):
     ''' This custom filter allows to filter the submissions according to 
@@ -116,27 +67,21 @@ class SubmissionCourseFilter(SimpleListFilter):
 
     def queryset(self, request, qs):
         if self.value():
-            return qs.filter(assignment__course__exact=self.value())
+            return qs.filter(assignment__course__exact = self.value())
         else:
-            return qs.filter(assignment__course__in=tutor_courses(request.user))
-
+            return qs.filter(assignment__course__in = tutor_courses(request.user))
 
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
 
-
 def grading_schemes(grading):
     ''' The list of grading schemes using this grading.'''
     return ",\n".join([str(scheme) for scheme in grading.schemes.all()])
 
-
 def means_passed(grading):
     return grading.means_passed
-
-
 means_passed.boolean = True
-
 
 def course(obj):
     ''' The course name as string, both for assignment and submission objects.'''
@@ -145,10 +90,8 @@ def course(obj):
     elif type(obj) == Assignment:
         return obj.course
 
-
 def upload(submission):
     return submission.file_upload
-
 
 def grading_notes(submission):
     ''' Determines if the submission has grading notes,
@@ -158,10 +101,7 @@ def grading_notes(submission):
         return len(submission.grading_notes) > 0
     else:
         return False
-
-
-grading_notes.boolean = True  # show nice little icon
-
+grading_notes.boolean = True            # show nice little icon
 
 def grading_file(submission):
     ''' Determines if the submission has a grading file,
@@ -171,10 +111,7 @@ def grading_file(submission):
         return True
     else:
         return False
-
-
-grading_file.boolean = True  # show nice little icon
-
+grading_file.boolean = True            # show nice little icon
 
 class SubmissionFileLinkWidget(forms.Widget):
     def __init__(self, subFile):
@@ -190,34 +127,29 @@ class SubmissionFileLinkWidget(forms.Widget):
     def render(self, name, value, attrs=None):
         try:
             sfile = SubmissionFile.objects.get(pk=self.subFileId)
-            text = u'<a href="%s">%s</a><table border=1>' % (sfile.get_absolute_url(), sfile.basename())
+            text = u'<a href="%s">%s</a><table border=1>'%(sfile.get_absolute_url(), sfile.basename())
             if sfile.test_compile:
-                text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>' % (sfile.test_compile)
-            if sfile.test_validity:
-                text += u'<tr><td><h3>Validation test</h3><pre>%s</pre></td></tr>' % (sfile.test_validity)
-            if sfile.test_full:
-                text += u'<tr><td><h3>Full test</h3><pre>%s</pre></td></tr>' % (sfile.test_full)
+                text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>'%(sfile.test_compile)
+            if sfile.test_validity:                
+                text += u'<tr><td><h3>Validation test</h3><pre>%s</pre></td></tr>'%(sfile.test_validity)
+            if sfile.test_full:                
+                text += u'<tr><td><h3>Full test</h3><pre>%s</pre></td></tr>'%(sfile.test_full)
             if sfile.perf_data:
-                text += u'<tr><td><h3>Performance data</h3><pre>%s</pre></td></tr>' % (sfile.perf_data)
+                text += u'<tr><td><h3>Performance data</h3><pre>%s</pre></td></tr>'%(sfile.perf_data)
             text += u'</table>'
             # TODO: This is not safe, since the script output can be influenced by students
             return mark_safe(text)
         except:
             return mark_safe(u'Nothing stored')
 
-
-class SubmissionAdmin(admin.ModelAdmin):
+class SubmissionAdmin(admin.ModelAdmin):    
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading',
-                    grading_notes, grading_file]
+    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    fields = (
-        'assignment', 'authors', ('submitter', 'notes'), 'file_upload', ('grading', 'grading_notes', 'grading_file'))
-    actions = ['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction',
-               'getPerformanceResultsAction']
-    list_per_page = 10000
+    fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes', 'grading_file'))
+    actions=['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     def queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
@@ -225,8 +157,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(
-                assignment__course__owner=request.user)).distinct()
+            return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
         ''' Make some of the form fields read-only, but only if the view used to 
@@ -234,7 +165,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             is the documented way to do that.
         '''
         if obj:
-            return ('assignment', 'submitter', 'notes')
+            return ('assignment','submitter','notes')
         else:
             # New manual submission
             return ()
@@ -281,14 +212,12 @@ class SubmissionAdmin(admin.ModelAdmin):
     def setInitialStateAction(self, request, queryset):
         for subm in queryset:
             subm.state = subm.get_initial_state()
-            subm.save()
-
+            subm.save() 
     setInitialStateAction.short_description = "Mark as new incoming submission"
 
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions, or for solutions in the middle of grading
-        qs = queryset.filter(
-            Q(state=Submission.SUBMITTED_TESTED) | Q(state=Submission.TEST_FULL_FAILED) | Q(state=Submission.CLOSED))
+        qs = queryset.filter(Q(state=Submission.SUBMITTED_TESTED)|Q(state=Submission.TEST_FULL_FAILED)|Q(state=Submission.CLOSED))
         numchanged = 0
         for subm in qs:
             if subm.assignment.has_full_test():
@@ -301,8 +230,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         if numchanged == 0:
             self.message_user(request, "Nothing changed, no testable submission found.")
         else:
-            self.message_user(request, "Changed status of %u submissions." % numchanged)
-
+            self.message_user(request, "Changed status of %u submissions."%numchanged)
     setFullPendingStateAction.short_description = "Restart full test without notification"
 
     def closeAndNotifyAction(self, request, queryset):
@@ -310,32 +238,32 @@ class SubmissionAdmin(admin.ModelAdmin):
             and inform the student. CLosing only graded submissions is a safeguard,
             since backend users tend to checkbox-mark all submissions without thinking.
         '''
-        mails = []
+        mails=[]
         qs = queryset.filter(Q(state=Submission.GRADED))
         for subm in qs:
             inform_student(subm, Submission.CLOSED)
             mails.append(str(subm.pk))
-        qs.update(state=Submission.CLOSED)  # works in bulk because inform_student never fails
+        qs.update(state=Submission.CLOSED)      # works in bulk because inform_student never fails
         if len(mails) == 0:
             self.message_user(request, "Nothing closed, no mails sent.")
         else:
             self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
-
     closeAndNotifyAction.short_description = "Close graded submissions + send notification"
 
     def getPerformanceResultsAction(self, request, queryset):
-        qs = queryset.exclude(state=Submission.WITHDRAWN)  #avoid accidental addition of withdrawn solutions
-        response = HttpResponse(mimetype="text/csv")
+        qs = queryset.exclude(state=Submission.WITHDRAWN)   #avoid accidental addition of withdrawn solutions
+        response=HttpResponse(mimetype="text/csv")
         response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
         for subm in qs:
             if subm.file_upload.perf_data != None:
-                auth = ", ".join([author.get_full_name() for author in subm.authors.all()])
-                response.write("%u;%s;%s;%s;" % (subm.pk, course(subm), subm.assignment, auth ))
+                auth =  ", ".join([author.get_full_name() for author in subm.authors.all()])
+                response.write("%u;%s;%s;%s;"%(subm.pk,course(subm),subm.assignment,auth ))         
                 response.write(subm.file_upload.perf_data)
-                response.write("\n")
+                response.write("\n")            
         return response
-
     getPerformanceResultsAction.short_description = "Download performance data as CSV"
+
+admin.site.register(Submission, SubmissionAdmin)
 
 
 ### Submission File admin interface ###
@@ -343,14 +271,11 @@ class SubmissionAdmin(admin.ModelAdmin):
 def submissions(submfile):
     while submfile.replaced_by != None:
         submfile = submfile.replaced_by
-    subms = submfile.submissions.all()
+    subms=submfile.submissions.all()
     return ','.join([str(sub) for sub in subms])
-
 
 def not_withdrawn(submfile):
     return submfile.replaced_by == None
-
-
 not_withdrawn.boolean = True
 
 # In case the backend user creates manually a SubmissionFile entry,
@@ -360,7 +285,6 @@ class InlineSubmissionAdmin(admin.StackedInline):
     model = Submission
     max_num = 1
     can_delete = False
-
 
 class SubmissionFileAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
@@ -372,8 +296,7 @@ class SubmissionFileAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(
-                submissions__assignment__course__owner=request.user)).distinct()
+            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)).distinct() 
 
     def get_readonly_fields(self, request, obj=None):
         # The idea is to make some fields readonly only on modification
@@ -386,6 +309,8 @@ class SubmissionFileAdmin(admin.ModelAdmin):
             return ('test_compile', 'test_validity', 'test_full', 'replaced_by', 'perf_data')
 
 
+admin.site.register(SubmissionFile, SubmissionFileAdmin)
+
 ### Assignment admin interface ###
 
 class AssignmentAdmin(admin.ModelAdmin):
@@ -397,12 +322,12 @@ class AssignmentAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
+            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct() 
 
 
+admin.site.register(Assignment, AssignmentAdmin)
 
-            ### Grading scheme admin interface ###
-
+### Grading scheme admin interface ###
 
 def gradings(gradingScheme):
     ''' Determine the list of gradings in this scheme as rendered string.
@@ -411,18 +336,16 @@ def gradings(gradingScheme):
     result = []
     for grading in gradingScheme.gradings.all():
         if grading.means_passed:
-            result.append(str(grading) + " (pass)")
+            result.append(str(grading)+" (pass)")
         else:
-            result.append(str(grading) + " (fail)")
+            result.append(str(grading)+" (fail)")
     return '  -  '.join(result)
-
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
-    course_ids = gradingScheme.assignments.all().values_list('course', flat=True)
+    course_ids = gradingScheme.assignments.all().values_list('course',flat=True)
     courses = Course.objects.filter(pk__in=course_ids)
     return ",\n".join([str(course) for course in courses])
-
 
 class GradingSchemeAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', gradings, courses]
@@ -431,33 +354,35 @@ class GradingSchemeAdmin(admin.ModelAdmin):
         ''' Offer only gradings that are not already used by other schemes.'''
         grad_filter = Q(schemes=None)
         if db_field.name == "gradings":
-            kwargs['queryset'] = Grading.objects.filter(grad_filter).distinct()
+            kwargs['queryset'] = Grading.objects.filter(grad_filter).distinct() 
         return super(GradingSchemeAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
 
 class GradingAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', grading_schemes, means_passed]
+
+admin.site.register(Grading, GradingAdmin)
+admin.site.register(GradingScheme, GradingSchemeAdmin)
 
 
 ### User admin interface ###
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
 
-
 class UserAdmin(UserAdmin):
     inlines = (UserProfileInline, )
 
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 ### Course admin interface ###
 
 def assignments(course):
     return ",\n".join([str(ass) for ass in course.assignments.all()])
 
-
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
-    actions = ['showGradingTable', 'downloadArchive']
-    filter_horizontal = ['tutors']
+    actions=['showGradingTable', 'downloadArchive']
+    filter_horizontal=['tutors']
 
     def queryset(self, request):
         ''' Restrict the listed courses for the current user.'''
@@ -465,26 +390,20 @@ class CourseAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)).distinct()
+            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)).distinct() 
 
     def showGradingTable(self, request, queryset):
         course = queryset.all()[0]
         return redirect('gradingtable', course_id=course.pk)
-
     showGradingTable.short_description = "Show grading table"
 
     def downloadArchive(self, request, queryset):
         course = queryset.all()[0]
         return redirect('coursearchive', course_id=course.pk)
-
     downloadArchive.short_description = "Download course archive file"
 
 
-admin_site.register(Course, CourseAdmin)
-admin_site.register(TestMachine)
-admin_site.register(Submission, SubmissionAdmin)
-admin_site.register(SubmissionFile, SubmissionFileAdmin)
-admin_site.register(Assignment, AssignmentAdmin)
-admin_site.register(Grading, GradingAdmin)
-admin_site.register(GradingScheme, GradingSchemeAdmin)
-admin_site.register(User, UserAdmin)
+admin.site.register(Course, CourseAdmin)
+
+admin.site.register(TestMachine)
+

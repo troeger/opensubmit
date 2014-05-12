@@ -7,52 +7,53 @@
 {% endblock %}
 
 {% block content %}
-    <div class="page-header">
-        <h1>Test Machine Details</h1>
-    </div>
+<div class="page-header">
+    <h1>Test Machine Details</h1>
+</div>
 
-    <h3>Current job queue</h3>
-    {% if queue %}
-        <table class="table">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>Course</th>
-                <th>Assignment</th>
-                <th>Authors</th>
-                <th>Status</th>
-                <th>Execution started</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for subm in queue %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ subm.assignment.course }}</td>
-                    <td>{{ subm.assignment }}</td>
-                    <td>{{ subm.authors.all|join:", " }}</td>
-                    <td>{{ subm.state_for_students }}</td>
-                    <td>{{ subm.file_upload.fetched|default_if_none:"-" }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nothing to do for students.</p>
-    {% endif %}
+<h3>Current job queue</h3>
+{% if queue %}
+<table class="table">
+<thead>
+    <tr>
+    	<th>#</th>
+        <th>Course</th>
+        <th>Assignment</th>
+        <th>Authors</th>
+        <th>Status</th>
+        <th>Execution started</th>
+    </tr>
+</thead>
+<tbody>
+{% for subm in queue %}
+	<tr>
+		<td>{{ forloop.counter }}</td>
+		<td>{{ subm.assignment.course }}</td>
+		<td>{{ subm.assignment }}</td>
+		<td>{{ subm.authors.all|join:", " }}</td>
+		<td>{{ subm.state_for_students }}</td>
+		<td>{{ subm.file_upload.fetched|default_if_none:"-" }}</td>
+	</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p>Nothing to do for students.</p>
+{% endif %}
 
-    {% if additional %}
-        <p>There are {{ additional }} additional jobs being queued.</p>
-    {% endif %}
+{% if additional %}
+<p>There are {{ additional }} additional jobs being queued.</p>
+{% endif %}
 
-    {% if machine.config %}
-        <h3>Machine configuration</h3>
-        {{ machine.config|linebreaksbr }}
-    {% endif %}
+<h3>Test Machine {{ machine.pk }}</h3>
+<dl class="dl-horizontal">
+{% for title, text in config %}
+<dt>{{ title }}</dt>
+<dd>{{ text|linebreaksbr }}</dd>
+{% endfor %}
+</dl>
 
-    <br/><br/>
-
-    <p>Last contact: {{ machine.last_contact }}</p>
+<p>Last contact: {{ machine.last_contact }}</p>
 
 
 {% endblock %}

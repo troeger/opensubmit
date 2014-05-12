@@ -2,16 +2,16 @@
 {% load bootstrap %}
 
 <form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
-    {% csrf_token %}
-    <table>
-        {{ submissionForm|bootstrap }}
-    </table>
-    {% if assignment.has_attachment %}
-        <table>
-            {{ filesForm }}
-        </table>
-    {% endif %}
-    <p>
-        <button type="submit" href="." class="btn primary"><i class="icon icon-ok"></i> Save</button>
-    </p>
+ {% csrf_token %}
+<table>
+{{ submissionForm|bootstrap }}
+</table>
+{% if assignment.has_attachment %}
+	<table>
+	{{ filesForm }}
+	</table>
+{% endif %}
+<p>
+<button type="submit" href="." class="btn primary"><i class="icon icon-ok"></i> Save</button>
+</p>
 </form>

@@ -1,101 +1,101 @@
 {% load url from future %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}Submit - Assignment Submission System{% endblock %}</title>
 
     {% block scripts %}
-        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.10.2.min.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}bootstrap/js/bootstrap-2.0.4.min.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}multiselect/js/bootstrap-multiselect.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}bootstrap/js/bootstrap-2.0.4.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}multiselect/js/bootstrap-multiselect.js"></script>
     {% endblock %}
 
     <style type="text/css">
         {% block style %}
-            @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.min.css");
-            @import url("{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css");
-            @import url("{{ STATIC_URL }}multiselect/css/bootstrap-multiselect.css");
-            @import url("{{ STATIC_URL }}css/screen.css");
+        @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.min.css");
+        @import url("{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css");
+        @import url("{{ STATIC_URL }}multiselect/css/bootstrap-multiselect.css");
+        @import url("{{ STATIC_URL }}css/screen.css");
         {% endblock %}
     </style>
 
     <script type="text/javascript">
-        jQuery(document).ready(function () {
+        jQuery(document).ready( function(){
             {% block docready %}
-                jQuery(".alert").fadeIn();
+            jQuery(".alert").fadeIn();
             {% endblock %}
         });
     </script>
 </head>
 
 <body>
-<div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container">
-            <a class="brand" anchor="/">Submit</a>
-            <ul class="nav pull-right">
-                <li class="{% block navigation_home %}{% endblock %}">
-                    <a href="{% url 'index' %}">
-                        <i class="icon-home icon-white"></i>
-                        Dashboard
-                    </a>
-                </li>
-                {% block navigation_fields %}{% endblock %}
-                <li class="{% block navigation_settings %}{% endblock %}">
-                    <a href="{% url 'courses' %}">
-                        <i class="icon-filter icon-white"></i>
-                        Courses
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'settings' %}">
-                        <i class="icon-wrench icon-white"></i>
-                        Settings
-                    </a>
-                </li>
-                <li class="{% block navigation_logout %}{% endblock %}">
-                    <a href="{% url 'logout' %}">
-                        <i class="icon-off icon-white"></i>
-                        Logout
-                    </a>
-                </li>
-            </ul>
+    <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="brand" anchor="/">Submit</a>
+                <ul class="nav pull-right">
+                    <li class="{% block navigation_home %}{% endblock %}">
+                        <a href="{% url 'index' %}">
+                            <i class="icon-home icon-white"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    {% block navigation_fields%}{%endblock%}
+                     <li class="{% block navigation_settings %}{% endblock %}">
+                        <a href="{% url 'courses' %}">
+                            <i class="icon-filter icon-white"></i>
+                            Courses
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'settings' %}">
+                            <i class="icon-wrench icon-white"></i>
+                            Settings
+                        </a>
+                    </li>
+                    <li  class="{% block navigation_logout %}{% endblock %}">
+                        <a href="{% url 'logout' %}">
+                            <i class="icon-off icon-white"></i>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
-</div>
-
-{% block body %}
+    
+    {% block body %}
     <div class="container space-top">
-    {% if messages %}
-        <div style="position: relative; margin-top: -40px; top: 0; width: 100%">
-        {% for message in messages %}
-            {% if message.tags == "success" %}
-                <div class="alert alert-success">
-                <i class="icon-ok-sign"></i>
-            {% elif message.tags == "info" %}
-                <div class="alert alert-info">
-                <i class="icon-info-sign"></i>
-            {% elif message.tags == "warning" %}
-                <div class="alert">
-                <i class="icon-warning-sign"></i>
-            {% elif message.tags == "error" %}
-                <div class="alert alert-error">
-                <i class="icon-warning-sign"></i>
-            {% endif %}
-        {{ message }}
-        </div>
-        {% endfor %}
+        {% if messages %}
+            <div style="position: relative; margin-top: -40px; top: 0; width: 100%">
+            {% for message in messages %}
+                {% if message.tags == "success" %}
+                    <div class="alert alert-success">
+                    <i class="icon-ok-sign"></i>
+                {% elif message.tags == "info"%}
+                    <div class="alert alert-info">
+                    <i class="icon-info-sign"></i>                
+                {% elif message.tags == "warning"%}
+                    <div class="alert">
+                    <i class="icon-warning-sign"></i>                
+                {% elif message.tags == "error"%}
+                    <div class="alert alert-error">
+                    <i class="icon-warning-sign"></i>                
+                {% endif %}
+                {{ message }}
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+
+        {% block footer %}
+            {% include "footer.html" %}
+        {% endblock %}
     </div>
-    {% endif %}
-
-{% block content %}{% endblock %}
-
-{% block footer %}
-    {% include "footer.html" %}
-{% endblock %}
-</div>
-{% endblock %}
+    {% endblock %}
 </body>
 </html>

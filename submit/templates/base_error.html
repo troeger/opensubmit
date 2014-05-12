@@ -2,20 +2,20 @@
 <html lang="en">
 
 <head>
-    <title>{% block title %}{% endblock %}</title>
-    <style type="text/css">
-        @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.min.css");
-        @import url("{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css");
-        @import url("{{ STATIC_URL }}openid-selector/css/openid.css");
-    </style>
+<title>{% block title %}{% endblock %}</title>
+<style type="text/css">
+    @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.min.css");
+    @import url("{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css");
+    @import url("{{ STATIC_URL }}openid-selector/css/openid.css");
+</style>
 </head>
 
 <body>
-<div class="container">
-    <div class="hero-unit">
-        {% block content %}{% endblock %}
+    <div class="container">
+        <div class="hero-unit">
+            {% block content %}{% endblock %}
 
-    </div>
-    {% include "footer.html" %}
+        </div>
+        {% include "footer.html" %}
 </body>
 </html>
