@@ -481,12 +481,9 @@ def login(request):
     GET  = request.GET
     POST = request.POST
 
-    if 'authmethod' in GET:
+    if 'authmethod' in GET and request.GET['authmethod']=="openid":
         # first stage of OpenID authentication
-        if request.GET['authmethod']=="openid":
-            return preAuthenticate(OPENID_PROVIDER, MAIN_URL+"/login?openidreturn")
-        else:
-            return redirect('index')
+        return preAuthenticate(OPENID_PROVIDER, MAIN_URL+"/login?openidreturn")
 
     elif 'openidreturn' in GET:
         user = auth.authenticate(openidrequest=request)
@@ -543,8 +540,16 @@ def login(request):
 
         auth.login(request, user)
         return redirect('dashboard')
-    else:
-        return redirect('index')
+    elif 'authmethod' in POST and POST["authmethod"]=="passwd":
+        user = auth.authenticate(username=POST["username"], password=POST["password"])
+        if user is not 'None':
+            return redirect('dashboard')
+        else:
+            return redirect('index')
+
+@require_http_methods(['POST'])
+def register(request):
+    pass 
 
 @staff_member_required
 def manual_submit(request, ass_id):

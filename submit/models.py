@@ -40,6 +40,8 @@ class Course(models.Model):
     homepage = models.URLField(max_length=200)
     active = models.BooleanField(default=True)
     max_authors = models.PositiveSmallIntegerField(default=1)
+    needs_key = models.BooleanField(default=False)
+    registration_key = models.CharField(max_length=200, null=True, unique=True)
     def __unicode__(self):
         return unicode(self.title)
 

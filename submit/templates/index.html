@@ -36,4 +36,25 @@
         </form>
     </div>
 </section>
+<section>
+    <div style="text-align: center;">
+        <form class="form-inline" action="{% url 'login' %}" method="POST">
+             {% csrf_token %}
+            <input type="hidden" name="authmethod" value="passwd" />
+            <input type="text" class="form-control"  name="username" placeholder="User name"/>
+            <input type="password" class="form-control"  name="password" placeholder="Password"/>
+            <input type="submit" value="Sign in" class="btn btn-default"/>
+        </form>
+    </div>
+</section>
+<section>
+    <div style="text-align: center;">
+        <form class="form-inline" action="{% url 'register' %}" method="POST">
+             {% csrf_token %}
+            <p>Having no account and a course key ? Please enter it here:</p>
+            <input type="text" class="form-control"  name="key" placeholder="Course key"/>
+            <input type="submit" value="Register" class="btn btn-default"/>
+        </form>
+    </div>
+</section>
 {% endblock %}
