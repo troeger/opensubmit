@@ -7,29 +7,31 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>
-        Update Submission Files<br/>
-        <small>{{ submission.assignment.course }}, {{ submission.assignment }}</small><br/>
-        <small> Submission by {{ submission.submitter.get_full_name }} on {{ submission.created }}</small><br/>
+    <div class="page-header">
+        <h1>
+            Update Submission Files<br/>
+            <small>{{ submission.assignment.course }}, {{ submission.assignment }}</small>
+            <br/>
+            <small> Submission by {{ submission.submitter.get_full_name }} on {{ submission.created }}</small>
+            <br/>
 
-        <small>Authors: {{ submission.authors.all|join:",&nbsp;" }}</small>
-    </h1>
-</div>
+            <small>Authors: {{ submission.authors.all|join:",&nbsp;" }}</small>
+        </h1>
+    </div>
 
-<p>
-    <i>{{ submission.file_upload.attachment|basename }}</i> - 
-	This file will be removed and replaced by the following one:
-</p>
+    <p>
+        <i>{{ submission.file_upload.attachment|basename }}</i> -
+        This file will be removed and replaced by the following one:
+    </p>
 
-<form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
- {% csrf_token %}
-<table>
-{{ fileForm|bootstrap }}
-</table>
-<br/>
-<button type="submit" href="/update/{{submission.pk}}" class="btn"><i class="icon icon-ok"></i> Save</button>
+    <form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
+        {% csrf_token %}
+        <table>
+            {{ fileForm|bootstrap }}
+        </table>
+        <br/>
+        <button type="submit" href="/update/{{ submission.pk }}" class="btn"><i class="icon icon-ok"></i> Save</button>
 
-</form>
+    </form>
 
 {% endblock %}

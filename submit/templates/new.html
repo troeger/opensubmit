@@ -7,54 +7,58 @@
 {% endblock %}
 
 {% block docready %}
-$('#id_authors').multiselect({enableFiltering: true});
+    $('#id_authors').multiselect({enableFiltering: true});
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>
-        New Submission<br/>
-        <small>{{ assignment }} ({{ assignment.course }})</small>
-    </h1>
-</div>
+    <div class="page-header">
+        <h1>
+            New Submission<br/>
+            <small>{{ assignment }} ({{ assignment.course }})</small>
+        </h1>
+    </div>
 
-<div class="hero-unit">
-	<h4>Please note:</h4>
-	{% if assignment.attachment_is_tested %}
-			Your file attachment is automatically tested for validity. You can find further information in the <a href="{{ assignment.download }}">assignment description</a>.<br/> Invalid submissions are
-			not accepted for grading. You will be informed by eMail.<br/>A valid upload fulfills at least the following conditions:
-			<ul>
-				<li>The uploaded file is a TGZ or ZIP archive.</li>
-				{% if assignment.attachment_test_compile %}
-					<li>After unpacking, a 'make' call can be issued to build the sources.</li>
-				{% endif %}
-				{% if assignment.attachment_test_validity %}
-					<li>After successful building, the application can be verified with the <a href="{% url 'download' assignment.pk 'validity_testscript'%}">test script.</a>.</li>
-				{% endif %}
-			</ul>
-			The console output and exit code for the compilation / test run is available in the submission details.			
-	{% else %}
-	    	You can find further information in the <a href="{{ assignment.download }}">assignment description</a>.
-	{% endif %}
-	{% if assignment.course.max_authors > 1 %}
-		<br/>A maximum of {{ assignment.course.max_authors }} author(s) is allowed. You are added automatically.
-		
-	{% endif %}
-</div>
+    <div class="hero-unit">
+        <h4>Please note:</h4>
+        {% if assignment.attachment_is_tested %}
+            Your file attachment is automatically tested for validity. You can find further information in the
+            <a href="{{ assignment.download }}">assignment description</a>.<br/> Invalid submissions are
+            not accepted for grading. You will be informed by eMail.<br/>A valid upload fulfills at least the following
+            conditions:
+            <ul>
+                <li>The uploaded file is a TGZ or ZIP archive.</li>
+                {% if assignment.attachment_test_compile %}
+                    <li>After unpacking, a 'make' call can be issued to build the sources.</li>
+                {% endif %}
+                {% if assignment.attachment_test_validity %}
+                    <li>After successful building, the application can be verified with the <a
+                            href="{% url 'download' assignment.pk 'validity_testscript' %}">test script.</a>.
+                    </li>
+                {% endif %}
+            </ul>
+            The console output and exit code for the compilation / test run is available in the submission details.
+        {% else %}
+            You can find further information in the <a href="{{ assignment.download }}">assignment description</a>.
+        {% endif %}
+        {% if assignment.course.max_authors > 1 %}
+            <br/>A maximum of {{ assignment.course.max_authors }} author(s) is allowed. You are added automatically.
 
-<form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
- {% csrf_token %}
-<table>
-{{ submissionForm|bootstrap }}
-</table>
-{% if assignment.has_attachment %}
-	<table>
-	{{ filesForm }}
-	</table>
-{% endif %}
-<p>
-<button type="submit" href="." class="btn primary"><i class="icon icon-ok"></i> Save</button>
-</p>
-</form>
+        {% endif %}
+    </div>
+
+    <form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
+        {% csrf_token %}
+        <table>
+            {{ submissionForm|bootstrap }}
+        </table>
+        {% if assignment.has_attachment %}
+            <table>
+                {{ filesForm }}
+            </table>
+        {% endif %}
+        <p>
+            <button type="submit" href="." class="btn primary"><i class="icon icon-ok"></i> Save</button>
+        </p>
+    </form>
 
 {% endblock %}

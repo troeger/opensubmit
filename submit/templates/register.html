@@ -2,22 +2,19 @@
 {% load bootstrap %}
 
 {% block title %}
-    {{ block.super }} - Your Courses
-{% endblock %}
-
-{% block docready %}
-    $('#id_courses').multiselect();
+    {{ block.super }} - Register User
 {% endblock %}
 
 {% block content %}
     <div class="page-header">
-        <h1>Your Courses</h1>
+        <h1>Register User</h1>
     </div>
 
     <form action="." method="post" class="form-horizontal">
         {% csrf_token %}
+        <p>{{ title }}</p>
         <table>
-            {{ coursesForm|bootstrap }}
+            {{ registerForm|bootstrap }}
         </table>
         <p>
             <button type="submit" href="." class="btn"><i class="icon icon-ok"></i> Save</button>
@@ -25,6 +22,3 @@
     </form>
 
 {% endblock %}
-
-
-

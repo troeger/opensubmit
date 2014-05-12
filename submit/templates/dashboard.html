@@ -6,19 +6,19 @@
     {{ block.super }} - Dashboard
 {% endblock %}
 
-{%block navigation_home %}hidden{% endblock %}
+{% block navigation_home %}hidden{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Dashboard</h1>
-    <h6>{{ username }}</h6>
-</div>
+    <div class="page-header">
+        <h1>Dashboard</h1>
+        <h6>{{ username }}</h6>
+    </div>
 
-<section>
-    <h3>Open Assignments</h3>
-    {% if assignments %}
-        <table class="table">
-            <thead>
+    <section>
+        <h3>Open Assignments</h3>
+        {% if assignments %}
+            <table class="table">
+                <thead>
                 <tr>
                     <th>Course</th>
                     <th>Assignment</th>
@@ -27,32 +27,36 @@
                     <th>Time Left</th>
                     <th>Action</th>
                 </tr>
-            </thead>
+                </thead>
 
-            <tbody>
-                {% for assignment in assignments %} 
+                <tbody>
+                {% for assignment in assignments %}
                     <tr>
                         <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
                         <td><a href="{{ assignment.download }}">{{ assignment }}</a>
-			{% if assignment.attachment_test_validity and assignment.validity_script_download %}
-				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation skript)</a>
-			{% endif %}
-			</td>
+                            {% if assignment.attachment_test_validity and assignment.validity_script_download %}
+                                <br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation
+                                skript)</a>
+                            {% endif %}
+                        </td>
                         <td>{{ assignment.publish_at }}</td>
-                        <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline }}{%else %}{{ assignment.hard_deadline }}{% endif %}</td>
-                        <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
-                        <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Submission</a></td>
+                        <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline }}{% else %}
+                            {{ assignment.hard_deadline }}{% endif %}</td>
+                        <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{% else %}
+                            {{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
+                        <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Submission</a>
+                        </td>
                     </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-</section>
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
 
-<section>
-    <h3>Active Submissions</h3>
-    <table class="table">
-        <thead>
+    <section>
+        <h3>Active Submissions</h3>
+        <table class="table">
+            <thead>
             <tr>
                 <th>Course</th>
                 <th>Assignment</th>
@@ -61,17 +65,19 @@
                 <th>Status</th>
                 <th>Action</th>
             </tr>
-        </thead>
+            </thead>
 
-        <tbody>
-            {% for submission in authored %} 
-                <tr {% if submission.passed or submission.failed %}style="font-style: italic"{%endif%}>
-                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+            <tbody>
+            {% for submission in authored %}
+                <tr {% if submission.passed or submission.failed %}style="font-style: italic"{% endif %}>
+                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a>
+                    </td>
                     <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors.all|join:"<br/>" }}</td>
                     <td>
-                            <a href="#" class="label {% if submission.green_tag %}label-success{% endif %}{% if submission.red_tag %}label-important{% endif %}">{{ submission.state_for_students }}</a>
+                        <a href="#"
+                           class="label {% if submission.green_tag %}label-success{% endif %}{% if submission.red_tag %}label-important{% endif %}">{{ submission.state_for_students }}</a>
                     </td>
                     <td style="white-space: nowrap;">
                         <a href="{% url 'details' submission.pk %}" class="btn"><i class="icon-th-list"></i> Details</a>
@@ -88,14 +94,14 @@
                     </td>
                 </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</section>
+            </tbody>
+        </table>
+    </section>
 
-<section>
-    <h3>Archive</h3>
-    <table class="table table-condensed">
-        <thead>
+    <section>
+        <h3>Archive</h3>
+        <table class="table table-condensed">
+            <thead>
             <tr>
                 <th>Course</th>
                 <th>Assignment</th>
@@ -104,12 +110,13 @@
                 <th>Status</th>
                 <th></th>
             </tr>
-        </thead>
+            </thead>
 
-        <tbody>
-            {% for submission in archived %} 
+            <tbody>
+            {% for submission in archived %}
                 <tr>
-                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a>
+                    </td>
                     <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.created }}</td>
                     <td>{{ submission.authors.all|join:"<br/>" }}</td>
@@ -117,18 +124,18 @@
                     <td><a href="{% url 'details' submission.pk %}">Details</a></td>
                 </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</section>
+            </tbody>
+        </table>
+    </section>
 
-<section>
-    <h3>Test Machines</h3>
-    <ul class="list">
-    {% for machine in machines %}
-        <li><a href="{% url 'machine' machine.pk %}">Test machine</a></li>
-    {% endfor %}
-</ul>
-</section>
+    <section>
+        <h3>Test Machines</h3>
+        <ul class="list">
+            {% for machine in machines %}
+                <li><a href="{% url 'machine' machine.pk %}">Test machine</a></li>
+            {% endfor %}
+        </ul>
+    </section>
 
 
 {% endblock %}

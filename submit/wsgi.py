@@ -13,7 +13,8 @@ middleware here, or combine a Django application with an application of another
 framework.
 
 """
-import os, sys
+import os
+import sys
 
 sys.path.append('/usr/local/submit')
 
@@ -23,6 +24,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "submit.settings")
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
 from django.core.wsgi import get_wsgi_application
+
 application = get_wsgi_application()
 
 # Apply WSGI middleware here.

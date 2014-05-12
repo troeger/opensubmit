@@ -1,16 +1,16 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls %}
 {% block after_field_sets %}
-<fieldset class="module aligned">
-	<div class="form-row">
-		<div>
-			<input type="radio" name="newstate" value="unfinished">
-			Grading not finished
-		</div>
-		<div>
-			<input type="radio" name="newstate" value="finished">
-			Grading finished
-		</div>
-	</div>
-</fieldset>
+    <fieldset class="module aligned">
+        <div class="form-row">
+            <div>
+                <input type="radio" name="newstate" value="unfinished">
+                Grading not finished
+            </div>
+            <div>
+                <input type="radio" name="newstate" value="finished">
+                Grading finished
+            </div>
+        </div>
+    </fieldset>
 {% endblock %}

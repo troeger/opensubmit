@@ -7,34 +7,34 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Grading Table - {{ course }}</h1>
-</div>
+    <div class="page-header">
+        <h1>Grading Table - {{ course }}</h1>
+    </div>
 
-<table class='table'>
-	<thead>
-		<tr>
-			<th colspan='2'>Student</th>
-			{% for assignment in assignments %}
-				<th>{{ assignment.title }}</th>
-			{% endfor %}
-			<th>Passed assignments</th>
-		</tr>
-	</thread>
-	<tbody>
-	{% for row in resulttable %}
-		<tr>
-			{% for col in row %}
-			<td nowrap>
-				{{ col }}
-				{% if col.means_passed %}
-					(<img src="{{ STATIC_URL }}admin/img/icon-yes.gif"/>)
-				{% endif %}
-			</td>
-			{% endfor %}
-		</tr>
-	{% endfor %}
-	</tbody>
-</table>
+    <table class='table'>
+        <thead>
+        <tr>
+            <th colspan='2'>Student</th>
+            {% for assignment in assignments %}
+                <th>{{ assignment.title }}</th>
+            {% endfor %}
+            <th>Passed assignments</th>
+        </tr>
+        </thread>
+        <tbody>
+        {% for row in resulttable %}
+            <tr>
+                {% for col in row %}
+                    <td nowrap>
+                        {{ col }}
+                        {% if col.means_passed %}
+                            (<img src="{{ STATIC_URL }}admin/img/icon-yes.gif"/>)
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
 {% endblock %}
