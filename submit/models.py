@@ -15,7 +15,9 @@ import logging
 logger = logging.getLogger('Submit')
 
 def upload_path(instance, filename):
-    ''' Sanitize the user-provided file name, add timestamp for uniqness. '''
+    ''' 
+        Sanitize the user-provided file name, add timestamp for uniqness. 
+    '''
     filename=filename.replace(" ","_")
     filename=unicodedata.normalize('NFKD', filename).encode('ascii','ignore').lower()
     return '/'.join([str(date.today().isoformat()),filename])
@@ -51,6 +53,9 @@ class TestMachine(models.Model):
         return unicode(self.host)
 
 class Assignment(models.Model):
+    '''
+        An assignment for which students can submit their solution.
+    '''
     title = models.CharField(max_length=200)
     course = models.ForeignKey(Course, related_name='assignments')
     download = models.URLField(max_length=200)
@@ -90,24 +95,35 @@ class UserProfile(models.Model):
     courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact':True})
 
 def user_courses(user):
-    ''' Returns the list of courses this user is subscribed for.'''
+    ''' 
+        Returns the list of courses this user is subscribed for.
+    '''
     return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
 
 def tutor_courses(user):
-    ''' Returns the list of courses this user is tutor or owner for.'''
+    ''' 
+        Returns the list of courses this user is tutor or owner for.
+    '''
     return list(chain(user.courses_tutoring.all().filter(active__exact=True),user.courses.all().filter(active__exact=True)))
 
 class ValidSubmissionFileManager(models.Manager):
+    '''
+        A model manager used by SubmissionFile. It returns only submission files
+        that were not replaced.
+    '''
     def get_query_set(self):
         return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)
 
 class SubmissionFile(models.Model):
+    '''
+        A file attachment for a student submission. File attachments may be replaced
+        by the student, but we keep the original version for some NSA-style data gathering.
+        The "fetched" field defines the time stamp when the file was fetched for
+        checking by some executor. On result retrieval, this timestamp is emptied
+        again, which allows to find 'stucked' executor jobs on the server side. 
+    '''
     attachment = models.FileField(upload_to=upload_path) 
     fetched = models.DateTimeField(editable=False, null=True)
-    test_compile = models.TextField(null=True, blank=True)
-    test_validity = models.TextField(null=True, blank=True)
-    test_full = models.TextField(null=True, blank=True)
-    perf_data = models.TextField(null=True, blank=True)
     replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
     def __unicode__(self):
         return unicode(self.attachment.name)
@@ -125,22 +141,36 @@ class SubmissionFile(models.Model):
     valid_ones = ValidSubmissionFileManager()
 
 class PendingStudentTestsManager(models.Manager):
+    '''
+        A model manager used by the Submission model. It returns a sorted list
+        of executor work to be done that relates to compilation and
+        validation test jobs for students.
+        The basic approach is that compilation should happen before validation,
+        under the assumption is that the time effort is increasing.
+    '''
     def get_query_set(self):
-        # compilation wins over validation 
-        # the assumption is that the time effort is increasing
         #TODO: Make this one query
         compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('-modified')
         validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
         return list(chain(compileJobs, validationJobs))
 
 class PendingFullTestsManager(models.Manager):
+    '''
+        A model manager used by the Submission model. It returns a sorted list
+        of full test executor work to be done.
+        The basic approach is that non-graded job validation wins over closed job 
+        re-evaluation triggered by the teachers,
+        under the assumption is that the time effort is increasing.
+    '''
     def get_query_set(self):
-        # Non-graded job validatin wins over closed job re-evaluation
         fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('-modified')
         closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('-modified')
         return list(chain(fullJobs, closedFullJobs))
 
 class Submission(models.Model):
+    '''
+        A student submission for an assignment.
+    '''
     RECEIVED = 'R'                  # Only for initialization, this should never persist
     WITHDRAWN = 'W'                 # Withdrawn by the student
     SUBMITTED = 'S'                 # Submitted, no tests so far
@@ -276,6 +306,25 @@ class Submission(models.Model):
     objects = models.Manager()
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
+
+class SubmissionTestResult(models.Model):
+    '''
+        An executor test result for a given submission file.
+    '''
+    COMPILE_TEST = 'c'
+    VALIDITY_TEST = 'v'
+    FULL_TEST = 'f'
+    JOB_TYPES = (                      
+        (COMPILE_TEST, 'Compilation test'),     
+        (VALIDITY_TEST, 'Validation test'),
+        (FULL_TEST, 'Full test')
+    )
+    submission_file = models.ForeignKey(SubmissionFile, related_name="test_results")
+    machine = models.ForeignKey(TestMachine, related_name="test_results")
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    result = models.TextField(null=True, blank=True)
+    kind = models.CharField(max_length=2, choices=JOB_TYPES)
+    perf_data = models.TextField(null=True, blank=True)
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected
