@@ -24,6 +24,7 @@ class SubmitAdminSite(AdminSite):
         Our custom admin site implementation. This is needed (beside the custom model admins)
         to render additional content on the index page of the admin view.
     '''
+    index_template="admin/site_index.html"
     @never_cache
     def index(self, request, extra_context=None):
         """
@@ -40,10 +41,14 @@ class SubmitAdminSite(AdminSite):
                 stat = {}
                 stat['course'] = course
                 stat['assignment'] = assignment
-                stat['not_graded'] = assignment.submissions.all().filter(~Q(state__in=[Submission.GRADED, Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])).count()
-                stat['not_closed'] = assignment.submissions.all().filter(state=Submission.GRADED).count()
-                stat['closed'] = assignment.submissions.all().filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING]).count()
-                stats.append(stat)
+                not_graded = assignment.submissions.all().filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED]).count()
+                not_closed = assignment.submissions.all().filter(state=Submission.GRADED).count()
+                closed = assignment.submissions.all().filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING]).count()
+                if not_graded > 0 or not_closed > 0:
+                    stat['not_graded'] = not_graded
+                    stat['not_closed'] = not_closed
+                    stat['closed'] = closed
+                    stats.append(stat)
         return super(SubmitAdminSite, self).index(request, extra_context={'stats':stats})
 
 admin_site = SubmitAdminSite()
@@ -186,6 +191,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     filter_horizontal = ('authors',)
     fields = ('assignment','authors',('submitter','notes'),'file_upload',('grading','grading_notes', 'grading_file'))
     actions=['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    list_per_page = 10000
 
     def queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
