@@ -94,24 +94,24 @@ def details(request, subm_id):
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
     # get submission form according to the assignment type
-    SubmissionForm=getSubmissionForm(ass)
+    SubmissionForm = getSubmissionForm(ass)
     # Analyze submission data
     if request.POST:
         # Make sure that the submission is still possible, since web page rendering
         # and POST data sending may be indefinitly delayed
-        if ass not in open_assignments(request.user):
-            messages.error(request, "New submissions for this assignment are no longer possible.")
+        if not ass.can_create_submission(user=request.user):
+            messages.error(request, "You are not authorized to create a submission for this assignment right now.")
             return redirect('dashboard')
         # we need to fill all forms here, so that they can be rendered on validation errors
-        submissionForm=SubmissionForm(request.user, ass, request.POST, request.FILES)
+        submissionForm = SubmissionForm(request.user, ass, request.POST, request.FILES)
         if submissionForm.is_valid(): 
-            submission=submissionForm.save(commit=False)   # commit=False to set submitter in the instance
-            submission.submitter=request.user
-            submission.assignment=ass
+            submission = submissionForm.save(commit=False)   # commit=False to set submitter in the instance
+            submission.submitter = request.user
+            submission.assignment = ass
             submission.state = submission.get_initial_state()
             # take uploaded file from extra field
             if ass.has_attachment:
-                submissionFile=SubmissionFile(attachment=submissionForm.cleaned_data['attachment'])
+                submissionFile = SubmissionFile(attachment=submissionForm.cleaned_data['attachment'])
                 submissionFile.save()
                 submission.file_upload=submissionFile                
             submission.save()
@@ -296,11 +296,9 @@ def machines(request, secret):
 def withdraw(request, subm_id):
     # submission should only be deletable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
-    if (request.user not in submission.authors.all()) or (not submission.can_withdraw()):
-        return redirect('dashboard')        
-    if not submission.can_withdraw():
-        messages.error(request, "Withdrawal for this assignment is no longer possible.")
-        return redirect('dashboard')
+    if not submission.can_withdraw(user=request.user):
+        messages.error(request, "Withdrawal for this assignment is no longer possible, or user is unauthorized.")
+        return HttpResponseForbidden()
     if "confirm" in request.POST:
         submission.state=Submission.WITHDRAWN
         submission.save()
