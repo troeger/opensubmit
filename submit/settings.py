@@ -7,7 +7,7 @@ config = RawConfigParser()
 # since this is excluded from the source code distribution.
 try:
     # production system
-    config.readfp(open('/etc/submit/settings.ini')) 
+    config.readfp(open('/etc/submit/settings.ini'))
     is_production = True
 except IOError:
     try:
@@ -28,12 +28,12 @@ except IOError:
 # Global settings
 DATABASES = {
     'default': {
-        'ENGINE':   'django.db.backends.'+config.get('database', 'DATABASE_ENGINE'), 
-        'NAME':     config.get('database', 'DATABASE_NAME') ,
-        'USER':     config.get('database', 'DATABASE_USER') ,                           
-        'PASSWORD': config.get('database', 'DATABASE_PASSWORD') ,                           
-        'HOST':     config.get('database', 'DATABASE_HOST'),                           
-        'PORT':     config.get('database', 'DATABASE_PORT'),                           
+        'ENGINE':   'django.db.backends.' + config.get('database', 'DATABASE_ENGINE'),
+        'NAME':     config.get('database', 'DATABASE_NAME'),
+        'USER':     config.get('database', 'DATABASE_USER'),
+        'PASSWORD': config.get('database', 'DATABASE_PASSWORD'),
+        'HOST':     config.get('database', 'DATABASE_HOST'),
+        'PORT':     config.get('database', 'DATABASE_PORT'),
     }
 }
 
@@ -42,29 +42,29 @@ TEMPLATE_DEBUG = DEBUG
 
 # Let the user specify the complete URL, and split it up accordingly
 # FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-MAIN_URL = config.get('server', 'HOST') + config.get('server','HOST_DIR')
+MAIN_URL = config.get('server', 'HOST') + config.get('server', 'HOST_DIR')
 url = MAIN_URL.split('/')
-FORCE_SCRIPT_NAME = config.get('server','HOST_DIR')
+FORCE_SCRIPT_NAME = config.get('server', 'HOST_DIR')
 
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
 if is_production:
-    STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') +'static/'
-    STATIC_URL = MAIN_URL+'/static/'
-    STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') +'static',)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'    
+    STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') + 'static/'
+    STATIC_URL = MAIN_URL + '/static/'
+    STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') + 'static',)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
 else:
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'    
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     ALLOWED_HOSTS = ['localhost']
 
-LOGIN_DESCRIPTION = config.get('login','LOGIN_DESCRIPTION')
-OPENID_PROVIDER = config.get('login','OPENID_PROVIDER')
+LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
+OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
 
-ADMINS = ( (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL')),)
+ADMINS = ((config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL')),)
 MANAGERS = ADMINS
 EMAIL_SUBJECT_PREFIX = '[Submit] '
 TIME_ZONE = config.get("server", "TIME_ZONE")
@@ -78,7 +78,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-SECRET_KEY = config.get("server","SECRET_KEY")
+SECRET_KEY = config.get("server", "SECRET_KEY")
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
@@ -106,7 +106,7 @@ INSTALLED_APPS = (
     'openid2rp.django',
     'bootstrapform',
     'south',
-    'submit'
+    'submit',
 )
 LOGGING = {
     'version': 1,
@@ -122,10 +122,10 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-         'console': {
+        'console': {
             'level':   'DEBUG',
             'class':   'logging.StreamHandler'
-        }       
+        }
     },
     'loggers': {
         'django.request': {
@@ -152,6 +152,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'submit.contextprocessors.footer'
 )
 
-JOB_EXECUTOR_SECRET=config.get("executor","SHARED_SECRET")
+JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
-
