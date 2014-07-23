@@ -12,7 +12,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 
-### Submission admin interface ###
+# Submission admin interface
 
 class SubmissionStateFilter(SimpleListFilter):
 
@@ -60,7 +60,7 @@ class SubmissionAssignmentFilter(SimpleListFilter):
 
 class SubmissionCourseFilter(SimpleListFilter):
 
-    ''' This custom filter allows to filter the submissions according to 
+    ''' This custom filter allows to filter the submissions according to
         the course they belong to. Additionally, only submission that the
         user is a tutor for are returned in any of the filter settings.
     '''
@@ -108,7 +108,7 @@ def grading_notes(submission):
     ''' Determines if the submission has grading notes,
         leads to nice little icon in the submission overview.
     '''
-    if submission.grading_notes != None:
+    if submission.grading_notes is not None:
         return len(submission.grading_notes) > 0
     else:
         return False
@@ -119,7 +119,7 @@ def grading_file(submission):
     ''' Determines if the submission has a grading file,
         leads to nice little icon in the submission overview.
     '''
-    if submission.grading_file != None:
+    if submission.grading_file is not None:
         return True
     else:
         return False
@@ -176,7 +176,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             return qs.filter(Q(assignment__course__tutors__pk=request.user.pk) | Q(assignment__course__owner=request.user)).distinct()
 
     def get_readonly_fields(self, request, obj=None):
-        ''' Make some of the form fields read-only, but only if the view used to 
+        ''' Make some of the form fields read-only, but only if the view used to
             modify an existing submission. Overriding the ModelAdmin getter
             is the documented way to do that.
         '''
@@ -271,7 +271,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         response = HttpResponse(mimetype="text/csv")
         response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
         for subm in qs:
-            if subm.file_upload.perf_data != None:
+            if subm.file_upload.perf_data is not None:
                 auth = ", ".join([author.get_full_name() for author in subm.authors.all()])
                 response.write("%u;%s;%s;%s;" % (subm.pk, course(subm), subm.assignment, auth))
                 response.write(subm.file_upload.perf_data)
@@ -282,17 +282,17 @@ class SubmissionAdmin(admin.ModelAdmin):
 admin.site.register(Submission, SubmissionAdmin)
 
 
-### Submission File admin interface ###
+# Submission File admin interface
 
 def submissions(submfile):
-    while submfile.replaced_by != None:
+    while submfile.replaced_by is not None:
         submfile = submfile.replaced_by
     subms = submfile.submissions.all()
     return ','.join([str(sub) for sub in subms])
 
 
 def not_withdrawn(submfile):
-    return submfile.replaced_by == None
+    return submfile.replaced_by is None
 not_withdrawn.boolean = True
 
 # In case the backend user creates manually a SubmissionFile entry,
@@ -331,8 +331,8 @@ class SubmissionFileAdmin(admin.ModelAdmin):
 
 admin.site.register(SubmissionFile, SubmissionFileAdmin)
 
-### Assignment admin interface ###
 
+# Assignment admin interface
 
 class AssignmentAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
@@ -348,8 +348,8 @@ class AssignmentAdmin(admin.ModelAdmin):
 
 admin.site.register(Assignment, AssignmentAdmin)
 
-### Grading scheme admin interface ###
 
+# Grading scheme admin interface
 
 def gradings(gradingScheme):
     ''' Determine the list of gradings in this scheme as rendered string.
@@ -389,7 +389,8 @@ admin.site.register(Grading, GradingAdmin)
 admin.site.register(GradingScheme, GradingSchemeAdmin)
 
 
-### User admin interface ###
+# User admin interface
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
 
@@ -400,8 +401,8 @@ class UserAdmin(UserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
-### Course admin interface ###
 
+# Course admin interface
 
 def assignments(course):
     return ",\n".join([str(ass) for ass in course.assignments.all()])
