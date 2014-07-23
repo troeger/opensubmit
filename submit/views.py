@@ -93,15 +93,17 @@ def details(request, subm_id):
 @login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
+
+    # Check whether submissions are allowed.
+    if not ass.can_create_submission(user=request.user):
+        messages.error(request, "You are not authorized to create a submission for this assignment right now.")
+        return redirect('dashboard')
+
     # get submission form according to the assignment type
     SubmissionForm = getSubmissionForm(ass)
+
     # Analyze submission data
     if request.POST:
-        # Make sure that the submission is still possible, since web page rendering
-        # and POST data sending may be indefinitly delayed
-        if not ass.can_create_submission(user=request.user):
-            messages.error(request, "You are not authorized to create a submission for this assignment right now.")
-            return redirect('dashboard')
         # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm = SubmissionForm(request.user, ass, request.POST, request.FILES)
         if submissionForm.is_valid(): 
