@@ -255,6 +255,7 @@ class Submission(models.Model):
             return unicode("%u"%(self.pk))
         else:
             return unicode("New Submission instance")
+
     def log(self, level, format_string, *args, **kwargs):
         level_mapping = {
             'CRITICAL': logging.CRITICAL,
@@ -270,9 +271,6 @@ class Submission(models.Model):
         else:
             log_prefix = "<{} new>".format(self.__class__.__name__)
         return logger.log(level_numeric, "{} {}".format(log_prefix, format_string.format(*args, **kwargs)))
-
-    def log_debug(self, format_string, *args, **kwargs):
-        return self.log_level('DEBUG', format_string, *args, **kwargs)
 
     def can_modify(self, user=None):
         """Determines whether the submission can be modified.
