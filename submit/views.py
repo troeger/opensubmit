@@ -299,8 +299,8 @@ def withdraw(request, subm_id):
     # submission should only be deletable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
     if not submission.can_withdraw(user=request.user):
-        messages.error(request, "Withdrawal for this assignment is no longer possible, or user is unauthorized.")
-        return HttpResponseForbidden()
+        messages.error(request, "Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
+        return redirect('dashboard')
     if "confirm" in request.POST:
         submission.state=Submission.WITHDRAWN
         submission.save()
