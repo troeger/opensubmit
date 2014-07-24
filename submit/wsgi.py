@@ -13,7 +13,8 @@ middleware here, or combine a Django application with an application of another
 framework.
 
 """
-import os, sys
+import sys
+import os
 
 sys.path.append('/usr/local/submit')
 

@@ -1,3 +1,7 @@
+import logging
+import string
+import unicodedata
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -9,53 +13,64 @@ from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL, MEDIA_ROOT
 from datetime import date
 from itertools import chain
-import string, unicodedata
 
-import logging
+
 logger = logging.getLogger('Submit')
 
+
 def upload_path(instance, filename):
-    ''' 
-        Sanitize the user-provided file name, add timestamp for uniqness. 
     '''
-    filename=filename.replace(" ","_")
-    filename=unicodedata.normalize('NFKD', filename).encode('ascii','ignore').lower()
-    return '/'.join([str(date.today().isoformat()),filename])
+        Sanitize the user-provided file name, add timestamp for uniqness.
+    '''
+
+    filename = filename.replace(" ", "_")
+    filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').lower()
+    return '/'.join([str(date.today().isoformat()), filename])
+
 
 class Grading(models.Model):
     title = models.CharField(max_length=20)
     means_passed = models.BooleanField(default=True)
+
     def __unicode__(self):
         return unicode(self.title)
+
 
 class GradingScheme(models.Model):
     title = models.CharField(max_length=200)
     gradings = models.ManyToManyField(Grading, related_name='schemes')
+
     def __unicode__(self):
         return unicode(self.title)
+
 
 class Course(models.Model):
     title = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    owner   = models.ForeignKey(User, related_name='courses')
+    owner = models.ForeignKey(User, related_name='courses')
     tutors = models.ManyToManyField(User, blank=True, null=True, related_name='courses_tutoring')
     homepage = models.URLField(max_length=200)
     active = models.BooleanField(default=True)
     max_authors = models.PositiveSmallIntegerField(default=1)
+
     def __unicode__(self):
         return unicode(self.title)
 
+
 class TestMachine(models.Model):
     host = models.TextField(null=True)
-    last_contact =  models.DateTimeField(editable=False)
+    last_contact = models.DateTimeField(editable=False)
     config = models.TextField(null=True)
+
     def __unicode__(self):
         return unicode(self.host)
+
 
 class Assignment(models.Model):
     '''
         An assignment for which students can submit their solution.
     '''
+
     title = models.CharField(max_length=200)
     course = models.ForeignKey(Course, related_name='assignments')
     download = models.URLField(max_length=200)
@@ -67,17 +82,19 @@ class Assignment(models.Model):
     has_attachment = models.BooleanField(default=False)
     attachment_test_timeout = models.IntegerField(default=30)
     attachment_test_compile = models.BooleanField(default=False)
-    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True) 
+    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True)
     validity_script_download = models.BooleanField(default=False)
-    attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True) 
+    attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True)
     test_machines = models.ManyToManyField(TestMachine, blank=True, null=True)
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""
+
     def has_full_test(self):
         return str(self.attachment_test_full).strip() != ""
+
     def attachment_is_tested(self):
-        return self.attachment_test_compile == True or self.has_validity_test() or self.has_full_test()
+        return self.attachment_test_compile is True or self.has_validity_test() or self.has_full_test()
 
     def __unicode__(self):
         return unicode(self.title)
@@ -102,29 +119,34 @@ class Assignment(models.Model):
 
         return True
 
+
 # monkey patch for getting better user name stringification
 # User proxies did not make the job
 # Django's custom user model feature would have needed to be introduced
-# before the first syncdb, whcih does not work for existing installations 
+# before the first syncdb, whcih does not work for existing installations
 def user_unicode(self):
-    return  u'%s %s' % (self.first_name, self.last_name)
+    return u'%s %s' % (self.first_name, self.last_name)
 User.__unicode__ = user_unicode
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact':True})
+    courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact': True})
+
 
 def user_courses(user):
-    ''' 
+    '''
         Returns the list of courses this user is subscribed for.
     '''
     return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
 
+
 def tutor_courses(user):
-    ''' 
+    '''
         Returns the list of courses this user is tutor or owner for.
     '''
-    return list(chain(user.courses_tutoring.all().filter(active__exact=True),user.courses.all().filter(active__exact=True)))
+    return list(chain(user.courses_tutoring.all().filter(active__exact=True), user.courses.all().filter(active__exact=True)))
+
 
 class ValidSubmissionFileManager(models.Manager):
     '''
@@ -134,31 +156,40 @@ class ValidSubmissionFileManager(models.Manager):
     def get_query_set(self):
         return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)
 
+
 class SubmissionFile(models.Model):
     '''
         A file attachment for a student submission. File attachments may be replaced
         by the student, but we keep the original version for some NSA-style data gathering.
         The "fetched" field defines the time stamp when the file was fetched for
         checking by some executor. On result retrieval, this timestamp is emptied
-        again, which allows to find 'stucked' executor jobs on the server side. 
+        again, which allows to find 'stucked' executor jobs on the server side.
     '''
-    attachment = models.FileField(upload_to=upload_path) 
+
+    attachment = models.FileField(upload_to=upload_path)
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
+
     def __unicode__(self):
         return unicode(self.attachment.name)
+
     def basename(self):
-        return self.attachment.name[self.attachment.name.rfind('/')+1:]
+        return self.attachment.name[self.attachment.name.rfind('/') + 1:]
+
     def get_absolute_url(self):
         # to implement access protection, we implement our own download
         # this implies that the Apache media serving is disabled
-        return reverse('download', args=(self.submissions.all()[0].pk,'attachment'))
+        return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
+
     def absolute_path(self):
         return MEDIA_ROOT + "/" + self.attachment.name
+
     def is_executed(self):
-        return self.fetched != None
+        return self.fetched is not None
+
     objects = models.Manager()
     valid_ones = ValidSubmissionFileManager()
+
 
 class PendingStudentTestsManager(models.Manager):
     '''
@@ -168,45 +199,50 @@ class PendingStudentTestsManager(models.Manager):
         The basic approach is that compilation should happen before validation,
         under the assumption is that the time effort is increasing.
     '''
+
     def get_query_set(self):
-        #TODO: Make this one query
+        # TODO: Make this one query
         compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('-modified')
         validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
         return list(chain(compileJobs, validationJobs))
+
 
 class PendingFullTestsManager(models.Manager):
     '''
         A model manager used by the Submission model. It returns a sorted list
         of full test executor work to be done.
-        The basic approach is that non-graded job validation wins over closed job 
+        The basic approach is that non-graded job validation wins over closed job
         re-evaluation triggered by the teachers,
         under the assumption is that the time effort is increasing.
     '''
+
     def get_query_set(self):
         fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('-modified')
         closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('-modified')
         return list(chain(fullJobs, closedFullJobs))
 
+
 class Submission(models.Model):
     '''
         A student submission for an assignment.
     '''
-    RECEIVED = 'R'                  # Only for initialization, this should never persist
-    WITHDRAWN = 'W'                 # Withdrawn by the student
-    SUBMITTED = 'S'                 # Submitted, no tests so far
-    TEST_COMPILE_PENDING = 'PC'     # Submitted, compile test planned
-    TEST_COMPILE_FAILED = 'FC'      # Submitted, compile test failed 
-    TEST_VALIDITY_PENDING = 'PV'    # Submitted, validity test planned
-    TEST_VALIDITY_FAILED = 'FV'     # Submitted, validity test failed
-    TEST_FULL_PENDING = 'PF'        # Submitted, full test planned
-    TEST_FULL_FAILED = 'FF'         # Submitted, full test failed
-    SUBMITTED_TESTED = 'ST'         # Submitted, all tests performed, grading planned
-    GRADING_IN_PROGRESS = 'GP'      # Grading in progress, but not finished
-    GRADED = 'G'                    # Graded, student notification not done
-    CLOSED = 'C'                    # Graded, student notification done
-    CLOSED_TEST_FULL_PENDING = 'CT' # Keep grading status, full test planned
-    STATES = (                      # States from the backend point of view
-        (RECEIVED, 'Received'),     
+
+    RECEIVED = 'R'                   # Only for initialization, this should never persist
+    WITHDRAWN = 'W'                  # Withdrawn by the student
+    SUBMITTED = 'S'                  # Submitted, no tests so far
+    TEST_COMPILE_PENDING = 'PC'      # Submitted, compile test planned
+    TEST_COMPILE_FAILED = 'FC'       # Submitted, compile test failed
+    TEST_VALIDITY_PENDING = 'PV'     # Submitted, validity test planned
+    TEST_VALIDITY_FAILED = 'FV'      # Submitted, validity test failed
+    TEST_FULL_PENDING = 'PF'         # Submitted, full test planned
+    TEST_FULL_FAILED = 'FF'          # Submitted, full test failed
+    SUBMITTED_TESTED = 'ST'          # Submitted, all tests performed, grading planned
+    GRADING_IN_PROGRESS = 'GP'       # Grading in progress, but not finished
+    GRADED = 'G'                     # Graded, student notification not done
+    CLOSED = 'C'                     # Graded, student notification done
+    CLOSED_TEST_FULL_PENDING = 'CT'  # Keep grading status, full test planned
+    STATES = (                       # States from the backend point of view
+        (RECEIVED, 'Received'),
         (WITHDRAWN, 'Withdrawn'),
         (SUBMITTED, 'Submitted'),
         (TEST_COMPILE_PENDING, 'Compilation test pending'),
@@ -222,7 +258,7 @@ class Submission(models.Model):
         (CLOSED_TEST_FULL_PENDING, 'Closed, full test pending')
     )
     STUDENT_STATES = (              # States from the student point of view
-        (RECEIVED, 'Received'),     
+        (RECEIVED, 'Received'),
         (WITHDRAWN, 'Withdrawn'),
         (SUBMITTED, 'Waiting for grading'),
         (TEST_COMPILE_PENDING, 'Waiting for compilation test'),
@@ -232,7 +268,7 @@ class Submission(models.Model):
         (TEST_FULL_PENDING, 'Waiting for grading'),
         (TEST_FULL_FAILED, 'Waiting for grading'),
         (SUBMITTED_TESTED, 'Waiting for grading'),
-        (GRADING_IN_PROGRESS, 'Waiting for grading'),       
+        (GRADING_IN_PROGRESS, 'Waiting for grading'),
         (GRADED, 'Waiting for grading'),
         (CLOSED, 'Graded'),
         (CLOSED_TEST_FULL_PENDING, 'Graded')
@@ -241,18 +277,19 @@ class Submission(models.Model):
     assignment = models.ForeignKey(Assignment, related_name='submissions')
     submitter = models.ForeignKey(User, related_name='submitted')
     authors = models.ManyToManyField(User, related_name='authored')
-    authors.help_text = ''      
+    authors.help_text = ''
     notes = models.TextField(max_length=200, blank=True)
     file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey(Grading, blank=True, null=True)
     grading_notes = models.TextField(max_length=1000, blank=True, null=True)
-    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True) 
+    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True)
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
+
     def __unicode__(self):
         if self.pk:
-            return unicode("%u"%(self.pk))
+            return unicode("%u" % (self.pk))
         else:
             return unicode("New Submission instance")
 
@@ -277,7 +314,7 @@ class Submission(models.Model):
         Returns a boolean value.
         The 'user' parameter is optional and additionally checks whether
         the given user is authorized to perform these actions.
-        
+
         This function checks the submission states and assignment deadlines."""
 
         # The user must be authorized to commit these actions.
@@ -322,7 +359,7 @@ class Submission(models.Model):
         if self.assignment.soft_deadline:
             if timezone.now() > self.assignment.soft_deadline:
                 # The soft deadline has passed
-                pass # do nothing.
+                pass  # do nothing.
 
         self.log('DEBUG', "Submission can be modified.")
         return True
@@ -330,21 +367,21 @@ class Submission(models.Model):
     def can_withdraw(self, user=None):
         """Determines whether a submisison can be withdrawn.
         Returns a boolean value.
-        
+
         Requires: can_modify.
-        
+
         Currently, the conditions for modifications and withdrawal are the same."""
         return self.can_modify(user=user)
 
     def can_reupload(self, user=None):
         """Determines whether a submission can be re-uploaded.
         Returns a boolean value.
-        
+
         Requires: can_modify.
-        
+
         Re-uploads are allowed only when test executions have failed."""
         # Re-uploads are allowed only when test executions have failed.
-        if not self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ]:
+        if self.state not in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ]:
             return False
 
         # It must be allowed to modify the submission.
@@ -356,7 +393,7 @@ class Submission(models.Model):
     def user_can_modify(self, user):
         """Determines whether a user is allowed to modify a specific submission in general.
         Returns a boolean value.
-        
+
         A user is authorized when he is part of the authorized users (submitter and authors)."""
         return user in self.authorized_users
 
@@ -367,20 +404,25 @@ class Submission(models.Model):
 
     def is_withdrawn(self):
         return self.state == self.WITHDRAWN
+
     def is_closed(self):
         return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
+
     def green_tag(self):
         if self.is_closed() and self.grading:
             return self.grading.means_passed
         else:
             return self.state in [self.SUBMITTED_TESTED, self.SUBMITTED, self.TEST_FULL_PENDING, self.GRADED, self.TEST_FULL_FAILED]
+
     def red_tag(self):
         if self.is_closed() and self.grading:
             return not self.grading.means_passed
         else:
             return self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED]
-    def show_grading(self): 
+
+    def show_grading(self):
         return self.is_closed()
+
     def get_initial_state(self):
         if not self.assignment.attachment_is_tested():
             return Submission.SUBMITTED
@@ -391,26 +433,30 @@ class Submission(models.Model):
                 return Submission.TEST_VALIDITY_PENDING
             elif self.assignment.attachment_test_full:
                 return Submission.TEST_FULL_PENDING
+
     def state_for_students(self):
         return dict(self.STUDENT_STATES)[self.state]
+
     def grading_file_url(self):
         # to implement access protection, we implement our own download
         # this implies that the Apache media serving is disabled
-        return reverse('download', args=(self.pk,'grading_file'))
+        return reverse('download', args=(self.pk, 'grading_file', ))
 
     objects = models.Manager()
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
 
+
 class SubmissionTestResult(models.Model):
     '''
         An executor test result for a given submission file.
     '''
+
     COMPILE_TEST = 'c'
     VALIDITY_TEST = 'v'
     FULL_TEST = 'f'
-    JOB_TYPES = (                      
-        (COMPILE_TEST, 'Compilation test'),     
+    JOB_TYPES = (
+        (COMPILE_TEST, 'Compilation test'),
         (VALIDITY_TEST, 'Validation test'),
         (FULL_TEST, 'Full test')
     )
@@ -421,6 +467,7 @@ class SubmissionTestResult(models.Model):
     kind = models.CharField(max_length=2, choices=JOB_TYPES)
     perf_data = models.TextField(null=True, blank=True)
 
+
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected
 # in the model at the moment
@@ -429,55 +476,57 @@ def inform_student(submission, state):
     if state == Submission.TEST_COMPILE_FAILED:
         subject = 'Warning: Your submission did not pass the compilation test'
         message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-        message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+        message = message % (submission.assignment, submission.assignment.course, MAIN_URL)
 
     elif state == Submission.TEST_VALIDITY_FAILED:
         subject = 'Warning: Your submission did not pass the validation test'
         message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-        message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+        message = message % (submission.assignment, submission.assignment.course, MAIN_URL)
 
     elif state == Submission.CLOSED:
         subject = 'Grading completed'
         message = u'Hi,\n\nthis is a short notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
-        message = message%(submission.assignment, submission.assignment.course, MAIN_URL)
+        message = message % (submission.assignment, submission.assignment.course, MAIN_URL)
     else:
         return
 
-    subject = "[%s] %s"%(submission.assignment.course, subject)
+    subject = "[%s] %s" % (submission.assignment.course, subject)
     from_email = submission.assignment.course.owner.email
     recipients = submission.authors.values_list('email', flat=True).distinct().order_by('email')
     # send student email with BCC to course owner.
-    #TODO: This might be configurable later
+    # TODO: This might be configurable later
     # email = EmailMessage(subject, message, from_email, recipients, [submission.assignment.course.owner.email])
     email = EmailMessage(subject, message, from_email, recipients)
     email.send(fail_silently=True)
+
 
 # to avoid cyclic dependencies, we keep it in the models.py
 def inform_course_owner(request, submission):
     if submission.state == Submission.WITHDRAWN:
         subject = "Submission withdrawn"
-        message = "Withdrawn solution %u for '%s'"%(submission.pk, submission.assignment)   
+        message = "Withdrawn solution %u for '%s'" % (submission.pk, submission.assignment)
 
     elif submission.state == Submission.SUBMITTED:
         subject = "Submission ready for grading"
-        message = "Solution for '%s' that is ready for grading."%(submission.assignment)    
+        message = "Solution for '%s' that is ready for grading." % (submission.assignment)
 
     elif submission.state == Submission.SUBMITTED_TESTED:
         subject = "Submission tested and ready for grading"
-        message = "Solution for '%s' that was tested and is ready for grading."%(submission.assignment) 
+        message = "Solution for '%s' that was tested and is ready for grading." % (submission.assignment)
 
     else:
         subject = "Submission changed state"
-        message = "Submission has now the state '%s'."%(submission.STATES[submission.state])    
+        message = "Submission has now the state '%s'." % (submission.STATES[submission.state])
 
     from_email = submission.assignment.course.owner.email
     recipients = [submission.assignment.course.owner.email]
-    #TODO: Make this configurable, some course owners got annoyed by this
-    #send_mail(subject, message, from_email, recipients, fail_silently=True)
+    # TODO: Make this configurable, some course owners got annoyed by this
+    # send_mail(subject, message, from_email, recipients, fail_silently=True)
+
 
 def db_fixes(user):
-    ''' 
-    This is a monkey patch function called after login, which allows to deal with 
+    '''
+    This is a monkey patch function called after login, which allows to deal with
     schema change issues I was too lazy to formulate in a South script.
     It is also the easiest alternative to a User instance post_save() handler.
     '''
@@ -493,17 +542,19 @@ def db_fixes(user):
         profile.courses = Course.objects.all()
         profile.save()
 
+
 def open_assignments(user):
     ''' Returns the list of open assignments from the viewpoint of this user.
         The caller can request the information under consideration of existing submission
         from this user (the dashboard case) or under ignorance of them (the signal handler case).
     '''
-    qs = Assignment.objects.filter(hard_deadline__gt = timezone.now())
-    qs = qs.filter(publish_at__lt = timezone.now())
+    qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
+    qs = qs.filter(publish_at__lt=timezone.now())
     qs = qs.filter(course__in=user_courses(user))
     qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
-    waiting_for_action=[subm.assignment for subm in user.authored.all().exclude(state=Submission.WITHDRAWN)]
+    waiting_for_action = [subm.assignment for subm in user.authored.all().exclude(state=Submission.WITHDRAWN)]
     return [ass for ass in qs if ass not in waiting_for_action]
+
 
 @receiver(post_save, sender=Submission)
 def submission_post_save(sender, instance, **kwargs):
@@ -512,7 +563,7 @@ def submission_post_save(sender, instance, **kwargs):
     if instance.submitter not in instance.authors.all():
         instance.authors.add(instance.submitter)
         instance.save()
-    # Mark all existing submissions for this assignment by these authors as invalid. 
+    # Mark all existing submissions for this assignment by these authors as invalid.
     # This fixes a race condition with parallel new submissions in multiple browser windows by the same user.
     # Solving this as pre_save security exception does not work, since we have no instance with valid foreign keys to check there.
     # Considering that this runs also on tutor correction backend activities, it also serves as kind-of cleanup functionality
@@ -523,4 +574,3 @@ def submission_post_save(sender, instance, **kwargs):
             for subm in same_author_subm:
                 subm.state = Submission.WITHDRAWN
                 subm.save()
-

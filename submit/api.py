@@ -17,14 +17,14 @@ from submit.models import Assignment, Submission, TestMachine, inform_student, S
 
 
 def download(request, obj_id, filetype, secret=None):
-    ''' 
-    Download facilility for files on the server.
-    This view is intentionally not login-protected, since the
-    security happens on a more fine-grained level:
-    - A requestor who wants a submission attachment or grading notes must be author 
-     (student front page) or staff (correctors).
-    - A requestor who wants a validation script gets it with a secret (executor script)
-      or if public download is enabled for it.
+    '''
+        Download facilility for files on the server.
+        This view is intentionally not login-protected, since the
+        security happens on a more fine-grained level:
+        - A requestor who wants a submission attachment or grading notes must be author
+         (student front page) or staff (correctors).
+        - A requestor who wants a validation script gets it with a secret (executor script)
+          or if public download is enabled for it.
     '''
     if filetype == "attachment":
         subm = get_object_or_404(Submission, pk=obj_id)
@@ -93,14 +93,14 @@ def jobs(request, secret):
             # only deliver jobs that are unfetched so far, or where the executor should have finished meanwhile
             # it may happen in special cases that stucked executors deliver their result after the timeout
             # this is not really a problem, since the result remains the same for the same file
-            #TODO: Make this a part of the original query
-            #TODO: Count number of attempts to leave the same state, mark as finally failed in case; alternatively, the executor must always deliver a re.
+            # TODO: Make this a part of the original query
+            # TODO: Count number of attempts to leave the same state, mark as finally failed in case; alternatively, the executor must always deliver a re.
             if (not sub.file_upload.fetched) or (sub.file_upload.fetched + datetime.timedelta(
                     seconds=sub.assignment.attachment_test_timeout) < timezone.now()):
                 if sub.file_upload.fetched:
                     # Stuff that has timed out
                     # we mark it as failed so that the user gets informed
-                    #TODO:  Late delivery for such a submission by the executor witll break everything
+                    # TODO:  Late delivery for such a submission by the executor witll break everything
                     sub.file_upload.fetched = None
                     if sub.state == Submission.TEST_COMPILE_PENDING:
                         sub.state = Submission.TEST_COMPILE_FAILED
