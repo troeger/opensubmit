@@ -37,10 +37,7 @@ DATABASES = {
     }
 }
 
-if is_production:
-	DEBUG = False
-else:
-	DEBUG = bool(config.get('general', 'DEBUG'))
+DEBUG = bool(config.get('general', 'DEBUG')) and not is_production
 TEMPLATE_DEBUG = DEBUG
 
 # Let the user specify the complete URL, and split it up accordingly

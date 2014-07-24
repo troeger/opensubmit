@@ -82,6 +82,26 @@ class Assignment(models.Model):
     def __unicode__(self):
         return unicode(self.title)
 
+    def can_create_submission(self, user=None):
+        if self.hard_deadline < timezone.now():
+            # Hard deadline has been reached.
+            return False
+
+        if self.publish_at > timezone.now():
+            # The assignment has not yet been published.
+            return False
+
+        if user:
+            if self.course not in user_courses(user):
+                # The user is not enrolled in this assignment's course.
+                return False
+
+            if user.authored.filter(assignment=self).exclude(state=Submission.WITHDRAWN).count() > 0:
+                # User already has a valid submission for this assignment.
+                return False
+
+        return True
+
 # monkey patch for getting better user name stringification
 # User proxies did not make the job
 # Django's custom user model feature would have needed to be introduced
@@ -235,41 +255,116 @@ class Submission(models.Model):
             return unicode("%u"%(self.pk))
         else:
             return unicode("New Submission instance")
-    def can_withdraw(self):
-        # No double withdraw
-        # No withdraw for graded jobs or jobs in the middle of grading
-        if self.state in [self.GRADED, self.GRADING_IN_PROGRESS, self.WITHDRAWN]: 
-            logger.debug("Submission cannot be withdrawn, wrong state")
+
+    def log(self, level, format_string, *args, **kwargs):
+        level_mapping = {
+            'CRITICAL': logging.CRITICAL,
+            'ERROR': logging.ERROR,
+            'WARNING': logging.WARNING,
+            'INFO': logging.INFO,
+            'DEBUG': logging.DEBUG,
+            'NOTSET': logging.NOTSET,
+        }
+        level_numeric = level_mapping[level] if level in level_mapping else level_mapping['NOTSET']
+        if self.pk:
+            log_prefix = "<{} pk={}>".format(self.__class__.__name__, self.pk)
+        else:
+            log_prefix = "<{} new>".format(self.__class__.__name__)
+        return logger.log(level_numeric, "{} {}".format(log_prefix, format_string.format(*args, **kwargs)))
+
+    def can_modify(self, user=None):
+        """Determines whether the submission can be modified.
+        Returns a boolean value.
+        The 'user' parameter is optional and additionally checks whether
+        the given user is authorized to perform these actions.
+        
+        This function checks the submission states and assignment deadlines."""
+
+        # The user must be authorized to commit these actions.
+        if user and not self.user_can_modify(user):
+            self.log('DEBUG', "Submission cannot be modified, user is not an authorized user ({!r} not in {!r})", user, self.authorized_users)
             return False
-        # No withdraw for closed jobs
+
+        # Modification of submissions, that are withdrawn, graded or currently being graded, is prohibited.
+        if self.state in [self.WITHDRAWN, self.GRADED, self.GRADING_IN_PROGRESS, ]:
+            self.log('DEBUG', "Submission cannot be modified, is in state '{}'", self.state)
+            return False
+
+        # Modification of closed submissions is prohibited.
         if self.is_closed():
-            logger.debug("Submission cannot be withdrawn, is closed")
-            return False    
-        # No withdraw for executed jobs
-        # This smells like race condition (page withdraw button rendering -> clicking)
-        # Therefore, the withdraw view has to do this check again
-        if self.state in [self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]: 
-            assert(self.file_upload)    # otherwise, the state model is broken
-            if self.file_upload.is_executed():
-                logger.debug("Submission cannot be withdrawn, is currently executed")
-                return False
-        # In principle, it can be withdrawn
-        # Now consider the deadlines
-        if self.assignment.hard_deadline < timezone.now():
-            logger.debug("Submission cannot be withdrawn, hard deadline is over")
+            self.log('DEBUG', "Submission cannot be modified, is closed")
             return False
-        # Hard deadline is not over
+
+        # Submissions, that are executed right now, cannot be modified
+        if self.state in [self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING, ]:
+            if not self.file_upload:
+                self.log('CRITICAL', "Submission is in invalid state! State is '{}', but there is no file uploaded!", self.state)
+                raise AssertionError()
+                return False
+            if self.file_upload.is_executed():
+                # The above call informs that the uploaded file is being executed, or execution has been completed.
+                # Since the current state is 'PENDING', the execution cannot yet be completed.
+                # Thus, the submitted file is being executed right now.
+                return False
+
+        # Submissions must belong to an assignment.
+        if not self.assignment:
+            self.log('CRITICAL', "Submission does not belong to an assignment!")
+            raise AssertionError()
+
+        # Submissions, that belong to an assignment where the hard deadline has passed,
+        # cannot be modified.
+        if timezone.now() > self.assignment.hard_deadline:
+            self.log('DEBUG', "Submission cannot be modified - assignment's hard deadline has passed (hard deadline is: {})", self.assignment.hard_deadline)
+            return False
+
+        # The soft deadline has no effect (yet).
         if self.assignment.soft_deadline:
-            if self.assignment.soft_deadline < timezone.now():
-                # soft deadline is over, allowance of withdrawal here may become configurable later
-                logger.debug("Submission can be withdrawn, but soft deadline is over")
-                return True
-        # Soft deadline is not over, or there is no soft deadline 
-        logger.debug("Submission could be withdrawn")
+            if timezone.now() > self.assignment.soft_deadline:
+                # The soft deadline has passed
+                pass # do nothing.
+
+        self.log('DEBUG', "Submission can be modified.")
         return True
-    def can_reupload(self):
-        # Re-upload should only be possible if the deadlines are not over, which is part of the withdrawal check
-        return (self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED]) and self.can_withdraw()
+
+    def can_withdraw(self, user=None):
+        """Determines whether a submisison can be withdrawn.
+        Returns a boolean value.
+        
+        Requires: can_modify.
+        
+        Currently, the conditions for modifications and withdrawal are the same."""
+        return self.can_modify(user=user)
+
+    def can_reupload(self, user=None):
+        """Determines whether a submission can be re-uploaded.
+        Returns a boolean value.
+        
+        Requires: can_modify.
+        
+        Re-uploads are allowed only when test executions have failed."""
+        # Re-uploads are allowed only when test executions have failed.
+        if not self.state in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ]:
+            return False
+
+        # It must be allowed to modify the submission.
+        if not self.can_modify(user=user):
+            return False
+
+        return True
+
+    def user_can_modify(self, user):
+        """Determines whether a user is allowed to modify a specific submission in general.
+        Returns a boolean value.
+        
+        A user is authorized when he is part of the authorized users (submitter and authors)."""
+        return user in self.authorized_users
+
+    @property
+    def authorized_users(self):
+        """Returns a list of all authorized users (submitter and additional authors)."""
+        return [self.submitter, ] + list(self.authors.all())
+
     def is_withdrawn(self):
         return self.state == self.WITHDRAWN
     def is_closed(self):
