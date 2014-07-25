@@ -1,29 +1,70 @@
+from __future__ import print_function
+
+import sys
 import os
-from ConfigParser import RawConfigParser
+from ConfigParser import SafeConfigParser
 
-config = RawConfigParser()
 
-# Determine dev mode based on the existence of the dev settings file,
-# since this is excluded from the source code distribution.
+# The following section determines which configuration file to load.
+# It also deduces whether we are in a live environment (is_production,
+# which forces DEBUG to False), or in a development environment (al-
+# lowing DEBUG mode).
+#
+# The application first searches for files named 'settings.ini' in
+# either the system's configuration directory (%APPDATA% on Windows,
+# /etc on others) or in the directory where the settings.py is located.
+# If this file is found, it is loaded in is_production mode (no DEBUG).
+# Then, same behaviour applies for a 'settings_dev.ini' file, which
+# starts the app in the DEBUG mode specified in the configuration file.
+#
+# If both these files cannot be found, the template file located in
+# the settings.py directory, called 'settings.ini.template', is loaded
+# in DEBUG mode.
+def find_config_info():
+    config_info_default = (os.path.abspath('submit/settings.ini.template'), False, )
+
+    # config_info: (<config file path>, <is production>, )
+    system_config_directories = {
+        'win32': os.path.expandvars('$APPDATA'),
+        'default': '/etc',
+    }
+
+    if sys.platform in system_config_directories:
+        system_config_directory = system_config_directories[sys.platform]
+    else:
+        system_config_directory = system_config_directories['default']
+
+    config_directories = [
+        os.path.join(system_config_directory, 'submit'),
+        os.path.join(os.path.dirname(__file__)),
+    ]
+
+    config_files = (
+        ('settings.ini', True, ),
+        ('settings_dev.ini', False, ),
+    )
+
+    for config_file, production in config_files:
+        for config_path in config_directories:
+            config_file_path = os.path.join(config_path, config_file)
+            if os.path.isfile(config_file_path):
+                return (config_file_path, production, )
+
+    print("No configuration file found. Please copy .../submit/settings.ini.template to {} and edit it. Falling back to default settings.".format(os.path.join(config_directories[0], config_files[0][0])), file=sys.stderr)
+    print("WARNING: THIS APP IS EXECUTED IN DEBUG MODE.", file=sys.stderr)
+    return config_info_default
+
+config_file_path, is_production = find_config_info()
 try:
-    # production system
-    config.readfp(open('/etc/submit/settings.ini'))
-    is_production = True
+    config_fp = open(config_file_path, 'r')
 except IOError:
-    try:
-        # development machine
-        config.readfp(open('submit/settings_dev.ini'))
-        is_production = False
-        print "Using submit/settings_dev.ini"
-    except:
-        # See if the user just forgot to edit and rename the template
-        try:
-            config.readfp(open('submit/settings.ini.template'))
-            print("No configuration file found. Please copy .../submit/settings.ini.template to /etc/submit/settings.ini and edit it.")
-            exit(-1)
-        except:
-            print("Error - Configuration file /etc/submit/settings.ini does not exist.")
-            exit(-1)
+    print("ERROR: Cannot open configuration file {}! Exiting.".format(config_file_path), file=sys.stderr)
+    sys.exit(-1)
+
+print("Choosing {} as configuration file".format(config_file_path), file=sys.stderr)
+
+config = SafeConfigParser()
+config.readfp(config_fp)
 
 # Global settings
 DATABASES = {
@@ -36,6 +77,9 @@ DATABASES = {
         'PORT':     config.get('database', 'DATABASE_PORT'),
     }
 }
+
+if bool(config.get('general', 'DEBUG')) and is_production:
+    print("WARNING: DEBUG is enabled in configuration file, despite being in productive mode.", file=sys.stderr)
 
 DEBUG = bool(config.get('general', 'DEBUG')) and not is_production
 TEMPLATE_DEBUG = DEBUG
@@ -52,7 +96,7 @@ MEDIA_URL = MAIN_URL + '/files/'
 if is_production:
     STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') + 'static/'
     STATIC_URL = MAIN_URL + '/static/'
-    STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') + 'static',)
+    STATICFILES_DIRS = (STATIC_ROOT, )
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
 else:
@@ -64,7 +108,9 @@ else:
 LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
 OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
 
-ADMINS = ((config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL')),)
+ADMINS = (
+    (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),
+)
 MANAGERS = ADMINS
 EMAIL_SUBJECT_PREFIX = '[Submit] '
 TIME_ZONE = config.get("server", "TIME_ZONE")
@@ -114,7 +160,7 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
-        }
+        },
     },
     'handlers': {
         'mail_admins': {
@@ -125,7 +171,7 @@ LOGGING = {
         'console': {
             'level':   'DEBUG',
             'class':   'logging.StreamHandler'
-        }
+        },
     },
     'loggers': {
         'django.request': {
@@ -137,7 +183,7 @@ LOGGING = {
             'handlers':  ['console'],
             'level':     'DEBUG',
             'propagate': True,
-        }
+        },
     }
 }
 AUTHENTICATION_BACKENDS = (
@@ -154,3 +200,25 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
+
+# If config file has a section 'overrides',
+# override global config variables.
+if config.has_section('overrides'):
+    global_vars = globals()
+    for key, value in config.items('overrides'):
+        key = key.upper().strip()
+        if key.endswith('[]'):
+            key = key[:-2].strip()
+            values = map(lambda s: s.strip(), value.split(","))
+            if key in global_vars:
+                value_type = type(global_vars[key])
+                global_vars[key] = value_type(global_vars[key] + value_type(values))
+                del value_type
+            else:
+                global_vars[key] = tuple(values)
+            del values
+        else:
+            value = value.strip()
+            global_vars[key] = value
+        del key, value
+    del global_vars
