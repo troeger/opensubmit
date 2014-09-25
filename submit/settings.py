@@ -139,7 +139,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'submit.urls'
 WSGI_APPLICATION = 'submit.wsgi.application'
 TEMPLATE_DIRS = (
-    'submit/templates/'
+    'submit/templates/',
 )
 INSTALLED_APPS = (
     'django.contrib.auth',
