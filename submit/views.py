@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.core.mail import mail_managers, send_mail
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.encoding import smart_text
@@ -115,11 +115,11 @@ def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
 
     if not ass.is_visible(user=request.user):
-        return HttpResponseNotFound()
+        raise Http404()
 
     # Check whether submissions are allowed.
     if not ass.can_create_submission(user=request.user):
-        return HttpResponseForbidden()
+        raise PermissionDenied("You are not allowed to create a submission for this assignment")
 
     # get submission form according to the assignment type
     SubmissionForm = getSubmissionForm(ass)
@@ -129,7 +129,7 @@ def new(request, ass_id):
         if 'authors' in request.POST:
             authors = map(lambda s: User.objects.get(pk=int(s)), request.POST['authors'].split(','))
             if not ass.authors_valid(authors):
-                return HttpResponseForbidden()
+                raise PermissionDenied("The given list of co-authors is invalid!")
 
         # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm = SubmissionForm(request.user, ass, request.POST, request.FILES)
@@ -332,8 +332,7 @@ def withdraw(request, subm_id):
     # submission should only be deletable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
     if not submission.can_withdraw(user=request.user):
-        messages.error(request, "Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
-        return HttpResponseForbidden()
+        raise PermissionDenied("Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
     if "confirm" in request.POST:
         submission.state = Submission.WITHDRAWN
         submission.save()
