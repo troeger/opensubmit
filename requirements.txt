@@ -1,5 +1,6 @@
-django
-south
+Django>=1.6
+South>=0.7
 django-bootstrap-form
 openid2rp
 XlsxWriter
+djangorestframework>=2.4

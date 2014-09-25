@@ -29,6 +29,8 @@ urlpatterns = patterns('',
     url(r'^settings/$', 'submit.views.settings', name='settings'),
     url(r'^courses/$', 'submit.views.courses', name='courses'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+    url(r'^api/', include('executor_api.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )
 

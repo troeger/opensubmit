@@ -1,3 +1,5 @@
+import os
+
 import logging
 import string
 import unicodedata
@@ -11,7 +13,6 @@ from django.core.mail import send_mail, EmailMessage
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_URL, MEDIA_ROOT
-from datetime import date
 from itertools import chain
 
 
@@ -25,7 +26,7 @@ def upload_path(instance, filename):
 
     filename = filename.replace(" ", "_")
     filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').lower()
-    return '/'.join([str(date.today().isoformat()), filename])
+    return os.path.join(str(timezone.now().date().isoformat()), filename)
 
 
 class Grading(models.Model):
@@ -55,6 +56,25 @@ class Course(models.Model):
 
     def __unicode__(self):
         return unicode(self.title)
+
+    def is_owner(self, user):
+        return user == self.owner
+
+    def is_tutor(self, user):
+        return self.tutors.filter(pk=user.pk).exists()
+
+    def is_owner_or_tutor(self, user):
+        return self.is_owner(user) or self.is_tutor(user)
+
+    def is_visible(self, user=None):
+        if user:
+            if self.is_owner_or_tutor(user):
+                return True
+
+        if not self.active:
+            return False
+
+        return True
 
 
 class TestMachine(models.Model):
@@ -100,6 +120,17 @@ class Assignment(models.Model):
         return unicode(self.title)
 
     def can_create_submission(self, user=None):
+        if user:
+            if user.is_superuser:
+                # Super users are allowed to submit after the deadline.
+                return True
+            if user is self.course.owner:
+                # The course owner is allowed to submit after the deadline.
+                return True
+            if self.course.tutors.filter(pk=user.pk).exists():
+                # Tutors are allowed to submit after the deadline.
+                return True
+
         if self.hard_deadline < timezone.now():
             # Hard deadline has been reached.
             return False
@@ -116,6 +147,26 @@ class Assignment(models.Model):
             if user.authored.filter(assignment=self).exclude(state=Submission.WITHDRAWN).count() > 0:
                 # User already has a valid submission for this assignment.
                 return False
+
+        return True
+
+    def authors_valid(self, authors=()):
+        for author in authors:
+            if not self.can_create_submission(author):
+                return False
+
+        return True
+
+    def is_visible(self, user=None):
+        if user:
+            if self.course.is_owner_or_tutor(user):
+                return True
+
+        if not self.course.is_visible(user):
+            return False
+
+        if self.publish_at > timezone.now():
+            return False
 
         return True
 
@@ -381,7 +432,7 @@ class Submission(models.Model):
 
         Re-uploads are allowed only when test executions have failed."""
         # Re-uploads are allowed only when test executions have failed.
-        if self.state not in [self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ]:
+        if self.state not in (self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ):
             return False
 
         # It must be allowed to modify the submission.

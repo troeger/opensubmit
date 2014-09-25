@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.core.mail import mail_managers, send_mail
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.encoding import smart_text
@@ -104,7 +104,7 @@ def dashboard(request):
 def details(request, subm_id):
     subm = get_object_or_404(Submission, pk=subm_id)
     if not (request.user in subm.authors.all() or request.user.is_staff):               # only authors should be able to look into submission details
-        return HttpResponseForbidden()
+        raise PermissionDenied()
     return render(request, 'details.html', {
         'submission': subm}
     )
@@ -114,16 +114,23 @@ def details(request, subm_id):
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
 
+    if not ass.is_visible(user=request.user):
+        return HttpResponseNotFound()
+
     # Check whether submissions are allowed.
     if not ass.can_create_submission(user=request.user):
-        messages.error(request, "You are not authorized to create a submission for this assignment right now.")
-        return redirect('dashboard')
+        return HttpResponseForbidden()
 
     # get submission form according to the assignment type
     SubmissionForm = getSubmissionForm(ass)
 
     # Analyze submission data
     if request.POST:
+        if 'authors' in request.POST:
+            authors = map(lambda s: User.objects.get(pk=int(s)), request.POST['authors'].split(','))
+            if not ass.authors_valid(authors):
+                return HttpResponseForbidden()
+
         # we need to fill all forms here, so that they can be rendered on validation errors
         submissionForm = SubmissionForm(request.user, ass, request.POST, request.FILES)
         if submissionForm.is_valid():
@@ -326,7 +333,7 @@ def withdraw(request, subm_id):
     submission = get_object_or_404(Submission, pk=subm_id)
     if not submission.can_withdraw(user=request.user):
         messages.error(request, "Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
-        return redirect('dashboard')
+        return HttpResponseForbidden()
     if "confirm" in request.POST:
         submission.state = Submission.WITHDRAWN
         submission.save()

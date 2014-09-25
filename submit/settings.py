@@ -152,7 +152,10 @@ INSTALLED_APPS = (
     'openid2rp.django',
     'bootstrapform',
     'south',
+    'rest_framework',
+
     'submit',
+    'executor_api',
 )
 LOGGING = {
     'version': 1,
@@ -190,6 +193,15 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'openid2rp.django.auth.Backend'
 )
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissions',
+    ]
+}
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
