@@ -3,7 +3,6 @@ from functools import wraps
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseForbidden
 from django.utils import timezone
 from django.utils.decorators import available_attrs
 
@@ -25,7 +24,7 @@ def require_ssl(view):
         if not settings.DEBUG:
             scheme = request.META['wsgi.url_scheme'].lower().strip()
             if scheme not in SAFE_SCHEMES:
-                return HttpResponseForbidden()
+                raise PermissionDenied("API access is only allowed through secure channels, such as HTTP over SSL/TLS!")
         return view(request, *args, **kwargs)
     return require_ssl_view_wrapper
 
@@ -46,8 +45,10 @@ class ExecutorAPIView(APIView):
 
             if require:
                 raise PermissionDenied("Only test machines are allowed to access this view.")
-        machine.last_contact = timezone.now()
-        machine.save()
+        if machine:
+            machine.last_contact = timezone.now()
+            machine.save()
+
         return machine
 
     def check_requirements(self, requirements, data):
