@@ -102,6 +102,7 @@ class AssignmentTest(models.Model):
     puppet_config = models.TextField(blank=True)
     machines = models.ManyToManyField(TestMachine, related_name='assignments')
     test_script = models.FileField(upload_to=upload_path, blank=True, null=True)
+    last_modified = models.DateTimeField(auto_now=True, editable=False)
 
     def __unicode__(self):
         return u'Assignment test for: {}'.format(self.assignment)

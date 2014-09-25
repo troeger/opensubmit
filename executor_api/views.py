@@ -27,7 +27,7 @@ def index(request):
 
 class IndexView(ExecutorAPIView):
     def get(self, request):
-        machine = self.discover_machine(request)
+        machine = self.discover_machine(request, require=False)
 
         response_obj = {
             'machine': machine.pk if machine else None,
@@ -201,6 +201,7 @@ class AssignmentTestView(ExecutorAssignmentAPIView):
             'title': ass_test.assignment.title,
             'puppet_config': ass_test.puppet_config,
             'test_script_download': test_script_download,
+            'last_modified': ass_test.last_modified,
         })
 
 
