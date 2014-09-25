@@ -24,9 +24,14 @@ class StudentACLTestCase(SubmitTestCase):
     def testCanCreateSubmission(self):
         self.assertEquals(self.openAssignment.can_create_submission(self.current_user.user), True)
         self.assertEquals(self.softDeadlinePassedAssignment.can_create_submission(self.current_user.user), True)
+
+    def testCannotCreateSubmissionAfterDeadline(self):
         self.assertEquals(self.hardDeadlinePassedAssignment.can_create_submission(self.current_user.user), False)
+
+    def testCannotCreateSubmissionBeforePublishing(self):
         self.assertEquals(self.unpublishedAssignment.can_create_submission(self.current_user.user), False)
-        
+
+    def testAdminTeacherTutorAlwaysCanCreateSubmission(self):
         for user in (self.admin, self.teacher, self.tutor, ):
             self.assertEquals(self.openAssignment.can_create_submission(user.user), True)
             self.assertEquals(self.softDeadlinePassedAssignment.can_create_submission(user.user), True)
@@ -44,15 +49,21 @@ class StudentACLTestCase(SubmitTestCase):
         self.createSubmissions()
         self.assertEquals(self.openAssignmentSub.can_withdraw(self.current_user.user), True)
         self.assertEquals(self.softDeadlinePassedAssignmentSub.can_withdraw(self.current_user.user), True)
+
+    def testCannotWithdrawSubmissionAfterDeadline(self):
+        self.createSubmissions()
         self.assertEquals(self.hardDeadlinePassedAssignmentSub.can_withdraw(self.current_user.user), False)
 
     def testCanModifySubmission(self):
         self.createSubmissions()
         self.assertEquals(self.openAssignmentSub.can_modify(self.current_user.user), True)
         self.assertEquals(self.softDeadlinePassedAssignmentSub.can_modify(self.current_user.user), True)
+
+    def testCannotModifySubmissionAfterDeadline(self):
+        self.createSubmissions()
         self.assertEquals(self.hardDeadlinePassedAssignmentSub.can_modify(self.current_user.user), False)
 
-    def testCanReuploadSubmissions(self):
+    def testCanOrCannotReuploadSubmissions(self):
         self.createSubmissions()
         for state, desc in Submission.STATES:
             for submission in self.submissions:
