@@ -184,7 +184,7 @@ class StudentShowSubmissionWebTestCase(StudentSubmissionWebTestCase):
             self.hardDeadlinePassedAssignmentSub: (200, ),
         }
         for submission in cases:
-            response = self.c.get('/details/%s/' % submission.pk, {'confirm': '1', })
+            response = self.c.get('/details/%s/' % submission.pk)
             expected_responses = cases[submission]
             self.assertIn(response.status_code, expected_responses)
 
@@ -199,6 +199,6 @@ class StudentShowSubmissionWebTestCase(StudentSubmissionWebTestCase):
             self.hardDeadlinePassedAssignmentSub: (403, ),
         }
         for submission in cases:
-            response = self.c.get('/details/%s/' % submission.pk, {'confirm': '1', })
+            response = self.c.get('/details/%s/' % submission.pk)
             expected_responses = cases[submission]
             self.assertIn(response.status_code, expected_responses)
