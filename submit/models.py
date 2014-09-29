@@ -204,8 +204,8 @@ class ValidSubmissionFileManager(models.Manager):
         A model manager used by SubmissionFile. It returns only submission files
         that were not replaced.
     '''
-    def get_query_set(self):
-        return super(ValidSubmissionFileManager, self).get_query_set().filter(replaced_by=None)
+    def get_queryset(self):
+        return super(ValidSubmissionFileManager, self).get_queryset().filter(replaced_by=None)
 
 
 class SubmissionFile(models.Model):
@@ -251,7 +251,7 @@ class PendingStudentTestsManager(models.Manager):
         under the assumption is that the time effort is increasing.
     '''
 
-    def get_query_set(self):
+    def get_queryset(self):
         # TODO: Make this one query
         compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('-modified')
         validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
@@ -267,7 +267,7 @@ class PendingFullTestsManager(models.Manager):
         under the assumption is that the time effort is increasing.
     '''
 
-    def get_query_set(self):
+    def get_queryset(self):
         fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('-modified')
         closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('-modified')
         return list(chain(fullJobs, closedFullJobs))

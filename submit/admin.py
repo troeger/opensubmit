@@ -167,7 +167,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     fields = ('assignment', 'authors', ('submitter', 'notes'), 'file_upload', ('grading', 'grading_notes', 'grading_file'))
     actions = ['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
         qs = super(SubmissionAdmin, self).queryset(request)
         if request.user.is_superuser:
@@ -310,7 +310,7 @@ class SubmissionFileAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
     inlines = [InlineSubmissionAdmin, ]
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         ''' Restrict the listed submission files for the current user.'''
         qs = super(SubmissionFileAdmin, self).queryset(request)
         if request.user.is_superuser:
@@ -337,7 +337,7 @@ admin.site.register(SubmissionFile, SubmissionFileAdmin)
 class AssignmentAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         ''' Restrict the listed assignments for the current user.'''
         qs = super(AssignmentAdmin, self).queryset(request)
         if request.user.is_superuser:
@@ -413,7 +413,7 @@ class CourseAdmin(admin.ModelAdmin):
     actions = ['showGradingTable', 'downloadArchive']
     filter_horizontal = ['tutors']
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         ''' Restrict the listed courses for the current user.'''
         qs = super(CourseAdmin, self).queryset(request)
         if request.user.is_superuser:
