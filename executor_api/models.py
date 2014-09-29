@@ -24,7 +24,7 @@ def upload_path(instance, filename):
 class TestMachine(models.Model):
     class Meta:
         permissions = (
-            ('api_usage', "The user is allowed to use the excutor API, i. e. is a Submit executor."),
+            ('api_usage', "The user is allowed to use the API."),
         )
 
     machine_user = models.OneToOneField(User, primary_key=True)

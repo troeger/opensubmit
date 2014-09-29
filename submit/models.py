@@ -96,7 +96,7 @@ class Assignment(models.Model):
     download = models.URLField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments")
-    publish_at = models.DateTimeField(default=timezone.now())
+    publish_at = models.DateTimeField(default=timezone.now)
     soft_deadline = models.DateTimeField(blank=True, null=True)
     hard_deadline = models.DateTimeField()      # when should the assignment dissappear
     has_attachment = models.BooleanField(default=False)
