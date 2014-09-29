@@ -4,15 +4,17 @@ This is OpenSubmit, a small web application for managing student assignment solu
 
 Other tools, such as Moodle, are more powerful and support not only assignments, but also the management of learning material, course progress and access rights. If you want the all-inclusive solution, this is the wrong project.
 
-OpenSubmit offers a trivial web page were students can login and submit their assignment solutions. Teachers and their personal use the backend interface to manage assignments, deadlines, and the gradings. Students are informed about the progress of their correction and their final grade via eMail and the frontend page.
+OpenSubmit offers a trivial web page were *students can login and submit their assignment solutions*. Teachers and their personal use the backend interface to manage assignments, deadlines, and the gradings. Students are informed about the progress of their correction and their final grade via eMail and the frontend page.
 
-The unique capability of OpenSubmit is the support for coding assignments, were students upload their programming excercise solution as source code archive. OpenSubmit offers a separate executor daemon, which runs on another machine and downloads submitted solutions from the web server. These archives are unpacked and tested for compilation,  so that non-compiling assignment solutions are rejected by the system before the deadline. This makes the life of the corrector less miserable, because after the deadline, all gradable solutions are 'valid' (e.g. compile). Students also seem to like the idea of having a validated solution, so that they do not fail due to technical difficulties at the correctors side.
+The unique capability of OpenSubmit is the *support for coding assignments*, were students upload their programming excercise solution as source code archive. OpenSubmit offers a separate executor daemon, which runs on another machine and downloads submitted solutions from the web server. These archives are unpacked and tested for compilation,  so that non-compiling assignment solutions are rejected by the system before the deadline. This makes the life of the corrector less miserable, because after the deadline, all gradable solutions are 'valid' (e.g. compile). Students also seem to like the idea of having a validated solution, so that they do not fail due to technical difficulties at the correctors side.
 
 Since OpenSubmit is only for assignment submission, it has no management of course participants. Everbody who can perform a successful login can submit solutions. We expect you to have an institute-specific OpenID provider, otherwise you need to contribute your own patches for authentication.
 
+We also have a [user manual](User Manual).
+
 ## Installation
 
-If you just want to install your own copy of OpenSubmit, please read the [[installation guide|Installation Instructions]].
+If you just want to install your own copy of OpenSubmit, please read the [installation guide](Installation Instructions).
 
 ## Licence
 
