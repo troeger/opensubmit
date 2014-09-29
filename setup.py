@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys
+import os, sys, shutil
 
 from setuptools import setup
 from distutils.command.install import install as _install
@@ -29,6 +29,10 @@ def clean_pycs():
                 print 'Removing %s' % fullname
                 os.remove(fullname)
 
+def clean_dirs():
+    for path in ["OpenSubmit.egg-info","dist", "build" ]:
+        shutil.rmtree(path, ignore_errors=True)
+
 def install_config():
     config = RawConfigParser()
     try:
@@ -42,6 +46,7 @@ class clean(_clean):
     def run(self):
         _clean.run(self)
         clean_pycs()
+        clean_dirs()
 
 setup(
     name = 'OpenSubmit',
@@ -50,10 +55,10 @@ setup(
     include_package_data = True,
     install_requires=[
         'django',
-        'south',
         'openid2rp',
         'psycopg2',
-        'django-bootstrap-form'
+        'django-bootstrap-form',
+        'djangorestframework'
     ],    
     cmdclass={
         'clean': clean
