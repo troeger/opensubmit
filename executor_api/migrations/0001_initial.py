@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
             name='TestResult',
             fields=[
                 ('job', models.OneToOneField(related_name=b'_result', primary_key=True, serialize=False, to='executor_api.TestJob')),
-                ('success', models.BooleanField()),
+                ('success', models.BooleanField(default=False)),
             ],
             options={
             },
