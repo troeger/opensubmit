@@ -2,6 +2,7 @@ include manage.py
 include setup.py
 include requirements.txt
 include README.md
+include opensubmit/settings.ini.template
 recursive-include opensubmit *.py
 graft opensubmit/migrations
 graft opensubmit/static
