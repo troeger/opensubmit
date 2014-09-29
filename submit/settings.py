@@ -151,7 +151,6 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'openid2rp.django',
     'bootstrapform',
-    'south',
     'rest_framework',
 
     'submit',

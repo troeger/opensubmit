@@ -1,5 +1,4 @@
 Django>=1.7
-South>=0.7
 django-bootstrap-form
 openid2rp
 XlsxWriter

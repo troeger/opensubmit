@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(max_length=200)),
                 ('download', models.URLField()),
                 ('created', models.DateTimeField(auto_now_add=True)),
-                ('publish_at', models.DateTimeField(default=datetime.datetime(2014, 9, 29, 12, 14, 37, 530012))),
+                ('publish_at', models.DateTimeField(default=datetime.datetime(2014, 9, 29, 12, 16, 49, 905178))),
                 ('soft_deadline', models.DateTimeField(null=True, blank=True)),
                 ('hard_deadline', models.DateTimeField()),
                 ('has_attachment', models.BooleanField(default=False)),
