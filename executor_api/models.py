@@ -84,7 +84,7 @@ class TestJob(models.Model):
 
 class TestResult(models.Model):
     job = models.OneToOneField(TestJob, related_name='_result', primary_key=True)
-    success = models.BooleanField()
+    success = models.BooleanField(default=False)
 
     def __unicode__(self):
         return u'Test result for: {}'.format(self.job.submission)
