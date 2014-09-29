@@ -169,7 +169,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
-        qs = super(SubmissionAdmin, self).queryset(request)
+        qs = super(SubmissionAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         else:
