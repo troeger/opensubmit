@@ -4,7 +4,6 @@ import os, sys
 from setuptools import setup
 from distutils.command.install import install as _install
 from distutils.command.clean import clean as _clean
-# check FuzzEd/__init__.py for the project version number
 from opensubmit import __version__
 
 #TODO: Support packaging executor, must include dependency to psutil

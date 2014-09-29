@@ -415,7 +415,7 @@ class CourseAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         ''' Restrict the listed courses for the current user.'''
-        qs = super(CourseAdmin, self).queryset(request)
+        qs = super(CourseAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         else:
