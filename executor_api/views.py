@@ -58,9 +58,9 @@ class JobView(ExecutorJobAPIView):
 
         submission_download = None
         if job.submission.file_upload:
-            submission_download = reverse('job_submission_download', kwargs={'job_id': job.pk})
+            submission_download = reverse('api:job_submission_download', kwargs={'job_id': job.pk})
 
-        assignment_download = reverse('assignment_test', kwargs={'ass_id': job.assignment_test.pk})
+        assignment_download = reverse('api:assignment_test', kwargs={'ass_id': job.assignment_test.pk})
 
         response_obj = {
             'id': job.pk,
@@ -170,7 +170,7 @@ class JobAssignmentView(ExecutorAPIView):
             return Response({
                 'state': 'assigned',
                 'job': job.pk,
-                'job_download': reverse('job', kwargs={'job_id': job.pk}),
+                'job_download': reverse('api:job', kwargs={'job_id': job.pk}),
             })
 
 
@@ -178,7 +178,7 @@ class AssignmentTestsView(ExecutorAPIView):
     def get(self, request):
         machine = self.discover_machine(request)
         magic_no = 12345678987654321
-        url_scheme = reverse('assignment_test', kwargs={'ass_id': magic_no, }).replace(str(magic_no), '{}')
+        url_scheme = reverse('api:assignment_test', kwargs={'ass_id': magic_no, }).replace(str(magic_no), '{}')
 
         return Response({
             'url_scheme': url_scheme,
@@ -194,7 +194,7 @@ class AssignmentTestView(ExecutorAssignmentAPIView):
 
         test_script_download = None
         if ass_test.test_script:
-            test_script_download = reverse('assignment_test_download', kwargs={'ass_id': ass_test.pk})
+            test_script_download = reverse('api:assignment_test_download', kwargs={'ass_id': ass_test.pk})
 
         return Response({
             'id': ass_test.pk,

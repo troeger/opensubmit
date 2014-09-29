@@ -30,7 +30,7 @@ urlpatterns = patterns('',
     url(r'^courses/$', 'opensubmit.views.courses', name='courses'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
-    url(r'^api/', include('executor_api.urls')),
+    url(r'^api/', include('executor_api.urls', namespace="api")),
     url(r'^admin/', include(admin.site.urls)),
 )
 
