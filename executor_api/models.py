@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-from submit.models import Assignment, Submission, TestMachine
+from opensubmit.models import Assignment, Submission, TestMachine
 
 # Create your models here.
 

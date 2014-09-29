@@ -1,8 +1,8 @@
 include manage.py
 include setup.py
 include README
-recursive-include submit *.py
-graft submit/migrations
-graft submit/static
-graft submit/templates
-graft submit/templatetags
+recursive-include opensubmit *.py
+graft opensubmit/migrations
+graft opensubmit/static
+graft opensubmit/templates
+graft opensubmit/templatetags

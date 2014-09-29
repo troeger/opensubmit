@@ -6,13 +6,13 @@ import executor_api.models
 
 
 def create_groups(app, created_models, verbosity, **kwargs):
-    if verbosity > 0:
-        print "Creating default groups for executor_api app...",
+#    if verbosity > 0:
+#        print "Creating default groups for executor_api app...",
     api_group, created = Group.objects.get_or_create(name="API Users (automatic group)")
     api_group.permissions.add(Permission.objects.get(codename='api_usage'))
     api_group.save()
-    if verbosity > 0:
-        print " done."
+#    if verbosity > 0:
+#        print " done."
     
 
 signals.post_syncdb.connect(

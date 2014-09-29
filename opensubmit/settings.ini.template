@@ -1,7 +1,7 @@
-# This is the configuration file for the SUBMIT tool.
-# https://bitbucket.org/troeger/submit
+# This is the configuration file for the OpenSubmit tool.
+# https://github.com/troeger/opensubmit
 #
-# It is expected to be located at /etc/submit/settings.ini.
+# It is expected to be located at /etc/opensubmit/settings.ini.
 
 [general]
 # Enabling this will lead to detailed developer error information as result page 
@@ -12,10 +12,10 @@
 DEBUG: False
 
 [server]
-# This is the URL were the SUBMIT tool is offered by your web server.
+# This is the URL were the OpenSubmit tool is offered by your web server.
 # Default:
-# URL: https://<this machine>/submit
-URL: https://<this machine>/submit
+# URL: https://<this machine>/opensubmit
+URL: https://<this machine>/opensubmit
 
 # This is the source directory of the scripts.
 # Default:
@@ -25,8 +25,8 @@ SCRIPT_ROOT: ./
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
 # Default:
-# MEDIA_ROOT: /var/submit
-MEDIA_ROOT: /var/submit
+# MEDIA_ROOT: /var/opensubmit
+MEDIA_ROOT: /var/opensubmit
 
 # This is the timezone all dates and deadlines are specified in.
 # This setting overrides your web server default for the time zone.
@@ -50,19 +50,19 @@ SECRET_KEY: uzfp=4gv1u((#hb*#o3*4^v#u#g9k8-)us2nw^)@rz0-$2-23)
 # DATABASE_ENGINE: postgresql_psycopg2
 DATABASE_ENGINE: postgresql_psycopg2
 
-# The name of the database for submit. It must be already available for being used.
+# The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
 # Default:
-# DATABASE_NAME: submit
-DATABASE_NAME: submit
+# DATABASE_NAME: opensubmit
+DATABASE_NAME: opensubmit
 
 # The user name for accessing the database. Not needed for SQLite.
-# Default: DATABASE_USER: submit
-DATABASE_USER: submit
+# Default: DATABASE_USER: opensubmit
+DATABASE_USER: opensubmit
 
 # The user password for accessing the database. Not needed for SQLite.
-# Default: DATABASE_PASSWORD: submit
-DATABASE_PASSWORD: submit
+# Default: DATABASE_PASSWORD: opensubmit
+DATABASE_PASSWORD: opensubmit
 
 # The host name for accessing the database. Not needed for SQLite.
 # An empty settings means that the database is on the same host as the web server.

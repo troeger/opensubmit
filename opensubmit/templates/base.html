@@ -4,7 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{% block title %}Submit - Assignment Submission System{% endblock %}</title>
+    <title>{% block title %}OpenSubmit - Assignment Submission System{% endblock %}</title>
 
     {% block scripts %}
     <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.10.2.min.js"></script>
@@ -34,7 +34,7 @@
     <div class="navbar navbar-fixed-top">
         <div class="navbar-inner">
             <div class="container">
-                <a class="brand" anchor="/">Submit</a>
+                <a class="brand" anchor="/">OpenSubmit</a>
                 <ul class="nav pull-right">
                     <li class="{% block navigation_home %}{% endblock %}">
                         <a href="{% url 'index' %}">

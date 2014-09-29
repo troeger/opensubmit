@@ -16,7 +16,7 @@ from settings import MAIN_URL, MEDIA_URL, MEDIA_ROOT
 from itertools import chain
 
 
-logger = logging.getLogger('Submit')
+logger = logging.getLogger('OpenSubmit')
 
 
 def upload_path(instance, filename):
@@ -585,7 +585,7 @@ def db_fixes(user):
     # This may be legacy users after the v0.28 introduction of UserProfile,
     # or users accounts that were created by the OpenID library or the admin.
     # TODO: The latter two belong into a User post_save handler. If we have this,
-    #       then this code becomes obsolete for fresh installations of submit.
+    #       then this code becomes obsolete for fresh installations.
     #
     # Users should start with all courses being visible, which was the behavior until v0.27
     profile, created = UserProfile.objects.get_or_create(user=user)

@@ -7,28 +7,28 @@
 		}
 	}, {
 		"pk" : 1,
-		"model" : "submit.grading",
+		"model" : "opensubmit.grading",
 		"fields" : {
 			"means_passed" : true,
 			"title" : "Passed"
 		}
 	}, {
 		"pk" : 2,
-		"model" : "submit.grading",
+		"model" : "opensubmit.grading",
 		"fields" : {
 			"means_passed" : false,
 			"title" : "Failed"
 		}
 	}, {
 		"pk" : 1,
-		"model" : "submit.gradingscheme",
+		"model" : "opensubmit.gradingscheme",
 		"fields" : {
 			"gradings" : [1, 2],
 			"title" : "Passed or Failed"
 		}
 	}, {
 		"pk" : 1,
-		"model" : "submit.assignment",
+		"model" : "opensubmit.assignment",
 		"fields" : {
 			"validity_script_download" : false,
 			"created" : "2013-11-22T21:47:23.116",
@@ -616,7 +616,7 @@
 		}
 	}, {
 		"pk" : 1,
-		"model" : "submit.course",
+		"model" : "opensubmit.course",
 		"fields" : {
 			"max_authors" : 3,
 			"created" : "2013-11-22T21:30:30.723",
@@ -628,7 +628,7 @@
 		}
 	}, {
 		"pk" : 1,
-		"model" : "submit.userprofile",
+		"model" : "opensubmit.userprofile",
 		"fields" : {
 			"courses" : [1],
 			"user" : 1

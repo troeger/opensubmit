@@ -1,6 +1,6 @@
 [Server]
 
-# The submit server 
+# The OpenSubmit server 
 url=http://localhost:8000								
 
 # Shared secret, must match to settings.py on the server

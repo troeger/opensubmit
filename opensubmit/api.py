@@ -12,8 +12,8 @@ from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
-from submit.settings import JOB_EXECUTOR_SECRET, MAIN_URL
-from submit.models import Assignment, Submission, TestMachine, inform_student, SubmissionFile, inform_course_owner
+from opensubmit.settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from opensubmit.models import Assignment, Submission, TestMachine, inform_student, SubmissionFile, inform_course_owner
 
 
 def download(request, obj_id, filetype, secret=None):

@@ -21,7 +21,7 @@ from ConfigParser import SafeConfigParser
 # the settings.py directory, called 'settings.ini.template', is loaded
 # in DEBUG mode.
 def find_config_info():
-    config_info_default = (os.path.abspath('submit/settings.ini.template'), False, )
+    config_info_default = (os.path.abspath('opensubmit/settings.ini.template'), False, )
 
     # config_info: (<config file path>, <is production>, )
     system_config_directories = {
@@ -35,7 +35,7 @@ def find_config_info():
         system_config_directory = system_config_directories['default']
 
     config_directories = [
-        os.path.join(system_config_directory, 'submit'),
+        os.path.join(system_config_directory, 'opensubmit'),
         os.path.join(os.path.dirname(__file__)),
     ]
 
@@ -50,7 +50,7 @@ def find_config_info():
             if os.path.isfile(config_file_path):
                 return (config_file_path, production, )
 
-    print("No configuration file found. Please copy .../submit/settings.ini.template to {} and edit it. Falling back to default settings.".format(os.path.join(config_directories[0], config_files[0][0])), file=sys.stderr)
+    print("No configuration file found. Please copy .../opensubmit/settings.ini.template to {} and edit it. Falling back to default settings.".format(os.path.join(config_directories[0], config_files[0][0])), file=sys.stderr)
     print("WARNING: THIS APP IS EXECUTED IN DEBUG MODE.", file=sys.stderr)
     return config_info_default
 
@@ -112,7 +112,7 @@ ADMINS = (
     (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),
 )
 MANAGERS = ADMINS
-EMAIL_SUBJECT_PREFIX = '[Submit] '
+EMAIL_SUBJECT_PREFIX = '[OpenSubmit] '
 TIME_ZONE = config.get("server", "TIME_ZONE")
 LANGUAGE_CODE = 'en-en'
 USE_I18N = True
@@ -139,10 +139,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
-ROOT_URLCONF = 'submit.urls'
-WSGI_APPLICATION = 'submit.wsgi.application'
+ROOT_URLCONF = 'opensubmit.urls'
+WSGI_APPLICATION = 'opensubmit.wsgi.application'
 TEMPLATE_DIRS = (
-    'submit/templates/',
+    'opensubmit/templates/',
 )
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -156,7 +156,7 @@ INSTALLED_APPS = (
     'bootstrapform',
     'rest_framework',
 
-    'submit',
+    'opensubmit',
     'executor_api',
 )
 LOGGING = {
@@ -184,7 +184,7 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'Submit': {
+        'OpenSubmit': {
             'handlers':  ['console'],
             'level':     'DEBUG',
             'propagate': True,
@@ -209,7 +209,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
-    'submit.contextprocessors.footer'
+    'opensubmit.contextprocessors.footer'
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")

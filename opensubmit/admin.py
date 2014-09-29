@@ -1,4 +1,4 @@
-from submit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
+from opensubmit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
 from django import forms
 from django.db import models
 from django.db.models import Q
@@ -211,7 +211,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         return form
 
     def save_model(self, request, obj, form, change):
-        ''' Our custom addition to the view HTML in templates/admin/submit/submission/change_form.HTML
+        ''' Our custom addition to the view HTML in templates/admin/opensubmit/submission/change_form.HTML
             adds an easy radio button choice for the new state. This is meant to be for tutors.
             We need to peel this choice from the form data and set the state accordingly.
             The radio buttons have no default, so that we can keep the existing state

@@ -1,8 +1,8 @@
-from submit.tests.cases import *
+from opensubmit.tests.cases import *
 
-from submit.models import Course, Assignment, Submission
-from submit.models import Grading, GradingScheme
-from submit.models import UserProfile
+from opensubmit.models import Course, Assignment, Submission
+from opensubmit.models import Grading, GradingScheme
+from opensubmit.models import UserProfile
 
 
 class StudentSubmissionWebTestCase(SubmitTestCase):

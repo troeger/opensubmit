@@ -11,10 +11,10 @@ from django.test.client import Client
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import PBKDF2SHA1PasswordHasher
 
-from submit.models import Course, Assignment, Submission
-from submit.models import Grading, GradingScheme
-from submit.models import UserProfile
-from submit.models import logger
+from opensubmit.models import Course, Assignment, Submission
+from opensubmit.models import Grading, GradingScheme
+from opensubmit.models import UserProfile
+from opensubmit.models import logger
 
 
 class AnonStruct(object):
@@ -27,7 +27,7 @@ class FastPBKDF2SHA1PasswordHasher(PBKDF2SHA1PasswordHasher):
 
     
 FAST_PASSWORD_HASHERS = (
-    'submit.tests.cases.FastPBKDF2SHA1PasswordHasher',
+    'opensubmit.tests.cases.FastPBKDF2SHA1PasswordHasher',
 ) + settings.PASSWORD_HASHERS
 
 
@@ -212,7 +212,7 @@ class SubmitTestCase(LiveServerTestCase):
 
     def setUp(self):
         super(SubmitTestCase, self).setUp()
-        self.logger = logging.getLogger('Submit')
+        self.logger = logging.getLogger('OpenSubmit')
         self.loggerLevelOld = self.logger.level
         self.logger.setLevel(logging.WARN)
         self.setUpUsers()

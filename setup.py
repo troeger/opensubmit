@@ -5,7 +5,7 @@ from setuptools import setup
 from distutils.command.install import install as _install
 from distutils.command.clean import clean as _clean
 # check FuzzEd/__init__.py for the project version number
-from submit import __version__
+from opensubmit import __version__
 
 #TODO: Support packaging executor, must include dependency to psutil
 
@@ -23,7 +23,7 @@ check_python_version()
 
 def clean_pycs():
     # Clean all pyc files recursively
-    for root, dirs, files in os.walk('submit'):
+    for root, dirs, files in os.walk('opensubmit'):
         for name in files:
             if name.endswith('.pyc'):
                 fullname = os.path.join(root, name)
@@ -33,10 +33,10 @@ def clean_pycs():
 def install_config():
     config = RawConfigParser()
     try:
-        config.readfp(open('/etc/submit/settings.ini')) 
+        config.readfp(open('/etc/opensubmit/settings.ini')) 
     except IOError:
-        print "Seems like the config file /etc/submit/settings.ini does not exist. I am copying the template, don't forget to edit it !"
-        shutil.copyfile('etc/settings.ini.template','/etc/submit/settings.ini')
+        print "Seems like the config file /etc/opensubmit/settings.ini does not exist. I am copying the template, don't forget to edit it !"
+        shutil.copyfile('etc/settings.ini.template','/etc/opensubmit/settings.ini')
 
 # Our overloaded 'setup.py clean' command
 class clean(_clean):
@@ -45,9 +45,9 @@ class clean(_clean):
         clean_pycs()
 
 setup(
-    name = 'Submit',
+    name = 'OpenSubmit',
     version = __version__,
-    packages = ['submit'],
+    packages = ['opensubmit','executor_api'],
     include_package_data = True,
     install_requires=[
         'django',
@@ -59,8 +59,8 @@ setup(
     cmdclass={
         'clean': clean
     },
-    data_files=[ ('etc/submit', ['submit/settings.ini.template']) ],
+    data_files=[ ('etc/opensubmit', ['opensubmit/settings.ini.template']) ],
     maintainer = 'Peter Troeger',
-    maintainer_email = 'peter.troeger@hpi.uni-potsdam.de',
-	url = 'https://bitbucket.org/troeger/submit'
+    maintainer_email = 'peter@troeger.eu',
+	url = 'https://github.com/troeger/opensubmit'
 )

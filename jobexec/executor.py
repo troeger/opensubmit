@@ -1,5 +1,5 @@
 """
-This is the executor script for the Submit system.
+This is the executor script for the OpenSubmit system.
 It is intended to run on a dedicated host, in order to download
 and check student code.
 """
@@ -32,7 +32,7 @@ def cleanup_and_exit(finalpath, exit_code):
 
 def send_result(msg, error_code, submission_file_id, action, perfdata=None):
     ''' 
-        Send some result to the Submit web server.
+        Send some result to the OpenSubmit web server.
     '''
     if len(msg)>10000:
         # We need to truncate excessive console output, 
@@ -90,7 +90,7 @@ def infos_cmd(cmd):
 
 def send_config():
     '''
-        Sends the configuration of this machine to the Submit web server.
+        Sends the configuration of this machine to the OpenSubmit web server.
     '''
     conf = os.uname()
     output = []
@@ -112,10 +112,10 @@ def send_config():
 
 def fetch_job():
     '''
-        Fetch any available work from the SUBMIT server.
+        Fetch any available work from the OpenSubmit server.
         Returns job information as function result tuple:
             fname     - Fully qualified temporary file name for the job file
-            submid    - ID of this file on the submit server
+            submid    - ID of this file on the OpenSubmit server
             action    - What should be done with this file
             timeout   - What is the timeout for running this job
             validator - URL of the validator script
@@ -148,7 +148,7 @@ def fetch_job():
 def unpack_job(fname, submid, action):
     '''
         Decompress the downloaded file "fname" into the globally defined "targetdir".
-        Returns on success, or terminates the executor after notifying the SUBMIT server
+        Returns on success, or terminates the executor after notifying the OpenSubmit server
         about the problem.
     '''
     # os.chroot is not working with tarfile support

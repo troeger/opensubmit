@@ -9,15 +9,15 @@ import executor_api.models
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('opensubmit', '0001_initial'),
         ('auth', '0001_initial'),
-        ('submit', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
             name='AssignmentTest',
             fields=[
-                ('assignment', models.OneToOneField(related_name=b'test', primary_key=True, serialize=False, to='submit.Assignment')),
+                ('assignment', models.OneToOneField(related_name=b'test', primary_key=True, serialize=False, to='opensubmit.Assignment')),
                 ('puppet_config', models.TextField(blank=True)),
                 ('test_script', models.FileField(null=True, upload_to=executor_api.models.upload_path, blank=True)),
                 ('last_modified', models.DateTimeField(auto_now=True)),
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TestJob',
             fields=[
-                ('submission', models.OneToOneField(related_name=b'job', primary_key=True, serialize=False, to='submit.Submission')),
+                ('submission', models.OneToOneField(related_name=b'job', primary_key=True, serialize=False, to='opensubmit.Submission')),
             ],
             options={
             },
