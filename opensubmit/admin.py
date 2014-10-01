@@ -414,10 +414,10 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 class AdminBackend(AdminSite):
-    site_header = "Admin Backend"
+    site_header = "OpenSubmit Admin Backend"
     site_title = "OpenSubmit Admin Backend"
 
-admin_backend = AdminBackend()
+admin_backend = AdminBackend(name="admin")
 admin_backend.register(User, UserAdmin)
 
 class TeacherBackend(AdminSite):
@@ -425,7 +425,7 @@ class TeacherBackend(AdminSite):
     site_title = "OpenSubmit Teacher Backend"
     login_template = "teacher/login.html"
 
-teacher_backend = TeacherBackend()    
+teacher_backend = TeacherBackend(name="teacher")    
 teacher_backend.register(Grading, GradingAdmin)
 teacher_backend.register(GradingScheme, GradingSchemeAdmin)
 teacher_backend.register(Assignment, AssignmentAdmin)
