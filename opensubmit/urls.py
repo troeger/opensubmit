@@ -1,13 +1,10 @@
 from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth.decorators import login_required
-from django.contrib import admin
+
+from opensubmit.admin import teacher_backend, admin_backend
 
 import settings
-
-
-admin.autodiscover()
-
 
 urlpatterns = patterns('',
     url(r'^$', 'opensubmit.views.index', name='index'),
@@ -28,12 +25,11 @@ urlpatterns = patterns('',
     url(r'^machines/secret=(?P<secret>\w+)$', 'opensubmit.api.machines', name='machines'),
     url(r'^settings/$', 'opensubmit.views.settings', name='settings'),
     url(r'^courses/$', 'opensubmit.views.courses', name='courses'),
-    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     url(r'^api/', include('executor_api.urls', namespace="api")),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^teacher/', include(teacher_backend.urls)),
+    url(r'^admin/', include(admin_backend.urls))
 )
-
 
 # disables itself when DEBUG==FALSE
 urlpatterns += staticfiles_urlpatterns()

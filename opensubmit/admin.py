@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-
+from django.contrib.admin.sites import AdminSite
 
 # Submission admin interface
 
@@ -279,9 +279,6 @@ class SubmissionAdmin(admin.ModelAdmin):
         return response
     getPerformanceResultsAction.short_description = "Download performance data as CSV"
 
-admin.site.register(Submission, SubmissionAdmin)
-
-
 # Submission File admin interface
 
 def submissions(submfile):
@@ -328,10 +325,6 @@ class SubmissionFileAdmin(admin.ModelAdmin):
             # New manual submission
             return ('test_compile', 'test_validity', 'test_full', 'replaced_by', 'perf_data')
 
-
-admin.site.register(SubmissionFile, SubmissionFileAdmin)
-
-
 # Assignment admin interface
 
 class AssignmentAdmin(admin.ModelAdmin):
@@ -344,10 +337,6 @@ class AssignmentAdmin(admin.ModelAdmin):
             return qs
         else:
             return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
-
-
-admin.site.register(Assignment, AssignmentAdmin)
-
 
 # Grading scheme admin interface
 
@@ -385,10 +374,6 @@ class GradingSchemeAdmin(admin.ModelAdmin):
 class GradingAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', grading_schemes, means_passed]
 
-admin.site.register(Grading, GradingAdmin)
-admin.site.register(GradingScheme, GradingSchemeAdmin)
-
-
 # User admin interface
 
 class UserProfileInline(admin.StackedInline):
@@ -397,10 +382,6 @@ class UserProfileInline(admin.StackedInline):
 
 class UserAdmin(UserAdmin):
     inlines = (UserProfileInline, )
-
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
-
 
 # Course admin interface
 
@@ -432,6 +413,23 @@ class CourseAdmin(admin.ModelAdmin):
     downloadArchive.short_description = "Download course archive file"
 
 
-admin.site.register(Course, CourseAdmin)
+class AdminBackend(AdminSite):
+    site_header = "Admin Backend"
+    site_title = "OpenSubmit Admin Backend"
 
-admin.site.register(TestMachine)
+admin_backend = AdminBackend()
+admin_backend.register(User, UserAdmin)
+
+class TeacherBackend(AdminSite):
+    site_header = "Teacher Backend"
+    site_title = "OpenSubmit Teacher Backend"
+    login_template = "teacher/login.html"
+
+teacher_backend = TeacherBackend()    
+teacher_backend.register(Grading, GradingAdmin)
+teacher_backend.register(GradingScheme, GradingSchemeAdmin)
+teacher_backend.register(Assignment, AssignmentAdmin)
+teacher_backend.register(SubmissionFile, SubmissionFileAdmin)
+teacher_backend.register(Submission, SubmissionAdmin)
+teacher_backend.register(Course, CourseAdmin)
+teacher_backend.register(TestMachine)
