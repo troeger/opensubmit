@@ -16,6 +16,7 @@
 <div style="text-align: center; margin: 20px">
     <form action="{% url 'login' %}" method="GET">
         <input type="hidden" name="authmethod" value="openid" />
+        <input type="hidden" name="next" value="{{ request.GET.next }}" />
         <img src="{{ STATIC_URL }}images/openid-logo.png" width="51" height="51"/>
         <input type="submit" value="{% setting 'LOGIN_DESCRIPTION' %}" class="btn"/>
     </form>
