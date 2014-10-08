@@ -309,7 +309,7 @@ class SubmissionFileAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         ''' Restrict the listed submission files for the current user.'''
-        qs = super(SubmissionFileAdmin, self).queryset(request)
+        qs = super(SubmissionFileAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         else:
