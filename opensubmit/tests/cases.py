@@ -73,6 +73,10 @@ class SubmitTestCase(LiveServerTestCase):
         }
         self.admin = self.createUser(self.admin_dict)
 
+        #TODO: This should happen automatically due to the post_save signal for User objects
+        from opensubmit.app import ensure_user_groups
+        ensure_user_groups(self.admin.user, created = True)
+
         self.teacher_dict = {
             'username': 'testrunner_teacher',
             'password': '2tVvWzdknP56',

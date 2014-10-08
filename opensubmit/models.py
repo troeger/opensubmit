@@ -5,7 +5,7 @@ import string
 import unicodedata
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils import timezone
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -625,3 +625,32 @@ def submission_post_save(sender, instance, **kwargs):
             for subm in same_author_subm:
                 subm.state = Submission.WITHDRAWN
                 subm.save()
+
+@receiver(post_save, sender=Course)
+def course_post_save(sender, instance, **kwargs):
+    ''' Several sanity checks after we got a valid course object.'''
+    # Make globally sure that only tutors and course owners have backend access rights.
+    # This relates to both tutor addition and removal.
+    # PLease note that inactive courses are still considered here, which means that tutors can access their archived courses still
+    tutors = User.objects.filter(courses_tutoring__isnull=False)
+    tutor_group = Group.objects.get(name='Student Tutors')          # check app.py for the group rights
+    for user in tutors:
+        if not user.is_staff:
+            user.is_staff = True
+            user.save()
+        tutor_group.user_set.add(user)
+    tutor_group.save()
+    owners = User.objects.filter(courses__isnull=False)
+    owner_group = Group.objects.get(name='Course Owners')          # check app.py for the group rights
+    for user in owners:
+        if not user.is_staff:
+            user.is_staff = True
+            user.save()
+        owner_group.user_set.add(user)
+    owner_group.save()
+    students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True)
+    no_longer_staff = students.filter(is_staff = True)
+    for user in no_longer_staff:
+        user.is_staff = False
+        user.save()
+
