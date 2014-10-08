@@ -648,7 +648,7 @@ def course_post_save(sender, instance, **kwargs):
             user.save()
         owner_group.user_set.add(user)
     owner_group.save()
-    students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True)
+    students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
     no_longer_staff = students.filter(is_staff = True)
     for user in no_longer_staff:
         user.is_staff = False

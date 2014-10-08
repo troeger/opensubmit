@@ -137,7 +137,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware'
 )
 ROOT_URLCONF = 'opensubmit.urls'
 WSGI_APPLICATION = 'opensubmit.wsgi.application'
@@ -154,7 +154,6 @@ INSTALLED_APPS = (
     'openid2rp.django',
     'bootstrapform',
     'rest_framework',
-
     'opensubmit',
     'executor_api',
 )

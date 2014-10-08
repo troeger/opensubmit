@@ -9,7 +9,7 @@ from django.test.utils import override_settings
 from django.test.client import Client
 
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import PBKDF2SHA1PasswordHasher
+from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 
 from opensubmit.models import Course, Assignment, Submission
 from opensubmit.models import Grading, GradingScheme
@@ -25,28 +25,20 @@ class AnonStruct(object):
 class FastPBKDF2SHA1PasswordHasher(PBKDF2SHA1PasswordHasher):
     iterations = 1
 
-    
+
 FAST_PASSWORD_HASHERS = (
     'opensubmit.tests.cases.FastPBKDF2SHA1PasswordHasher',
 ) + settings.PASSWORD_HASHERS
 
 
 @override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
-class SubmitTestCase(LiveServerTestCase):
+class SubmitTestCase(TestCase):
     current_user = None
 
     def createUser(self, user_dict):
-        user_obj = User.objects.create_user(
-            username=user_dict['username'],
-            password=user_dict['password'],
-            email=user_dict['email'],
-        )
-
-        if 'is_superuser' in user_dict:
-            user_obj.is_superuser = user_dict['is_superuser']
-        if 'is_staff' in user_dict:
-            user_obj.is_staff = user_dict['is_staff']
-
+        args = dict(user_dict)
+        args['password'] = make_password(args['password'])
+        user_obj = User(**args)
         user_obj.save()
         user_profile = UserProfile(user=user_obj)
         user_profile.save()
@@ -57,31 +49,29 @@ class SubmitTestCase(LiveServerTestCase):
         return user_struct
 
     def loginUser(self, user_struct):
-        result = self.c.login(username=user_struct.username, password=user_struct.password)
-        if result:
-            self.current_user = user_struct
-        return result
+        assert(self.c.login(username=user_struct.username, password=user_struct.password))
+        uid = self.c.session['_auth_user_id']
+        user_struct.user = User.objects.get(pk=uid)
+        self.current_user = user_struct
 
     def setUpUsers(self):
         self.c = Client()
+
         self.admin_dict = {
             'username': 'testrunner_admin',
             'password': 'PNZabhExaL6H',
             'email': 'testrunner_admin@django.localhost.local',
-            'is_superuser': True,
             'is_staff': True,
+            'is_superuser': True
         }
         self.admin = self.createUser(self.admin_dict)
-
-        #TODO: This should happen automatically due to the post_save signal for User objects, but it doesn't in test runs
-        from opensubmit.app import ensure_user_groups
-        ensure_user_groups(self.admin.user, created = True)
 
         self.teacher_dict = {
             'username': 'testrunner_teacher',
             'password': '2tVvWzdknP56',
             'email': 'testrunner_teacher@django.localhost.local',
             'is_staff': True,
+            'is_superuser': False
         }
         self.teacher = self.createUser(self.teacher_dict)
 
@@ -90,6 +80,7 @@ class SubmitTestCase(LiveServerTestCase):
             'password': 'LW8vhgQWz5kT',
             'email': 'testrunner_anotherTeacher@django.localhost.local',
             'is_staff': True,
+            'is_superuser': False
         }
         self.another_teacher = self.createUser(self.another_teacher_dict)
 
@@ -98,6 +89,7 @@ class SubmitTestCase(LiveServerTestCase):
             'password': '2tVP56vMadkn',
             'email': 'testrunner_tutor@django.localhost.local',
             'is_staff': True,
+            'is_superuser': False
         }
         self.tutor = self.createUser(self.tutor_dict)
 
@@ -107,6 +99,8 @@ class SubmitTestCase(LiveServerTestCase):
                 'username': 'testrunner_enrolled_student{}'.format(i),
                 'password': 'very{}secret'.format(i),
                 'email': 'testrunner_enrolled_student{}@django.localhost.local'.format(i),
+                'is_staff': False,
+                'is_superuser': False
             }
             self.enrolled_students.append(self.createUser(enrolled_student_dict))
 
@@ -116,6 +110,8 @@ class SubmitTestCase(LiveServerTestCase):
                 'username': 'testrunner_not_enrolled_student{}'.format(i),
                 'password': 'not.very{}secret'.format(i),
                 'email': 'testrunner_not_enrolled_student{}@django.localhost.local'.format(i),
+                'is_staff': False,
+                'is_superuser': False
             }
             self.not_enrolled_students.append(self.createUser(not_enrolled_student_dict))
 
@@ -241,31 +237,30 @@ class SubmitTestCase(LiveServerTestCase):
 
         return sub
 
-    def getWithRedirect(self, url):
-        '''
-            Perform a test client GET request, but follow 302 redirects until the ultimate target.
-        '''
-        result = self.c.get(url)
-        while (result.status_code == 302):
-            target = result['Location']
-            print "Redirected to "+target
-            result = self.c.get(target)
-        return result
-
-
 class SubmitAdminTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitAdminTestCase, self).setUp()
         self.loginUser(self.admin)
-
+        # Test for amok-running post_save handlers (we had such a case)
+        assert(self.current_user.user.is_active)
+        assert(self.current_user.user.is_superuser)
+        assert(self.current_user.user.is_staff)        
 
 class SubmitTeacherTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitTeacherTestCase, self).setUp()
         self.loginUser(self.teacher)
+        # Test for amok-running post_save handlers (we had such a case)
+        assert(self.current_user.user.is_active)
+        assert(not self.current_user.user.is_superuser)
+        assert(self.current_user.user.is_staff)        
 
 
 class SubmitTutorTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitTutorTestCase, self).setUp()
         self.loginUser(self.tutor)
+        # Test for amok-running post_save handlers (we had such a case)
+        assert(self.current_user.user.is_active)
+        assert(not self.current_user.user.is_superuser)
+        assert(self.current_user.user.is_staff)        
