@@ -93,5 +93,6 @@ class StudentACLTestCase(SubmitTestCase):
 
     def testCannotUseAdminBackend(self):
         response = self.c.get('/admin/auth/user/')
-        self.assertEquals(response.status_code, 302)        # Redirect to login page
+        self.assertEquals(response.status_code, 403)        # Raise permission denied
+
 

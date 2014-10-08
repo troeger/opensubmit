@@ -56,10 +56,10 @@ class SubmitTestCase(LiveServerTestCase):
         user_struct = AnonStruct(user_dict)
         return user_struct
 
-    def loginUser(self, user_dict):
-        result = self.c.login(username=user_dict['username'], password=user_dict['password'])
+    def loginUser(self, user_struct):
+        result = self.c.login(username=user_struct.username, password=user_struct.password)
         if result:
-            self.current_user = user_dict
+            self.current_user = user_struct
         return result
 
     def setUpUsers(self):
@@ -73,7 +73,7 @@ class SubmitTestCase(LiveServerTestCase):
         }
         self.admin = self.createUser(self.admin_dict)
 
-        #TODO: This should happen automatically due to the post_save signal for User objects
+        #TODO: This should happen automatically due to the post_save signal for User objects, but it doesn't in test runs
         from opensubmit.app import ensure_user_groups
         ensure_user_groups(self.admin.user, created = True)
 
@@ -245,16 +245,16 @@ class SubmitTestCase(LiveServerTestCase):
 class SubmitAdminTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitAdminTestCase, self).setUp()
-        self.loginUser(self.admin_dict)
+        self.loginUser(self.admin)
 
 
 class SubmitTeacherTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitTeacherTestCase, self).setUp()
-        self.loginUser(self.teacher_dict)
+        self.loginUser(self.teacher)
 
 
 class SubmitTutorTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitTutorTestCase, self).setUp()
-        self.loginUser(self.tutor_dict)
+        self.loginUser(self.tutor)
