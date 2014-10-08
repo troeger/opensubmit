@@ -632,25 +632,21 @@ def course_post_save(sender, instance, **kwargs):
     # Make globally sure that only tutors and course owners have backend access rights.
     # This relates to both tutor addition and removal.
     # PLease note that inactive courses are still considered here, which means that tutors can access their archived courses still
-    tutors = User.objects.filter(courses_tutoring__isnull=False)
-    tutor_group = Group.objects.get(name='Student Tutors')          # check app.py for the group rights
-    for user in tutors:
-        if not user.is_staff:
-            user.is_staff = True
-            user.save()
-        tutor_group.user_set.add(user)
-    tutor_group.save()
-    owners = User.objects.filter(courses__isnull=False)
-    owner_group = Group.objects.get(name='Course Owners')          # check app.py for the group rights
-    for user in owners:
-        if not user.is_staff:
-            user.is_staff = True
-            user.save()
-        owner_group.user_set.add(user)
-    owner_group.save()
-    students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
-    no_longer_staff = students.filter(is_staff = True)
-    for user in no_longer_staff:
-        user.is_staff = False
-        user.save()
 
+    # Give all tutor users staff rights and add them to the tutors permission group
+    tutors = User.objects.filter(courses_tutoring__isnull=False, is_superuser=False)
+    tutor_user_group = Group.objects.get(name='Student Tutors')          # check app.py for the group rights
+    tutor_user_group.user_set = tutors
+    tutor_user_group.save()
+    tutors.update(is_staff=True)
+
+    # Give all course owner users staff rights and add them to the course owners permission group
+    owners = User.objects.filter(courses__isnull=False)
+    owner_user_group = Group.objects.get(name='Course Owners')          # check app.py for the group rights
+    owner_user_group.user_set = owners
+    owner_user_group.save()
+    owners.update(is_staff=True)
+
+    # Make sure that pure students (no tutor, no course owner, no superuser) have no backend access at all
+    pure_students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
+    pure_students.update(is_staff=False)

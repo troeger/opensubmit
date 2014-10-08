@@ -40,6 +40,7 @@ class SubmitTestCase(TestCase):
         args['password'] = make_password(args['password'])
         user_obj = User(**args)
         user_obj.save()
+
         user_profile = UserProfile(user=user_obj)
         user_profile.save()
 
