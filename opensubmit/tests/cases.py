@@ -56,10 +56,10 @@ class SubmitTestCase(LiveServerTestCase):
         user_struct = AnonStruct(user_dict)
         return user_struct
 
-    def loginUser(self, user_struct):
-        result = self.c.login(username=user_struct.username, password=user_struct.password)
+    def loginUser(self, user_dict):
+        result = self.c.login(username=user_dict['username'], password=user_dict['password'])
         if result:
-            self.current_user = user_struct
+            self.current_user = user_dict
         return result
 
     def setUpUsers(self):
