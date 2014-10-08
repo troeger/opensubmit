@@ -86,3 +86,12 @@ class StudentACLTestCase(SubmitTestCase):
                 self.assertEquals(self.openAssignmentSub.can_reupload(self.current_user.user), False)
                 self.assertEquals(self.softDeadlinePassedAssignmentSub.can_reupload(self.current_user.user), False)
                 self.assertEquals(self.hardDeadlinePassedAssignmentSub.can_reupload(self.current_user.user), False)
+
+    def testCannotUseTeacherBackend(self):
+        response = self.c.get('/teacher/opensubmit/submission/')
+        self.assertEquals(response.status_code, 302)        # Redirect to login page
+
+    def testCannotUseAdminBackend(self):
+        response = self.c.get('/admin/auth/user/')
+        self.assertEquals(response.status_code, 302)        # Redirect to login page
+
