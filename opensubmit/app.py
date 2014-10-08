@@ -9,8 +9,14 @@ def ensure_user_groups(user, created):
 
     from django.contrib.auth.models import Group, Permission
 
-    tutor_perms = "add_submission", "change_submission", "delete_submission", "add_submissionfile", "change_submissionfile", "delete_submissionfile"
-    owner_perms = "add_assignment", "add_grading", "add_gradingscheme", "add_submission", "add_submissionfile", "change_assignment", "change_course", "change_grading", "change_gradingscheme", "change_submission", "change_submissionfile", "delete_assignment", "delete_grading", "delete_gradingscheme", "delete_submission", "delete_submissionfile",
+    tutor_perms = ( "add_submission", "change_submission", "delete_submission", 
+                    "add_submissionfile", "change_submissionfile", "delete_submissionfile" )
+    owner_perms = ( "add_assignment", "change_assignment", "delete_assignment",
+                    "add_grading", "change_grading",  "delete_grading",
+                    "add_gradingscheme", "change_gradingscheme", "delete_gradingscheme",
+                    "add_submission", "change_submission", "delete_submission",
+                    "add_submissionfile", "change_submissionfile", "delete_submissionfile",
+                    "change_course" )
 
     tutor_group, created = Group.objects.get_or_create(name="Student Tutors")
     if created:

@@ -1,10 +1,5 @@
 from opensubmit.tests.cases import *
 
-from opensubmit.models import Course, Assignment, Submission
-from opensubmit.models import Grading, GradingScheme
-from opensubmit.models import UserProfile
-
-
 class TutorACLTestCase(SubmitTutorTestCase):
     def setUp(self):
         super(TutorACLTestCase, self).setUp()
@@ -16,3 +11,4 @@ class TutorACLTestCase(SubmitTutorTestCase):
     def testCannotUseAdminBackend(self):
         response = self.c.get('/admin/auth/user/')
         self.assertEquals(response.status_code, 403)        # Raise permission denied
+

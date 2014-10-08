@@ -95,4 +95,54 @@ class StudentACLTestCase(SubmitTestCase):
         response = self.c.get('/admin/auth/user/')
         self.assertEquals(response.status_code, 403)        # Raise permission denied
 
+    def testCannotUseAdminBackendAsTutor(self):
+        # Assign rights
+        self.course.tutors.add(self.current_user.user)
+        self.course.save()
+        # Admin access should be still forbidden
+        response = self.c.get('/admin/auth/user/')
+        self.assertEquals(response.status_code, 403)        # Raise permission denied
+
+    def testStudentBecomesTutor(self):
+        # Before rights assignment        
+        response = self.c.get('/teacher/opensubmit/submission/')
+        self.assertEquals(response.status_code, 302)        # Redirect to login page
+        # Assign rights
+        self.course.tutors.add(self.current_user.user)
+        self.course.save()
+        # After rights assignment
+        response = self.c.get('/teacher/opensubmit/submission/')
+        self.assertEquals(response.status_code, 200)        # Access allowed
+        # Take away rights
+        self.course.tutors.remove(self.current_user.user)
+        self.course.save()
+        # After rights removal
+        response = self.c.get('/teacher/opensubmit/submission/')
+        self.assertEquals(response.status_code, 302)        # Redirect to login page
+
+    def testCannotUseAdminBackendAsCourseOwner(self):
+        # Assign rights
+        self.course.owner = self.current_user.user
+        self.course.save()
+        # Admin access should be still forbidden
+        response = self.c.get('/admin/auth/user/')
+        self.assertEquals(response.status_code, 403)        # Raise permission denied
+
+    def testStudentBecomesCourseOwner(self):
+        # Before rights assignment        
+        response = self.c.get('/teacher/opensubmit/course/%u/'%(self.course.pk))
+        self.assertEquals(response.status_code, 302)        # Redirect to login page
+        # Assign rights
+        old_owner = self.course.owner
+        self.course.owner = self.current_user.user
+        self.course.save()
+        # After rights assignment
+        response = self.c.get('/teacher/opensubmit/course/%u/'%(self.course.pk))
+        self.assertEquals(response.status_code, 200)        # Redirect to login page
+        # Take away rights
+        self.course.owner = old_owner
+        self.course.save()
+        # After rights removal
+        response = self.c.get('/teacher/opensubmit/course/%u/'%(self.course.pk))
+        self.assertEquals(response.status_code, 302)        # Redirect to login page
 

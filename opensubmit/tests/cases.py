@@ -241,6 +241,17 @@ class SubmitTestCase(LiveServerTestCase):
 
         return sub
 
+    def getWithRedirect(self, url):
+        '''
+            Perform a test client GET request, but follow 302 redirects until the ultimate target.
+        '''
+        result = self.c.get(url)
+        while (result.status_code == 302):
+            target = result['Location']
+            print "Redirected to "+target
+            result = self.c.get(target)
+        return result
+
 
 class SubmitAdminTestCase(SubmitTestCase):
     def setUp(self):
