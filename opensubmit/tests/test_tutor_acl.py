@@ -10,5 +10,5 @@ class TutorACLTestCase(SubmitTutorTestCase):
 
     def testCannotUseAdminBackend(self):
         response = self.c.get('/admin/auth/user/')
-        self.assertEquals(response.status_code, 403)        # Raise permission denied
+        self.assertEquals(response.status_code, 403)        # 302: can access the model in principle, 403: can never access the app label
 
