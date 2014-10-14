@@ -7,8 +7,6 @@ import unicodedata
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
-from django.db.models.signals import post_save, pre_save
-from django.dispatch import receiver
 from django.core.mail import send_mail, EmailMessage
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
@@ -605,48 +603,3 @@ def open_assignments(user):
     qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
     waiting_for_action = [subm.assignment for subm in user.authored.all().exclude(state=Submission.WITHDRAWN)]
     return [ass for ass in qs if ass not in waiting_for_action]
-
-
-@receiver(post_save, sender=Submission)
-def submission_post_save(sender, instance, **kwargs):
-    ''' Several sanity checks after we got a valid submission object.'''
-    # Make the submitter an author
-    if instance.submitter not in instance.authors.all():
-        instance.authors.add(instance.submitter)
-        instance.save()
-    # Mark all existing submissions for this assignment by these authors as invalid.
-    # This fixes a race condition with parallel new submissions in multiple browser windows by the same user.
-    # Solving this as pre_save security exception does not work, since we have no instance with valid foreign keys to check there.
-    # Considering that this runs also on tutor correction backend activities, it also serves as kind-of cleanup functionality
-    # for multiplse submissions by the same students for the same assignment - however they got in here.
-    if instance.state == instance.get_initial_state():
-        for author in instance.authors.all():
-            same_author_subm = User.objects.get(pk=author.pk).authored.all().exclude(pk=instance.pk).filter(assignment=instance.assignment)
-            for subm in same_author_subm:
-                subm.state = Submission.WITHDRAWN
-                subm.save()
-
-@receiver(post_save, sender=Course)
-def course_post_save(sender, instance, **kwargs):
-    ''' Several sanity checks after we got a valid course object.'''
-    # Make globally sure that only tutors and course owners have backend access rights.
-    # This relates to both tutor addition and removal.
-    # PLease note that inactive courses are still considered here, which means that tutors can access their archived courses still
-
-    # Give all tutor users staff rights and add them to the tutors permission group
-    tutors = User.objects.filter(courses_tutoring__isnull=False, is_superuser=False)
-    tutor_user_group = Group.objects.get(name='Student Tutors')          # check app.py for the group rights
-    tutor_user_group.user_set = tutors
-    tutor_user_group.save()
-    tutors.update(is_staff=True)
-
-    # Give all course owner users staff rights and add them to the course owners permission group
-    owners = User.objects.filter(courses__isnull=False)
-    owner_user_group = Group.objects.get(name='Course Owners')          # check app.py for the group rights
-    owner_user_group.user_set = owners
-    owner_user_group.save()
-    owners.update(is_staff=True)
-
-    # Make sure that pure students (no tutor, no course owner, no superuser) have no backend access at all
-    pure_students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
-    pure_students.update(is_staff=False)
