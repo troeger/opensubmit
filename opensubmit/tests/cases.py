@@ -1,6 +1,8 @@
 import datetime
 import logging
 
+from django import http
+
 from django.conf import settings
 from django.utils import timezone
 
@@ -8,6 +10,7 @@ from django.test import TestCase, LiveServerTestCase
 from django.test.utils import override_settings
 from django.test.client import Client
 
+from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 
@@ -117,6 +120,8 @@ class SubmitTestCase(TestCase):
             self.not_enrolled_students.append(self.createUser(not_enrolled_student_dict))
 
     def setUpCourses(self):
+        self.all_courses = []
+
         self.course = Course(
             title='Active test course',
             active=True,
@@ -127,7 +132,8 @@ class SubmitTestCase(TestCase):
         self.course.tutors.add(self.tutor.user)
         for student in self.enrolled_students:
             self.course.participants.add(student.profile)
-        
+        self.all_courses.append(self.course)
+
         self.anotherCourse = Course(
             title='Another active test course',
             active=True,
@@ -135,6 +141,7 @@ class SubmitTestCase(TestCase):
             max_authors=1,
         )
         self.anotherCourse.save()
+        self.all_courses.append(self.anotherCourse)        
         
         self.inactiveCourse = Course(
             title='Inactive test course',
@@ -143,6 +150,7 @@ class SubmitTestCase(TestCase):
             max_authors=1,
         )
         self.inactiveCourse.save()
+        self.all_courses.append(self.inactiveCourse)
 
     def setUpGradings(self):
         self.passGrade = Grading(title='passed', means_passed=True)
@@ -163,6 +171,8 @@ class SubmitTestCase(TestCase):
         tomorrow = today + datetime.timedelta(days=1)
         next_week = today + datetime.timedelta(weeks=1)
 
+        self.allAssignments = []
+
         self.openAssignment = Assignment(
             title='Open assignment',
             course=self.course,
@@ -174,6 +184,7 @@ class SubmitTestCase(TestCase):
             has_attachment=False,
         )
         self.openAssignment.save()
+        self.allAssignments.append(self.openAssignment)
 
         self.softDeadlinePassedAssignment = Assignment(
             title='Soft deadline passed assignment',
@@ -186,6 +197,7 @@ class SubmitTestCase(TestCase):
             has_attachment=False,
         )
         self.softDeadlinePassedAssignment.save()
+        self.allAssignments.append(self.softDeadlinePassedAssignment)        
 
         self.hardDeadlinePassedAssignment = Assignment(
             title='Hard deadline passed assignment',
@@ -198,6 +210,7 @@ class SubmitTestCase(TestCase):
             has_attachment=False,
         )
         self.hardDeadlinePassedAssignment.save()
+        self.allAssignments.append(self.hardDeadlinePassedAssignment)        
 
         self.unpublishedAssignment = Assignment(
             title='Unpublished assignment',
@@ -210,6 +223,7 @@ class SubmitTestCase(TestCase):
             has_attachment=False,
         )
         self.unpublishedAssignment.save()
+        self.allAssignments.append(self.unpublishedAssignment)        
 
     def setUp(self):
         super(SubmitTestCase, self).setUp()
@@ -229,6 +243,7 @@ class SubmitTestCase(TestCase):
             assignment=assignment,
             submitter=user.user,
             notes="This is a submission.",
+            state=Submission.SUBMITTED
         )
         sub.save()
 
@@ -238,10 +253,19 @@ class SubmitTestCase(TestCase):
 
         return sub
 
+class MockRequest(http.HttpRequest):
+    def __init__(self, user):
+        self.user = user
+        # Needed for mocking a functioning messaging middleware
+        # see https://code.djangoproject.com/ticket/17971
+        self.session = 'session'
+        self._messages = FallbackStorage(self)
+
 class SubmitAdminTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitAdminTestCase, self).setUp()
         self.loginUser(self.admin)
+        self.request = MockRequest(self.admin.user)        
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
         assert(self.current_user.user.is_superuser)
@@ -261,7 +285,9 @@ class SubmitTutorTestCase(SubmitTestCase):
     def setUp(self):
         super(SubmitTutorTestCase, self).setUp()
         self.loginUser(self.tutor)
+        self.request = MockRequest(self.tutor.user)        
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
         assert(not self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)        
+        assert(self.current_user.user.is_staff)       
+

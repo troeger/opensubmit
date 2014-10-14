@@ -1,18 +1,40 @@
-from opensubmit.models import tutor_courses, Grading, UserProfile, GradingScheme, Course, Assignment, Submission, SubmissionFile, inform_student, TestMachine
-from django import forms
-from django.db import models
-from django.db.models import Q
-from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
-from django.contrib.admin.sites import AdminSite
-
 # Submission admin interface
+
+from django.contrib.admin import SimpleListFilter, ModelAdmin
+from django.utils.translation import ugettext_lazy as _
+from django import forms
+from django.db.models import Q
+from django.http import HttpResponse
+from opensubmit.models import inform_student, tutor_courses, Assignment, Submission
+
+def authors(submission):
+    ''' The list of authors als text, for submission list overview.'''
+    return ",\n".join([author.get_full_name() for author in submission.authors.all()])
+
+def course(obj):
+    ''' The course name as string.'''
+    return obj.assignment.course
+
+def grading_notes(submission):
+    ''' Determines if the submission has grading notes,
+        leads to nice little icon in the submission overview.
+    '''
+    if submission.grading_notes is not None:
+        return len(submission.grading_notes) > 0
+    else:
+        return False
+grading_notes.boolean = True            # show nice little icon
+
+def grading_file(submission):
+    ''' Determines if the submission has a grading file,
+        leads to nice little icon in the submission overview.
+    '''
+    if submission.grading_file.name:
+        return True
+    else:
+        return False
+grading_file.boolean = True            # show nice little icon
+
 
 class SubmissionStateFilter(SimpleListFilter):
 
@@ -76,56 +98,6 @@ class SubmissionCourseFilter(SimpleListFilter):
         else:
             return qs.filter(assignment__course__in=tutor_courses(request.user))
 
-
-def authors(submission):
-    ''' The list of authors als text, for submission list overview.'''
-    return ",\n".join([author.get_full_name() for author in submission.authors.all()])
-
-
-def grading_schemes(grading):
-    ''' The list of grading schemes using this grading.'''
-    return ",\n".join([str(scheme) for scheme in grading.schemes.all()])
-
-
-def means_passed(grading):
-    return grading.means_passed
-means_passed.boolean = True
-
-
-def course(obj):
-    ''' The course name as string, both for assignment and submission objects.'''
-    if type(obj) == Submission:
-        return obj.assignment.course
-    elif type(obj) == Assignment:
-        return obj.course
-
-
-def upload(submission):
-    return submission.file_upload
-
-
-def grading_notes(submission):
-    ''' Determines if the submission has grading notes,
-        leads to nice little icon in the submission overview.
-    '''
-    if submission.grading_notes is not None:
-        return len(submission.grading_notes) > 0
-    else:
-        return False
-grading_notes.boolean = True            # show nice little icon
-
-
-def grading_file(submission):
-    ''' Determines if the submission has a grading file,
-        leads to nice little icon in the submission overview.
-    '''
-    if submission.grading_file is not None:
-        return True
-    else:
-        return False
-grading_file.boolean = True            # show nice little icon
-
-
 class SubmissionFileLinkWidget(forms.Widget):
 
     def __init__(self, subFile):
@@ -157,7 +129,7 @@ class SubmissionFileLinkWidget(forms.Widget):
             return mark_safe(u'Nothing stored')
 
 
-class SubmissionAdmin(admin.ModelAdmin):
+class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
@@ -268,10 +240,10 @@ class SubmissionAdmin(admin.ModelAdmin):
 
     def getPerformanceResultsAction(self, request, queryset):
         qs = queryset.exclude(state=Submission.WITHDRAWN)  # avoid accidental addition of withdrawn solutions
-        response = HttpResponse(mimetype="text/csv")
+        response = HttpResponse(content_type="text/csv")
         response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
         for subm in qs:
-            if subm.file_upload.perf_data is not None:
+            if subm.file_upload and subm.file_upload.perf_data is not None:
                 auth = ", ".join([author.get_full_name() for author in subm.authors.all()])
                 response.write("%u;%s;%s;%s;" % (subm.pk, course(subm), subm.assignment, auth))
                 response.write(subm.file_upload.perf_data)
@@ -279,158 +251,3 @@ class SubmissionAdmin(admin.ModelAdmin):
         return response
     getPerformanceResultsAction.short_description = "Download performance data as CSV"
 
-# Submission File admin interface
-
-def submissions(submfile):
-    while submfile.replaced_by is not None:
-        submfile = submfile.replaced_by
-    subms = submfile.submissions.all()
-    return ','.join([str(sub) for sub in subms])
-
-
-def not_withdrawn(submfile):
-    return submfile.replaced_by is None
-not_withdrawn.boolean = True
-
-# In case the backend user creates manually a SubmissionFile entry,
-# we want to offer the according creation of a new submission entry.
-# This is the interface or manually adding submissions
-
-
-class InlineSubmissionAdmin(admin.StackedInline):
-    model = Submission
-    max_num = 1
-    can_delete = False
-
-
-class SubmissionFileAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
-    inlines = [InlineSubmissionAdmin, ]
-
-    def get_queryset(self, request):
-        ''' Restrict the listed submission files for the current user.'''
-        qs = super(SubmissionFileAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        else:
-            return qs.filter(Q(submissions__assignment__course__tutors__pk=request.user.pk) | Q(submissions__assignment__course__owner=request.user)).distinct()
-
-    def get_readonly_fields(self, request, obj=None):
-        # The idea is to make some fields readonly only on modification
-        # The trick is to override the getter for the according ModelAdmin attribute
-        if obj:
-            # Modification
-            return ()
-        else:
-            # New manual submission
-            return ('test_compile', 'test_validity', 'test_full', 'replaced_by', 'perf_data')
-
-# Assignment admin interface
-
-class AssignmentAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
-
-    def get_queryset(self, request):
-        ''' Restrict the listed assignments for the current user.'''
-        qs = super(AssignmentAdmin, self).queryset(request)
-        if request.user.is_superuser:
-            return qs
-        else:
-            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
-
-# Grading scheme admin interface
-
-def gradings(gradingScheme):
-    ''' Determine the list of gradings in this scheme as rendered string.
-        TODO: Use nice little icons instead of (p) / (f) marking.
-    '''
-    result = []
-    for grading in gradingScheme.gradings.all():
-        if grading.means_passed:
-            result.append(str(grading) + " (pass)")
-        else:
-            result.append(str(grading) + " (fail)")
-    return '  -  '.join(result)
-
-
-def courses(gradingScheme):
-    # determine the courses that use this grading scheme in one of their assignments
-    course_ids = gradingScheme.assignments.all().values_list('course', flat=True)
-    courses = Course.objects.filter(pk__in=course_ids)
-    return ",\n".join([str(course) for course in courses])
-
-
-class GradingSchemeAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', gradings, courses]
-
-    def formfield_for_dbfield(self, db_field, **kwargs):
-        ''' Offer only gradings that are not already used by other schemes.'''
-        grad_filter = Q(schemes=None)
-        if db_field.name == "gradings":
-            kwargs['queryset'] = Grading.objects.filter(grad_filter).distinct()
-        return super(GradingSchemeAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
-
-class GradingAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', grading_schemes, means_passed]
-
-# User admin interface
-
-class UserProfileInline(admin.StackedInline):
-    model = UserProfile
-
-
-class UserAdmin(UserAdmin):
-    inlines = (UserProfileInline, )
-
-# Course admin interface
-
-def assignments(course):
-    return ",\n".join([str(ass) for ass in course.assignments.all()])
-
-
-class CourseAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
-    actions = ['showGradingTable', 'downloadArchive']
-    filter_horizontal = ['tutors']
-
-    def get_queryset(self, request):
-        ''' Restrict the listed courses for the current user.'''
-        qs = super(CourseAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        else:
-            return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)).distinct()
-
-    def showGradingTable(self, request, queryset):
-        course = queryset.all()[0]
-        return redirect('gradingtable', course_id=course.pk)
-    showGradingTable.short_description = "Show grading table"
-
-    def downloadArchive(self, request, queryset):
-        course = queryset.all()[0]
-        return redirect('coursearchive', course_id=course.pk)
-    downloadArchive.short_description = "Download course archive file"
-
-
-class AdminBackend(AdminSite):
-    site_header = "OpenSubmit Admin Backend"
-    site_title = "OpenSubmit Admin Backend"
-
-admin_backend = AdminBackend(name="admin")
-admin_backend.register(User, UserAdmin)
-admin_backend.register(Course, CourseAdmin)
-
-class TeacherBackend(AdminSite):
-    site_header = "Teacher Backend"
-    site_title = "OpenSubmit Teacher Backend"
-    login_template = "teacher/login.html"
-
-teacher_backend = TeacherBackend(name="teacher")    
-teacher_backend.register(Grading, GradingAdmin)
-teacher_backend.register(GradingScheme, GradingSchemeAdmin)
-teacher_backend.register(Assignment, AssignmentAdmin)
-teacher_backend.register(SubmissionFile, SubmissionFileAdmin)
-teacher_backend.register(Submission, SubmissionAdmin)
-teacher_backend.register(Course, CourseAdmin)
-teacher_backend.register(TestMachine)

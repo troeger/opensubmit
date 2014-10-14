@@ -1,4 +1,7 @@
-from opensubmit.tests.cases import *
+from django.contrib.auth.models import User
+from opensubmit.models import Assignment, Course, SubmissionFile
+from opensubmit.tests.cases import MockRequest, SubmitAdminTestCase
+from django.contrib.admin.sites import AdminSite
 
 class AdminACLTestCase(SubmitAdminTestCase):
     def setUp(self):
@@ -11,6 +14,10 @@ class AdminACLTestCase(SubmitAdminTestCase):
     def testCanUseAdminBackend(self):
         response = self.c.get('/admin/auth/user/')
         self.assertEquals(response.status_code, 200)        
+
+class BackendTestCase(SubmitAdminTestCase):
+    def setUp(self):
+        super(BackendTestCase, self).setUp()
 
     def testAddCourseTutor(self):
         # Add another tutor who had no backend rights before
@@ -47,3 +54,23 @@ class AdminACLTestCase(SubmitAdminTestCase):
         # Make sure the new one has now backend rights
         new_owner = User.objects.get(username='foo')
         assert(new_owner.is_staff)
+
+    def testAssignmentBackend(self):
+        from opensubmit.admin.assignment import AssignmentAdmin
+        assadm = AssignmentAdmin(Assignment, AdminSite())
+        assignments_shown = assadm.get_queryset(self.request).count()
+        # should get all of them
+        self.assertEquals(len(self.allAssignments), assignments_shown)
+
+    def testCourseBackend(self):
+        from opensubmit.admin.course import CourseAdmin
+        courseadm = CourseAdmin(Course, AdminSite())
+        num_courses = courseadm.get_queryset(self.request).count()
+        self.assertEquals(num_courses, len(self.all_courses))
+
+    def testSubmissionFileBackend(self):
+        from opensubmit.admin.submissionfile import SubmissionFileAdmin
+        subfileadm = SubmissionFileAdmin(SubmissionFile, AdminSite())
+        files_shown = subfileadm.get_queryset(self.request).count()
+        self.assertEquals(0, files_shown)
+
