@@ -13,25 +13,37 @@ class AdminACLTestCase(SubmitAdminTestCase):
         self.assertEquals(response.status_code, 200)        
 
     def testAddCourseTutor(self):
-    	# Get a course
-
-    	# Add another tutor who had no backend rights before
-
-    	# Check if he got them afterwards
+        # Add another tutor who had no backend rights before
+        new_user = User(username='foo')
+        new_user.save()
+        assert(not new_user.is_staff)
+        self.course.tutors.add(new_user)
+        self.course.save()
+        # Check if he got them afterwards
+        new_user = User.objects.get(username='foo')
+        assert(new_user.is_staff)
 
     def testRemoveCourseTutor(self):
-    	# Get a course with a tutor
-
-    	# Remove him so that he has no more backend rights
-
-    	# Check if they were removed accordingly
+        # from test case setup
+        assert(self.tutor.user in self.course.tutors.all())
+        assert(self.tutor.user.is_staff)
+        self.course.tutors.remove(self.tutor.user)
+        self.course.save()
+        user = User.objects.get(username=self.tutor.username)
+        assert(not user.is_staff)
 
     def testChangeCourseOwner(self):
-    	# Get a course with some owner
-
-    	# Assign new owner who had no backend rights before
-
-    	# Make sure the old one has no more rights
-
-    	# Make sure the new one has now backend rights
-
+        # Get a course with some owner
+        # Assign new owner who had no backend rights before
+        new_owner = User(username='foo')
+        new_owner.save()
+        assert(not new_owner.is_staff)
+        old_owner_name = self.course.owner.username
+        self.course.owner = new_owner
+        self.course.save()
+        # Make sure the old one has no more rights
+        old_owner = User.objects.get(username=old_owner_name)
+        assert(not old_owner.is_staff)
+        # Make sure the new one has now backend rights
+        new_owner = User.objects.get(username='foo')
+        assert(new_owner.is_staff)
