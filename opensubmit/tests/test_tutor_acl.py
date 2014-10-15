@@ -141,4 +141,26 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         self.sub1.save()     
         self.assertEquals(True, grading_file(self.sub1))
 
+    def testStateFilter(self):
+        from opensubmit.admin.submission import SubmissionStateFilter
+        submfilter = SubmissionStateFilter(self.request, {'statefilter': 'tobegraded'}, Submission, None)
+        for sub in submfilter.queryset(self.request, Submission.objects.all()):
+            assert(sub in self.all_submissions)
 
+    def testAssignmentFilter(self):
+        from opensubmit.admin.submission import SubmissionAssignmentFilter
+        submfilter = SubmissionAssignmentFilter(self.request, {'assignmentfilter': self.sub1.assignment.pk}, Submission, None)
+        sublist = submfilter.queryset(self.request, Submission.objects.all()).values_list('pk', flat=True)      
+        self.assertSequenceEqual(sublist, [self.sub1.pk])
+
+
+    def testCourseFilter(self):
+        from opensubmit.admin.submission import SubmissionCourseFilter
+        submfilter = SubmissionCourseFilter(self.request, {'coursefilter': self.course.pk}, Submission, None)
+        subcount = submfilter.queryset(self.request, Submission.objects.all()).count()      
+        self.assertEquals(subcount, len(self.all_submissions))
+
+    def testSubmissionFileWidget(self):
+        from opensubmit.admin.submission import SubmissionFileLinkWidget
+        widget = SubmissionFileLinkWidget(None)
+        print widget.render('foo', 'bar')

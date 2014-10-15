@@ -4,6 +4,7 @@ from django.contrib.admin import SimpleListFilter, ModelAdmin
 from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.db.models import Q
+from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from opensubmit.models import inform_student, tutor_courses, Assignment, Submission
 
