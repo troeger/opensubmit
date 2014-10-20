@@ -14,8 +14,8 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 
-from opensubmit.models import Course, Assignment, Submission
-from opensubmit.models import Grading, GradingScheme
+from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
 from opensubmit.models import logger
 
@@ -238,12 +238,37 @@ class SubmitTestCase(TestCase):
     def tearDown(self):
         self.logger.setLevel(self.loggerLevelOld)
 
+    def createTestedSubmissionFile(self):
+        from django.core.files import File as DjangoFile
+        machine = TestMachine(last_contact=datetime.datetime.now())
+        machine.save()
+        sf = SubmissionFile(attachment=DjangoFile(open("manage.py"), unicode("manage.py")))
+        sf.save()
+        result_compile  = SubmissionTestResult(
+            kind=SubmissionTestResult.COMPILE_TEST, 
+            result="Compilation ok.",
+            machine=machine,
+            submission_file=sf).save()
+        result_validity = SubmissionTestResult(
+            kind=SubmissionTestResult.VALIDITY_TEST, 
+            result="Validation ok.",
+            machine=machine,
+            submission_file=sf).save()
+        result_full     = SubmissionTestResult(
+            kind=SubmissionTestResult.FULL_TEST, 
+            result="Full test ok.",
+            machine=machine,
+            submission_file=sf).save()
+        return sf
+
     def createSubmission(self, user, assignment, authors=[]):
+        sf = self.createTestedSubmissionFile()
         sub = Submission(
             assignment=assignment,
             submitter=user.user,
             notes="This is a submission.",
-            state=Submission.SUBMITTED
+            state=Submission.SUBMITTED,
+            file_upload=sf
         )
         sub.save()
 

@@ -228,6 +228,7 @@ class SubmissionFile(models.Model):
     def get_absolute_url(self):
         # to implement access protection, we implement our own download
         # this implies that the Apache media serving is disabled
+        assert(len(self.submissions.all()) > 0)
         return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
 
     def absolute_path(self):
@@ -235,6 +236,17 @@ class SubmissionFile(models.Model):
 
     def is_executed(self):
         return self.fetched is not None
+
+    def test_result_dict(self):
+        '''
+            Create a compact data structure representation of all result
+            types for this file. 
+
+            Returns a dictionary where the keys are the result types, and
+            the values are dicts of all the other result information.
+        '''
+        list_of_dicts=self.test_results.all().values()
+        return {entry['kind']: {'result':entry['result']} for entry in list_of_dicts}
 
     objects = models.Manager()
     valid_ones = ValidSubmissionFileManager()

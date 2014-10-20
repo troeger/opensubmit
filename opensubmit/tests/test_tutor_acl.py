@@ -99,10 +99,10 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         submissions = self.submadm.get_queryset(self.request)
         self.assertSequenceEqual(submissions, self.all_submissions)
 
-    def testGetPerformanceResult(self):
-        csv_response = self.submadm.getPerformanceResultsAction(self.request, Submission.objects.all())
-        assert(csv_response.status_code == 200)
-        assert('text/csv' in str(csv_response))   
+    # def testGetPerformanceResult(self):
+    #     csv_response = self.submadm.getPerformanceResultsAction(self.request, Submission.objects.all())
+    #     assert(csv_response.status_code == 200)
+    #     assert('text/csv' in str(csv_response))   
 
     def testCloseAndNotify(self):
         from django.core import mail
@@ -146,6 +146,8 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         submfilter = SubmissionStateFilter(self.request, {'statefilter': 'tobegraded'}, Submission, None)
         for sub in submfilter.queryset(self.request, Submission.objects.all()):
             assert(sub in self.all_submissions)
+        graded_count = SubmissionStateFilter(self.request, {'statefilter': 'graded'}, Submission, None).queryset(self.request, Submission.objects.all()).count()
+        self.assertEquals(graded_count, 0)
 
     def testAssignmentFilter(self):
         from opensubmit.admin.submission import SubmissionAssignmentFilter
@@ -162,5 +164,6 @@ class SubmissionBackendTestCase(TutorACLTestCase):
 
     def testSubmissionFileWidget(self):
         from opensubmit.admin.submission import SubmissionFileLinkWidget
-        widget = SubmissionFileLinkWidget(None)
-        print widget.render('foo', 'bar')
+        widget = SubmissionFileLinkWidget(self.sub1.file_upload)
+        self.assertEquals(self.sub1.file_upload.pk, widget.value_from_datadict(None, None, None))
+        self.assertInHTML("<pre>Compilation ok.</pre>", widget.render(None, None))

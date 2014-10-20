@@ -6,7 +6,7 @@ from django import forms
 from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
-from opensubmit.models import inform_student, tutor_courses, Assignment, Submission
+from opensubmit.models import inform_student, tutor_courses, Assignment, Submission, SubmissionFile, SubmissionTestResult
 
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
@@ -114,20 +114,22 @@ class SubmissionFileLinkWidget(forms.Widget):
     def render(self, name, value, attrs=None):
         try:
             sfile = SubmissionFile.objects.get(pk=self.subFileId)
-            text = u'<a href="%s">%s</a><table border=1>' % (sfile.get_absolute_url(), sfile.basename())
-            if sfile.test_compile:
-                text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>' % (sfile.test_compile)
-            if sfile.test_validity:
-                text += u'<tr><td><h3>Validation test</h3><pre>%s</pre></td></tr>' % (sfile.test_validity)
-            if sfile.test_full:
-                text += u'<tr><td><h3>Full test</h3><pre>%s</pre></td></tr>' % (sfile.test_full)
-            if sfile.perf_data:
-                text += u'<tr><td><h3>Performance data</h3><pre>%s</pre></td></tr>' % (sfile.perf_data)
-            text += u'</table>'
-            # TODO: This is not safe, since the script output can be influenced by students
-            return mark_safe(text)
         except:
             return mark_safe(u'Nothing stored')
+        test_results = sfile.test_result_dict()
+        text = u'<a href="%s">%s</a><table border=1>' % (sfile.get_absolute_url(), sfile.basename())
+        if SubmissionTestResult.COMPILE_TEST in test_results:
+            result = test_results[SubmissionTestResult.COMPILE_TEST]['result']
+            text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>' % (result)
+        if SubmissionTestResult.VALIDITY_TEST in test_results:
+            result = test_results[SubmissionTestResult.VALIDITY_TEST]['result']
+            text += u'<tr><td><h3>Validation test</h3><pre>%s</pre></td></tr>' % (result)
+        if SubmissionTestResult.FULL_TEST in test_results:
+            result = test_results[SubmissionTestResult.FULL_TEST]['result']
+            text += u'<tr><td><h3>Full test</h3><pre>%s</pre></td></tr>' % (result)
+        text += u'</table>'
+        # TODO: This is not safe, since the script output can be influenced by students
+        return mark_safe(text)
 
 
 class SubmissionAdmin(ModelAdmin):
@@ -239,16 +241,17 @@ class SubmissionAdmin(ModelAdmin):
             self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
     closeAndNotifyAction.short_description = "Close graded submissions + send notification"
 
-    def getPerformanceResultsAction(self, request, queryset):
-        qs = queryset.exclude(state=Submission.WITHDRAWN)  # avoid accidental addition of withdrawn solutions
-        response = HttpResponse(content_type="text/csv")
-        response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
-        for subm in qs:
-            if subm.file_upload and subm.file_upload.perf_data is not None:
-                auth = ", ".join([author.get_full_name() for author in subm.authors.all()])
-                response.write("%u;%s;%s;%s;" % (subm.pk, course(subm), subm.assignment, auth))
-                response.write(subm.file_upload.perf_data)
-                response.write("\n")
-        return response
-    getPerformanceResultsAction.short_description = "Download performance data as CSV"
+    # ToDo: Must be refactored to consider new performance data storage model
+    # def getPerformanceResultsAction(self, request, queryset):
+    #     qs = queryset.exclude(state=Submission.WITHDRAWN)  # avoid accidental addition of withdrawn solutions
+    #     response = HttpResponse(content_type="text/csv")
+    #     response.write("Submission ID;Course;Assignment;Authors;Performance Data\n")
+    #     for subm in qs:
+    #         if subm.file_upload and subm.file_upload.perf_data is not None:
+    #             auth = ", ".join([author.get_full_name() for author in subm.authors.all()])
+    #             response.write("%u;%s;%s;%s;" % (subm.pk, course(subm), subm.assignment, auth))
+    #             response.write(subm.file_upload.perf_data)
+    #             response.write("\n")
+    #     return response
+    # getPerformanceResultsAction.short_description = "Download performance data as CSV"
 
