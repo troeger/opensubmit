@@ -12,4 +12,4 @@ lib
 executor.cfg
 *.orig
 opensubmit/database.sqlite
-
+.coverage
