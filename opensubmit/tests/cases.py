@@ -1,5 +1,6 @@
 import datetime
 import logging
+import json
 
 from django import http
 
@@ -104,7 +105,9 @@ class SubmitTestCase(TestCase):
                 'password': 'very{}secret'.format(i),
                 'email': 'testrunner_enrolled_student{}@django.localhost.local'.format(i),
                 'is_staff': False,
-                'is_superuser': False
+                'is_superuser': False,
+                'first_name': 'Harold',
+                'last_name': 'Finch'
             }
             self.enrolled_students.append(self.createUser(enrolled_student_dict))
 
@@ -165,6 +168,8 @@ class SubmitTestCase(TestCase):
         self.passFailGrading.save()
 
     def setUpAssignments(self):
+        from django.core.files import File as DjangoFile
+
         today = timezone.now()
         last_week = today - datetime.timedelta(weeks=1)
         yesterday = today - datetime.timedelta(days=1)
@@ -181,10 +186,27 @@ class SubmitTestCase(TestCase):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False,
+            has_attachment=False
         )
         self.openAssignment.save()
         self.allAssignments.append(self.openAssignment)
+
+        self.validatedAssignment = Assignment(
+            title='Validated assignment',
+            course=self.course,
+            download='http://example.org/assignments/1/download',
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=True,
+            validity_script_download=True,
+            attachment_test_validity=DjangoFile(open('manage.py')),
+            attachment_test_full=DjangoFile(open('manage.py'))
+        )
+        self.validatedAssignment.save()
+        self.allAssignments.append(self.validatedAssignment)
+
 
         self.softDeadlinePassedAssignment = Assignment(
             title='Soft deadline passed assignment',
@@ -238,37 +260,58 @@ class SubmitTestCase(TestCase):
     def tearDown(self):
         self.logger.setLevel(self.loggerLevelOld)
 
+    def createTestMachine(self):
+        '''
+            Create test machine entry. The configuration information
+            is expected to be some JSON dictionary, since this is
+            normally directly rendered in the machine details view.
+        '''
+        self.machine = TestMachine(
+            last_contact=datetime.datetime.now(),
+            config=json.dumps({'Operating system':'Plan 9'}))
+        self.machine.save()
+        return self.machine
+
     def createTestedSubmissionFile(self):
         from django.core.files import File as DjangoFile
-        machine = TestMachine(last_contact=datetime.datetime.now())
-        machine.save()
+        self.createTestMachine()
         sf = SubmissionFile(attachment=DjangoFile(open("manage.py"), unicode("manage.py")))
         sf.save()
         result_compile  = SubmissionTestResult(
             kind=SubmissionTestResult.COMPILE_TEST, 
             result="Compilation ok.",
-            machine=machine,
+            machine=self.machine,
             submission_file=sf).save()
         result_validity = SubmissionTestResult(
             kind=SubmissionTestResult.VALIDITY_TEST, 
             result="Validation ok.",
-            machine=machine,
+            machine=self.machine,
             submission_file=sf).save()
         result_full     = SubmissionTestResult(
             kind=SubmissionTestResult.FULL_TEST, 
             result="Full test ok.",
-            machine=machine,
+            machine=self.machine,
             submission_file=sf).save()
         return sf
 
-    def createSubmission(self, user, assignment, authors=[]):
+    def createValidatedSubmission(self, user):
         sf = self.createTestedSubmissionFile()
+        sub = Submission(
+            assignment=self.validatedAssignment,
+            submitter=user.user,
+            notes="This is an already validated submission.",
+            state=Submission.SUBMITTED_TESTED,
+            file_upload=sf
+        )
+        sub.save()
+        return sub
+
+    def createSubmission(self, user, assignment, authors=[]):
         sub = Submission(
             assignment=assignment,
             submitter=user.user,
             notes="This is a submission.",
-            state=Submission.SUBMITTED,
-            file_upload=sf
+            state=Submission.SUBMITTED
         )
         sub.save()
 
@@ -315,4 +358,10 @@ class SubmitTutorTestCase(SubmitTestCase):
         assert(self.current_user.user.is_active)
         assert(not self.current_user.user.is_superuser)
         assert(self.current_user.user.is_staff)       
+
+class StudentTestCase(SubmitTestCase):
+    def setUp(self):
+        super(StudentTestCase, self).setUp()
+        self.loginUser(self.enrolled_students[0])
+        self.request = MockRequest(self.enrolled_students[0].user)        
 

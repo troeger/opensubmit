@@ -39,16 +39,10 @@ def index(request):
 
     return render(request, 'index.html', {'login_description': LOGIN_DESCRIPTION})
 
-
-def about(request):
-    return render(request, 'about.html')
-
-
 @login_required
 def logout(request):
     auth.logout(request)
     return redirect('index')
-
 
 @login_required
 def settings(request):
@@ -239,30 +233,31 @@ def coursearchive(request, course_id):
     for ass in assignments:
         assdir = coursedir + '/' + ass.title.replace(" ", "_").lower()
         for sub in ass.submissions.all().order_by('submitter'):
-            # unpack student data to temporary directory
-            # os.chroot is not working with tarfile support
-            tempdir = tempfile.mkdtemp()
-            if zipfile.is_zipfile(sub.file_upload.absolute_path()):
-                f = zipfile.ZipFile(sub.file_upload.absolute_path(), 'r')
-                f.extractall(tempdir)
-            elif tarfile.is_tarfile(sub.file_upload.absolute_path()):
-                tar = tarfile.open(sub.file_upload.absolute_path())
-                tar.extractall(tempdir)
-                tar.close()
-            else:
-                # unpacking not possible, just copy it
-                shutil.copyfile(sub.file_upload.absolute_path(), tempdir + "/" + sub.file_upload.basename())
-            # Create final ZIP file
-            state = sub.state_for_students().replace(" ", "_").lower()
-            submitter = "user" + str(sub.submitter.pk)
+            submitter = "user" + str(sub.submitter.pk)      
             if sub.modified:
                 modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
             else:
                 modified = sub.created.strftime("%Y_%m_%d_%H_%M_%S")
-            submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)
-            for root, dirs, files in os.walk(tempdir):
-                for f in files:
-                    z.write(root + "/" + f, submdir + 'student_files/' + f, zipfile.ZIP_DEFLATED)
+            state = sub.state_for_students().replace(" ", "_").lower()
+            submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)                  
+            if sub.file_upload:
+                # unpack student data to temporary directory
+                # os.chroot is not working with tarfile support
+                tempdir = tempfile.mkdtemp()
+                if zipfile.is_zipfile(sub.file_upload.absolute_path()):
+                    f = zipfile.ZipFile(sub.file_upload.absolute_path(), 'r')
+                    f.extractall(tempdir)
+                elif tarfile.is_tarfile(sub.file_upload.absolute_path()):
+                    tar = tarfile.open(sub.file_upload.absolute_path())
+                    tar.extractall(tempdir)
+                    tar.close()
+                else:
+                    # unpacking not possible, just copy it
+                    shutil.copyfile(sub.file_upload.absolute_path(), tempdir + "/" + sub.file_upload.basename())
+                # Create final ZIP file
+                for root, dirs, files in os.walk(tempdir):
+                    for f in files:
+                        z.write(root + "/" + f, submdir + 'student_files/' + f, zipfile.ZIP_DEFLATED)
             # add text file with additional information
             info = tempfile.NamedTemporaryFile()
             info.write("Status: %s\n\n" % sub.state_for_students())
@@ -286,7 +281,7 @@ def coursearchive(request, course_id):
     z.close()
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
-    response = HttpResponse(output, mimetype="application/x-zip-compressed")
+    response = HttpResponse(output, content_type="application/x-zip-compressed")
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % coursename
     return response
 
@@ -411,15 +406,3 @@ def login(request):
         return redirect('dashboard')
     else:
         return redirect('index')
-
-
-@staff_member_required
-def manual_submit(request, ass_id):
-    ''' Manual submission of assignment solutions by the course administrator.'''
-
-    from forms import getSubmissionForm
-    assignment = get_object_or_404(Assignment, pk=ass_id)
-    SubmissionForm = getSubmissionForm(assignment)
-    submissionForm = SubmissionForm(request.user, assignment)
-    return render(request, 'manual_submit.html', {'submissionForm': submissionForm,
-                                                  'assignment': assignment})

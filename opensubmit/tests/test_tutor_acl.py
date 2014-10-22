@@ -88,7 +88,8 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         super(SubmissionBackendTestCase, self).setUp()
         self.sub1 = self.createSubmission(self.current_user, self.openAssignment)
         self.sub2 = self.createSubmission(self.current_user, self.softDeadlinePassedAssignment)
-        self.all_submissions = [self.sub1, self.sub2]
+        self.val_sub = self.createValidatedSubmission(self.current_user)
+        self.all_submissions = [self.sub1, self.sub2, self.val_sub]
         self.submadm = SubmissionAdmin(Submission, AdminSite())
 
     def testAuthorsFromSubmission(self):
@@ -117,9 +118,14 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         self.submadm.closeAndNotifyAction(self.request, Submission.objects.all())        
         self.assertEquals(2, len(mail.outbox))
 
-    def testSetFullPending(self):
-        # by default, the assignment has no full test, so nothing should change
+    def testSetFullPendingAll(self):
+        # Only one of the submission assignments has validation configured
         self.submadm.setFullPendingStateAction(self.request, Submission.objects.all())
+        self.assertEquals(1, Submission.objects.filter(state=Submission.TEST_FULL_PENDING).count())
+
+    def testSetFullPendingNoneMatching(self):
+        # Only one of the submission assignments has validation configured
+        self.submadm.setFullPendingStateAction(self.request, Submission.objects.filter(state=Submission.SUBMITTED))
         self.assertEquals(0, Submission.objects.filter(state=Submission.TEST_FULL_PENDING).count())
 
     def testSetInitialState(self):
@@ -164,6 +170,14 @@ class SubmissionBackendTestCase(TutorACLTestCase):
 
     def testSubmissionFileWidget(self):
         from opensubmit.admin.submission import SubmissionFileLinkWidget
-        widget = SubmissionFileLinkWidget(self.sub1.file_upload)
-        self.assertEquals(self.sub1.file_upload.pk, widget.value_from_datadict(None, None, None))
+        widget = SubmissionFileLinkWidget(self.val_sub.file_upload)
+        self.assertEquals(self.val_sub.file_upload.pk, widget.value_from_datadict(None, None, None))
         self.assertInHTML("<pre>Compilation ok.</pre>", widget.render(None, None))
+
+    def testGradingTableView(self):
+        response = self.c.get('/course/%u/gradingtable'%self.course.pk)
+        self.assertEquals(response.status_code, 200)
+
+    def testArchiveView(self):
+        response = self.c.get('/course/%u/archive'%self.course.pk)
+        self.assertEquals(response.status_code, 200)
