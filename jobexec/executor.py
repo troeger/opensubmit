@@ -125,6 +125,10 @@ def fetch_job():
         result = urllib.request.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
         fname=targetdir+datetime.now().isoformat()
         headers=result.info()
+        if headers['Action'] == 'get_config':
+            # The server does not know us, so it demands registration before hand.
+            print("Machine unknown on server, run 'executor.py register' first")
+            exit(1)            
         submid=headers['SubmissionFileId']
         action=headers['Action']
         timeout=int(headers['Timeout'])
