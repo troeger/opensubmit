@@ -2,7 +2,7 @@
     These are the views being called by the executor. They typically have a different
     security model in comparison to the ordinary views.
 '''
-import datetime
+from datetime import datetime, timedelta
 import os
 from time import timezone
 
@@ -95,7 +95,7 @@ def jobs(request, secret):
             # this is not really a problem, since the result remains the same for the same file
             # TODO: Make this a part of the original query
             # TODO: Count number of attempts to leave the same state, mark as finally failed in case; alternatively, the executor must always deliver a re.
-            if (not sub.file_upload.fetched) or (sub.file_upload.fetched + datetime.timedelta(
+            if (not sub.file_upload.fetched) or (sub.file_upload.fetched + timedelta(
                     seconds=sub.assignment.attachment_test_timeout) < timezone.now()):
                 if sub.file_upload.fetched:
                     # Stuff that has timed out
