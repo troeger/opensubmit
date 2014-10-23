@@ -260,7 +260,7 @@ class SubmitTestCase(TestCase):
     def tearDown(self):
         self.logger.setLevel(self.loggerLevelOld)
 
-    def createTestMachine(self):
+    def createTestMachine(self, test_host):
         '''
             Create test machine entry. The configuration information
             is expected to be some JSON dictionary, since this is
@@ -268,20 +268,28 @@ class SubmitTestCase(TestCase):
         '''
         self.machine = TestMachine(
             last_contact=datetime.datetime.now(),
+            host = test_host,
             config=json.dumps({'Operating system':'Plan 9'}))
         self.machine.save()
         return self.machine
 
-    def createTestedSubmissionFile(self):
+    def createSubmissionFile(self):
         from django.core.files import File as DjangoFile
-        self.createTestMachine()
-        sf = SubmissionFile(attachment=DjangoFile(open("manage.py"), unicode("manage.py")))
-        sf.save()
+        sf = SubmissionFile(attachment=DjangoFile(open("opensubmit/tests/submfiles/working.zip"), unicode("working.zip")))
+        sf.save()  
+        return sf      
+
+    def createTestedSubmissionFile(self, test_machine):
+        '''
+            Create finalized test result in the database.
+        '''
+        sf = self.createSubmissionFile()
         result_compile  = SubmissionTestResult(
             kind=SubmissionTestResult.COMPILE_TEST, 
             result="Compilation ok.",
-            machine=self.machine,
-            submission_file=sf).save()
+            machine=test_machine,
+            submission_file=sf
+            ).save()
         result_validity = SubmissionTestResult(
             kind=SubmissionTestResult.VALIDITY_TEST, 
             result="Validation ok.",
@@ -294,8 +302,27 @@ class SubmitTestCase(TestCase):
             submission_file=sf).save()
         return sf
 
-    def createValidatedSubmission(self, user):
-        sf = self.createTestedSubmissionFile()
+    def createValidatableSubmission(self, user):
+        '''
+            Create a submission that can be validated by executor.
+        '''
+        sf = self.createSubmissionFile()
+        sub = Submission(
+            assignment=self.validatedAssignment,
+            submitter=user.user,
+            notes="This is a validatable submission.",
+            state=Submission.TEST_COMPILE_PENDING,
+            file_upload=sf
+        )
+        sub.save()
+        return sub
+
+    def createValidatedSubmission(self, user, test_host='127.0.0.1'):
+        '''
+            Create a submission that already has test results in the database.
+        '''
+        machine = self.createTestMachine(test_host)
+        sf = self.createTestedSubmissionFile(machine)
         sub = Submission(
             assignment=self.validatedAssignment,
             submitter=user.user,

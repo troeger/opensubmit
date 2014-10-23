@@ -72,7 +72,7 @@ def jobs(request, secret):
         raise PermissionDenied
     if request.method == "GET":
         try:
-            machine = TestMachine.objects.get(host=request.get_host())
+            machine = TestMachine.objects.get(host=request.META["REMOTE_ADDR"])
             machine.last_contact = datetime.now()
             machine.save()
         except:
@@ -96,7 +96,7 @@ def jobs(request, secret):
             # TODO: Make this a part of the original query
             # TODO: Count number of attempts to leave the same state, mark as finally failed in case; alternatively, the executor must always deliver a re.
             if (not sub.file_upload.fetched) or (sub.file_upload.fetched + timedelta(
-                    seconds=sub.assignment.attachment_test_timeout) < timezone.now()):
+                    seconds=sub.assignment.attachment_test_timeout) < datetime.now()):
                 if sub.file_upload.fetched:
                     # Stuff that has timed out
                     # we mark it as failed so that the user gets informed
@@ -143,10 +143,10 @@ def jobs(request, secret):
                 else:
                     assert (False)
                 # store date of fetching for determining jobs stucked at the executor
-                sub.file_upload.fetched = timezone.now()
+                sub.file_upload.fetched = datetime.now()
                 sub.file_upload.save()
                 # 'touch' submission so that it becomes sorted to the end of the queue if something goes wrong
-                sub.modified = timezone.now()
+                sub.modified = datetime.now()
                 sub.save()
                 return response
         # no feasible match in the list of possible jobs
@@ -227,12 +227,12 @@ def machines(request, secret):
     if request.method == "POST":
         try:
             # Find machine database entry for this host
-            machine = TestMachine.objects.get(host=request.get_host())
+            machine = TestMachine.objects.get(host=request.META["REMOTE_ADDR"])
             machine.last_contact = datetime.now()
             machine.save()
         except:
             # Machine is not known so far, create new record
-            machine = TestMachine(host=request.get_host(), last_contact=datetime.now())
+            machine = TestMachine(host=request.META["REMOTE_ADDR"], last_contact=datetime.now())
             machine.save()
         # POST request contains all relevant machine information
         machine.config = request.POST['Config']
