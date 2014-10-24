@@ -26,6 +26,7 @@ urlpatterns = patterns('',
     url(r'^courses/$', 'opensubmit.views.courses', name='courses'),
 
     url(r'^api/', include('executor_api.urls', namespace="api")),
+    url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS    
     url(r'^teacher/', include(teacher_backend.urls)),
     url(r'^admin/', include(admin_backend.urls))
 )
