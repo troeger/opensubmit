@@ -3,3 +3,4 @@ django-bootstrap-form
 openid2rp
 XlsxWriter
 djangorestframework>=2.4
+django-grappelli

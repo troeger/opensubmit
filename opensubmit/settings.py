@@ -121,8 +121,8 @@ USE_TZ = False
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 SECRET_KEY = config.get("server", "SECRET_KEY")
 TEMPLATE_LOADERS = (
@@ -150,6 +150,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'grappelli',
     'django.contrib.admin.apps.SimpleAdminConfig',
     'openid2rp.django',
     'bootstrapform',
@@ -207,10 +208,14 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
-    'opensubmit.contextprocessors.footer'
+    'opensubmit.contextprocessors.footer',
+    'django.core.context_processors.request',    
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
+
+GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
+GRAPPELLI_SWITCH_USER = True
 
 assert(not config.has_section('overrides'))     # factored out
