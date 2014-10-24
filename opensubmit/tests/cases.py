@@ -201,8 +201,8 @@ class SubmitTestCase(TestCase):
             hard_deadline=next_week,
             has_attachment=True,
             validity_script_download=True,
-            attachment_test_validity=DjangoFile(open('manage.py')),
-            attachment_test_full=DjangoFile(open('manage.py'))
+            attachment_test_validity=DjangoFile(open('opensubmit/tests/validators/working.zip')),
+            attachment_test_full=DjangoFile(open('opensubmit/tests/validators/working.zip'))
         )
         self.validatedAssignment.save()
         self.allAssignments.append(self.validatedAssignment)

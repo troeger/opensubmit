@@ -514,6 +514,20 @@ class Submission(models.Model):
             kind=SubmissionTestResult.COMPILE_TEST)
         self.file_upload.test_results.add(result)
 
+    def save_validation_result(self, machine, text):
+        result = SubmissionTestResult(
+            result=text,
+            machine=machine,
+            kind=SubmissionTestResult.VALIDITY_TEST)
+        self.file_upload.test_results.add(result)
+
+    def save_fulltest_result(self, machine, text):
+        result = SubmissionTestResult(
+            result=text,
+            machine=machine,
+            kind=SubmissionTestResult.FULL_TEST)
+        self.file_upload.test_results.add(result)
+
 
 class SubmissionTestResult(models.Model):
     '''

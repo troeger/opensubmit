@@ -12,7 +12,7 @@ from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
-from opensubmit.settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from opensubmit import settings
 from opensubmit.models import Assignment, Submission, TestMachine, inform_student, SubmissionFile, inform_course_owner
 
 
@@ -41,7 +41,7 @@ def download(request, obj_id, filetype, secret=None):
     elif filetype == "validity_testscript":
         ass = get_object_or_404(Assignment, pk=obj_id)
         if secret:
-            if secret != JOB_EXECUTOR_SECRET:
+            if secret != settings.JOB_EXECUTOR_SECRET:
                 raise PermissionDenied
         else:
             if not ass.validity_script_download:
@@ -49,7 +49,7 @@ def download(request, obj_id, filetype, secret=None):
         f = ass.attachment_test_validity
         fname = f.name[f.name.rfind('/') + 1:]
     elif filetype == "full_testscript":
-        if secret != JOB_EXECUTOR_SECRET:
+        if secret != settings.JOB_EXECUTOR_SECRET:
             raise PermissionDenied
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.attachment_test_full
@@ -68,7 +68,7 @@ def jobs(request, secret):
         A visible shared secret in the request is no problem, since the executors come
         from trusted networks. The secret only protects this view from outside foreigners.
     '''
-    if secret != JOB_EXECUTOR_SECRET:
+    if secret != settings.JOB_EXECUTOR_SECRET:
         raise PermissionDenied
 
     try:
@@ -135,13 +135,13 @@ def jobs(request, secret):
                 elif sub.state == Submission.TEST_VALIDITY_PENDING:
                     response['Action'] = 'test_validity'
                     # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = MAIN_URL + "/download/%u/validity_testscript/secret=%s" % (
-                        sub.assignment.pk, JOB_EXECUTOR_SECRET)
+                    response['PostRunValidation'] = settings.MAIN_URL + "/download/%u/validity_testscript/secret=%s" % (
+                        sub.assignment.pk, settings.JOB_EXECUTOR_SECRET)
                 elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
                     response['Action'] = 'test_full'
                     # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = MAIN_URL + "/download/%u/full_testscript/secret=%s" % (
-                        sub.assignment.pk, JOB_EXECUTOR_SECRET)
+                    response['PostRunValidation'] = settings.MAIN_URL + "/download/%u/full_testscript/secret=%s" % (
+                        sub.assignment.pk, settings.JOB_EXECUTOR_SECRET)
                 else:
                     assert (False)
                 # store date of fetching for determining jobs stucked at the executor
@@ -181,7 +181,7 @@ def jobs(request, secret):
                 sub.state = Submission.TEST_COMPILE_FAILED
             inform_student(sub, sub.state)
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
-            submission_file.test_validity = request.POST['Message']
+            sub.save_validation_result(machine, request.POST['Message'])
             if error_code == 0:
                 if sub.assignment.attachment_test_full:
                     sub.state = Submission.TEST_FULL_PENDING
@@ -192,7 +192,7 @@ def jobs(request, secret):
                 sub.state = Submission.TEST_VALIDITY_FAILED
             inform_student(sub, sub.state)
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
-            submission_file.test_full = request.POST['Message']
+            sub.save_fulltest_result(machine, request.POST['Message'])
             if error_code == 0:
                 sub.state = Submission.SUBMITTED_TESTED
                 inform_course_owner(request, sub)
@@ -224,7 +224,7 @@ def machines(request, secret):
         A visible shared secret in the request is no problem, since the executors come
         from trusted networks. The secret only protects this view from outside foreigners.
     '''
-    if secret != JOB_EXECUTOR_SECRET:
+    if secret != settings.JOB_EXECUTOR_SECRET:
         raise PermissionDenied
     if request.method == "POST":
         try:
