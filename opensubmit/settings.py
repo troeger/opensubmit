@@ -215,6 +215,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
 
+GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
+GRAPPELLI_SWITCH_USER = True
+
 # If config file has a section 'overrides',
 # override global config variables.
 if config.has_section('overrides'):
