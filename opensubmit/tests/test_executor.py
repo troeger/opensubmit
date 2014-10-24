@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 
 from opensubmit.models import TestMachine, SubmissionTestResult
 
-@override_settings(DEBUG=True)  # otherwise we have no traceback from live server
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def setUp(self):
         super(ExecutorTestCase, self).setUp()

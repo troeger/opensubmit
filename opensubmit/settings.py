@@ -130,7 +130,7 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.Loader',
 )
 
-TEST_RUNNER = 'opensubmit.tests.cases.DiscoverRunner'
+TEST_RUNNER = 'opensubmit.tests.DiscoverRunner'
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
