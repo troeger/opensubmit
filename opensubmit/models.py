@@ -507,6 +507,13 @@ class Submission(models.Model):
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
 
+    def save_compile_result(self, machine, text):
+        result = SubmissionTestResult(
+            result=text,
+            machine=machine,
+            kind=SubmissionTestResult.COMPILE_TEST)
+        self.file_upload.test_results.add(result)
+
 
 class SubmissionTestResult(models.Model):
     '''
@@ -527,7 +534,6 @@ class SubmissionTestResult(models.Model):
     result = models.TextField(null=True, blank=True)
     kind = models.CharField(max_length=2, choices=JOB_TYPES)
     perf_data = models.TextField(null=True, blank=True)
-
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected

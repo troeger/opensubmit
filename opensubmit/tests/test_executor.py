@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from opensubmit.models import TestMachine, SubmissionTestResult
 
 @override_settings(DEBUG=True)  # otherwise we have no traceback from live server
+@override_settings(MAIN_URL='http://localhost:8001')  # due to live server
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def setUp(self):
         super(ExecutorTestCase, self).setUp()
@@ -40,10 +41,13 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testCompleteRun(self):
         sub = self.createValidatableSubmission(self.current_user) 
         self.assertEquals(0, self._registerExecutor())
-        # Compilation test
-        self.assertEquals(0, self._runExecutor())
-        num_compile_results = SubmissionTestResult.objects.filter(
-            submission_file=sub.file_upload,
-            kind=SubmissionTestResult.COMPILE_TEST
-        ).count()
-        self.assertEquals(1, num_compile_results)
+        for test_kind in [  SubmissionTestResult.COMPILE_TEST,
+                            SubmissionTestResult.VALIDITY_TEST,
+                            SubmissionTestResult.FULL_TEST   ]:
+            self.assertEquals(0, self._runExecutor())
+            results = SubmissionTestResult.objects.filter(
+                submission_file=sub.file_upload,
+                kind=test_kind
+            )
+            self.assertEquals(1, len(results))
+            self.assertNotEquals(0, len(results[0].result))

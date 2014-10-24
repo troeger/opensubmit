@@ -213,24 +213,4 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
 
-# If config file has a section 'overrides',
-# override global config variables.
-if config.has_section('overrides'):
-    global_vars = globals()
-    for key, value in config.items('overrides'):
-        key = key.upper().strip()
-        if key.endswith('[]'):
-            key = key[:-2].strip()
-            values = map(lambda s: s.strip(), value.split(","))
-            if key in global_vars:
-                value_type = type(global_vars[key])
-                global_vars[key] = value_type(global_vars[key] + value_type(values))
-                del value_type
-            else:
-                global_vars[key] = tuple(values)
-            del values
-        else:
-            value = value.strip()
-            global_vars[key] = value
-        del key, value
-    del global_vars
+assert(not config.has_section('overrides'))     # factored out

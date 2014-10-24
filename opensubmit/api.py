@@ -70,19 +70,21 @@ def jobs(request, secret):
     '''
     if secret != JOB_EXECUTOR_SECRET:
         raise PermissionDenied
+
+    try:
+        machine = TestMachine.objects.get(host=request.META["REMOTE_ADDR"])
+        machine.last_contact = datetime.now()
+        machine.save()
+    except:
+        # ask for configuration of new execution hosts by returning the according action
+        machine = TestMachine(host=request.get_host(), last_contact=datetime.now())
+        machine.save()
+        response = HttpResponse()
+        response['Action'] = 'get_config'
+        response['MachineId'] = machine.pk
+        return response
+
     if request.method == "GET":
-        try:
-            machine = TestMachine.objects.get(host=request.META["REMOTE_ADDR"])
-            machine.last_contact = datetime.now()
-            machine.save()
-        except:
-            # ask for configuration of new execution hosts by returning the according action
-            machine = TestMachine(host=request.get_host(), last_contact=datetime.now())
-            machine.save()
-            response = HttpResponse()
-            response['Action'] = 'get_config'
-            response['MachineId'] = machine.pk
-            return response
         subm = Submission.pending_student_tests.all()
         if len(subm) == 0:
             subm = Submission.pending_full_tests.all()
@@ -166,7 +168,7 @@ def jobs(request, secret):
         sub = submission_file.submissions.all()[0]
         error_code = int(request.POST['ErrorCode'])
         if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
-            submission_file.test_compile = request.POST['Message']
+            sub.save_compile_result(machine, request.POST['Message'])
             if error_code == 0:
                 if sub.assignment.attachment_test_validity:
                     sub.state = Submission.TEST_VALIDITY_PENDING
