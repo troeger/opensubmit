@@ -10,14 +10,10 @@
     <h1>User Settings</h1>
 </div>
 
-<form action="." method="post" class="form-horizontal">
- {% csrf_token %}
-<table>
+<form class="form" role="form" action="." method="post">
+{% csrf_token %}
 {{ settingsForm|bootstrap }}
-</table>
-<p>
-<button type="submit" href="." class="btn"><i class="icon icon-ok"></i> Save</button>
-</p>
+<button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Save</button>
 </form>
 
 {% endblock %}

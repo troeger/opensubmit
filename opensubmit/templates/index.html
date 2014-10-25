@@ -16,6 +16,7 @@
 
 {%block navigation_home %}hidden{% endblock %}
 {%block navigation_settings %}hidden{% endblock %}
+{%block navigation_courses %}hidden{% endblock %}
 {%block navigation_logout %}hidden{% endblock %}
 
 {% block content %}
@@ -32,7 +33,7 @@
         <form action="{% url 'login' %}" method="GET">
             <input type="hidden" name="authmethod" value="openid" />
             <img src="{{ STATIC_URL }}images/openid-logo.png" width="51" height="51"/>
-            <input type="submit" value="{{ login_description }}" class="btn"/>
+            <input type="submit" value="{{ login_description }}" class="btn btn-default"/>
         </form>
     </div>
 </section>

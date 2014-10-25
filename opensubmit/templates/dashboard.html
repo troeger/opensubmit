@@ -41,7 +41,7 @@
                         <td>{{ assignment.publish_at }}</td>
                         <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline }}{%else %}{{ assignment.hard_deadline }}{% endif %}</td>
                         <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
-                        <td><a href="{% url 'new' assignment.pk %}" class="btn"><i class="icon-plus"></i> New Submission</a></td>
+                        <td><a href="{% url 'new' assignment.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span> New Submission</a></td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -74,16 +74,16 @@
                             <a href="#" class="label {% if submission.green_tag %}label-success{% endif %}{% if submission.red_tag %}label-important{% endif %}">{{ submission.state_for_students }}</a>
                     </td>
                     <td style="white-space: nowrap;">
-                        <a href="{% url 'details' submission.pk %}" class="btn"><i class="icon-th-list"></i> Details</a>
+                        <a href="{% url 'details' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-th-list"></span> Details</a>
                         {% if submission.can_reupload or submission.can_withdraw %}
                         {% endif %}
                         {% if submission.can_reupload %}
                             <p></p>
-                            <a href="{% url 'update' submission.pk %}" class="btn"><i class="icon-upload"></i> Re-upload</a>
+                            <a href="{% url 'update' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-upload"></span> Re-upload</a>
                         {% endif %}
                         {% if submission.can_withdraw %}
                             <p></p>
-                            <a href="{% url 'withdraw' submission.pk %}" class="btn"><i class="icon-trash"></i> Withdraw</a>
+                            <a href="{% url 'withdraw' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span> Withdraw</a>
                         {% endif %}
                     </td>
                 </tr>
