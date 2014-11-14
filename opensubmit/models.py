@@ -174,7 +174,11 @@ class Assignment(models.Model):
 # Django's custom user model feature would have needed to be introduced
 # before the first syncdb, whcih does not work for existing installations
 def user_unicode(self):
-    return u'%s %s' % (self.first_name, self.last_name)
+    if self.email:
+        shortened = self.email.split('@')[0]
+        return u'%s %s (%s@...)' % (self.first_name, self.last_name, shortened)
+    else:
+        return u'%s %s' % (self.first_name, self.last_name)        
 User.__unicode__ = user_unicode
 
 
