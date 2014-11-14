@@ -47,3 +47,4 @@ class ViewsTestCase(StudentTestCase):
     def testMachineView(self):
         response=self.c.get('/machine/%u/'%self.machine.pk)
         self.assertEquals(response.status_code, 200)
+

@@ -274,7 +274,7 @@ class SubmitTestCase(TestCase):
 
     def createSubmissionFile(self):
         from django.core.files import File as DjangoFile
-        sf = SubmissionFile(attachment=DjangoFile(open("opensubmit/tests/submfiles/working.zip"), unicode("working.zip")))
+        sf = SubmissionFile(attachment=DjangoFile(open("opensubmit/tests/submfiles/working_withsubdir.zip"), unicode("working_withsubdir.zip")))
         sf.save()  
         return sf      
 
