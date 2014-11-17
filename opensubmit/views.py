@@ -255,9 +255,12 @@ def coursearchive(request, course_id):
                     # unpacking not possible, just copy it
                     shutil.copyfile(sub.file_upload.absolute_path(), tempdir + "/" + sub.file_upload.basename())
                 # Create final ZIP file
-                for root, dirs, files in os.walk(tempdir):
+                allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)] 
+                for subdir, files in allfiles:
                     for f in files:
-                        z.write(root + "/" + f, submdir + 'student_files/' + f, zipfile.ZIP_DEFLATED)
+                        zip_relative_dir = subdir.replace(tempdir, "")     
+                        z.write(subdir + "/" + f, submdir + 'student_files/%s/%s'%(zip_relative_dir, f), zipfile.ZIP_DEFLATED)
+
             # add text file with additional information
             info = tempfile.NamedTemporaryFile()
             info.write("Status: %s\n\n" % sub.state_for_students())
