@@ -2,6 +2,7 @@
 
 from django.contrib.admin import ModelAdmin
 from django.db.models import Q
+from opensubmit.models import Course
 
 def course(obj):
 	''' Course name as string.'''
@@ -17,3 +18,8 @@ class AssignmentAdmin(ModelAdmin):
             return qs
         else:
             return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "course":
+            kwargs["queryset"] = Course.objects.filter(active=True)
+        return super(AssignmentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
