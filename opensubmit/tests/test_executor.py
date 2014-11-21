@@ -1,12 +1,13 @@
 import os
 
 from django.test import LiveServerTestCase
-from django.test.utils import override_settings
+from django.test.utils import override_settings, skipUnless
 from opensubmit.tests.cases import StudentTestCase
 from django.contrib.auth.models import User
 
 from opensubmit.models import TestMachine, SubmissionTestResult
 
+@skipUnless(os.system("python3 --version") == 0, None)
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def setUp(self):
         super(ExecutorTestCase, self).setUp()

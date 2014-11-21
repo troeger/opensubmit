@@ -193,7 +193,6 @@ class SubmissionBackendTestCase(TutorACLTestCase):
             # Try to find a file some student stored in a sub-folder on it's own, targets #18
             found_stud_subfile = False
             for entry in zipped_file.filelist:
-                print entry.filename
                 if "student_folder/folder_in_folder/student_file_in_subfolder" in entry.filename:
                     found_stud_subfile = True
             assert(found_stud_subfile)
