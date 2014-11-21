@@ -265,14 +265,13 @@ if len(sys.argv) < 3 or sys.argv[1] not in ["register","run"]:
 
 config = configparser.RawConfigParser()
 config.read(sys.argv[2])
-logformat=config.get("Logging","format")
-logfile=config.get("Logging","file")
-loglevel=logging._levelNames[config.get("Logging","level")]
-logtofile=config.getboolean("Logging","to_file")
-if logtofile:
-    logging.basicConfig(format=logformat, level=loglevel, filename='/tmp/executor.log')
+
+if config.getboolean("Logging","to_file"):
+    logging.basicConfig(format=config.get("Logging","format"), filename='/tmp/executor.log')
 else:
-    logging.basicConfig(format=logformat, level=loglevel)   
+    logging.basicConfig(format=config.get("Logging","format"))   
+logger=logging.getLogger()
+logger.setLevel(config.get("Logging","level"))
 # set global variables from config file
 submit_server=config.get("Server","url")
 secret=config.get("Server","secret")
