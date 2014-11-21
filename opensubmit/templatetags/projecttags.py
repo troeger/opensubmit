@@ -12,14 +12,11 @@ def basename(value):
     return os.path.basename(value)
 
 @register.filter(name='state_label_css')
-@stringfilter
-def state_label_css(subm_id):
-    subm = Submission.objects.get(pk=int(subm_id))
+def state_label_css(subm):
     green_label = "label label-success"
     red_label = "label label-important"
     grey_label = "label label-info"
     # We expect a submission as input
-    print subm
     if subm.is_closed() and subm.grading:
         if subm.grading.means_passed:
             return green_label
@@ -34,3 +31,7 @@ def state_label_css(subm_id):
 @register.simple_tag
 def setting(name):
     return getattr(opensubmit.settings, name, "")
+
+@register.inclusion_tag('inclusion_tags/details_table.html')
+def details_table(submission):
+    return {'submission': submission}

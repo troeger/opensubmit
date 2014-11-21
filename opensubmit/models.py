@@ -445,6 +445,9 @@ class Submission(models.Model):
         Requires: can_modify.
 
         Re-uploads are allowed only when test executions have failed."""
+
+        return True
+
         # Re-uploads are allowed only when test executions have failed.
         if self.state not in (self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ):
             return False

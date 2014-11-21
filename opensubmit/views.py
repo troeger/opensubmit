@@ -27,7 +27,7 @@ from django.forms.models import modelform_factory
 
 from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
 
-from forms import SettingsForm, getSubmissionForm, SubmissionFileForm
+from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from models import inform_student, inform_course_owner, open_assignments
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
@@ -162,21 +162,23 @@ def update(request, subm_id):
     if request.user not in submission.authors.all():
         return redirect('dashboard')
     if request.POST:
-        fileForm = SubmissionFileForm(request.POST, request.FILES)
-        if fileForm.is_valid():
-            f = fileForm.save()
+        updateForm = SubmissionFileUpdateForm(request.POST, request.FILES)
+        if updateForm.is_valid():
+            new_file = SubmissionFile(attachment=updateForm.files['attachment'])
+            new_file.save()
             # fix status of old uploaded file
-            submission.file_upload.replaced_by = f
+            submission.file_upload.replaced_by = new_file
             submission.file_upload.save()
             # store new file for submissions
-            submission.file_upload = f
+            submission.file_upload = new_file
             submission.state = submission.get_initial_state()
+            submission.notes = updateForm.data['notes']
             submission.save()
             messages.info(request, 'Submission files successfully updated.')
             return redirect('dashboard')
     else:
-        fileForm = SubmissionFileForm()
-    return render(request, 'update.html', {'fileForm': fileForm,
+        updateForm = SubmissionFileUpdateForm(instance=submission)
+    return render(request, 'update.html', {'submissionFileUpdateForm': updateForm,
                                            'submission': submission})
 
 

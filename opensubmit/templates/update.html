@@ -8,28 +8,23 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>
-        Update Submission Files<br/>
-        <small>{{ submission.assignment.course }}, {{ submission.assignment }}</small><br/>
-        <small> Submission by {{ submission.submitter.get_full_name }} on {{ submission.created }}</small><br/>
-
-        <small>Authors: {{ submission.authors.all|join:",&nbsp;" }}</small>
-    </h1>
+    <h1>Update Submission File</h1>
 </div>
 
-<p>
-    <i>{{ submission.file_upload.attachment|basename }}</i> - 
-	This file will be removed and replaced by the following one:
-</p>
+{% details_table submission %}
 
-<form action="." method="post" enctype="multipart/form-data" class="form-horizontal">
- {% csrf_token %}
-<table>
-{{ fileForm|bootstrap }}
-</table>
-<br/>
-<button type="submit" href="/update/{{submission.pk}}" class="btn"><i class="icon icon-ok"></i> Save</button>
+<p>Please update your notes and your submission files as neccessary.<br/>For changing the authors, you need to withdraw this solution.</p>
 
-</form>
+
+<div class="row">
+    <div class="col-md-12">
+        <form class="form" role="form" action="." method="post" enctype="multipart/form-data">
+            {% csrf_token %} 
+            {{ submissionFileUpdateForm|bootstrap }}
+            <button type="submit" href="/update/{{submission.pk}}" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Save</button>
+        </form>
+    </div>
+</div>
+
 
 {% endblock %}

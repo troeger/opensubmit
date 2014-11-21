@@ -48,11 +48,14 @@ class SubmissionWithGroupsWithoutFileForm(SubmissionWithGroups):
     pass
 
 
-class SubmissionFileForm(forms.ModelForm):
+class SubmissionFileUpdateForm(forms.ModelForm):
+
+    attachment = forms.FileField()
 
     class Meta:
-        model = SubmissionFile
-        fields = ('attachment',)
+        model = Submission
+        fields = ('notes',)
+
 
 
 def getSubmissionForm(assignment):

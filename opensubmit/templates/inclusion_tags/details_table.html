@@ -1,0 +1,45 @@
+{% load projecttags %}
+
+<table class="table">
+    <tr>
+        <td>Course</td><td>{{ submission.assignment.course }}</td>
+    </tr><tr>
+        <td>Assignment</td><td>{{ submission.assignment }}</td>
+    </tr><tr>
+        <td>Submitter</td><td>{{ submission.submitter }}</td>
+    </tr><tr>
+        <td>Authors</td><td>{{ submission.authors.all|join:", " }}</td>
+    </tr><tr>
+        <td>Notes</td><td>{{ submission.notes }}</td>
+    {% if submission.assignment.has_attachment %}
+        </tr><tr>
+            <td>File</td>
+            <td>
+                <a href="{{ submission.file_upload.get_absolute_url }}">{{ submission.file_upload.attachment|basename }}</a> 
+                {% if submission.file_upload.test_compile %}
+                    <h5>Compilation test result:</h5>
+                    <code>{{ submission.file_upload.test_compile|linebreaks }}</code>
+                {% endif %}
+                {% if submission.file_upload.test_validity %}
+                    <h5>Validity test result:</h5>
+                    <code>{{ submission.file_upload.test_validity|linebreaks }}</code>
+                    {% if submission.assignment.validity_script_download %}
+                        <br/>(<a href="{% url 'download' submission.assignment.pk 'validity_testscript' %}">Download</a> the validation script)
+                    {% endif %}
+                {% endif %}
+            </td>
+    {% endif %}
+    </tr><tr>
+        <td>State</td><td>{{ submission.state_for_students }}</td>
+    {% if submission.show_grading %}
+        </tr><tr>
+            <td>Grading</td><td>{{ submission.grading }}</td>
+        </tr><tr>
+            <td>Grading Notes</td><td>{{ submission.grading_notes|linebreaks }}</td>
+        {% if submission.grading_file %}
+            </tr><tr>
+                <td>Grading Attachment</td><td><a href="{{ submission.grading_file_url }}">{{ submission.grading_file|basename }}</a></td>
+        {% endif %}
+    {% endif %}
+    </tr>
+</table>
