@@ -150,7 +150,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'grappelli',
+    'grappelli',    
     'django.contrib.admin.apps.SimpleAdminConfig',
     'openid2rp.django',
     'bootstrapform',
