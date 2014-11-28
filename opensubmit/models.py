@@ -104,7 +104,7 @@ class Assignment(models.Model):
     attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True)
     validity_script_download = models.BooleanField(default=False)
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True)
-    test_machines = models.ManyToManyField(TestMachine, blank=True, null=True)
+    test_machines = models.ManyToManyField(TestMachine, blank=True, null=True, related_name="assignments")
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""

@@ -5,7 +5,7 @@ from django.test.utils import override_settings, skipUnless
 from opensubmit.tests.cases import StudentTestCase
 from django.contrib.auth.models import User
 
-from opensubmit.models import TestMachine, SubmissionTestResult
+from opensubmit.models import TestMachine, SubmissionTestResult, Submission
 
 @skipUnless(os.system("python3 --version") == 0, None)
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
@@ -69,3 +69,29 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         )
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
+
+    def testAssignmentSpecificTestMachine(self):
+        # Register two test machines T1 and T2
+        self.assertEquals(0, self._registerExecutor())        
+        real_machine = TestMachine.objects.all()[0]
+        fake_machine = TestMachine(host="127.0.0.2")
+        fake_machine.save()
+        # Assign each of them to a different assignment A1 and A2
+        self.openAssignment.test_machines.add(real_machine)
+        self.validatedAssignment.test_machines.add(fake_machine)
+        # Produce submissions for the assignments
+        sub1 = Submission(
+            assignment=self.validatedAssignment,
+            submitter=self.current_user.user,
+            state=Submission.TEST_COMPILE_PENDING,
+            file_upload=self.createSubmissionFile()
+        )
+        sub1.save()
+        # Real executor should not take care of this submission, since it is not for 'openAssignment'
+        old_sub1_state = sub1.state
+        self.assertEquals(0, self._runExecutor())    
+        sub1 = Submission.objects.get(pk=sub1.pk)
+        self.assertEquals(old_sub1_state, sub1.state)
+        self.assertEquals(0, self._runExecutor())        
+
+        # T2 should only take care of A2
