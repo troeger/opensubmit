@@ -76,9 +76,10 @@ class Course(models.Model):
 
 
 class TestMachine(models.Model):
-    host = models.TextField(null=True)
-    last_contact = models.DateTimeField(editable=False)
-    config = models.TextField(null=True)
+    host = models.TextField(null=True, 
+                            help_text="IP address of the test machine, as given in the HTTP REMOTE_ADDR header information.<br/>We recommend to run the executor script on the test machine with the 'register' parameter instead.")
+    last_contact = models.DateTimeField(editable=False, default=timezone.now)
+    config = models.TextField(null=True, help_text="Host configuration, as shown to the students, in JSON format.")
 
     def __unicode__(self):
         return unicode(self.host)
