@@ -4,13 +4,13 @@ from django.contrib.auth.models import User, Group
 from opensubmit.models import Submission, Course
 
 def ensure_user_groups(user, created):
-    if not (user.is_superuser and created):
-        return
+    if not (user.is_staff and created):
+        return False
 
     from django.contrib.auth.models import Group, Permission
 
-    tutor_perms = ( "add_submission", "change_submission", "delete_submission", 
-                    "add_submissionfile", "change_submissionfile", "delete_submissionfile" )
+    tutor_perms = ( "change_submission", "delete_submission", 
+                    "change_submissionfile", "delete_submissionfile" )
     owner_perms = ( "add_assignment", "change_assignment", "delete_assignment",
                     "add_grading", "change_grading",  "delete_grading",
                     "add_gradingscheme", "change_gradingscheme", "delete_gradingscheme",
@@ -19,14 +19,14 @@ def ensure_user_groups(user, created):
                     "change_course" )
 
     tutor_group, created = Group.objects.get_or_create(name="Student Tutors")
-    if created:
-        tutor_group.permissions = [Permission.objects.get(codename=perm) for perm in tutor_perms]      
-        tutor_group.save()  
+    tutor_group.permissions = [Permission.objects.get(codename=perm) for perm in tutor_perms]      
+    tutor_group.save()  
 
     owner_group, created = Group.objects.get_or_create(name="Course Owners")
-    if created:
-        owner_group.permissions = [Permission.objects.get(codename=perm) for perm in owner_perms]
-        owner_group.save()
+    owner_group.permissions = [Permission.objects.get(codename=perm) for perm in owner_perms]
+    owner_group.save()
+
+    return True
 
 @receiver(post_save, sender=User)
 def post_user_save(sender,instance, signal, created, **kwargs):
