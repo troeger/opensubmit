@@ -262,15 +262,16 @@ class PendingStudentTestsManager(models.Manager):
         A model manager used by the Submission model. It returns a sorted list
         of executor work to be done that relates to compilation and
         validation test jobs for students.
-        The basic approach is that compilation should happen before validation,
+        The basic approach is that compilation should happen before validation in FIFO order,
         under the assumption is that the time effort is increasing.
     '''
 
     def get_queryset(self):
-        # TODO: Make this one query
-        compileJobs = Submission.objects.filter(state=Submission.TEST_COMPILE_PENDING).order_by('-modified')
-        validationJobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
-        return list(chain(compileJobs, validationJobs))
+        jobs = Submission.objects.filter(
+            state__in=[ Submission.TEST_COMPILE_PENDING,
+                        Submission.TEST_VALIDITY_PENDING]
+            ).order_by('state').order_by('-modified')
+        return jobs
 
 
 class PendingFullTestsManager(models.Manager):
@@ -283,10 +284,11 @@ class PendingFullTestsManager(models.Manager):
     '''
 
     def get_queryset(self):
-        fullJobs = Submission.objects.filter(state=Submission.TEST_FULL_PENDING).order_by('-modified')
-        closedFullJobs = Submission.objects.filter(state=Submission.CLOSED_TEST_FULL_PENDING).order_by('-modified')
-        return list(chain(fullJobs, closedFullJobs))
-
+        jobs = Submission.objects.filter(
+            state__in=[ Submission.TEST_FULL_PENDING,
+                        Submission.CLOSED_TEST_FULL_PENDING]
+            ).order_by('-state').order_by('-modified')
+        return jobs
 
 class Submission(models.Model):
     '''

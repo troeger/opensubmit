@@ -71,13 +71,15 @@ def jobs(request, secret):
     if secret != settings.JOB_EXECUTOR_SECRET:
         raise PermissionDenied
 
+    remote_host = request.META["REMOTE_ADDR"]
+
     try:
-        machine = TestMachine.objects.get(host=request.META["REMOTE_ADDR"])
+        machine = TestMachine.objects.get(host=remote_host)
         machine.last_contact = datetime.now()
         machine.save()
     except:
         # ask for configuration of new execution hosts by returning the according action
-        machine = TestMachine(host=request.get_host(), last_contact=datetime.now())
+        machine = TestMachine(host=remote_host, last_contact=datetime.now())
         machine.save()
         response = HttpResponse()
         response['Action'] = 'get_config'
@@ -85,9 +87,9 @@ def jobs(request, secret):
         return response
 
     if request.method == "GET":
-        subm = Submission.pending_student_tests.all()
+        subm = Submission.pending_student_tests.filter(assignment__in=machine.assignments.all()).all()
         if len(subm) == 0:
-            subm = Submission.pending_full_tests.all()
+            subm = Submission.pending_full_tests.filter(assignment__in=machine.assignments.all()).all()
             if len(subm) == 0:
                 raise Http404
         for sub in subm:
@@ -97,8 +99,12 @@ def jobs(request, secret):
             # this is not really a problem, since the result remains the same for the same file
             # TODO: Make this a part of the original query
             # TODO: Count number of attempts to leave the same state, mark as finally failed in case; alternatively, the executor must always deliver a re.
-            if (not sub.file_upload.fetched) or (sub.file_upload.fetched + timedelta(
-                    seconds=sub.assignment.attachment_test_timeout) < datetime.now()):
+            if (machine in sub.assignment.test_machines.all()) and (
+                    (not sub.file_upload.fetched) or (
+                     sub.file_upload.fetched + timedelta(
+                        seconds=sub.assignment.attachment_test_timeout) < datetime.now()
+                    )
+                ):
                 if sub.file_upload.fetched:
                     # Stuff that has timed out
                     # we mark it as failed so that the user gets informed

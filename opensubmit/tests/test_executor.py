@@ -13,15 +13,15 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         super(ExecutorTestCase, self).setUp()
 
     def _registerExecutor(self):
-        return os.system("python3 jobexec/executor.py register opensubmit/tests/executor.cfg")
+        self.assertEquals(0, os.system("python3 jobexec/executor.py register opensubmit/tests/executor.cfg"))
+        return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
         return os.system("python3 jobexec/executor.py run opensubmit/tests/executor.cfg")
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
-        exit_status = self._registerExecutor()
-        self.assertEquals(0, exit_status)
+        assert(self._registerExecutor().pk)
         self.assertEquals(machine_count+1, TestMachine.objects.all().count())
 
     def testRunRequestFromUnknownMachine(self):
@@ -34,12 +34,13 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
     def testEverythingAlreadyTested(self):
         self.createValidatedSubmission(self.current_user)
-        self.assertEquals(0, self._registerExecutor())
+        assert(self._registerExecutor().pk)
         self.assertEquals(0, self._runExecutor())
 
     def testCompileTest(self):
         self.sub = self.createValidatableSubmission(self.current_user) 
-        self.assertEquals(0, self._registerExecutor())
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
         self.assertEquals(0, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
@@ -72,8 +73,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
     def testAssignmentSpecificTestMachine(self):
         # Register two test machines T1 and T2
-        self.assertEquals(0, self._registerExecutor())        
-        real_machine = TestMachine.objects.all()[0]
+        real_machine = self._registerExecutor()        
         fake_machine = TestMachine(host="127.0.0.2")
         fake_machine.save()
         # Assign each of them to a different assignment A1 and A2
