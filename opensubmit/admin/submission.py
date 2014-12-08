@@ -118,7 +118,7 @@ class SubmissionAdmin(ModelAdmin):
                     'classes': ('grp-collapse grp-closed',)
                 }),
             ('Submission and test results',
-                {   'fields': ('notes','file_link','compile_result','validation_result','fulltest_result'),
+                {   'fields': ('notes',('file_link','file_upload'),'compile_result','validation_result','fulltest_result'),
                 }),
             ('Grading',
                 {'fields': ('grading_status', 'grading', 'grading_notes', 'grading_file',),}),
@@ -130,7 +130,7 @@ class SubmissionAdmin(ModelAdmin):
             return mark_safe(u'No file submitted by student.')
         else:
             return mark_safe(u'<a href="%s">%s</a>' % (sfile.get_absolute_url(), sfile.basename()))
-    file_link.short_description = "Student upload"
+    file_link.short_description = "Stored upload"
 
 
     def _render_test_result(self, result_obj, enabled):

@@ -345,9 +345,8 @@ class Submission(models.Model):
     assignment = models.ForeignKey(Assignment, related_name='submissions')
     submitter = models.ForeignKey(User, related_name='submitted')
     authors = models.ManyToManyField(User, related_name='authored')
-    authors.help_text = ''
     notes = models.TextField(max_length=200, blank=True)
-    file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True)
+    file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True, verbose_name='New upload')
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey(Grading, blank=True, null=True)
