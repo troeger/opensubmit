@@ -222,7 +222,7 @@ class SubmissionFile(models.Model):
 
     attachment = models.FileField(upload_to=upload_path)
     fetched = models.DateTimeField(editable=False, null=True)
-    replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True)
+    replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True, editable=False)
 
     def __unicode__(self):
         return unicode(self.attachment.name)
