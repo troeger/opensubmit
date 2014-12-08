@@ -503,26 +503,36 @@ class Submission(models.Model):
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
 
-    def save_compile_result(self, machine, text):
+    def _save_test_result(self, machine, text, kind): 
         result = SubmissionTestResult(
             result=text,
             machine=machine,
-            kind=SubmissionTestResult.COMPILE_TEST)
+            kind=kind)
         self.file_upload.test_results.add(result)
+
+    def _get_test_result(self, kind):
+        try:
+            return self.file_upload.test_results.get(kind=kind)
+        except:
+            return None
+
+    def save_compile_result(self, machine, text):
+        self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST)
 
     def save_validation_result(self, machine, text):
-        result = SubmissionTestResult(
-            result=text,
-            machine=machine,
-            kind=SubmissionTestResult.VALIDITY_TEST)
-        self.file_upload.test_results.add(result)
+        self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST)
 
     def save_fulltest_result(self, machine, text):
-        result = SubmissionTestResult(
-            result=text,
-            machine=machine,
-            kind=SubmissionTestResult.FULL_TEST)
-        self.file_upload.test_results.add(result)
+        self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST)
+
+    def get_compile_result(self):
+        return self._get_test_result(SubmissionTestResult.COMPILE_TEST)
+
+    def get_validation_result(self):
+        return self._get_test_result(SubmissionTestResult.VALIDITY_TEST)
+
+    def get_fulltest_result(self):
+        return self._get_test_result(SubmissionTestResult.FULL_TEST)
 
 
 class SubmissionTestResult(models.Model):

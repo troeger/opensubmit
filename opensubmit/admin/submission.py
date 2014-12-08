@@ -36,6 +36,8 @@ def grading_file(submission):
         return False
 grading_file.boolean = True            # show nice little icon
 
+def test_results(submission):
+    return "Foo"
 
 class SubmissionStateFilter(SimpleListFilter):
 
@@ -99,39 +101,6 @@ class SubmissionCourseFilter(SimpleListFilter):
         else:
             return qs.filter(assignment__course__in=tutor_courses(request.user))
 
-class SubmissionFileLinkWidget(forms.Widget):
-
-    def __init__(self, subFile):
-        if subFile:
-            self.subFileId = subFile.pk
-        else:
-            self.subFileId = None
-        super(SubmissionFileLinkWidget, self).__init__()
-
-    def value_from_datadict(self, data, files, name):
-        return self.subFileId
-
-    def render(self, name, value, attrs=None):
-        try:
-            sfile = SubmissionFile.objects.get(pk=self.subFileId)
-        except:
-            return mark_safe(u'Nothing stored')
-        test_results = sfile.test_result_dict()
-        text = u'<a href="%s">%s</a><table border=1>' % (sfile.get_absolute_url(), sfile.basename())
-        if SubmissionTestResult.COMPILE_TEST in test_results:
-            result = test_results[SubmissionTestResult.COMPILE_TEST]['result']
-            text += u'<tr><td colspan="2"><h3>Compilation test</h3><pre>%s</pre></td></tr>' % (result)
-        if SubmissionTestResult.VALIDITY_TEST in test_results:
-            result = test_results[SubmissionTestResult.VALIDITY_TEST]['result']
-            text += u'<tr><td><h3>Validation test</h3><pre>%s</pre></td></tr>' % (result)
-        if SubmissionTestResult.FULL_TEST in test_results:
-            result = test_results[SubmissionTestResult.FULL_TEST]['result']
-            text += u'<tr><td><h3>Full test</h3><pre>%s</pre></td></tr>' % (result)
-        text += u'</table>'
-        # TODO: This is not safe, since the script output can be influenced by students
-        return mark_safe(text)
-
-
 class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
@@ -139,8 +108,64 @@ class SubmissionAdmin(ModelAdmin):
     list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    fields = ('assignment', 'authors', ('submitter', 'notes'), 'file_upload', ('grading', 'grading_notes', 'grading_file'))
     actions = ['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+
+    fieldsets = (
+            ('', 
+                {'fields': ('assignment',),}),
+            ('Authors', 
+                {   'fields': ('authors','submitter'),
+                    'classes': ('grp-collapse grp-closed',)
+                }),
+            ('Submission and test results',
+                {   'fields': ('notes','file_link','compile_result','validation_result','fulltest_result'),
+                }),
+            ('Grading',
+                {'fields': ('grading_status', 'grading', 'grading_notes', 'grading_file',),}),
+    )
+
+    def file_link(self, instance):
+        sfile = instance.file_upload
+        if not sfile:
+            return mark_safe(u'No file submitted by student.')
+        else:
+            return mark_safe(u'<a href="%s">%s</a>' % (sfile.get_absolute_url(), sfile.basename()))
+    file_link.short_description = "Student upload"
+
+
+    def _render_test_result(self, result_obj, enabled):
+        if not result_obj:
+            if enabled:
+                return mark_safe(u'Enabled, no results.')
+            else:
+                return mark_safe(u'Not enabled.')                
+        else:
+            return format_html("Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
+
+    def compile_result(self, instance):
+        result_obj = instance.get_compile_result()
+        return self._render_test_result(result_obj, instance.assignment.attachment_test_compile)
+    compile_result.short_description = "Compilation test"
+    test_results.allow_tags = True
+
+    def validation_result(self, instance):
+        result_obj = instance.get_validation_result()
+        return self._render_test_result(result_obj, instance.assignment.attachment_test_validity)
+    compile_result.short_description = "Validation test"
+    test_results.allow_tags = True
+
+    def fulltest_result(self, instance):
+        result_obj = instance.get_fulltest_result()
+        return self._render_test_result(result_obj, instance.assignment.attachment_test_full)
+    compile_result.short_description = "Full test"
+    test_results.allow_tags = True
+
+    def grading_status(self, instance):
+        return mark_safe(u'''<input type="radio" name="newstate" value="unfinished">Grading not finished</input>
+                        <input type="radio" name="newstate" value="finished">Grading finished</input>
+        ''')
+    grading_status.short_description = "Status"
+
 
     def get_queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
@@ -155,11 +180,13 @@ class SubmissionAdmin(ModelAdmin):
             modify an existing submission. Overriding the ModelAdmin getter
             is the documented way to do that.
         '''
+        # Pseudo-fields generated by functions always must show up in the readonly list
+        pseudo_fields = ('file_link', 'compile_result', 'validation_result','fulltest_result', 'grading_status')
         if obj:
-            return ('assignment', 'submitter', 'notes')
+            return ('assignment', 'submitter', 'notes')+pseudo_fields
         else:
             # New manual submission
-            return ()
+            return pseudo_fields
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         ''' Offer grading choices from the assignment definition as potential form
@@ -171,19 +198,6 @@ class SubmissionAdmin(ModelAdmin):
                 kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
 
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
-    def get_form(self, request, obj=None):
-        ''' Establish our own renderer for the file upload field, and adjust some labels.
-        '''
-        form = super(SubmissionAdmin, self).get_form(request, obj)
-        if obj:
-            self.obj = obj
-            form.base_fields['file_upload'].widget = SubmissionFileLinkWidget(getattr(obj, 'file_upload', ''))
-            form.base_fields['file_upload'].required = False
-            form.base_fields['grading_notes'].label = "Grading notes"
-        else:
-            self.obj = None
-        return form
 
     def save_model(self, request, obj, form, change):
         ''' Our custom addition to the view HTML in templates/admin/opensubmit/submission/change_form.HTML
