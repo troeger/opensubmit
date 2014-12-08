@@ -171,12 +171,6 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         subcount = submfilter.queryset(self.request, Submission.objects.all()).count()      
         self.assertEquals(subcount, len(self.all_submissions))
 
-    def testSubmissionFileWidget(self):
-        from opensubmit.admin.submission import SubmissionFileLinkWidget
-        widget = SubmissionFileLinkWidget(self.val_sub.file_upload)
-        self.assertEquals(self.val_sub.file_upload.pk, widget.value_from_datadict(None, None, None))
-        self.assertInHTML("<pre>Compilation ok.</pre>", widget.render(None, None))
-
     def testGradingTableView(self):
         response = self.c.get('/course/%u/gradingtable'%self.course.pk)
         self.assertEquals(response.status_code, 200)
