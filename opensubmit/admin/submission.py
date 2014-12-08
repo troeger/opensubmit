@@ -146,19 +146,19 @@ class SubmissionAdmin(ModelAdmin):
         result_obj = instance.get_compile_result()
         return self._render_test_result(result_obj, instance.assignment.attachment_test_compile)
     compile_result.short_description = "Compilation test"
-    test_results.allow_tags = True
+    compile_result.allow_tags = True
 
     def validation_result(self, instance):
         result_obj = instance.get_validation_result()
         return self._render_test_result(result_obj, instance.assignment.attachment_test_validity)
-    compile_result.short_description = "Validation test"
-    test_results.allow_tags = True
+    validation_result.short_description = "Validation test"
+    validation_result.allow_tags = True
 
     def fulltest_result(self, instance):
         result_obj = instance.get_fulltest_result()
         return self._render_test_result(result_obj, instance.assignment.attachment_test_full)
-    compile_result.short_description = "Full test"
-    test_results.allow_tags = True
+    fulltest_result.short_description = "Full test"
+    fulltest_result.allow_tags = True
 
     def grading_status(self, instance):
         return mark_safe(u'''<input type="radio" name="newstate" value="unfinished">Grading not finished</input>

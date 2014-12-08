@@ -28,16 +28,16 @@ def upload_path(instance, filename):
 
 
 class Grading(models.Model):
-    title = models.CharField(max_length=20)
-    means_passed = models.BooleanField(default=True)
+    title = models.CharField(max_length=20, help_text="The title of the grade, such as 'A', 'B', 'Pass', or 'Fail'.")
+    means_passed = models.BooleanField(default=True, help_text="Students are informed about their pass or fail in the assignment, based on this flag in their given grade.")
 
     def __unicode__(self):
         return unicode(self.title)
 
 
 class GradingScheme(models.Model):
-    title = models.CharField(max_length=200)
-    gradings = models.ManyToManyField(Grading, related_name='schemes')
+    title = models.CharField(max_length=200, help_text="Choose a directly understandable name, such as 'ECTS' or 'Pass / Fail'.")
+    gradings = models.ManyToManyField(Grading, related_name='schemes', help_text="The list of gradings that form this grading scheme.")
 
     def __unicode__(self):
         return unicode(self.title)
@@ -46,11 +46,11 @@ class GradingScheme(models.Model):
 class Course(models.Model):
     title = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    owner = models.ForeignKey(User, related_name='courses')
-    tutors = models.ManyToManyField(User, blank=True, null=True, related_name='courses_tutoring')
-    homepage = models.URLField(max_length=200)
-    active = models.BooleanField(default=True)
-    max_authors = models.PositiveSmallIntegerField(default=1)
+    owner = models.ForeignKey(User, related_name='courses', help_text="Only this user can change the course details and create new assignments.")
+    tutors = models.ManyToManyField(User, blank=True, null=True, related_name='courses_tutoring', help_text="These users can edit / grade submissions for the course.")
+    homepage = models.URLField(max_length=200, verbose_name="Course description link")
+    active = models.BooleanField(default=True, help_text="Only assignments and submissions of active courses are shown to students and tutors. Use this flag for archiving past courses.")
+    max_authors = models.PositiveSmallIntegerField(default=1, help_text="Maximum number of authors (= group size) for assignments in this course.")
 
     def __unicode__(self):
         return unicode(self.title)
@@ -92,19 +92,19 @@ class Assignment(models.Model):
 
     title = models.CharField(max_length=200)
     course = models.ForeignKey(Course, related_name='assignments')
-    download = models.URLField(max_length=200)
+    download = models.URLField(max_length=200, verbose_name="Link for assignment description")
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments")
+    gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments", verbose_name="grading scheme")
     publish_at = models.DateTimeField(default=timezone.now)
-    soft_deadline = models.DateTimeField(blank=True, null=True)
-    hard_deadline = models.DateTimeField()      # when should the assignment dissappear
-    has_attachment = models.BooleanField(default=False)
-    attachment_test_timeout = models.IntegerField(default=30)
-    attachment_test_compile = models.BooleanField(default=False)
-    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True)
-    validity_script_download = models.BooleanField(default=False)
-    attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True)
-    test_machines = models.ManyToManyField(TestMachine, blank=True, null=True, related_name="assignments")
+    soft_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline shown to students. After this point in time, submissions are still possible. Leave empty for only using a hard deadline.")
+    hard_deadline = models.DateTimeField(help_text="Deadline after which submissions are no longer possible.")      
+    has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only fill the notes field.")
+    attachment_test_timeout = models.IntegerField(default=30, verbose_name="Timout for tests", help_text="Timeout (in seconds) after which the compilation / validation test / full test is cancelled. The submission is marked as invalid in this case. Intended for student code with deadlocks.")
+    attachment_test_compile = models.BooleanField(default=False, verbose_name="Compile test ?", help_text="If activated, the student upload is uncompressed and 'make' is executed on one of the test machines.")
+    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed, compiled and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
+    validity_script_download = models.BooleanField(default=False, verbose_name='Download of validation script ?', help_text='If activated, the students can download the validation script for offline analysis.')
+    attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Full test script', help_text='Same as the validation script, but executed AFTER the hard deadline to determine final grading criterias for the submission. Results are not shown to students.')
+    test_machines = models.ManyToManyField(TestMachine, blank=True, null=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""
@@ -220,7 +220,7 @@ class SubmissionFile(models.Model):
         again, which allows to find 'stucked' executor jobs on the server side.
     '''
 
-    attachment = models.FileField(upload_to=upload_path)
+    attachment = models.FileField(upload_to=upload_path, verbose_name="File upload")
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True, editable=False)
 
@@ -350,8 +350,8 @@ class Submission(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey(Grading, blank=True, null=True)
-    grading_notes = models.TextField(max_length=1000, blank=True, null=True)
-    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True)
+    grading_notes = models.TextField(max_length=1000, blank=True, null=True, help_text="Specific notes about the grading for this submission.")
+    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True, help_text="Additional information about the grading as file.")
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 
     def __unicode__(self):
