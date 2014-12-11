@@ -39,7 +39,7 @@ def install_config():
         config.readfp(open('/etc/opensubmit/settings.ini')) 
     except IOError:
         print "Seems like the config file /etc/opensubmit/settings.ini does not exist. I am copying the template, don't forget to edit it !"
-        shutil.copyfile('etc/settings.ini.template','/etc/opensubmit/settings.ini')
+        shutil.copyfile('settings.ini.template','/etc/opensubmit/settings.ini')
 
 # Our overloaded 'setup.py clean' command
 class clean(_clean):
@@ -48,23 +48,41 @@ class clean(_clean):
         clean_pycs()
         clean_dirs()
 
+# Our overloaded 'setup.py install' command
+class install(_clean):
+    def run(self):
+        _install.run(self)
+        print "Running post-installation steps"
+        install_config()
+
 setup(
     name = 'OpenSubmit',
     version = __version__,
-    packages = ['opensubmit','executor_api'],
-    include_package_data = True,
+    url = 'https://github.com/troeger/opensubmit',
+    license='AGPL',    
+    author = 'Peter Troeger',
+    author_email = 'peter@troeger.eu',
+    classifiers=[
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 4 - Beta',
+
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7'
+    ],
     install_requires=[
-        'django',
-        'openid2rp',
-        'psycopg2',
+        'Django>=1.7',
         'django-bootstrap-form',
-        'djangorestframework'
+        'openid2rp',
+        'djangorestframework>=2.4',
+        'django-grappelli'
     ],    
+    packages = ['opensubmit'],
+
     cmdclass={
+        'install': install,
         'clean': clean
     },
-    data_files=[ ('etc/opensubmit', ['opensubmit/settings.ini.template']) ],
-    maintainer = 'Peter Troeger',
-    maintainer_email = 'peter@troeger.eu',
-	url = 'https://github.com/troeger/opensubmit'
 )
+
+
