@@ -6,20 +6,6 @@ from distutils.command.install import install as _install
 from distutils.command.clean import clean as _clean
 from opensubmit import __version__
 
-#TODO: Support packaging executor, must include dependency to psutil
-
-def check_python_version():
-    version_message = 'This Django project requires Python 2.6+'
-
-    if sys.version_info[0] < 2 or sys.version_info[0] == 2 and sys.version_info[1] < 6:
-        print version_message
-        exit(-1)
-    elif sys.version_info[0] > 2:
-        print(version_message)
-        exit(-1)
-
-check_python_version()
-
 def clean_pycs():
     # Clean all pyc files recursively
     for root, dirs, files in os.walk('opensubmit'):
@@ -68,9 +54,10 @@ setup(
         'django-bootstrap-form',
         'openid2rp',
         'djangorestframework>=2.4',
-        'django-grappelli'
+        'django-grappelli',
+        'psutil'                            # for executor
     ],    
-    # "executor_api.*" must move become "opensubmit.executor_api.*" before being
+    # "executor_api.*" must migrate to "opensubmit.executor_api.*" before being
     # included, otherwise we get a separate python module with a completely
     # independent name in the final installation.
     packages = find_packages(exclude=[  'executor_api', 

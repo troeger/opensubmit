@@ -3,5 +3,6 @@ django-bootstrap-form
 openid2rp
 djangorestframework>=2.4
 django-grappelli
+psutil
 twine
 

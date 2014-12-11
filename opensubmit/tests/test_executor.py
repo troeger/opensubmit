@@ -13,11 +13,11 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         super(ExecutorTestCase, self).setUp()
 
     def _registerExecutor(self):
-        self.assertEquals(0, os.system("python3 jobexec/executor.py register opensubmit/tests/executor.cfg"))
+        self.assertEquals(0, os.system("python3 -m opensubmit.executor register opensubmit/tests/executor.cfg"))
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
-        return os.system("python3 jobexec/executor.py run opensubmit/tests/executor.cfg")
+        return os.system("python3 -m opensubmit.executor run opensubmit/tests/executor.cfg")
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()

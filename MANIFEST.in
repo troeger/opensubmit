@@ -8,6 +8,7 @@
 # Therefore, we just list them here.
 
 include opensubmit/settings.ini.template
+include opensubmit/executor/executor.cfg.template
 graft opensubmit/static
 graft opensubmit/templates
 graft opensubmit/templatetags
