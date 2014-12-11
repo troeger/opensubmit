@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os, sys, shutil
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from distutils.command.install import install as _install
 from distutils.command.clean import clean as _clean
 from opensubmit import __version__
@@ -70,8 +70,13 @@ setup(
         'djangorestframework>=2.4',
         'django-grappelli'
     ],    
-    packages = ['opensubmit'],
-
+    # "executor_api.*" must move become "opensubmit.executor_api.*" before being
+    # included, otherwise we get a separate python module with a completely
+    # independent name in the final installation.
+    packages = find_packages(exclude=[  'executor_api', 
+                                        'executor_api.migrations',
+                                        'opensubmit.tests']),     # Just add Python packages
+    include_package_data = True,                                  # Consider MANIFEST.in
     cmdclass={
         'clean': clean
     },
