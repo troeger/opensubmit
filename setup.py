@@ -48,13 +48,6 @@ class clean(_clean):
         clean_pycs()
         clean_dirs()
 
-# Our overloaded 'setup.py install' command
-class install(_clean):
-    def run(self):
-        _install.run(self)
-        print "Running post-installation steps"
-        install_config()
-
 setup(
     name = 'OpenSubmit',
     version = __version__,
@@ -80,7 +73,6 @@ setup(
     packages = ['opensubmit'],
 
     cmdclass={
-        'install': install,
         'clean': clean
     },
 )
