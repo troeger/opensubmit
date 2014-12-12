@@ -47,7 +47,6 @@ setup(
         'openid2rp',
         'djangorestframework>=2.4',
         'django-grappelli',
-        'psycopg2',
         'psutil'                            # for executor
     ],    
     # "executor_api.*" must migrate to "opensubmit.executor_api.*" before being

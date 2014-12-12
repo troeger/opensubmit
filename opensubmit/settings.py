@@ -9,17 +9,6 @@ from ConfigParser import SafeConfigParser
 # It also deduces whether we are in a live environment (is_production,
 # which forces DEBUG to False), or in a development environment (al-
 # lowing DEBUG mode).
-#
-# The application first searches for files named 'settings.ini' in
-# either the system's configuration directory (%APPDATA% on Windows,
-# /etc on others) or in the directory where the settings.py is located.
-# If this file is found, it is loaded in is_production mode (no DEBUG).
-# Then, same behaviour applies for a 'settings_dev.ini' file, which
-# starts the app in the DEBUG mode specified in the configuration file.
-#
-# If both these files cannot be found, the template file located in
-# the settings.py directory, called 'settings.ini.template', is loaded
-# in DEBUG mode.
 def find_config_info():
     config_info_default = (os.path.abspath('opensubmit/settings.ini.template'), False, )
 
@@ -35,13 +24,13 @@ def find_config_info():
         system_config_directory = system_config_directories['default']
 
     config_directories = [
-        os.path.join(system_config_directory, 'opensubmit'),
         os.path.join(os.path.dirname(__file__)),
+        os.path.join(system_config_directory, 'opensubmit'),
     ]
 
     config_files = (
-        ('settings.ini', True, ),
         ('settings_dev.ini', False, ),
+        ('settings.ini', True, ),
     )
 
     for config_file, production in config_files:
@@ -50,8 +39,7 @@ def find_config_info():
             if os.path.isfile(config_file_path):
                 return (config_file_path, production, )
 
-    print("No configuration file found. Please copy .../opensubmit/settings.ini.template to {} and edit it. Falling back to default settings.".format(os.path.join(config_directories[0], config_files[0][0])), file=sys.stderr)
-    print("WARNING: THIS APP IS EXECUTED IN DEBUG MODE.", file=sys.stderr)
+    print("No configuration file found. Falling back to default settings, which most likely will not work.", file=sys.stderr)
     return config_info_default
 
 config_file_path, is_production = find_config_info()

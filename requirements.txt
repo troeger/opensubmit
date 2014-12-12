@@ -5,5 +5,4 @@ djangorestframework>=2.4
 django-grappelli
 psutil
 twine
-psycopg2
 

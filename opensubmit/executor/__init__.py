@@ -1,10 +1,6 @@
-"""
-This is the executor script for the OpenSubmit system.
-It is intended to run on a dedicated host, in order to download
-and check student code.
-
-Written for Python3.
-"""
+'''
+    Everything that is about to be executed on a test machine.
+'''
 
 import urllib, urllib.request, urllib.error, urllib.parse
 import logging, json
@@ -23,6 +19,14 @@ submit_server = None
 secret = None       
 targetdir=None
 pidfile=None
+
+def _read_config(config_file):
+    pass
+
+def register(config_file):
+    pass
+
+# TODO: Port to Python2, make eveything into methods
 
 def cleanup_and_exit(finalpath, exit_code):
     ''' 
@@ -255,7 +259,6 @@ def run_job(finalpath, cmd, submid, action, timeout, ignore_errors=False):
         output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
         send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
         cleanup_and_exit(finalpath, -1)
-
 
 '''
     Read configuration file, either as specified on command-line, or from

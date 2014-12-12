@@ -1,6 +1,6 @@
 # Files and directories to include in packaging that are NOT Python packages
 #
-# Using include_package_data for listing the additional includes below works
+# Using include_package_data for describing the additional includes below works
 # in theory, but does not support directory traversal, which is especially
 # annoying with the 'static' directory. We could also make everything below a pseudo-package
 # by giving them a __init__.py file, which is too much of a hack.
