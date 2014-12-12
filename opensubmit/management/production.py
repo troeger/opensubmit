@@ -41,7 +41,7 @@ def check_web_db():
     '''
         Everything related to database checks and updates.
     '''
-    print "Testing for neccessary database migrations"
+    print "Testing for neccessary database migrations..."
     django_admin("migrate")             # apply schema migrations
     django_admin("fixperms")            # Fix django backend user permissions, if needed
 

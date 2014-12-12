@@ -144,7 +144,7 @@ INSTALLED_APPS = (
     'bootstrapform',
     'rest_framework',
     'opensubmit',
-    'executor_api',
+#    'executor_api',
 )
 LOGGING = {
     'version': 1,
