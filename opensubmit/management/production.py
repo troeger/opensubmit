@@ -16,6 +16,9 @@ EXECUTOR_CONFIG_FILE = CONFIG_PATH+'/executor.ini'
 EXECUTOR_TEMPLATE = "opensubmit/executor/executor.cfg.template"     # relative to package path
 
 def django_admin(command):
+    '''
+        Run something like it would be done through Django's manage.py.
+    '''
     from django.core.management import execute_from_command_line
     execute_from_command_line([sys.argv[0], command])
 
@@ -66,14 +69,6 @@ def check_executor_config():
         shutil.copy(orig,EXECUTOR_CONFIG_FILE)
         return False    # Manual editing is needed before further proceeding with the fresh file
 
-def register_executor():
-    '''
-        Register executor, based on the given configuration.
-    '''
-    #TODO: This obviousely can be done much better, since the executor is now a module
-    print "Registering OpenSubmit executor..."
-    os.system("python3 -m opensubmit.executor register "+EXECUTOR_CONFIG_FILE)
-
 def console_script():
     '''
         The main entry point for the production administration script 'opensubmit', installed by setuptools.
@@ -98,5 +93,12 @@ def console_script():
     if "check_executor" in sys.argv:
         if not check_executor_config():
             return
-        register_executor()
+        print "Registering OpenSubmit executor..."
+        from opensubmit.executor import send_config
+        send_config(EXECUTOR_CONFIG_FILE)
         exit(0)
+
+    if "executor" in sys.argv:
+        from opensubmit.executor import run
+        run(EXECUTOR_CONFIG_FILE)
+

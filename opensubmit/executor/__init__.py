@@ -2,41 +2,34 @@
     Everything that is about to be executed on a test machine.
 '''
 
-import urllib, urllib.request, urllib.error, urllib.parse
+from urllib import urlencode
+from urllib2 import urlopen, HTTPError
 import logging, json
 import zipfile, tarfile
-import tempfile, os, shutil, subprocess, signal, stat, configparser, sys, fcntl, pickle
+import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle
 import time
-try:
-    import psutil       # compiled version for Py3 is crashing on MacOS X
-    havePsUtil=True
-except:
-    havePsUtil=False
 from datetime import datetime, timedelta
 
-# Global configuration for the script, filled from the config file
-submit_server = None
-secret = None       
-targetdir=None
-pidfile=None
-
-def _read_config(config_file):
-    pass
-
-def register(config_file):
-    pass
-
-# TODO: Port to Python2, make eveything into methods
-
-def cleanup_and_exit(finalpath, exit_code):
-    ''' 
-        Exit this script, clean any student code or generated
-        data before.
+def read_config(config_file):
     '''
-    shutil.rmtree(finalpath, ignore_errors=True)
-    exit(exit_code)
+        Fill config dictionary, already check and interpret some values.
+    '''
+    import ConfigParser
+    config = ConfigParser.RawConfigParser()
+    config.read(config_file)
 
-def send_result(msg, error_code, submission_file_id, action, perfdata=None):
+    if config.getboolean("Logging","to_file"):
+        logging.basicConfig(format=config.get("Logging","format"), filename='/tmp/executor.log')
+    else:
+        logging.basicConfig(format=config.get("Logging","format"))   
+    logger=logging.getLogger()
+    logger.setLevel(config.get("Logging","level"))
+    targetdir=config.get("Execution","directory")
+    assert(targetdir.startswith('/'))
+    assert(targetdir.endswith('/'))
+    return config
+
+def _send_result(config, msg, error_code, submission_file_id, action, perfdata=None):
     ''' 
         Send some result to the OpenSubmit web server.
     '''
@@ -55,14 +48,13 @@ def send_result(msg, error_code, submission_file_id, action, perfdata=None):
     # Prepare response HTTP package
     post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action),('PerfData',perfdata)]    
     try:
-        post_data = urllib.parse.urlencode(post_data)
+        post_data = urlencode(post_data)
         post_data = post_data.encode('utf-8')
-        urllib.request.urlopen('%s/jobs/secret=%s'%(submit_server, secret), post_data)  
-    except urllib.error.HTTPError as e:
+        urlopen('%s/jobs/secret=%s'%(config.get("Server","url"), config.get("Server","secret")), post_data)  
+    except HTTPError as e:
         logging.error(str(e))
-        exit(-1)
 
-def infos_opencl():
+def _infos_opencl():
     '''
         Determine some system information about the installed OpenCL device.
     '''
@@ -83,7 +75,7 @@ def infos_opencl():
     except:
         return ""
 
-def infos_cmd(cmd):
+def _infos_cmd(cmd):
     '''
         Determine some system information based on a shell command.
     '''
@@ -94,29 +86,7 @@ def infos_cmd(cmd):
     except:
         return ""
 
-def send_config():
-    '''
-        Sends the configuration of this machine to the OpenSubmit web server.
-    '''
-    conf = os.uname()
-    output = []
-    output.append(["Operating system","%s %s (%s)"%(conf[0], conf[2], conf[4])])
-    output.append(["CPUID information", infos_cmd("cpuid")])
-    output.append(["CC information", infos_cmd("cc -v")])
-    output.append(["JDK information", infos_cmd("java -version")])
-    output.append(["MPI information", infos_cmd("mpirun -version")])
-    output.append(["Scala information", infos_cmd("scala -version")])
-    output.append(["OpenCL headers", infos_cmd("find /usr/include|grep opencl.h")])
-    output.append(["OpenCL libraries", infos_cmd("find /usr/lib/ -iname '*opencl*'")])
-    output.append(["NVidia SMI", infos_cmd("nvidia-smi -q")])
-    output.append(["OpenCL Details", infos_opencl()])
-    logging.debug("Sending config data: "+str(output))
-    post_data = [('Config',json.dumps(output)),('Name',infos_cmd("hostname"))]
-    post_data = urllib.parse.urlencode(post_data)
-    post_data = post_data.encode('utf-8')
-    urllib.request.urlopen('%s/machines/secret=%s'%(submit_server, secret), post_data)
-
-def fetch_job():
+def _fetch_job(config):
     '''
         Fetch any available work from the OpenSubmit server.
         Returns job information as function result tuple:
@@ -128,13 +98,13 @@ def fetch_job():
 
     '''
     try:
-        result = urllib.request.urlopen("%s/jobs/secret=%s"%(submit_server,secret))
-        fname=targetdir+datetime.now().isoformat()
+        result = urlopen("%s/jobs/secret=%s"%(config.get("Server","url"),config.get("Server","secret")))
+        fname=config.get("Execution","directory")+datetime.now().isoformat()
         headers=result.info()
         if headers['Action'] == 'get_config':
             # The server does not know us, so it demands registration before hand.
-            logging.info("Machine unknown on server, run 'executor.py register' first")
-            exit(1)            
+            logging.info("Machine unknown on server, perform registration first.")
+            return [None]*5
         submid=headers['SubmissionFileId']
         action=headers['Action']
         timeout=int(headers['Timeout'])
@@ -147,22 +117,24 @@ def fetch_job():
         target.write(result.read())
         target.close()
         return fname, submid, action, timeout, validator
-    except urllib.error.HTTPError as e:
+    except HTTPError as e:
         if e.code == 404:
             logging.debug("Nothing to do.")
-            exit(0)
+            return [None]*5
         else:
             logging.error(str(e))
-            exit(-1)
+            return [None]*5
 
-def unpack_job(fname, submid, action):
+def _unpack_job(config, fname, submid, action):
     '''
         Decompress the downloaded file "fname" into the globally defined "targetdir".
         Returns on success, or terminates the executor after notifying the OpenSubmit server
         about the problem.
+
+        Returns None on error, or path were the compressed data now lives
     '''
     # os.chroot is not working with tarfile support
-    finalpath=targetdir+str(submid)+"/"
+    finalpath=config.get("Execution","directory")+str(submid)+"/"
     shutil.rmtree(finalpath, ignore_errors=True)
     os.makedirs(finalpath)
     if zipfile.is_zipfile(fname):
@@ -180,18 +152,19 @@ def unpack_job(fname, submid, action):
         os.remove(fname)
     else:
         os.remove(fname)
-        send_result("This is not a valid compressed file.",-1, submid, action)
-        cleanup_and_exit(finalpath, -1)
+        _send_result(config, "This is not a valid compressed file.",-1, submid, action)
+        shutil.rmtree(finalpath, ignore_errors=True)
+        return None
     dircontent=os.listdir(finalpath)
     logging.debug("Content after decompression: "+str(dircontent))
     if len(dircontent)==0:
-        send_result("Your compressed upload is empty - no files in there.",-1, submid, action)
+        _send_result(config, "Your compressed upload is empty - no files in there.",-1, submid, action)
     elif len(dircontent)==1 and os.path.isdir(finalpath+os.sep+dircontent[0]):
         logging.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..."%(dircontent[0]))
         finalpath=finalpath+os.sep+dircontent[0]
     return finalpath
 
-def handle_alarm(signum, frame):
+def _handle_alarm(signum, frame):
     '''
         Signal handler for timeout implementation
     '''
@@ -203,15 +176,17 @@ def handle_alarm(signum, frame):
     logging.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
     os.killpg(pid, signal.SIGTERM)
 
-def run_job(finalpath, cmd, submid, action, timeout, ignore_errors=False):
+def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=False):
     '''
         Perform some execution activity with timeout support.
         This is used both for compilation and validator script execution.
+
+        Return stdout of the job execution and a boolean flag of the execution was successfull
     '''
     logging.debug("Changing to target directory.")
     os.chdir(finalpath)
     logging.debug("Installing signal handler for timeout")
-    signal.signal(signal.SIGALRM, handle_alarm)
+    signal.signal(signal.SIGALRM, _handle_alarm)
     logging.info("Spawning process for "+str(cmd))
     try:
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
@@ -243,59 +218,33 @@ def run_job(finalpath, cmd, submid, action, timeout, ignore_errors=False):
             assert(False)
     except:
         if ignore_errors:
-            return ""
+            return "", True             # act like nothing had happened
         else:
             logging.info("Exception on process execution: "+str(e))
-            cleanup_and_exit(finalpath, -1) 
+            shutil.rmtree(finalpath, ignore_errors=True)
+            return "", False
     if proc.returncode == 0:
         logging.info("Executed with error code 0: \n\n"+output)
-        return output
+        return output, True
     elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
-        send_result("%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
-        cleanup_and_exit(finalpath, -1)
+        _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
+        shutil.rmtree(finalpath, ignore_errors=True)
+        return output, False
     else:
         dircontent = subprocess.check_output(["ls","-ln"])
         dircontent = dircontent.decode("utf-8")
         output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
-        send_result("%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
-        cleanup_and_exit(finalpath, -1)
+        _send_result(config, "%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
+        shutil.rmtree(finalpath, ignore_errors=True)
+        return output, False
 
-'''
-    Read configuration file, either as specified on command-line, or from
-    the default location. Set global config variables accordingly.
-'''
-if len(sys.argv) < 3 or sys.argv[1] not in ["register","run"]:
-    print("%s [register|run] <config_file>"%sys.argv[0])
-    exit(-1)
-
-config = configparser.RawConfigParser()
-config.read(sys.argv[2])
-
-if config.getboolean("Logging","to_file"):
-    logging.basicConfig(format=config.get("Logging","format"), filename='/tmp/executor.log')
-else:
-    logging.basicConfig(format=config.get("Logging","format"))   
-logger=logging.getLogger()
-logger.setLevel(config.get("Logging","level"))
-# set global variables from config file
-submit_server=config.get("Server","url")
-secret=config.get("Server","secret")
-targetdir=config.get("Execution","directory")
-pidfile=config.get("Execution","pidfile")
-maxruntime=int(config.get("Execution","timeout"))
-assert(targetdir.startswith('/'))
-assert(targetdir.endswith('/'))
-script_runner=config.get("Execution","script_runner")
-serialize=config.getboolean("Execution","serialize")
-
-if sys.argv[1] == "register":
-    # Determine machine configuration and send it
-    send_config()
-    exit(0)
-
-if havePsUtil:
-    # terminate everything under this account that runs too long
-    # this is a final safeguard if the SIGALRM stuff is not working
+def _kill_deadlocked_jobs(config):
+    '''
+        Terminate everything under the current user account that has run too long.
+        This is a final safeguard if the SIGALRM stuff is not working.
+        You better have no production servers running also under the current user account ...
+    '''
+    import psutil 
     ourpid=os.getpid()
     username=psutil.Process(ourpid).username
     # check for other processes running under this account
@@ -303,69 +252,126 @@ if havePsUtil:
         if proc.username == username and proc.pid != ourpid:
             runtime=time.time()-proc.create_time
             logging.debug("This user already runs %u for %u seconds."%(proc.pid,runtime))
-            if runtime > maxruntime:
+            if runtime > int(config.get("Execution","timeout")):
                 logging.debug("Killing %u due to exceeded runtime."%proc.pid)
                 proc.kill()
 
-# If the configuration says when need to serialize, check this
-# long-runners may have being killed already before, together with their lock
-if serialize:
-    fp = open(pidfile, 'w')
-    try:
-        fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        logging.debug("Got the script lock")
-    except IOError:
-        logging.debug("Script is already running.")
-        exit(0)
+def _can_run(config):
+    '''
+        Determines if the executor is configured to run fetched jobs one after the other.
+        If this is the case, then check if another script instance is still running.
+    '''
+    if config.getboolean("Execution","serialize"):
+        fp = open(config.get("Execution","pidfile"), 'w')
+        try:
+            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            logging.debug("Got the script lock")
+        except IOError:
+            logging.debug("Script is already running.")
+            return False
+    return True
 
+def send_config(config_file):
+    '''
+        Sends the registration of this machine to the OpenSubmit web server.
+    '''
+    config = read_config(config_file)
+    conf = os.uname()
+    output = []
+    output.append(["Operating system","%s %s (%s)"%(conf[0], conf[2], conf[4])])
+    output.append(["CPUID information", _infos_cmd("cpuid")])
+    output.append(["CC information", _infos_cmd("cc -v")])
+    output.append(["JDK information", _infos_cmd("java -version")])
+    output.append(["MPI information", _infos_cmd("mpirun -version")])
+    output.append(["Scala information", _infos_cmd("scala -version")])
+    output.append(["OpenCL headers", _infos_cmd("find /usr/include|grep opencl.h")])
+    output.append(["OpenCL libraries", _infos_cmd("find /usr/lib/ -iname '*opencl*'")])
+    output.append(["NVidia SMI", _infos_cmd("nvidia-smi -q")])
+    output.append(["OpenCL Details", _infos_opencl()])
+    logging.debug("Sending config data: "+str(output))
+    post_data = [('Config',json.dumps(output)),('Name',_infos_cmd("hostname"))]
+    post_data = urlencode(post_data)
+    post_data = post_data.encode('utf-8')
+    urlopen('%s/machines/secret=%s'%(config.get("Server","url"), config.get("Server","secret")), post_data)
 
-# fetch any available job
-fname, submid, action, timeout, validator=fetch_job()
-# decompress download, only returns on success
-finalpath=unpack_job(fname, submid, action)
-# perform action defined by the server for this download
-if action == 'test_compile':
-    # run configure script, if available.
-    #TODO: document this in the front-end
-    run_job(finalpath,['./configure'],submid, action, timeout, True)
-    # build it, only returns on success
-    output=run_job(finalpath,['make'],submid, action, timeout)
-    send_result(output, 0, submid, action)
-    cleanup_and_exit(finalpath, 0)
-elif action == 'test_validity' or action == 'test_full':
-    # prepare the output file for validator performance results
-    perfdata_fname = finalpath+"/perfresults.csv" 
-    open(perfdata_fname,"w").close()
-    # run configure script, if available.
-    #TODO: document this in the front-end
-    run_job(finalpath,['./configure'],submid, action, timeout, True)
-    # build it, only returns on success
-    run_job(finalpath,['make'],submid,action,timeout)
-    # fetch validator into target directory 
-    logging.debug("Fetching validator script from "+validator)
-    urllib.request.urlretrieve(validator, finalpath+"/download")
-    if zipfile.is_zipfile(finalpath+"/download"):
-        logging.debug("Validator is a ZIP file, unpacking it.")
-        f=zipfile.ZipFile(finalpath+"/download", 'r')
-        f.extractall(finalpath)
-        os.remove(finalpath+"/download")
-        # ZIP file is expected to contain 'validator.py'
-        if not os.path.exists(finalpath+"/validator.py"):
-            logging.error("Validator ZIP package does not contain validator.py")
-            #TODO: Ugly hack, make error reporting better
-            send_result("Internal error, please consult the course administrators.", -1, submid, action, "")
+def run(config_file):
+    '''
+        The primary worker function of the executor, fetches and runs jobs from the OpenSubmit server.
+        Expects an existing registration of this machine.
+    '''
+    config = read_config(config_file)
+    _kill_deadlocked_jobs(config)
+    if _can_run(config):        
+        # fetch any available job
+        fname, submid, action, timeout, validator=_fetch_job(config)
+        if not fname:
+            return False
+        # decompress download, only returns on success
+        finalpath=_unpack_job(config, fname, submid, action)
+        if not finalpath:
+            return False
+        # perform action defined by the server for this download
+        if action == 'test_compile':
+            # run configure script, if available.
+            output, success = _run_job(config, finalpath,['./configure'],submid, action, timeout, True)
+            if not success:
+                return False
+            # build it, only returns on success
+            output, success = _run_job(config, finalpath,['make'],submid, action, timeout)
+            if not success:
+                return False
+            _send_result(config, output, 0, submid, action)
+            shutil.rmtree(finalpath, ignore_errors=True)
+            return True
+        elif action == 'test_validity' or action == 'test_full':
+            # prepare the output file for validator performance results
+            perfdata_fname = finalpath+"/perfresults.csv" 
+            open(perfdata_fname,"w").close()
+            # run configure script, if available.
+            output, success = _run_job(config, finalpath,['./configure'],submid, action, timeout, True)
+            if not success:
+                return False
+            # build it
+            output, success = _run_job(config, finalpath,['make'],submid,action,timeout)
+            if not success:
+                return False
+            # fetch validator into target directory 
+            logging.debug("Fetching validator script from "+validator)
+            urllib.request.urlretrieve(validator, finalpath+"/download")
+            if zipfile.is_zipfile(finalpath+"/download"):
+                logging.debug("Validator is a ZIP file, unpacking it.")
+                f=zipfile.ZipFile(finalpath+"/download", 'r')
+                f.extractall(finalpath)
+                os.remove(finalpath+"/download")
+                # ZIP file is expected to contain 'validator.py'
+                if not os.path.exists(finalpath+"/validator.py"):
+                    logging.error("Validator ZIP package does not contain validator.py")
+                    #TODO: Ugly hack, make error reporting better
+                    _send_result(config, "Internal error, please consult the course administrators.", -1, submid, action, "")
+            else:
+                logging.debug("Validator is a single file, renaming it.")
+                os.rename(finalpath+"/download",finalpath+"/validator.py")
+            os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
+            # Allow submission to load their own libraries
+            logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
+            os.environ['LD_LIBRARY_PATH']=finalpath
+            # execute validator
+            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), 'validator.py', perfdata_fname],submid,action,timeout)
+            if not success:
+                return False
+            perfdata= open(perfdata_fname,"r").read()
+            _send_result(config, output, 0, submid, action, perfdata)
+            shutil.rmtree(finalpath, ignore_errors=True)
+            return True
+        else:
+            # unknown action, programming error in the server
+            logging.error("Uknown action keyword from server: "+action)
+            return False
+
+if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "register":
+        send_config(sys.argv[2])
+    elif len(sys.argv) > 2 and sys.argv[1] == "run":
+        run(sys.argv[2])
     else:
-        logging.debug("Validator is a single file, renaming it.")
-        os.rename(finalpath+"/download",finalpath+"/validator.py")
-    os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
-    # Allow submission to load their own libraries
-    logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
-    os.environ['LD_LIBRARY_PATH']=finalpath
-    # execute validator
-    output=run_job(finalpath,[script_runner, 'validator.py', perfdata_fname],submid,action,timeout)
-    perfdata= open(perfdata_fname,"r").read()
-    send_result(output, 0, submid, action, perfdata)
-    cleanup_and_exit(finalpath, 0)
-else:
-    # unknown action, programming error in the server
-    assert(False)
+        print("python -m opensubmit.executor [register|run] executor.ini")
