@@ -19,14 +19,6 @@ def clean_dirs():
     for path in ["OpenSubmit.egg-info","dist", "build" ]:
         shutil.rmtree(path, ignore_errors=True)
 
-def install_config():
-    config = RawConfigParser()
-    try:
-        config.readfp(open('/etc/opensubmit/settings.ini')) 
-    except IOError:
-        print "Seems like the config file /etc/opensubmit/settings.ini does not exist. I am copying the template, don't forget to edit it !"
-        shutil.copyfile('settings.ini.template','/etc/opensubmit/settings.ini')
-
 # Our overloaded 'setup.py clean' command
 class clean(_clean):
     def run(self):
@@ -55,6 +47,7 @@ setup(
         'openid2rp',
         'djangorestframework>=2.4',
         'django-grappelli',
+        'psycopg2',
         'psutil'                            # for executor
     ],    
     # "executor_api.*" must migrate to "opensubmit.executor_api.*" before being
@@ -67,6 +60,11 @@ setup(
     cmdclass={
         'clean': clean
     },
+    entry_points={
+        'console_scripts': [
+            'opensubmit = opensubmit.management.production:console_script',
+        ],
+    }    
 )
 
 

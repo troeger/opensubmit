@@ -2,6 +2,8 @@
 This is the executor script for the OpenSubmit system.
 It is intended to run on a dedicated host, in order to download
 and check student code.
+
+Written for Python3.
 """
 
 import urllib, urllib.request, urllib.error, urllib.parse
