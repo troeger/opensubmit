@@ -16,7 +16,7 @@ are informed about the progress of their correction and their final
 grade via eMail and the frontend page.
 
 The unique capability of OpenSubmit is the *support for coding
-assignments*, were students upload their programming excercise solution
+assignments*, were students upload their programming exercise solution
 as source code archive. OpenSubmit offers a separate executor daemon,
 which runs on another machine and downloads submitted solutions from the
 web server. These archives are unpacked and tested for compilation, so
@@ -28,7 +28,7 @@ validated solution, so that they do not fail due to technical
 difficulties at the correctors side.
 
 Since OpenSubmit is only for assignment submission, it has no management
-of course participants. Everbody who can perform a successful login can
+of course participants. Everybody who can perform a successful login can
 submit solutions. We expect you to have an institute-specific OpenID
 provider, otherwise you need to contribute your own patches for
 authentication.
@@ -41,10 +41,10 @@ Installation
 If you just want to install your own copy of OpenSubmit, please read the
 installation guide in the GitHub Wiki.
 
-Licence
+License
 -------
 
-OpenSubmit ist licensed under the AGPL Version 3. This means your are
+OpenSubmit is licensed under the AGPL Version 3. This means you are
 allowed to:
 
 -  Install and run the unmodified OpenSubmit code at your site.
