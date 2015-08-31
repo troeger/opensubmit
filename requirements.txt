@@ -10,3 +10,5 @@ pyjwkest
 python-social-auth
 python-openid
 python-oauth2
+python-saml
+

@@ -30,7 +30,7 @@ setup(
     name = 'OpenSubmit',
     version = __version__,
     url = 'https://github.com/troeger/opensubmit',
-    license='AGPL',    
+    license='AGPL',
     author = 'Peter Troeger',
     author_email = 'peter@troeger.eu',
     classifiers=[
@@ -44,18 +44,11 @@ setup(
     install_requires=[
         'Django>=1.7',
         'django-bootstrap-form',
-        'openid2rp',
-        'djangorestframework>=2.4',
         'django-grappelli',
         'psutil'                            # for executor
-    ],    
-    # "executor_api.*" must migrate to "opensubmit.executor_api.*" before being
-    # included, otherwise we get a separate python module with a completely
-    # independent name in the final installation.
-    packages = find_packages(exclude=[  'executor_api', 
-                                        'executor_api.migrations',
-                                        'opensubmit.tests']),     # Just add Python packages
-    include_package_data = True,                                  # Consider MANIFEST.in
+    ],
+    packages = find_packages(exclude=['opensubmit.tests']),     # Just add Python packages
+    include_package_data = True,                                # Consider MANIFEST.in
     cmdclass={
         'clean': clean
     },
@@ -63,7 +56,7 @@ setup(
         'console_scripts': [
             'opensubmit = opensubmit.management.production:console_script',
         ],
-    }    
+    }
 )
 
 

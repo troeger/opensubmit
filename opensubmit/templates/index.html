@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load url from future %}
+{% load projecttags %}
 
 {% block scripts %}
 {{ block.super }}
@@ -8,7 +8,7 @@
 
 {% block style %}
 {{ block.super }}
-<link rel="stylesheet" href="{{ STATIC_URL }}social-buttons/auth-buttons.css">
+@import url("{{ STATIC_URL }}social-buttons/auth-buttons.css");
 {% endblock %}
 
 {% block docready %}
@@ -30,9 +30,7 @@
 </div>
 
 <section>
-    <h5>Please use one of these authentication methods: </h5>
-
-        <div class="row">
+    <div class="row">
             <div class="col-2">
                 <a href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}" class="btn-auth btn-google"><b>Google</b></a>
             </div>
@@ -42,28 +40,10 @@
             <div class="col-2">
                 <a href="{% url 'social:begin' 'github' %}?next={{ next }}" class="btn-auth btn-github"><b>GitHub</b></a>
             </div>
-<!--        <div class="col-2">
-                <a href="{% url 'social:begin' 'yahoo-oauth2' %}?next={{ next }}" class="btn-auth btn-yahoo"><b>Yahoo!</b></a>
-            </div>
             <div class="col-2">
-                <a href="{% url 'social:begin' 'live' %}?next={{ next }}" class="btn-auth btn-windows"><b>Live</b></a>
+                <a href="{% url 'social:begin' 'openid' %}?next={{ next }}" class="btn-auth btn-openid"><b>{% setting 'LOGIN_DESCRIPTION' %}</b></a>
             </div>
--->         <div class="col-4">
-                <form action="{% url 'social:begin' 'openid' %}?next={{ next }}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ next }}" />
-                    <label for="openid_identifier">
-                        <span class="btn-auth btn-openid"><b>OpenID</b></span>
-                    </label>
-                    <input id="openid_identifier" name="openid_identifier" type="text" value="https://" />
-                    <input id="submit_url" name="submit_url" type="submit" value="Sign-In"/>
-                </form>
-            </div>
-        </div>
-        {% if debug %}
-        <div>
-                <a href="{% url 'social:begin' 'username' %}?next={{ next }}"><b>Developer Login</b></a>
-        </div>
-        {% endif %}
+    </div>
+</section>
 
 {% endblock %}

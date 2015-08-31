@@ -141,10 +141,8 @@ INSTALLED_APPS = (
     'django.contrib.admin.apps.SimpleAdminConfig',
     'social.apps.django_app.default',
     'bootstrapform',
-    'rest_framework',
     'grappelli',
     'opensubmit',
-#    'executor_api',
 )
 LOGGING = {
     'version': 1,
@@ -183,10 +181,8 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'social.backends.google.GoogleOAuth2',
     'social.backends.twitter.TwitterOAuth',
-    'social.backends.yahoo.YahooOAuth2',
+    'social.backends.github.GithubOAuth2',
     'social.backends.open_id.OpenIdAuth',
-    'social.backends.live.LiveOAuth2',
-    'social.backends.github.GithubOAuth2'
 )
 
 REST_FRAMEWORK = {

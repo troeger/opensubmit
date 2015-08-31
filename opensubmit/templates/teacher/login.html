@@ -3,7 +3,11 @@
 
 {% load projecttags %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}" />{% endblock %}
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "social-buttons/auth-buttons.css" %}" />
+{% endblock %}
 
 {% block bodyclass %}{{ block.super }} login{% endblock %}
 
@@ -13,14 +17,22 @@
 
 {% block content %}
 
-<div style="text-align: center; margin: 20px">
-    <form action="{% url 'login' %}" method="GET">
-        <input type="hidden" name="authmethod" value="openid" />
-        <input type="hidden" name="next" value="{{ request.GET.next }}" />
-        <img src="{{ STATIC_URL }}images/openid-logo.png" width="51" height="51"/>
-        <input type="submit" value="{% setting 'LOGIN_DESCRIPTION' %}" class="btn"/>
-    </form>
-</div>
+<section>
+    <div class="row">
+            <div class="col-2">
+                <a href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}" class="btn-auth btn-google"><b>Google</b></a>
+            </div>
+            <div class="col-2">
+                <a href="{% url 'social:begin' 'twitter' %}?next={{ next }}" class="btn-auth btn-twitter"><b>Twitter</b></a>
+            </div>
+            <div class="col-2">
+                <a href="{% url 'social:begin' 'github' %}?next={{ next }}" class="btn-auth btn-github"><b>GitHub</b></a>
+            </div>
+            <div class="col-2">
+                <a href="{% url 'social:begin' 'openid' %}?next={{ next }}" class="btn-auth btn-openid"><b>{% setting 'LOGIN_DESCRIPTION' %}</b></a>
+            </div>
+    </div>
+</section>
 
 <hr/>
 {% include "teacher/footer.html" %}

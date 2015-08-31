@@ -25,8 +25,6 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
 
-from openid2rp.django.auth import linkOpenID, preAuthenticate, AX, getOpenIDs
-
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from models import inform_student, inform_course_owner, open_assignments
@@ -345,72 +343,3 @@ def withdraw(request, subm_id):
         return render(request, 'withdraw.html', {'submission': submission})
 
 
-@require_http_methods(['GET', 'POST'])
-def login(request):
-    GET = request.GET
-    POST = request.POST
-
-    if 'authmethod' in GET:
-        # first stage of OpenID authentication
-        if request.GET['authmethod'] == "openid":
-            return preAuthenticate(OPENID_PROVIDER, MAIN_URL + "/login?openidreturn")
-        else:
-            return redirect('index')
-
-    elif 'openidreturn' in GET:
-        user = auth.authenticate(openidrequest=request)
-
-        if user.is_anonymous():
-            user_name = None
-            email = None
-
-            user_sreg = user.openid_sreg
-            user_ax = user.openid_ax
-
-            # not known to the backend so far, create it transparently
-            if 'nickname' in user_sreg:
-                user_name = unicode(user_sreg['nickname'], 'utf-8')[:29]
-
-            if 'email' in user_sreg:
-                email = unicode(user_sreg['email'], 'utf-8')  # [:29]
-
-            if AX.email in user_ax:
-                email = unicode(user_ax[AX.email], 'utf-8')  # [:29]
-
-            # no username given, register user with his e-mail address as username
-            if not user_name and email:
-                new_user = User(username=email[:29], email=email)
-
-            # both, username and e-mail were not given, use a timestamp as username
-            elif not user_name and not email:
-                now = timezone.now()
-                user_name = 'Anonymous %u%u%u%u' % (now.hour, now.minute,
-                                                    now.second, now.microsecond)
-                new_user = User(username=user_name)
-
-            # username and e-mail were given; great - register as is
-            elif user_name and email:
-                new_user = User(username=user_name, email=email)
-
-            # username given but no e-mail - at least we know how to call him
-            elif user_name and not email:
-                new_user = User(username=user_name)
-
-            if AX.first in user_ax:
-                new_user.first_name = unicode(user_ax[AX.first], 'utf-8')[:29]
-
-            if AX.last in user_ax:
-                new_user.last_name = unicode(user_ax[AX.last], 'utf-8')[:29]
-
-            new_user.is_active = True
-            new_user.save()
-
-            linkOpenID(new_user, user.openid_claim)
-            mail_managers('New user', str(new_user), fail_silently=True)
-            messages.info(request, 'We created a new account for you. Please click again to enter the system.')
-            return redirect('index')
-
-        auth.login(request, user)
-        return redirect('dashboard')
-    else:
-        return redirect('index')

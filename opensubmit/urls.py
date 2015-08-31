@@ -8,7 +8,6 @@ import settings
 
 urlpatterns = patterns('',
     url(r'^$', 'opensubmit.views.index', name='index'),
-    url(r'^login/$', 'opensubmit.views.login', name='login'),
     url(r'^logout/$', 'opensubmit.views.logout', name='logout'),
     url(r'^dashboard/$', 'opensubmit.views.dashboard', name='dashboard'),
     url(r'^details/(?P<subm_id>\d+)/$', 'opensubmit.views.details', name='details'),
@@ -25,8 +24,8 @@ urlpatterns = patterns('',
     url(r'^settings/$', 'opensubmit.views.settings', name='settings'),
     url(r'^courses/$', 'opensubmit.views.courses', name='courses'),
 
-    url(r'^api/', include('executor_api.urls', namespace="api")),
-    url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS    
+    url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
+    url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^teacher/', include(teacher_backend.urls)),
     url(r'^admin/', include(admin_backend.urls))
 )
