@@ -29,9 +29,8 @@ difficulties at the correctors side.
 
 Since OpenSubmit is only for assignment submission, it has no management
 of course participants. Everybody who can perform a successful login can
-submit solutions. We expect you to have an institute-specific OpenID
-provider, otherwise you need to contribute your own patches for
-authentication.
+submit solutions. We expect you to have an institute-specific authentication
+provider, otherwise you need to contribute your own patches.
 
 The end-user documentation is available in the GitHub Wiki.
 

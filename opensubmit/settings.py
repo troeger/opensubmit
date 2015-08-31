@@ -138,11 +138,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'grappelli',    
     'django.contrib.admin.apps.SimpleAdminConfig',
-    'openid2rp.django',
+    'social.apps.django_app.default',
     'bootstrapform',
     'rest_framework',
+    'grappelli',
     'opensubmit',
 #    'executor_api',
 )
@@ -178,10 +178,17 @@ LOGGING = {
         },
     }
 }
+
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'openid2rp.django.auth.Backend'
+    'social.backends.google.GoogleOAuth2',
+    'social.backends.twitter.TwitterOAuth',
+    'social.backends.yahoo.YahooOAuth2',
+    'social.backends.open_id.OpenIdAuth',
+    'social.backends.live.LiveOAuth2',
+    'social.backends.github.GithubOAuth2'
 )
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
@@ -197,7 +204,24 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
     'opensubmit.contextprocessors.footer',
-    'django.core.context_processors.request',    
+    'django.core.context_processors.request',
+    'social.apps.django_app.context_processors.backends',
+    'social.apps.django_app.context_processors.login_redirect'
+)
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next',]
+SOCIAL_AUTH_PIPELINE = (
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    'social.pipeline.social_auth.associate_by_email',  # Transition for existing users
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details'
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")

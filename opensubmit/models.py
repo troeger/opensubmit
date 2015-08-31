@@ -31,6 +31,9 @@ class Grading(models.Model):
     title = models.CharField(max_length=20, help_text="The title of the grade, such as 'A', 'B', 'Pass', or 'Fail'.")
     means_passed = models.BooleanField(default=True, help_text="Students are informed about their pass or fail in the assignment, based on this flag in their given grade.")
 
+    class Meta:
+        app_label = 'opensubmit'
+
     def __unicode__(self):
         return unicode(self.title)
 
@@ -38,6 +41,9 @@ class Grading(models.Model):
 class GradingScheme(models.Model):
     title = models.CharField(max_length=200, help_text="Choose a directly understandable name, such as 'ECTS' or 'Pass / Fail'.")
     gradings = models.ManyToManyField(Grading, related_name='schemes', help_text="The list of gradings that form this grading scheme.")
+
+    class Meta:
+        app_label = 'opensubmit'
 
     def __unicode__(self):
         return unicode(self.title)
@@ -47,10 +53,13 @@ class Course(models.Model):
     title = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     owner = models.ForeignKey(User, related_name='courses', help_text="Only this user can change the course details and create new assignments.")
-    tutors = models.ManyToManyField(User, blank=True, null=True, related_name='courses_tutoring', help_text="These users can edit / grade submissions for the course.")
+    tutors = models.ManyToManyField(User, blank=True, related_name='courses_tutoring', help_text="These users can edit / grade submissions for the course.")
     homepage = models.URLField(max_length=200, verbose_name="Course description link")
     active = models.BooleanField(default=True, help_text="Only assignments and submissions of active courses are shown to students and tutors. Use this flag for archiving past courses.")
     max_authors = models.PositiveSmallIntegerField(default=1, help_text="Maximum number of authors (= group size) for assignments in this course.")
+
+    class Meta:
+        app_label = 'opensubmit'
 
     def __unicode__(self):
         return unicode(self.title)
@@ -81,6 +90,9 @@ class TestMachine(models.Model):
     last_contact = models.DateTimeField(editable=False, default=timezone.now)
     config = models.TextField(null=True, help_text="Host configuration, as shown to the students, in JSON format.")
 
+    class Meta:
+        app_label = 'opensubmit'
+
     def __unicode__(self):
         return unicode(self.host)
 
@@ -104,7 +116,10 @@ class Assignment(models.Model):
     attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed, compiled and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
     validity_script_download = models.BooleanField(default=False, verbose_name='Download of validation script ?', help_text='If activated, the students can download the validation script for offline analysis.')
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Full test script', help_text='Same as the validation script, but executed AFTER the hard deadline to determine final grading criterias for the submission. Results are not shown to students.')
-    test_machines = models.ManyToManyField(TestMachine, blank=True, null=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
+    test_machines = models.ManyToManyField(TestMachine, blank=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
+
+    class Meta:
+        app_label = 'opensubmit'
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""
@@ -185,7 +200,10 @@ User.__unicode__ = user_unicode
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
-    courses = models.ManyToManyField(Course, blank=True, null=True, related_name='participants', limit_choices_to={'active__exact': True})
+    courses = models.ManyToManyField(Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
+
+    class Meta:
+        app_label = 'opensubmit'
 
 
 def user_courses(user):
@@ -223,6 +241,9 @@ class SubmissionFile(models.Model):
     attachment = models.FileField(upload_to=upload_path, verbose_name="File upload")
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True, editable=False)
+
+    class Meta:
+        app_label = 'opensubmit'
 
     def __unicode__(self):
         return unicode(self.attachment.name)
@@ -353,6 +374,9 @@ class Submission(models.Model):
     grading_notes = models.TextField(max_length=1000, blank=True, null=True, help_text="Specific notes about the grading for this submission.")
     grading_file = models.FileField(upload_to=upload_path, blank=True, null=True, help_text="Additional information about the grading as file.")
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
+
+    class Meta:
+        app_label = 'opensubmit'
 
     def __unicode__(self):
         if self.pk:
@@ -553,6 +577,9 @@ class SubmissionTestResult(models.Model):
     result = models.TextField(null=True, blank=True)
     kind = models.CharField(max_length=2, choices=JOB_TYPES)
     perf_data = models.TextField(null=True, blank=True)
+
+    class Meta:
+        app_label = 'opensubmit'
 
 # to avoid cyclic dependencies, we keep it in the models.py
 # we hand-in explicitely about which new state we want to inform, since this may not be reflected
