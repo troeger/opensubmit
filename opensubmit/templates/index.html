@@ -25,22 +25,22 @@
 <div class="page-header">
     <h1>
         Welcome <br/>
-        <small>Assignment Management and Submission System</small>
+        <small>OpenSubmit - Assignment Management and Submission System</small>
     </h1>
 </div>
 
 <section>
     <div class="row">
-            <div class="col-2">
+            <div class="col-md-2">
                 <a href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}" class="btn-auth btn-google"><b>Google</b></a>
             </div>
-            <div class="col-2">
+            <div class="col-md-2">
                 <a href="{% url 'social:begin' 'twitter' %}?next={{ next }}" class="btn-auth btn-twitter"><b>Twitter</b></a>
             </div>
-            <div class="col-2">
+            <div class="col-md-2">
                 <a href="{% url 'social:begin' 'github' %}?next={{ next }}" class="btn-auth btn-github"><b>GitHub</b></a>
             </div>
-            <div class="col-2">
+            <div class="col-md-4">
                 <a href="{% url 'social:begin' 'openid' %}?next={{ next }}" class="btn-auth btn-openid"><b>{% setting 'LOGIN_DESCRIPTION' %}</b></a>
             </div>
     </div>
