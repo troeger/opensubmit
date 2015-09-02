@@ -5,9 +5,12 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/bootstrap.min.css" %}" />
 <link rel="stylesheet" type="text/css" href="{% static "social-buttons/auth-buttons.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "css/screen.css" %}" />
 {% endblock %}
+
+
 
 {% block bodyclass %}{{ block.super }} login{% endblock %}
 
@@ -17,22 +20,7 @@
 
 {% block content %}
 
-<section>
-    <div class="row">
-            <div class="col-2">
-                <a href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}" class="btn-auth btn-google"><b>Google</b></a>
-            </div>
-            <div class="col-2">
-                <a href="{% url 'social:begin' 'twitter' %}?next={{ next }}" class="btn-auth btn-twitter"><b>Twitter</b></a>
-            </div>
-            <div class="col-2">
-                <a href="{% url 'social:begin' 'github' %}?next={{ next }}" class="btn-auth btn-github"><b>GitHub</b></a>
-            </div>
-            <div class="col-2">
-                <a href="{% url 'social:begin' 'openid' %}?next={{ next }}" class="btn-auth btn-openid"><b>{% setting 'LOGIN_DESCRIPTION' %}</b></a>
-            </div>
-    </div>
-</section>
+{% include "login_buttons.inc" %}
 
 <hr/>
 {% include "teacher/footer.html" %}

@@ -93,15 +93,15 @@ ADMIN_NAME: Super Admin
 ADMIN_EMAIL: root@<my domain>
 
 [login]
-# Text shown beside the login icon.
-# Default: 
-# LOGIN_DESCRIPTION: Sign in with Google
-LOGIN_DESCRIPTION: Sign in with Google
+# Text shown beside the OpenID login icon.
+# Default:
+# LOGIN_DESCRIPTION: StackExchange
+LOGIN_DESCRIPTION: StackExchange
 
 # OpenID provider URL to be used for login.
 # Default:
-# OPENID_PROVIDER: https://www.google.com/accounts/o8/id
-OPENID_PROVIDER: https://www.google.com/accounts/o8/id
+# OPENID_PROVIDER: https://openid.stackexchange.com
+OPENID_PROVIDER: https://openid.stackexchange.com
 
 
 

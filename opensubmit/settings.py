@@ -182,7 +182,7 @@ AUTHENTICATION_BACKENDS = (
     'social.backends.google.GoogleOAuth2',
     'social.backends.twitter.TwitterOAuth',
     'social.backends.github.GithubOAuth2',
-    'social.backends.open_id.OpenIdAuth',
+    'opensubmit.open_id.OpenIdAuth',
 )
 
 REST_FRAMEWORK = {
