@@ -111,11 +111,14 @@ LOGIN_ENV: True
 LOGIN_ENV_DESCRIPTION: Web Server Auth
 
 # Names of of the environment variables containing the authentication results
-# Access is only granted if the LOGIN_ENV_USERNAME variable ist set by web server (e.g. REMOTE_USER)
+# Access is only granted if the LOGIN_ENV_USERNAME variable ist set by web server (e.g. REMOTE_USER by mod_shb)
+# The login provider must be given performed the correct redirect
 # All other variables are optional
 LOGIN_ENV_USERNAME: REMOTE_USER
+LOGIN_ENV_PROVIDER:/Shibboleth.sso/Login?target=http://<your_submit_host>/dashboard/
 LOGIN_ENV_EMAIL:
 LOGIN_ENV_FIRST_NAME:
 LOGIN_ENV_LAST_NAME:
+
 
 

@@ -25,7 +25,7 @@ class ServerEnvAuth(BaseAuth):
 
     def auth_url(self):
         """Must return redirect URL to auth provider, so we use the current page."""
-        return self.strategy.absolute_uri(self.redirect_uri)
+        return self.strategy.absolute_uri(self.setting('SOCIAL_AUTH_ENV_PROVIDER'))
 
     def env_val(self, data_key):
         """ Helper function:
@@ -49,7 +49,7 @@ class ServerEnvAuth(BaseAuth):
         uid = self.env_val(self.ID_KEY)
         if not uid:
             # Web server did not store the authenticated user name in the environment
-            raise AuthFailed("Missing authentication in environment")
+            raise AuthMissingParameter(self, "No auth information in environment: "+str(os.environ))
         response[self.ID_KEY]=uid
         kwargs.update({'response': response, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
