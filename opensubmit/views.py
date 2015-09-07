@@ -67,7 +67,7 @@ def courses(request):
             return redirect('dashboard')
     else:
         coursesForm = UserProfileForm(instance=profile)
-    return render(request, 'courses.html', {'coursesForm': coursesForm})
+    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': user_courses(request.user)})
 
 
 @login_required

@@ -8,28 +8,44 @@
 {% block docready %}
 $('#id_courses').multiselect({
 	 buttonClass: 'btn btn-default',
-	 buttonWidth: '300px',
-	 disableIfEmpty: true
+	 disableIfEmpty: true,
+	 enableCaseInsensitiveFiltering: true,
+     numberDisplayed: 0
 });
 {% endblock %}
-
-
-
-
-).multiselect({
-           
-        });
-
 
 {% block content %}
 <div class="page-header">
     <h1>Your Courses</h1>
 </div>
 
+<section>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Owner</th>
+                <th>Open Assignments</th>
+                <th>Allowed Group Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in courses %}
+                <tr>
+                    <td><a href="{{ course.homepage }}">{{ course }}</a></td>
+                    <td>{{ course.owner }}</td>
+                    <td>{{ course.open_assignments|length }}</td>
+                    <td>{{ course.max_authors }}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
 <form class="form" role="form" action="." method="post">
 	{% csrf_token %}
-	{{ coursesForm|bootstrap }}
-	<button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Save</button>
+	{{ coursesForm }}
+	<button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Save Changes</button>
 </form>
 
 {% endblock %}

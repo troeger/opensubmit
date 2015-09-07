@@ -16,7 +16,7 @@
 <section>
     <h3>Open Assignments</h3>
     {% if not courses %}
-        Seems like you don't have any courses configured. Want to <a href="/courses/">change that</a>?
+        Seems like you don't have any courses configured. You should <a href="/courses/">change that</a>.
     {% else %}
         {% if assignments %}
             <table class="table">
@@ -49,7 +49,7 @@
                 </tbody>
             </table>
         {% else %}
-            Nothing.
+            Nothing at the moment.
         {% endif %}
     {% endif %}
 </section>
