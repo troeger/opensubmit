@@ -28,14 +28,14 @@ from django.forms.models import modelform_factory
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from models import inform_student, inform_course_owner, open_assignments
-from settings import JOB_EXECUTOR_SECRET, MAIN_URL, LOGIN_DESCRIPTION, OPENID_PROVIDER
+from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 
 
 def index(request):
     if request.user.is_authenticated():
         return redirect('dashboard')
 
-    return render(request, 'index.html', {'login_description': LOGIN_DESCRIPTION})
+    return render(request, 'index.html', {})
 
 @login_required
 def logout(request):

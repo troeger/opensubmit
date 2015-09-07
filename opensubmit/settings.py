@@ -93,9 +93,6 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     ALLOWED_HOSTS = ['localhost']
 
-LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
-OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
-
 ADMINS = (
     (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),
 )
@@ -177,14 +174,6 @@ LOGGING = {
     }
 }
 
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'social.backends.google.GoogleOAuth2',
-    'social.backends.twitter.TwitterOAuth',
-    'social.backends.github.GithubOAuth2',
-    'opensubmit.open_id.OpenIdAuth',
-)
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
@@ -204,6 +193,35 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'social.apps.django_app.context_processors.backends',
     'social.apps.django_app.context_processors.login_redirect'
 )
+
+LOGIN_GOOGLE =  config.getboolean('login', 'LOGIN_GOOGLE')
+LOGIN_OPENID =  config.getboolean('login', 'LOGIN_OPENID')
+LOGIN_GITHUB =  config.getboolean('login', 'LOGIN_GITHUB')
+LOGIN_TWITTER = config.getboolean('login', 'LOGIN_TWITTER')
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+if LOGIN_GOOGLE:
+    AUTHENTICATION_BACKENDS += ('social.backends.google.GoogleOAuth2',)
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY =    config.get("login", "LOGIN_GOOGLE_OAUTH_KEY")
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config.get("login", "LOGIN_GOOGLE_OAUTH_SECRET")
+
+if LOGIN_TWITTER:
+    AUTHENTICATION_BACKENDS += ('social.backends.twitter.TwitterOAuth',)
+    SOCIAL_AUTH_TWITTER_KEY =          config.get("login", "LOGIN_TWITTER_OAUTH_KEY")
+    SOCIAL_AUTH_TWITTER_SECRET =       config.get("login", "LOGIN_TWITTER_OAUTH_SECRET")
+
+if LOGIN_GITHUB:
+    AUTHENTICATION_BACKENDS += ('social.backends.github.GithubOAuth2',)
+    SOCIAL_AUTH_GITHUB_KEY =           config.get("login", "LOGIN_GITHUB_OAUTH_KEY")
+    SOCIAL_AUTH_GITHUB_SECRET =        config.get("login", "LOGIN_GITHUB_OAUTH_SECRET")
+
+if LOGIN_OPENID:
+    AUTHENTICATION_BACKENDS += ('opensubmit.open_id.OpenIdAuth',)
+    LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
+    OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
 
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next',]

@@ -28,8 +28,11 @@ def state_label_css(subm):
         return red_label
     return grey_label
 
-@register.simple_tag
+@register.assignment_tag
 def setting(name):
+    print name
+    print opensubmit.settings
+    print getattr(opensubmit.settings, name, "")
     return getattr(opensubmit.settings, name, "")
 
 @register.inclusion_tag('inclusion_tags/details_table.html')
