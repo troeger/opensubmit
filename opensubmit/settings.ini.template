@@ -1,7 +1,9 @@
 # This is the configuration file for the OpenSubmit tool.
 # https://github.com/troeger/opensubmit
 #
-# It is expected to be located at /etc/opensubmit/settings.ini.
+# It is expected to be located at:
+# /etc/opensubmit/settings.ini (on production system), or
+# ./settings_dev.ini (on developer systems)
 
 [general]
 # Enabling this will lead to detailed developer error information as result page

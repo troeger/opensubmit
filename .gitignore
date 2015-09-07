@@ -13,3 +13,5 @@ executor.cfg
 *.orig
 opensubmit/database.sqlite
 .coverage
+opensubmit/settings_dev.ini
+
