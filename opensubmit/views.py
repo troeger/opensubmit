@@ -87,6 +87,7 @@ def dashboard(request):
         'archived': archived,
         'user': request.user,
         'username': username,
+        'courses' : user_courses(request.user),
         'assignments': open_assignments(request.user),
         'machines': TestMachine.objects.all()}
     )
