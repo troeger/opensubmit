@@ -82,9 +82,9 @@ MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
 if is_production:
-    STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') + 'static/'
+    STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') + 'static-production/'
     STATIC_URL = MAIN_URL + '/static/'
-    STATICFILES_DIRS = (STATIC_ROOT, )
+    STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') + 'opensubmit/static/', )
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
 else:
