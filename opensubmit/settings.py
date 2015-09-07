@@ -87,6 +87,7 @@ if is_production:
     STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') + 'opensubmit/static/', )
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
+    SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
     STATIC_ROOT = 'static/'
     STATIC_URL = '/static/'
