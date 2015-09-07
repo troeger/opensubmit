@@ -122,6 +122,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware'
 )
 ROOT_URLCONF = 'opensubmit.urls'
@@ -198,6 +199,7 @@ LOGIN_GOOGLE =  config.getboolean('login', 'LOGIN_GOOGLE')
 LOGIN_OPENID =  config.getboolean('login', 'LOGIN_OPENID')
 LOGIN_GITHUB =  config.getboolean('login', 'LOGIN_GITHUB')
 LOGIN_TWITTER = config.getboolean('login', 'LOGIN_TWITTER')
+LOGIN_ENV = config.getboolean('login', 'LOGIN_ENV')
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -222,6 +224,14 @@ if LOGIN_OPENID:
     AUTHENTICATION_BACKENDS += ('opensubmit.open_id.OpenIdAuth',)
     LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
     OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
+
+if LOGIN_ENV:
+    AUTHENTICATION_BACKENDS += ('opensubmit.env.ServerEnvAuth',)
+    LOGIN_ENV_DESCRIPTION = config.get('login', 'LOGIN_ENV_DESCRIPTION')
+    SOCIAL_AUTH_ENV_USERNAME = config.get('login', 'LOGIN_ENV_USERNAME')
+    SOCIAL_AUTH_ENV_EMAIL = config.get('login', 'LOGIN_ENV_EMAIL')
+    SOCIAL_AUTH_ENV_FIRST_NAME = config.get('login', 'LOGIN_ENV_FIRST_NAME')
+    SOCIAL_AUTH_ENV_LAST_NAME = config.get('login', 'LOGIN_ENV_LAST_NAME')
 
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next',]

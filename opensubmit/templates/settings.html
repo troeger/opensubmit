@@ -11,9 +11,18 @@
 </div>
 
 <form class="form" role="form" action="." method="post">
-{% csrf_token %}
-{{ settingsForm|bootstrap }}
+	{% csrf_token %}
+	{{ settingsForm|bootstrap }}
+
+<h5>Social Logins</h5>
+<ul>
+{% for social in backends.associated %}
+	<li>{{ social.provider }} ({{social.uid}})</li>
+{% endfor %}
+</ul>
+
 <button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Save</button>
 </form>
+
 
 {% endblock %}
