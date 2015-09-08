@@ -5,8 +5,8 @@
 {% setting "LOGIN_TWITTER" as login_twitter %}
 {% setting "LOGIN_GITHUB" as login_github %}
 {% setting "LOGIN_DESCRIPTION" as login_description %}
-{% setting "LOGIN_ENV" as login_env %}
-{% setting "LOGIN_ENV_DESCRIPTION" as login_env_description %}
+{% setting "LOGIN_SHIB" as login_shib %}
+{% setting "LOGIN_SHIB_DESCRIPTION" as login_shib_description %}
 
 <section>
     <div class="row">
@@ -33,9 +33,9 @@
                 <a href="{% url 'social:begin' 'openid' %}?next={{ next }}" class="btn-auth btn-openid"><b>{{ login_description }}</b></a>
             </div>
             {% endif %}
-            {% if login_env %}
+            {% if login_shib %}
             <div class="col-md-3">
-                <a href="{% url 'social:begin' 'env' %}?next={{ next }}" class="btn-auth btn-openid"><b>{{ login_env_description }}</b></a>
+                <a href="{% url 'social:begin' 'modshib' %}?next={{ next }}" class="btn-auth btn-openid"><b>{{ login_shib_description }}</b></a>
             </div>
             {% endif %}
     </div>
