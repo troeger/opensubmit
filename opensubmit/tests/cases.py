@@ -21,6 +21,8 @@ from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
 from opensubmit.models import logger
 
+rootdir=os.getcwd()
+
 class AnonStruct(object):
     def __init__(self, entries):
         self.__dict__.update(entries)
@@ -201,8 +203,8 @@ class SubmitTestCase(TestCase):
             hard_deadline=next_week,
             has_attachment=True,
             validity_script_download=True,
-            attachment_test_validity=DjangoFile(open('opensubmit/tests/validators/working.zip')),
-            attachment_test_full=DjangoFile(open('opensubmit/tests/validators/working.zip'))
+            attachment_test_validity=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip')),
+            attachment_test_full=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip'))
         )
         self.validatedAssignment.save()
         self.allAssignments.append(self.validatedAssignment)
@@ -219,7 +221,7 @@ class SubmitTestCase(TestCase):
             has_attachment=False,
         )
         self.softDeadlinePassedAssignment.save()
-        self.allAssignments.append(self.softDeadlinePassedAssignment)        
+        self.allAssignments.append(self.softDeadlinePassedAssignment)
 
         self.hardDeadlinePassedAssignment = Assignment(
             title='Hard deadline passed assignment',
@@ -275,7 +277,7 @@ class SubmitTestCase(TestCase):
 
     def createSubmissionFile(self):
         from django.core.files import File as DjangoFile
-        sf = SubmissionFile(attachment=DjangoFile(open("opensubmit/tests/submfiles/working_withsubdir.zip"), unicode("working_withsubdir.zip")))
+        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip"), unicode("working_withsubdir.zip")))
         sf.save()  
         return sf      
 
