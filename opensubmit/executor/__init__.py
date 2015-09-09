@@ -6,7 +6,7 @@ from urllib import urlencode
 from urllib2 import urlopen, HTTPError
 import logging, json
 import zipfile, tarfile
-import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle
+import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle, ConfigParser
 import time
 from datetime import datetime, timedelta
 
@@ -14,7 +14,6 @@ def read_config(config_file):
     '''
         Fill config dictionary, already check and interpret some values.
     '''
-    import ConfigParser
     config = ConfigParser.RawConfigParser()
     config.read(config_file)
 

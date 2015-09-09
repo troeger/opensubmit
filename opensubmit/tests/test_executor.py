@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
 
-from opensubmit import executor
+from opensubmit import executor 
 
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def setUp(self):
