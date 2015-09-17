@@ -66,9 +66,6 @@ DATABASES = {
     }
 }
 
-if bool(config.get('general', 'DEBUG')) and is_production:
-    print("WARNING: DEBUG is enabled in configuration file, despite being in productive mode.", file=sys.stderr)
-
 DEBUG = bool(config.get('general', 'DEBUG')) and not is_production
 TEMPLATE_DEBUG = DEBUG
 
@@ -181,6 +178,11 @@ LOGGING = {
             'propagate': True,
         },
         'OpenSubmit': {
+            'handlers':  ['console', 'file'],
+            'level':     'DEBUG',
+            'propagate': True,
+        },
+        'social': {
             'handlers':  ['console', 'file'],
             'level':     'DEBUG',
             'propagate': True,
