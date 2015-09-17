@@ -78,6 +78,9 @@ MAIN_URL = config.get('server', 'HOST') + config.get('server', 'HOST_DIR')
 url = MAIN_URL.split('/')
 FORCE_SCRIPT_NAME = config.get('server', 'HOST_DIR')
 
+LOGIN_URL = MAIN_URL
+LOGIN_REDIRECT_URL = MAIN_URL+'/dashboard/'
+
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
@@ -104,8 +107,6 @@ LANGUAGE_CODE = 'en-en'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = False
-LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/dashboard/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -150,6 +151,9 @@ LOGGING = {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
+        },
     },
     'handlers': {
         'mail_admins': {
@@ -159,17 +163,23 @@ LOGGING = {
         },
         'console': {
             'level':   'DEBUG',
+            'filters': ['require_debug_true'],
             'class':   'logging.StreamHandler'
         },
+	'file': {
+	    'level':   'DEBUG',
+	    'class':   'logging.FileHandler',
+	    'filename':   '/tmp/opensubmit.log'
+        }
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['mail_admins', 'file'],
             'level': 'ERROR',
             'propagate': True,
         },
         'OpenSubmit': {
-            'handlers':  ['console'],
+            'handlers':  ['console', 'file'],
             'level':     'DEBUG',
             'propagate': True,
         },
