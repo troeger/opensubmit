@@ -16,7 +16,7 @@ Note: If you are using Apache + mod_wsgi, make sure to set 'WSGIPassAuthorizatio
 """
 
 from social.backends.base import BaseAuth
-from social.exceptions import AuthMissingParameter, AuthFailed
+from social.exceptions import AuthMissingParameter
 import os, logging
 
 logger = logging.getLogger('OpenSubmit')
@@ -33,14 +33,12 @@ class ServerEnvAuth(BaseAuth):
 
     def auth_complete(self, *args, **kwargs):
         """Completes loging process, must return user instance"""
+        logger.debug("Auth complete, environment: "+str(os.environ))
         response = {}
         if self.ENV_USERNAME not in os.environ:
-            raise AuthFailed(self.ENV_USERNAME+' variable missing on server, authentication failed.')
-        uid = os.environ[self.ENV_USERNAME]
-        logger.debug("Auth complete, environment: "+str(os.environ))
-        if not uid:
             # Web server did not store the authenticated user name in the environment
-            raise AuthMissingParameter(self, "Missing %s in environment: %s"%(self.ENV_USERNAME, str(os.environ)))
+            raise AuthMissingParameter(self, "%s, found only: %s"%(self.ENV_USERNAME, str(os.environ)))
+        uid = os.environ[self.ENV_USERNAME]
         response['username']=uid
         kwargs.update({'response': response, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
