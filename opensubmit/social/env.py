@@ -33,27 +33,31 @@ class ServerEnvAuth(BaseAuth):
 
     def auth_complete(self, *args, **kwargs):
         """Completes loging process, must return user instance"""
-        logger.debug("Auth complete, environment: "+str(os.environ))
-        response = {}
-        if self.ENV_USERNAME not in os.environ:
-            # Web server did not store the authenticated user name in the environment
+        if self.ENV_USERNAME in os.environ:
+            response = os.environ
+        elif type(self.strategy).__name__ == "DjangoStrategy" and self.ENV_USERNAME in self.strategy.request.META:
+            # Looks like the Django strategy. In this case, it might by mod_wsgi, which stores
+            # authentication environment variables in request.META
+            response = self.strategy.request.META
+	else:
             raise AuthMissingParameter(self, "%s, found only: %s"%(self.ENV_USERNAME, str(os.environ)))
-        uid = os.environ[self.ENV_USERNAME]
-        response['username']=uid
         kwargs.update({'response': response, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
 
     def get_user_details(self, response):
         """ Complete with additional information from environment, as available. """
         result = {
-            'username': response['username'],
-            'email': os.environ[self.ENV_EMAIL],
-            'first_name': os.environ[self.ENV_FIRST_NAME],
-            'last_name': os.environ[self.ENV_LAST_NAME]
+            'username': response[self.ENV_USERNAME],
+            'email': response.get(self.ENV_EMAIL, None),
+            'first_name': response.get(self.ENV_FIRST_NAME, None),
+            'last_name': response.get(self.ENV_LAST_NAME, None)
         }
         if result['first_name'] and result['last_name']:
             result['fullname']=result['first_name']+' '+result['last_name']
         logger.debug("Returning user details: "+str(result))
         return result
 
+    def get_user_id(self, details, response):
+        """Return a unique ID for the current user, by default from server response."""
+        return response[self.ENV_USERNAME]
 
