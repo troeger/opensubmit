@@ -13,6 +13,6 @@ class ModShibAuth(ServerEnvAuth):
 
     def auth_url(self):
         """Must return redirect URL to auth provider."""
-        url = "/Shibboleth.sso/Login?target="+self.strategy.absolute_uri(self.setting('LOGIN_REDIRECT_URL'))
+        url = "/Shibboleth.sso/Login?target="+self.redirect_uri
         return self.strategy.absolute_uri(url)
 
