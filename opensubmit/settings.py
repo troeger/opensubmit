@@ -79,6 +79,7 @@ url = MAIN_URL.split('/')
 FORCE_SCRIPT_NAME = config.get('server', 'HOST_DIR')
 
 LOGIN_URL = MAIN_URL
+LOGIN_ERROR_URL = MAIN_URL
 LOGIN_REDIRECT_URL = MAIN_URL+'/dashboard/'
 
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
@@ -125,7 +126,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware'
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'social.apps.django_app.middleware.SocialAuthExceptionMiddleware'
 )
 ROOT_URLCONF = 'opensubmit.urls'
 WSGI_APPLICATION = 'opensubmit.wsgi.application'
