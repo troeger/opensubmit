@@ -32,13 +32,16 @@ of course participants. Everybody who can perform a successful login can
 submit solutions. We expect you to have an institute-specific authentication
 provider, otherwise you need to contribute your own patches.
 
-The end-user documentation is available in the GitHub Wiki.
+The `end-user documentation`_ is available in the GitHub Wiki.
+
+.. _end-user documentation: https://github.com/troeger/opensubmit/wiki/User-Manual
 
 Installation
 ------------
 
-If you just want to install your own copy of OpenSubmit, please read the
-installation guide in the GitHub Wiki.
+If you just want to install your own copy of OpenSubmit, please read the `installation guide`_ in the GitHub Wiki.
+
+.. _installation guide: https://github.com/troeger/opensubmit/wiki/Installation-Instructions
 
 License
 -------
