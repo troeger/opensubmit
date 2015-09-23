@@ -200,12 +200,13 @@ def user_unicode(self):
         shortened = self.email.split('@')[0]
         return u'%s %s (%s@...)' % (self.first_name, self.last_name, shortened)
     else:
-        return u'%s %s' % (self.first_name, self.last_name)        
+        return u'%s %s' % (self.first_name, self.last_name)
 User.__unicode__ = user_unicode
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='profile')
+    student_id = models.CharField(max_length=30, null=True)
     courses = models.ManyToManyField(Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
 
     class Meta:

@@ -76,7 +76,17 @@ class SettingsForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
     username = forms.CharField(max_length=30, required=True)
+    student_id = forms.CharField(max_length=30, required=False, label="Student ID (optional)")
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email')
+
+    def save(self, commit=True):
+        self.instance.profile.student_id = self.cleaned_data['student_id']
+        self.instance.profile.save()
+        return super(SettingsForm, self).save(commit=commit)
+
+    def __init__(self, *args, **kwargs):
+        super(SettingsForm, self).__init__(*args, **kwargs)
+        self.initial['student_id'] = self.instance.profile.student_id
