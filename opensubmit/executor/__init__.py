@@ -15,14 +15,15 @@ def read_config(config_file):
         Fill config dictionary, already check and interpret some values.
     '''
     config = ConfigParser.RawConfigParser()
-    config.read(config_file)
+    config.readfp(open(config_file))
 
     if config.getboolean("Logging","to_file"):
         logging.basicConfig(format=config.get("Logging","format"), filename='/tmp/executor.log')
     else:
-        logging.basicConfig(format=config.get("Logging","format"))   
-    logger=logging.getLogger()
+        logging.basicConfig(format=config.get("Logging","format"))
+    logger=logging.getLogger('OpenSubmit')
     logger.setLevel(config.get("Logging","level"))
+
     targetdir=config.get("Execution","directory")
     assert(targetdir.startswith('/'))
     assert(targetdir.endswith('/'))
@@ -183,12 +184,11 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         Return stdout of the job execution and a boolean flag of the execution was successfull
     '''
     logging.debug("Changing to target directory.")
-    os.chdir(finalpath)
     logging.debug("Installing signal handler for timeout")
     signal.signal(signal.SIGALRM, _handle_alarm)
     logging.info("Spawning process for "+str(cmd))
     try:
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
+        proc=subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
         logging.debug("Starting timeout counter: %u seconds"%timeout)
         signal.alarm(timeout)
         output=None
@@ -300,7 +300,7 @@ def run(config_file):
     '''
     config = read_config(config_file)
     _kill_deadlocked_jobs(config)
-    if _can_run(config):        
+    if _can_run(config):
         # fetch any available job
         fname, submid, action, timeout, validator=_fetch_job(config)
         if not fname:

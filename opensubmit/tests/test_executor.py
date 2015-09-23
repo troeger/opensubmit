@@ -7,18 +7,19 @@ from django.contrib.auth.models import User
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
 
-from opensubmit import executor 
+from opensubmit import executor
 
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
+
     def setUp(self):
         super(ExecutorTestCase, self).setUp()
 
     def _registerExecutor(self):
-        executor.send_config("opensubmit/tests/executor.cfg")
+        executor.send_config(os.path.dirname(__file__)+"/executor.cfg")
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
-        executor.run("opensubmit/tests/executor.cfg")
+        executor.run(os.path.dirname(__file__)+"/executor.cfg")
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()

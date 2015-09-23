@@ -143,11 +143,11 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         self.assertEquals(True, grading_notes(self.sub1))
 
     def testGradingFileIndicator(self):
-        from django.core.files import File as DjangoFile        
-        from opensubmit.admin.submission import grading_file        
+        from django.core.files import File as DjangoFile
+        from opensubmit.admin.submission import grading_file
         self.assertEquals(False, grading_file(self.sub1))
-        self.sub1.grading_file = DjangoFile(open('opensubmit/models.py'), unicode("grading_file.txt"))  
-        self.sub1.save()     
+        self.sub1.grading_file = DjangoFile(open(__file__), unicode("grading_file.txt"))  
+        self.sub1.save()
         self.assertEquals(True, grading_file(self.sub1))
 
     def testStateFilter(self):
