@@ -300,6 +300,8 @@ def run(config_file):
     '''
         The primary worker function of the executor, fetches and runs jobs from the OpenSubmit server.
         Expects an existing registration of this machine.
+
+        Returns boolean that indicates success.
     '''
     config = read_config(config_file)
     _kill_deadlocked_jobs(config)

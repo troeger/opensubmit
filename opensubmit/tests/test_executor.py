@@ -19,7 +19,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
-        executor.run(os.path.dirname(__file__)+"/executor.cfg")
+        return executor.run(os.path.dirname(__file__)+"/executor.cfg")
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
@@ -28,22 +28,22 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
     def testRunRequestFromUnknownMachine(self):
         # This is expected to trigger a register action request from the server
-        self.assertNotEquals(0, self._runExecutor())
+        self.assertNotEquals(True, self._runExecutor())
 
     @override_settings(JOB_EXECUTOR_SECRET='foo')
     def testInvalidSecret(self):
-        self.assertNotEquals(0, self._runExecutor())
+        self.assertNotEquals(True, self._runExecutor())
 
     def testEverythingAlreadyTested(self):
         self.createValidatedSubmission(self.current_user)
         assert(self._registerExecutor().pk)
-        self.assertEquals(0, self._runExecutor())
+        self.assertEquals(True, self._runExecutor())
 
     def testCompileTest(self):
         self.sub = self.createValidatableSubmission(self.current_user) 
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(0, self._runExecutor())
+        self.assertEquals(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.COMPILE_TEST
@@ -54,7 +54,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testValidationTest(self):
         # We need a fully working compile run beforehand
         self.testCompileTest()
-        self.assertEquals(0, self._runExecutor())
+        self.assertEquals(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
@@ -65,7 +65,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testFullTest(self):
         # We need a fully working validation run beforehand
         self.testValidationTest()
-        self.assertEquals(0, self._runExecutor())
+        self.assertEquals(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.FULL_TEST
@@ -75,13 +75,13 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
     def testAssignmentSpecificTestMachine(self):
         # Register two test machines T1 and T2
-        real_machine = self._registerExecutor()        
+        real_machine = self._registerExecutor()
         fake_machine = TestMachine(host="127.0.0.2")
         fake_machine.save()
-        # Assign each of them to a different assignment A1 and A2
+        # Assign each of them to a different assignment
         self.openAssignment.test_machines.add(real_machine)
         self.validatedAssignment.test_machines.add(fake_machine)
-        # Produce submissions for the assignments
+        # Produce submission for the assignment linked to fake_machine
         sub1 = Submission(
             assignment=self.validatedAssignment,
             submitter=self.current_user.user,
@@ -89,11 +89,10 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
             file_upload=self.createSubmissionFile()
         )
         sub1.save()
-        # Real executor should not take care of this submission, since it is not for 'openAssignment'
+        # Run real_machine executor, should not react on this submission
         old_sub1_state = sub1.state
-        self.assertEquals(0, self._runExecutor())    
+        self.assertEquals(False, self._runExecutor())
+        # Make sure that submission object was not touched, whatever the executor says
         sub1 = Submission.objects.get(pk=sub1.pk)
         self.assertEquals(old_sub1_state, sub1.state)
-        self.assertEquals(0, self._runExecutor())        
 
-        # T2 should only take care of A2
