@@ -12,6 +12,9 @@ from datetime import datetime, timedelta
 
 logger=logging.getLogger('OpenSubmitExecutor')
 
+# Expected in validator ZIP packages
+VALIDATOR_FNAME = 'validator.py'
+
 def read_config(config_file):
     '''
         Fill config dictionary, already check and interpret some values.
@@ -88,6 +91,40 @@ def _infos_cmd(cmd):
         return out
     except:
         return ""
+
+def _fetch_validator(url, path):
+        '''
+            Fetch validator script from the given URL and put it under the given target file.
+
+            Returns success indication as boolean value.
+        '''
+        logger.debug("Fetching validator script from "+url)
+        download_file = path+'validator.download'
+
+        try:
+            result = urlopen(url)
+            target=open(download_file,"wb")
+            target.write(result.read())
+            target.close()
+        except HTTPError as e:
+            logger.error("Error while fetching validator from "+url)
+            return False
+
+        if zipfile.is_zipfile(download_file):
+            logger.debug("Validator is a ZIP file, unpacking it.")
+            f=zipfile.ZipFile(download_file, 'r')
+            f.extractall(path)
+            os.remove(download_file)
+            # ZIP file is expected to contain VALIDATOR_FNAME
+            if not os.path.exists(path+VALIDATOR_FNAME):
+                logger.error("Validator ZIP package does not contain "+VALIDATOR_FNAME)
+                #TODO: Ugly hack, make error reporting better
+                _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
+        else:
+            logger.debug("Validator is a single file, renaming it.")
+            os.rename(download_file,path+VALIDATOR_FNAME)
+        os.chmod(path+VALIDATOR_FNAME, stat.S_IXUSR|stat.S_IRUSR)
+
 
 def _fetch_job(config):
     '''
@@ -307,7 +344,7 @@ def run(config_file):
     _kill_deadlocked_jobs(config)
     if _can_run(config):
         # fetch any available job
-        fname, submid, action, timeout, validator=_fetch_job(config)
+        fname, submid, action, timeout, validator_url=_fetch_job(config)
         if not fname:
             return False
         # decompress download, only returns on success
@@ -339,28 +376,13 @@ def run(config_file):
             output, success = _run_job(config, finalpath,['make'],submid,action,timeout)
             if not success:
                 return False
-            # fetch validator into target directory 
-            logger.debug("Fetching validator script from "+validator)
-            urllib.request.urlretrieve(validator, finalpath+"/download")
-            if zipfile.is_zipfile(finalpath+"/download"):
-                logger.debug("Validator is a ZIP file, unpacking it.")
-                f=zipfile.ZipFile(finalpath+"/download", 'r')
-                f.extractall(finalpath)
-                os.remove(finalpath+"/download")
-                # ZIP file is expected to contain 'validator.py'
-                if not os.path.exists(finalpath+"/validator.py"):
-                    logger.error("Validator ZIP package does not contain validator.py")
-                    #TODO: Ugly hack, make error reporting better
-                    _send_result(config, "Internal error, please consult the course administrators.", -1, submid, action, "")
-            else:
-                logger.debug("Validator is a single file, renaming it.")
-                os.rename(finalpath+"/download",finalpath+"/validator.py")
-            os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
+            # fetch validator into target directory
+            _fetch_validator(validator_url, finalpath)
             # Allow submission to load their own libraries
             logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
             os.environ['LD_LIBRARY_PATH']=finalpath
             # execute validator
-            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), 'validator.py', perfdata_fname],submid,action,timeout)
+            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
             if not success:
                 return False
             perfdata= open(perfdata_fname,"r").read()
