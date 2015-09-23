@@ -37,7 +37,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testEverythingAlreadyTested(self):
         self.createValidatedSubmission(self.current_user)
         assert(self._registerExecutor().pk)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEquals(False, self._runExecutor())
 
     def testCompileTest(self):
         self.sub = self.createValidatableSubmission(self.current_user) 
