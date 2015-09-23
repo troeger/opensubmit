@@ -10,6 +10,8 @@ import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle, Confi
 import time
 from datetime import datetime, timedelta
 
+logger=logging.getLogger('OpenSubmitExecutor')
+
 def read_config(config_file):
     '''
         Fill config dictionary, already check and interpret some values.
@@ -18,10 +20,11 @@ def read_config(config_file):
     config.readfp(open(config_file))
 
     if config.getboolean("Logging","to_file"):
-        logging.basicConfig(format=config.get("Logging","format"), filename='/tmp/executor.log')
+        handler = logging.FileHandler('/tmp/executor.log')
     else:
-        logging.basicConfig(format=config.get("Logging","format"))
-    logger=logging.getLogger('OpenSubmit')
+        handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(config.get("Logging","format")))
+    logger.addHandler(handler)
     logger.setLevel(config.get("Logging","level"))
 
     targetdir=config.get("Execution","directory")
@@ -40,7 +43,7 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
         msg+="\n[Output truncated]"
     if not perfdata:
         perfdata=""
-    logging.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
+    logger.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
     # There are cases where the program was not finished, but we still deliver a result
     # Transmitting "None" is a bad idea, so we use a special code instead
     if error_code==None:
@@ -103,12 +106,12 @@ def _fetch_job(config):
         headers=result.info()
         if headers['Action'] == 'get_config':
             # The server does not know us, so it demands registration before hand.
-            logging.info("Machine unknown on server, perform registration first.")
+            logger.info("Machine unknown on server, perform registration first.")
             return [None]*5
         submid=headers['SubmissionFileId']
         action=headers['Action']
         timeout=int(headers['Timeout'])
-        logging.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
+        logger.info("Retrieved submission file %s for '%s' action: %s"%(submid, action, fname))
         if 'PostRunValidation' in headers:
             validator=headers['PostRunValidation']
         else:
@@ -119,10 +122,10 @@ def _fetch_job(config):
         return fname, submid, action, timeout, validator
     except HTTPError as e:
         if e.code == 404:
-            logging.debug("Nothing to do.")
+            logger.debug("Nothing to do.")
             return [None]*5
         else:
-            logging.error(str(e))
+            logger.error(str(e))
             return [None]*5
 
 def _unpack_job(config, fname, submid, action):
@@ -138,15 +141,15 @@ def _unpack_job(config, fname, submid, action):
     shutil.rmtree(finalpath, ignore_errors=True)
     os.makedirs(finalpath)
     if zipfile.is_zipfile(fname):
-        logging.debug("Valid ZIP file")
+        logger.debug("Valid ZIP file")
         f=zipfile.ZipFile(fname, 'r')
-        logging.debug("Extracting ZIP file.")
+        logger.debug("Extracting ZIP file.")
         f.extractall(finalpath)
         os.remove(fname)
     elif tarfile.is_tarfile(fname):
-        logging.debug("Valid TAR file")
+        logger.debug("Valid TAR file")
         tar = tarfile.open(fname)
-        logging.debug("Extracting TAR file.")
+        logger.debug("Extracting TAR file.")
         tar.extractall(finalpath)
         tar.close()
         os.remove(fname)
@@ -156,11 +159,11 @@ def _unpack_job(config, fname, submid, action):
         shutil.rmtree(finalpath, ignore_errors=True)
         return None
     dircontent=os.listdir(finalpath)
-    logging.debug("Content after decompression: "+str(dircontent))
+    logger.debug("Content after decompression: "+str(dircontent))
     if len(dircontent)==0:
         _send_result(config, "Your compressed upload is empty - no files in there.",-1, submid, action)
     elif len(dircontent)==1 and os.path.isdir(finalpath+os.sep+dircontent[0]):
-        logging.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..."%(dircontent[0]))
+        logger.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..."%(dircontent[0]))
         finalpath=finalpath+os.sep+dircontent[0]
     return finalpath
 
@@ -173,7 +176,7 @@ def _handle_alarm(signum, frame):
         pid=frame.f_locals['self'].pid
     else:
         pid=frame.f_back.f_locals['self'].pid
-    logging.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
+    logger.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
     os.killpg(pid, signal.SIGTERM)
 
 def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=False):
@@ -183,21 +186,21 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
 
         Return stdout of the job execution and a boolean flag of the execution was successfull
     '''
-    logging.debug("Changing to target directory.")
-    logging.debug("Installing signal handler for timeout")
+    logger.debug("Changing to target directory.")
+    logger.debug("Installing signal handler for timeout")
     signal.signal(signal.SIGALRM, _handle_alarm)
-    logging.info("Spawning process for "+str(cmd))
+    logger.info("Spawning process for "+str(cmd))
     try:
         proc=subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-        logging.debug("Starting timeout counter: %u seconds"%timeout)
+        logger.debug("Starting timeout counter: %u seconds"%timeout)
         signal.alarm(timeout)
         output=None
         stderr=None
         try:
             output, stderr = proc.communicate()
-            logging.debug("Process terminated")
+            logger.debug("Process terminated")
         except:
-            logging.debug("Seems like the process got killed by the timeout handler")
+            logger.debug("Seems like the process got killed by the timeout handler")
         if output == None:
             output = ""
         else:
@@ -219,11 +222,11 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         if ignore_errors:
             return "", True             # act like nothing had happened
         else:
-            logging.info("Exception on process execution: "+str(e))
+            logger.info("Exception on process execution: "+str(e))
             shutil.rmtree(finalpath, ignore_errors=True)
             return "", False
     if proc.returncode == 0:
-        logging.info("Executed with error code 0: \n\n"+output)
+        logger.info("Executed with error code 0: \n\n"+output)
         return output, True
     elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
         _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
@@ -250,9 +253,9 @@ def _kill_deadlocked_jobs(config):
     for proc in psutil.process_iter():
         if proc.username == username and proc.pid != ourpid:
             runtime=time.time()-proc.create_time
-            logging.debug("This user already runs %u for %u seconds."%(proc.pid,runtime))
+            logger.debug("This user already runs %u for %u seconds."%(proc.pid,runtime))
             if runtime > int(config.get("Execution","timeout")):
-                logging.debug("Killing %u due to exceeded runtime."%proc.pid)
+                logger.debug("Killing %u due to exceeded runtime."%proc.pid)
                 proc.kill()
 
 def _can_run(config):
@@ -264,9 +267,9 @@ def _can_run(config):
         fp = open(config.get("Execution","pidfile"), 'w')
         try:
             fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            logging.debug("Got the script lock")
+            logger.debug("Got the script lock")
         except IOError:
-            logging.debug("Script is already running.")
+            logger.debug("Script is already running.")
             return False
     return True
 
@@ -287,7 +290,7 @@ def send_config(config_file):
     output.append(["OpenCL libraries", _infos_cmd("find /usr/lib/ -iname '*opencl*'")])
     output.append(["NVidia SMI", _infos_cmd("nvidia-smi -q")])
     output.append(["OpenCL Details", _infos_opencl()])
-    logging.debug("Sending config data: "+str(output))
+    logger.debug("Sending config data: "+str(output))
     post_data = [('Config',json.dumps(output)),('Name',_infos_cmd("hostname"))]
     post_data = urlencode(post_data)
     post_data = post_data.encode('utf-8')
@@ -335,24 +338,24 @@ def run(config_file):
             if not success:
                 return False
             # fetch validator into target directory 
-            logging.debug("Fetching validator script from "+validator)
+            logger.debug("Fetching validator script from "+validator)
             urllib.request.urlretrieve(validator, finalpath+"/download")
             if zipfile.is_zipfile(finalpath+"/download"):
-                logging.debug("Validator is a ZIP file, unpacking it.")
+                logger.debug("Validator is a ZIP file, unpacking it.")
                 f=zipfile.ZipFile(finalpath+"/download", 'r')
                 f.extractall(finalpath)
                 os.remove(finalpath+"/download")
                 # ZIP file is expected to contain 'validator.py'
                 if not os.path.exists(finalpath+"/validator.py"):
-                    logging.error("Validator ZIP package does not contain validator.py")
+                    logger.error("Validator ZIP package does not contain validator.py")
                     #TODO: Ugly hack, make error reporting better
                     _send_result(config, "Internal error, please consult the course administrators.", -1, submid, action, "")
             else:
-                logging.debug("Validator is a single file, renaming it.")
+                logger.debug("Validator is a single file, renaming it.")
                 os.rename(finalpath+"/download",finalpath+"/validator.py")
             os.chmod(finalpath+"/validator.py", stat.S_IXUSR|stat.S_IRUSR)
             # Allow submission to load their own libraries
-            logging.debug("Setting LD_LIBRARY_PATH to "+finalpath)
+            logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
             os.environ['LD_LIBRARY_PATH']=finalpath
             # execute validator
             output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), 'validator.py', perfdata_fname],submid,action,timeout)
@@ -364,7 +367,7 @@ def run(config_file):
             return True
         else:
             # unknown action, programming error in the server
-            logging.error("Uknown action keyword from server: "+action)
+            logger.error("Uknown action keyword from server: "+action)
             return False
 
 if __name__ == "__main__":
