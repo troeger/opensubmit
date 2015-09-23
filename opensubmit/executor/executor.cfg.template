@@ -3,7 +3,7 @@
 # The OpenSubmit server 
 url=http://localhost:8000								
 
-# Shared secret, must match to settings.py on the server
+# Shared secret, must match to /etc/submit/settings.ini on the server
 secret=49846zut93purfh977TTTiuhgalkjfnk89				
 
 [Execution]

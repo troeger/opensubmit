@@ -9,10 +9,10 @@ class ModShibAuth(ServerEnvAuth):
     ENV_USERNAME = "REMOTE_USER"
     ENV_EMAIL = "HTTP_SHIB_ORGPERSON_EMAILADDRESS"
     ENV_FIRST_NAME = "HTTP_SHIB_INETORGPERSON_GIVENNAME"
-    ENV_LAST_NAME = "HTTP_SHIB_PERSON_SURNAM"
+    ENV_LAST_NAME = "HTTP_SHIB_PERSON_SURNAME"
 
     def auth_url(self):
         """Must return redirect URL to auth provider."""
-        url = "/Shibboleth.sso/Login?target="+self.strategy.absolute_uri(self.setting('LOGIN_REDIRECT_URL'))
+        url = "/Shibboleth.sso/Login?target="+self.redirect_uri
         return self.strategy.absolute_uri(url)
 
