@@ -128,9 +128,6 @@ MIDDLEWARE_CLASSES = (
 )
 ROOT_URLCONF = 'opensubmit.urls'
 WSGI_APPLICATION = 'opensubmit.wsgi.application'
-TEMPLATE_DIRS = (
-    'opensubmit/templates/',
-)
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
