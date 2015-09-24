@@ -1,7 +1,7 @@
 # Administration script functionality on the production system
 # We cover some custom actions and a small subset of django-admin here
 
-import os
+import os, urllib
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
 
 import sys, shutil
@@ -15,27 +15,40 @@ WEB_TEMPLATE = "opensubmit/settings.ini.template"                   # relative t
 EXECUTOR_CONFIG_FILE = CONFIG_PATH+'/executor.ini'
 EXECUTOR_TEMPLATE = "opensubmit/executor/executor.cfg.template"     # relative to package path
 
-def django_admin(command):
+def django_admin(args):
     '''
         Run something like it would be done through Django's manage.py.
     '''
     from django.core.management import execute_from_command_line
-    execute_from_command_line([sys.argv[0], command])
+    execute_from_command_line([sys.argv[0]]+args)
+
+def check_web_config_consistency(config):
+    '''
+        Check the web application config file for consistency.
+    '''
+    print "Checking configuration of the OpenSubmit web application..."
+    try:
+        urllib.urlopen(config.get("server", "HOST"))
+    except Exception as e:
+        # This may be ok, when the admin is still setting up to server
+        print "WARNING: The configured HOST seems to be invalid: "+str(e)
+    return True
 
 def check_web_config():
     '''
         Everything related to configuration file checks.
     '''
-    print "Checking configuration of the OpenSubmit web application..."
+    print "Looking for config files ..."
     config = RawConfigParser()
     try:
         config.readfp(open(WEB_CONFIG_FILE)) 
         print "Config file found at "+WEB_CONFIG_FILE
-        return True
+        return check_web_config_consistency(config)
     except IOError:
         print "ERROR: Seems like the config file %s does not exist."%WEB_CONFIG_FILE
-        print "       I am creating a new one, don't forget to edit it !"
-        os.makedirs(CONFIG_PATH)
+        print "       I am creating a new one. Please edit it and re-run this command."
+        if not os.path.exists(CONFIG_PATH):
+            os.makedirs(CONFIG_PATH)
         orig = resource_filename(Requirement.parse("OpenSubmit"),WEB_TEMPLATE)
         shutil.copy(orig,WEB_CONFIG_FILE)
         return False    # Manual editing is needed before further proceeding with the fresh file
@@ -45,8 +58,8 @@ def check_web_db():
         Everything related to database checks and updates.
     '''
     print "Testing for neccessary database migrations..."
-    django_admin("migrate")             # apply schema migrations
-    django_admin("fixperms")            # Fix django backend user permissions, if needed
+    django_admin(["migrate"])             # apply schema migrations
+    django_admin(["fixperms"])            # Fix django backend user permissions, if needed
 
 def check_executor_config():
     '''
@@ -74,20 +87,22 @@ def console_script():
         The main entry point for the production administration script 'opensubmit', installed by setuptools.
     '''
     if len(sys.argv) == 1:
-        print "opensubmit [check_web|check_executor|executor|help]"
+        print "opensubmit [install_web|install_executor|executor|help]"
         exit(0)
 
     if "help" in sys.argv:
-        print "check_web:      Check config files and database for correct installation of the OpenSubmit web server."
-        print "check_executor: Check config files and registration of a OpenSubmit test machine."
-        print "executor:       Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab."
-        print "help:           Print this help"
+        print "install_web:      Check config files and database for correct installation of the OpenSubmit web server."
+        print "install_executor: Check config files and registration of a OpenSubmit test machine."
+        print "executor:         Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab."
+        print "help:             Print this help"
         exit(0)
 
-    if "check_web" in sys.argv:
+    if "install_web" in sys.argv:
         if not check_web_config():
             return          # Let them first fix the config file before trying a DB access
         check_web_db()
+        print("Preparing static files for web server...")
+        django_admin(["collectstatic","--noinput"])
         exit(0)
 
     if "check_executor" in sys.argv:
@@ -101,4 +116,5 @@ def console_script():
     if "executor" in sys.argv:
         from opensubmit.executor import run
         run(EXECUTOR_CONFIG_FILE)
+
 

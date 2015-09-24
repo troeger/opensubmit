@@ -82,10 +82,12 @@ LOGIN_REDIRECT_URL = MAIN_URL+'/dashboard/'
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
+SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))+os.sep
+
 if is_production:
-    STATIC_ROOT = config.get('server', 'SCRIPT_ROOT') + 'static-production/'
+    STATIC_ROOT = SCRIPT_ROOT + 'static-production/'
     STATIC_URL = MAIN_URL + '/static/'
-    STATICFILES_DIRS = (config.get('server', 'SCRIPT_ROOT') + 'opensubmit/static/', )
+    STATICFILES_DIRS = (SCRIPT_ROOT + 'static/', )
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')

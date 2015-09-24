@@ -2,7 +2,6 @@
 import os, sys, shutil
 
 from setuptools import setup, find_packages
-from distutils.command.install import install as _install
 from distutils.command.clean import clean as _clean
 from opensubmit import __version__
 

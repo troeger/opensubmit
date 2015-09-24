@@ -17,9 +17,6 @@ DEBUG: False
 HOST: https://<this machine>
 HOST_DIR: /opensubmit
 
-# This is the source directory of the scripts.
-SCRIPT_ROOT: <source file path>
-
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
 MEDIA_ROOT: <media storage path>
