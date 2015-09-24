@@ -26,6 +26,9 @@ class clean(_clean):
         clean_pycs()
         clean_dirs()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name = 'OpenSubmit',
     version = __version__,
@@ -37,16 +40,10 @@ setup(
         #   4 - Beta
         #   5 - Production/Stable
         'Development Status :: 4 - Beta',
-
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7'
     ],
-    install_requires=[
-        'Django>=1.7',
-        'django-bootstrap-form',
-        'django-grappelli',
-        'psutil'                            # for executor
-    ],
+    install_requires=required,
     packages = find_packages(exclude=['opensubmit.tests']),     # Just add Python packages
     include_package_data = True,                                # Consider MANIFEST.in
     cmdclass={
