@@ -18,11 +18,11 @@ HOST: https://<this machine>
 HOST_DIR: /opensubmit
 
 # This is the source directory of the scripts.
-SCRIPT_ROOT: ./
+SCRIPT_ROOT: <source file path>
 
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
-MEDIA_ROOT: /var/opensubmit
+MEDIA_ROOT: <media storage path>
 
 # This is the timezone all dates and deadlines are specified in.
 # This setting overrides your web server default for the time zone.
@@ -40,17 +40,17 @@ SECRET_KEY: uzfp=4gv1u((#hb*#o3*4^v#u#g9k8-)us2nw^)@rz0-$2-23)
 # - mysql
 # - sqlite3
 # - oracle
-DATABASE_ENGINE: postgresql_psycopg2
+DATABASE_ENGINE: sqlite3
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: opensubmit
+DATABASE_NAME: /tmp/opensubmit.sqlite
 
 # The user name for accessing the database. Not needed for SQLite.
-DATABASE_USER: opensubmit
+DATABASE_USER: 
 
 # The user password for accessing the database. Not needed for SQLite.
-DATABASE_PASSWORD: opensubmit
+DATABASE_PASSWORD: 
 
 # The host name for accessing the database. Not needed for SQLite.
 # An empty settings means that the database is on the same host as the web server.
@@ -86,27 +86,27 @@ LOGIN_DESCRIPTION: StackExchange
 OPENID_PROVIDER: https://openid.stackexchange.com
 
 # Enables or disables login with Twitter
-LOGIN_TWITTER: True
+LOGIN_TWITTER: False
 
 # OAuth application credentials for Twitter
 LOGIN_TWITTER_OAUTH_KEY:
 LOGIN_TWITTER_OAUTH_SECRET:
 
 # Enables or disables login with Google
-LOGIN_GOOGLE: True
+LOGIN_GOOGLE: False
 
 # OAuth application credentials for Google
 LOGIN_GOOGLE_OAUTH_KEY:
 LOGIN_GOOGLE_OAUTH_SECRET:
 
 # Enables or disables login with GitHub
-LOGIN_GITHUB: True
+LOGIN_GITHUB: False
 
 # OAuth application credentials for GitHub
 LOGIN_GITHUB_OAUTH_KEY:
 LOGIN_GITHUB_OAUTH_SECRET:
 
 # Enables or diables login through Apache 2.4 mod_shib authentication
-LOGIN_SHIB: True
+LOGIN_SHIB: False
 LOGIN_SHIB_DESCRIPTION: Shibboleth
 
