@@ -6,6 +6,7 @@ from django import forms
 from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
+from django.utils.html import format_html
 from opensubmit.models import inform_student, tutor_courses, Assignment, Submission, SubmissionFile, SubmissionTestResult
 
 def authors(submission):
