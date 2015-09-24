@@ -13,9 +13,9 @@ def basename(value):
 
 @register.filter(name='state_label_css')
 def state_label_css(subm):
-    green_label = "label label-success"
-    red_label = "label label-important"
-    grey_label = "label label-info"
+    green_label = "badge label label-success"
+    red_label = "badge label label-important"
+    grey_label = "badge label label-info"
     # We expect a submission as input
     if subm.is_closed() and subm.grading:
         if subm.grading.means_passed:
