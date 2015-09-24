@@ -1,10 +1,8 @@
-Django>=1.7
+Django>=1.8
 django-bootstrap-form
 djangorestframework>=2.4
 django-grappelli
-psutil
-twine
-requests
+requests>=2.5.1
 pycrypto
 pyjwkest
 python-social-auth
