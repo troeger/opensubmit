@@ -3,7 +3,7 @@
 '''
 
 from urllib import urlencode
-from urllib2 import urlopen, HTTPError
+from urllib2 import urlopen, HTTPError, URLError
 import logging, json
 import zipfile, tarfile
 import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle, ConfigParser
@@ -164,6 +164,9 @@ def _fetch_job(config):
         else:
             logger.error(str(e))
             return [None]*5
+    except URLError as e:
+        logger.error("Could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
+        return [None]*5
 
 def _unpack_job(config, fname, submid, action):
     '''
