@@ -331,7 +331,10 @@ def send_config(config_file):
     post_data = [('Config',json.dumps(output)),('Name',_infos_cmd("hostname"))]
     post_data = urlencode(post_data)
     post_data = post_data.encode('utf-8')
-    urlopen('%s/machines/secret=%s'%(config.get("Server","url"), config.get("Server","secret")), post_data)
+    try:
+        urlopen('%s/machines/secret=%s'%(config.get("Server","url"), config.get("Server","secret")), post_data)
+    except Exception as e:
+        logger.error("Could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
 
 def run(config_file):
     '''
