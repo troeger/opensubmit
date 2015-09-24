@@ -12,14 +12,18 @@
 DEBUG: False
 
 [server]
-# This is the host were the OpenSubmit tool is offered by your web server.
-# If you serve the content from a subdirectory, please specify it too
+# This is the root host url were the OpenSubmit tool is offered by your web server.
+# If you serve the content from a subdirectory, please specify it too, without leading or trailing slashes,
+# otherwise leave it empty.
 HOST: https://<this machine>
-HOST_DIR: /opensubmit
+HOST_DIR: submit
 
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
 MEDIA_ROOT: <media storage path>
+
+# This is the logging file. The web server must be allowed to write into it.
+LOG_FILE: /var/log/opensubmit.log
 
 # This is the timezone all dates and deadlines are specified in.
 # This setting overrides your web server default for the time zone.
@@ -41,7 +45,7 @@ DATABASE_ENGINE: sqlite3
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: /tmp/opensubmit.sqlite
+DATABASE_NAME: <database>
 
 # The user name for accessing the database. Not needed for SQLite.
 DATABASE_USER: 

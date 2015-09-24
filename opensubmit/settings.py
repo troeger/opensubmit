@@ -71,7 +71,7 @@ TEMPLATE_DEBUG = DEBUG
 
 # Let the user specify the complete URL, and split it up accordingly
 # FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-MAIN_URL = config.get('server', 'HOST') + config.get('server', 'HOST_DIR')
+MAIN_URL = config.get('server', 'HOST') + '/' + config.get('server', 'HOST_DIR')
 url = MAIN_URL.split('/')
 FORCE_SCRIPT_NAME = config.get('server', 'HOST_DIR')
 
@@ -82,12 +82,15 @@ LOGIN_REDIRECT_URL = MAIN_URL+'/dashboard/'
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
 MEDIA_URL = MAIN_URL + '/files/'
 
-SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))+os.sep
+# Root of the installation, without leading slash
+SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+LOG_FILE = config.get('server', 'LOG_FILE')
 
 if is_production:
-    STATIC_ROOT = SCRIPT_ROOT + 'static-production/'
+    STATIC_ROOT = SCRIPT_ROOT + '/static-production/'
     STATIC_URL = MAIN_URL + '/static/'
-    STATICFILES_DIRS = (SCRIPT_ROOT + 'static/', )
+    STATICFILES_DIRS = (SCRIPT_ROOT + '/static/', )
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
@@ -167,7 +170,7 @@ LOGGING = {
 	'file': {
 	    'level':   'DEBUG',
 	    'class':   'logging.FileHandler',
-	    'filename':   '/tmp/opensubmit.log'
+	    'filename':   LOG_FILE
         }
     },
     'loggers': {
