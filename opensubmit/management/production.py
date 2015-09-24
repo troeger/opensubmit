@@ -55,6 +55,19 @@ def apache_config(config):
     f.write(text)
     f.close()
 
+def check_exec_config_consistency(config):
+    '''
+        Check the executor config file for consistency.
+    '''
+    print "Checking configuration of the OpenSubmit executor..."
+    # Check configured host
+    try:
+        urllib.urlopen(config.get("Server", "url"))
+        return True
+    except Exception as e:
+        print "ERROR: The configured OpenSubmit server URL seems to be invalid: "+str(e)
+    return False
+
 def check_web_config_consistency(config):
     '''
         Check the web application config file for consistency.
@@ -124,12 +137,12 @@ def check_executor_config():
     '''
         Everything related to the executor configuration file.
     '''
-    print "Checking configuration of the OpenSubmit executor..."
+    print "Looking for config files..."
     config = RawConfigParser()
     try:
         config.readfp(open(EXECUTOR_CONFIG_FILE)) 
         print "Config file found at "+EXECUTOR_CONFIG_FILE
-        return True
+        return config
     except IOError:
         print "ERROR: Seems like the config file %s does not exist."%EXECUTOR_CONFIG_FILE
         print "       I am creating a new one, don't forget to edit it !"
@@ -139,7 +152,7 @@ def check_executor_config():
             pass    # if directory already exists
         orig = resource_filename(Requirement.parse("OpenSubmit"),EXECUTOR_TEMPLATE)
         shutil.copy(orig,EXECUTOR_CONFIG_FILE)
-        return False    # Manual editing is needed before further proceeding with the fresh file
+        return None    # Manual editing is needed before further proceeding with the fresh file
 
 def check_warnings():
     if warning_counter > 0:
@@ -173,8 +186,11 @@ def console_script():
         apache_config(config)
         exit(0)
 
-    if "check_executor" in sys.argv:
-        if not check_executor_config():
+    if "install_executor" in sys.argv:
+        config = check_executor_config()
+        if not config:
+            return
+        if not check_exec_config_consistency(config):
             return
         print "Registering OpenSubmit executor..."
         from opensubmit.executor import send_config
@@ -185,4 +201,5 @@ def console_script():
         from opensubmit.executor import run
         run(EXECUTOR_CONFIG_FILE)
 
-
+    if "createsuperuser" in sys.argv:
+        django_admin(["createsuperuser"])

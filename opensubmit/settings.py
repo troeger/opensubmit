@@ -10,8 +10,6 @@ from ConfigParser import SafeConfigParser
 # which forces DEBUG to False), or in a development environment (al-
 # lowing DEBUG mode).
 def find_config_info():
-    config_info_default = (os.path.abspath('opensubmit/settings.ini.template'), False, )
-
     # config_info: (<config file path>, <is production>, )
     system_config_directories = {
         'win32': os.path.expandvars('$APPDATA'),
@@ -39,8 +37,8 @@ def find_config_info():
             if os.path.isfile(config_file_path):
                 return (config_file_path, production, )
 
-    print("No configuration file found. Falling back to default settings, which most likely will not work.", file=sys.stderr)
-    return config_info_default
+    print("No configuration file found. Please create settings_dev.ini or call 'opensubmit install_web' on production systems.", file=sys.stderr)
+    exit(-1)
 
 config_file_path, is_production = find_config_info()
 try:
@@ -71,8 +69,10 @@ TEMPLATE_DEBUG = DEBUG
 
 # Let the user specify the complete URL, and split it up accordingly
 # FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-MAIN_URL = config.get('server', 'HOST') + '/' + config.get('server', 'HOST_DIR')
-url = MAIN_URL.split('/')
+if len(config.get('server', 'HOST_DIR')) > 0:
+    MAIN_URL = config.get('server', 'HOST') + '/' + config.get('server', 'HOST_DIR')
+else:
+    MAIN_URL = config.get('server', 'HOST')
 FORCE_SCRIPT_NAME = config.get('server', 'HOST_DIR')
 
 LOGIN_URL = MAIN_URL
