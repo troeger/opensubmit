@@ -14,4 +14,4 @@ executor.cfg
 opensubmit/database.sqlite
 .coverage
 opensubmit/settings_dev.ini
-
+.vagrant
