@@ -73,7 +73,7 @@ if len(config.get('server', 'HOST_DIR')) > 0:
     MAIN_URL = config.get('server', 'HOST') + '/' + config.get('server', 'HOST_DIR')
 else:
     MAIN_URL = config.get('server', 'HOST')
-FORCE_SCRIPT_NAME = config.get('server', 'HOST_DIR')
+FORCE_SCRIPT_NAME = '/'+config.get('server', 'HOST_DIR')
 
 LOGIN_URL = MAIN_URL
 LOGIN_ERROR_URL = MAIN_URL

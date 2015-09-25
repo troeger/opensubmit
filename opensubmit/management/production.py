@@ -31,25 +31,28 @@ def apache_config(config):
     f = open(APACHE_CONFIG_FILE,'w')
     print "Generating Apache configuration in "+APACHE_CONFIG_FILE
     if len(settings.FORCE_SCRIPT_NAME)>0:
-        script_url_path = '/'+settings.FORCE_SCRIPT_NAME+'/'
+        script_trailing_slash   = '/'+settings.FORCE_SCRIPT_NAME+'/'
+        script_notrailing_slash = '/'+settings.FORCE_SCRIPT_NAME
     else:
-        script_url_path = '/'
+        script_trailing_slash = '/'
+        script_notrailing_slash = '/'
     text = """
     # OpenSubmit Configuration for Apache 2.4
     # These directives are expected to live in some <VirtualHost> block
 
-    Alias {script}static/ {static_path}/
+    Alias {script_trailing_slash}static/ {static_path}/
     <Directory {static_path}>
          Require all granted
     </Directory>
-    WSGIScriptAlias {script} {install_path}/wsgi.py
+    WSGIScriptAlias {script_notrailing_slash} {install_path}/wsgi.py
     WSGIPassAuthorization On
     <Directory {install_path}>
          <Files wsgi.py>
               Require all granted
          </Files>
     </Directory>
-    """.format( script=script_url_path, 
+    """.format( script_trailing_slash=script_trailing_slash, 
+                script_notrailing_slash=script_notrailing_slash,
                 static_path=settings.STATIC_ROOT,
                 install_path=settings.SCRIPT_ROOT)
     f.write(text)
