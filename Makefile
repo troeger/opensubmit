@@ -16,3 +16,4 @@ clean:
 	rm -rf ./executor/dist
 	rm -rf ./executor/build
 	rm -rf ./executor/*.egg-info/
+	rm     *.tar.gz
