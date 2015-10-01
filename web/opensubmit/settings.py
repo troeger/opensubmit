@@ -4,6 +4,8 @@ import sys
 import os
 from ConfigParser import SafeConfigParser
 
+import pkg_resources
+VERSION = pkg_resources.require("opensubmit-web")[0].version
 
 # The following section determines which configuration file to load.
 # It also deduces whether we are in a live environment (is_production,
@@ -37,7 +39,7 @@ def find_config_info():
             if os.path.isfile(config_file_path):
                 return (config_file_path, production, )
 
-    print("No configuration file found. Please create settings_dev.ini or call 'opensubmit install_web' on production systems.", file=sys.stderr)
+    print("No configuration file found. Please create settings_dev.ini or call 'opensubmit-web configure' on production systems.", file=sys.stderr)
     exit(-1)
 
 config_file_path, is_production = find_config_info()
@@ -64,7 +66,7 @@ DATABASES = {
     }
 }
 
-DEBUG = bool(config.get('general', 'DEBUG')) and not is_production
+DEBUG = bool(config.get('general', 'DEBUG'))
 TEMPLATE_DEBUG = DEBUG
 
 # Let the user specify the complete URL, and split it up accordingly

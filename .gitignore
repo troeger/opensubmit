@@ -11,7 +11,8 @@ lib
 *.sublime-*
 executor.cfg
 *.orig
-opensubmit/database.sqlite
+web/database.sqlite
 .coverage
-opensubmit/settings_dev.ini
+web/opensubmit/settings_dev.ini
 .vagrant
+*.egg-info

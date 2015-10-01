@@ -3,34 +3,13 @@ import os, sys, shutil
 
 from setuptools import setup, find_packages
 from distutils.command.clean import clean as _clean
-from opensubmit import __version__
-
-def clean_pycs():
-    # Clean all pyc files recursively
-    for root, dirs, files in os.walk('opensubmit'):
-        for name in files:
-            if name.endswith('.pyc'):
-                fullname = os.path.join(root, name)
-                print 'Removing %s' % fullname
-                os.remove(fullname)
-
-def clean_dirs():
-    for path in ["OpenSubmit.egg-info","dist", "build" ]:
-        shutil.rmtree(path, ignore_errors=True)
-
-# Our overloaded 'setup.py clean' command
-class clean(_clean):
-    def run(self):
-        _clean.run(self)
-        clean_pycs()
-        clean_dirs()
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name = 'OpenSubmit',
-    version = __version__,
+    name = 'opensubmit-web',
+    version = open('VERSION').read(),
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Troeger',
@@ -45,12 +24,9 @@ setup(
     install_requires=required,
     packages = find_packages(exclude=['opensubmit.tests']),     # Just add Python packages
     include_package_data = True,                                # Consider MANIFEST.in
-    cmdclass={
-        'clean': clean
-    },
     entry_points={
         'console_scripts': [
-            'opensubmit = opensubmit.management.production:console_script',
+            'opensubmit-web = opensubmit.cmdline:console_script',
         ],
     }
 )

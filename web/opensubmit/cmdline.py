@@ -1,7 +1,7 @@
 # Administration script functionality on the production system
 # We cover some custom actions and a small subset of django-admin here
 
-import os, urllib
+import os, pwd, grp, urllib
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
 
 import sys, shutil
@@ -12,8 +12,6 @@ from pkg_resources import Requirement, resource_filename
 CONFIG_PATH = '/etc/opensubmit'
 WEB_CONFIG_FILE = CONFIG_PATH+'/settings.ini'
 WEB_TEMPLATE = "opensubmit/settings.ini.template"                   # relative to package path
-EXECUTOR_CONFIG_FILE = CONFIG_PATH+'/executor.ini'
-EXECUTOR_TEMPLATE = "opensubmit/executor/executor.cfg.template"     # relative to package path
 APACHE_CONFIG_FILE = CONFIG_PATH+'/apache24.conf'
 
 def django_admin(args):
@@ -24,7 +22,7 @@ def django_admin(args):
     execute_from_command_line([sys.argv[0]]+args)
 
 def apache_config(config):
-    ''' 
+    '''
         Generate a valid Apache configuration file, based on the given settings.
     '''
     from opensubmit import settings
@@ -58,18 +56,18 @@ def apache_config(config):
     f.write(text)
     f.close()
 
-def check_exec_config_consistency(config):
+def fix_permissions(filepath):
     '''
-        Check the executor config file for consistency.
+        Fix file system permissions to suite the web server.
+        # TODO: This is Debian / Ubuntu specific, make it more generic.
+
     '''
-    print "Checking configuration of the OpenSubmit executor..."
-    # Check configured host
     try:
-        urllib.urlopen(config.get("Server", "url"))
-        return True
-    except Exception as e:
-        print "ERROR: The configured OpenSubmit server URL seems to be invalid: "+str(e)
-    return False
+        uid = pwd.getpwnam("www-data").pw_uid
+        gid = grp.getgrnam("www-data").gr_gid
+        os.chown(filepath, uid, gid)
+    except:
+        print "WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it."%filepath
 
 def check_web_config_consistency(config):
     '''
@@ -102,11 +100,13 @@ def check_web_config_consistency(config):
     # Prepare empty log file, in case the web server has no creation rights
     log_file = config.get('server', 'LOG_FILE')
     print "Preparing log file at "+log_file
-    with open(log_file, 'a'):
-        os.utime(log_file, None)
+    fix_permissions(log_file)
+    # If SQLite database, adjust file system permissions for the web server
+    if config.get('database','DATABASE_ENGINE') == 'sqlite3':
+        print "Fixing SqLite database permissions"
+        fix_permissions(config.get('database','DATABASE_NAME'))
     # everything ok
     return True
-
 
 def check_web_config():
     '''
@@ -115,7 +115,7 @@ def check_web_config():
     print "Looking for config files ..."
     config = RawConfigParser()
     try:
-        config.readfp(open(WEB_CONFIG_FILE)) 
+        config.readfp(open(WEB_CONFIG_FILE))
         print "Config file found at "+WEB_CONFIG_FILE
         return config
     except IOError:
@@ -123,7 +123,7 @@ def check_web_config():
         print "       I am creating a new one. Please edit it and re-run this command."
         if not os.path.exists(CONFIG_PATH):
             os.makedirs(CONFIG_PATH)
-        orig = resource_filename(Requirement.parse("OpenSubmit"),WEB_TEMPLATE)
+        orig = resource_filename(Requirement.parse("opensubmit-web"),WEB_TEMPLATE)
         shutil.copy(orig,WEB_CONFIG_FILE)
         return None    # Manual editing is needed before further proceeding with the fresh file
 
@@ -136,47 +136,25 @@ def check_web_db():
     django_admin(["fixperms"])            # Fix django backend user permissions, if needed
     return True
 
-def check_executor_config():
-    '''
-        Everything related to the executor configuration file.
-    '''
-    print "Looking for config files..."
-    config = RawConfigParser()
-    try:
-        config.readfp(open(EXECUTOR_CONFIG_FILE)) 
-        print "Config file found at "+EXECUTOR_CONFIG_FILE
-        return config
-    except IOError:
-        print "ERROR: Seems like the config file %s does not exist."%EXECUTOR_CONFIG_FILE
-        print "       I am creating a new one, don't forget to edit it !"
-        try:
-            os.makedirs(CONFIG_PATH)
-        except:
-            pass    # if directory already exists
-        orig = resource_filename(Requirement.parse("OpenSubmit"),EXECUTOR_TEMPLATE)
-        shutil.copy(orig,EXECUTOR_CONFIG_FILE)
-        return None    # Manual editing is needed before further proceeding with the fresh file
-
 def check_warnings():
     if warning_counter > 0:
         print("There were warnings, please check the output above.")
 
 def console_script():
     '''
-        The main entry point for the production administration script 'opensubmit', installed by setuptools.
+        The main entry point for the production administration script 'opensubmit-web', installed by setuptools.
     '''
     if len(sys.argv) == 1:
-        print "opensubmit [install_web|install_executor|executor|help]"
+        print "opensubmit-web [configure|createsuperuser|help]"
         exit(0)
 
     if "help" in sys.argv:
-        print "install_web:      Check config files and database for correct installation of the OpenSubmit web server."
-        print "install_executor: Check config files and registration of a OpenSubmit test machine."
-        print "executor:         Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab."
+        print "configure:        Check config files and database for correct installation of the OpenSubmit web server."
+        print "createsuperuser:  (Re-)Creates the superuser account for the OpenSubmit installation."
         print "help:             Print this help"
         exit(0)
 
-    if "install_web" in sys.argv:
+    if "configure" in sys.argv:
         config = check_web_config()
         if not config:
             return          # Let them first fix the config file before trying a DB access
@@ -188,21 +166,6 @@ def console_script():
         django_admin(["collectstatic","--noinput", "-v 0"])
         apache_config(config)
         exit(0)
-
-    if "install_executor" in sys.argv:
-        config = check_executor_config()
-        if not config:
-            return
-        if not check_exec_config_consistency(config):
-            return
-        print "Registering OpenSubmit executor..."
-        from opensubmit.executor import send_config
-        send_config(EXECUTOR_CONFIG_FILE)
-        exit(0)
-
-    if "executor" in sys.argv:
-        from opensubmit.executor import run
-        run(EXECUTOR_CONFIG_FILE)
 
     if "createsuperuser" in sys.argv:
         django_admin(["createsuperuser"])

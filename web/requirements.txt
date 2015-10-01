@@ -3,7 +3,6 @@ django-bootstrap-form
 djangorestframework>=2.4
 django-grappelli
 requests>=2.5.1
-psutil
 pycrypto
 pyjwkest
 python-social-auth

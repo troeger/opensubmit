@@ -36,7 +36,7 @@ def read_config(config_file):
     return config
 
 def _send_result(config, msg, error_code, submission_file_id, action, perfdata=None):
-    ''' 
+    '''
         Send some result to the OpenSubmit web server.
     '''
     if len(msg)>10000:
