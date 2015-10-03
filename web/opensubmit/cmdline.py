@@ -56,13 +56,33 @@ def apache_config(config):
     f.write(text)
     f.close()
 
+def ensure_path_exists(dirpath):
+    if os.path.exists(dirpath):
+        return
+    parent_dirpath = os.path.dirname(dirpath)
+    if not os.path.exists(parent_dirpath):
+        ensure_path_exists(parent_dirpath)
+    print "WARNING: Path does not exist. Creating it: %s"%dirpath
+    os.mkdir(dirpath)
+    fix_permissions(dirpath)
+
+def ensure_file_exists(filepath):
+    ensure_path_exists(os.path.dirname(filepath))
+    if not os.path.exists(filepath):
+        print "WARNING: File does not exist. Creating it: %s"%filepath
+        open(filepath, 'a').close()
+
+def check_file(filepath):
+    ensure_file_exists(filepath)
+    fix_permissions(filepath)
+
 def fix_permissions(filepath):
     '''
         Fix file system permissions to suite the web server.
         # TODO: This is Debian / Ubuntu specific, make it more generic.
 
     '''
-    try:
+    try:              
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
@@ -94,17 +114,15 @@ def check_web_config_consistency(config):
                     print "ERROR: You have enabled %s in settings.ini, but %s is not set."%(k, needed)
                     return False
     # Check media path
-    if not os.path.exists(config.get('server', 'MEDIA_ROOT')):
-        print "ERROR: The configured path for MEDIA_ROOT does not exist. (%s)"%config.get('server', 'MEDIA_ROOT')
-        return False
+    ensure_path_exists(config.get('server', 'MEDIA_ROOT'))
     # Prepare empty log file, in case the web server has no creation rights
     log_file = config.get('server', 'LOG_FILE')
     print "Preparing log file at "+log_file
-    fix_permissions(log_file)
+    check_file(log_file)
     # If SQLite database, adjust file system permissions for the web server
     if config.get('database','DATABASE_ENGINE') == 'sqlite3':
-        print "Fixing SqLite database permissions"
-        fix_permissions(config.get('database','DATABASE_NAME'))
+        print "Fixing SqLite database permissions"        
+        check_file(config.get('database','DATABASE_NAME'))
     # everything ok
     return True
 
