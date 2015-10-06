@@ -48,6 +48,14 @@ class SubmissionStateFilter(SimpleListFilter):
     title = _('Submission Status')
     parameter_name = 'statefilter'
 
+    @staticmethod
+    def qs_tobegraded(qs):
+        return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+
+    @staticmethod
+    def qs_graded(qs):
+        return qs.filter(state__in=[Submission.GRADED])
+
     def lookups(self, request, model_admin):
         return (
             ('tobegraded', _('To be graded')),
@@ -57,9 +65,9 @@ class SubmissionStateFilter(SimpleListFilter):
     def queryset(self, request, qs):
         qs = qs.filter(assignment__course__in=tutor_courses(request.user))
         if self.value() == 'tobegraded':
-            return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+            return SubmissionStateFilter.qs_tobegraded(qs)
         elif self.value() == 'graded':
-            return qs.filter(state__in=[Submission.GRADED])
+            return SubmissionStateFilter.qs_graded(qs)
         else:
             return qs
 

@@ -35,3 +35,4 @@ def setting(name):
 @register.inclusion_tag('inclusion_tags/details_table.html')
 def details_table(submission):
     return {'submission': submission}
+

@@ -224,7 +224,7 @@ def tutor_courses(user):
     '''
         Returns the list of courses this user is tutor or owner for.
     '''
-    return list(chain(user.courses_tutoring.all().filter(active__exact=True), user.courses.all().filter(active__exact=True)))
+    return user.courses_tutoring.all().filter(active__exact=True) | user.courses.all().filter(active__exact=True)
 
 
 class ValidSubmissionFileManager(models.Manager):
