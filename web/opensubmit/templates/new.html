@@ -6,7 +6,11 @@
 {% endblock %}
 
 {% block docready %}
-$('#id_authors').multiselect({enableFiltering: true, enableCaseInsensitiveFiltering: true});
+$('#id_authors').multiselect({
+   enableFiltering: true,
+   enableCaseInsensitiveFiltering: true,
+});
+$('#id_authors').multiselect('select', {{ user.pk }});
 {% endblock %}
 
 {% block content %}
