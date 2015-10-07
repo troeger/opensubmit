@@ -100,7 +100,10 @@ class TestMachine(models.Model):
         app_label = 'opensubmit'
 
     def __unicode__(self):
-        return unicode(self.host)
+        if self.address:
+            return unicode(self.address)
+        else:
+            return "Test Machine %u"%self.pk
 
 
 class Assignment(models.Model):
