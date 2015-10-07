@@ -342,6 +342,7 @@ def send_config(config_file):
     logger.debug("Sending config data: "+str(output))
     post_data = [   ('Config',json.dumps(output)),
                     ("UUID",config.get("Server","uuid")),
+                    ("Address",_infos_cmd("hostname -i")),
                     ("Secret",config.get("Server","secret"))
                 ]
     post_data = urlencode(post_data)
