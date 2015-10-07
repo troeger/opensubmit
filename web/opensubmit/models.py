@@ -206,7 +206,7 @@ User.__unicode__ = user_unicode
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
-    student_id = models.CharField(max_length=30, null=True)
+    student_id = models.CharField(max_length=30, blank=True, null=True)
     courses = models.ManyToManyField(Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
 
     class Meta:
