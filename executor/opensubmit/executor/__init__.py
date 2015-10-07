@@ -66,6 +66,20 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
     except HTTPError as e:
         logging.error(str(e))
 
+def _infos_host():
+    '''
+        Determine our own IP adress. This seems to be far more complicated than you would think:
+    '''
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("gmail.com",80))
+        result = s.getsockname()[0]
+        s.close()
+        return result
+    except:
+        return ""
+
 def _infos_opencl():
     '''
         Determine some system information about the installed OpenCL device.
@@ -342,7 +356,7 @@ def send_config(config_file):
     logger.debug("Sending config data: "+str(output))
     post_data = [   ('Config',json.dumps(output)),
                     ("UUID",config.get("Server","uuid")),
-                    ("Address",_infos_cmd("hostname -i")),
+                    ("Address",_infos_host()),
                     ("Secret",config.get("Server","secret"))
                 ]
     post_data = urlencode(post_data)
