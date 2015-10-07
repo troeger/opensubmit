@@ -2,14 +2,20 @@
 import django.contrib.admin
 from django.db.models import Q
 from django.shortcuts import redirect
+from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 def assignments(course):
     return ",\n".join([str(ass) for ass in course.assignments.all()])
 
+def actions(course):
+    allow_tags=True
+    result  = format_html('<a href="%s">Download course archive</a><br/>'%reverse('coursearchive', args=(course.pk,)))
+    result += format_html('<a href="%s">Show grading table</a>'%reverse('gradingtable', args=(course.pk,)))
+    return result
 
 class CourseAdmin(django.contrib.admin.ModelAdmin):
-    list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors']
-    actions = ['showGradingTable', 'downloadArchive']
+    list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors', actions]
     filter_horizontal = ['tutors']
 
     def get_queryset(self, request):
@@ -19,13 +25,3 @@ class CourseAdmin(django.contrib.admin.ModelAdmin):
             return qs
         else:
             return qs.filter(Q(tutors__pk=request.user.pk) | Q(owner=request.user)).distinct()
-
-    def showGradingTable(self, request, queryset):
-        course = queryset.all()[0]
-        return redirect('gradingtable', course_id=course.pk)
-    showGradingTable.short_description = "Show grading table"
-
-    def downloadArchive(self, request, queryset):
-        course = queryset.all()[0]
-        return redirect('coursearchive', course_id=course.pk)
-    downloadArchive.short_description = "Download course archive file"
