@@ -3,8 +3,10 @@
     security model in comparison to the ordinary views.
 '''
 from datetime import datetime, timedelta
-import os
+import os, logging
 from time import timezone
+
+logger = logging.getLogger('OpenSubmit')
 
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers
@@ -62,24 +64,58 @@ def download(request, obj_id, filetype, secret=None):
 
 
 @csrf_exempt
-def jobs(request, secret):
+def jobs(request):
     ''' This is the view used by the executor.py scripts for getting / putting the test results.
         Fetching some file for testing is changing the database, so using GET here is not really RESTish. Whatever.
         A visible shared secret in the request is no problem, since the executors come
         from trusted networks. The secret only protects this view from outside foreigners.
+
+        POST requests with 'Action'='get_config' are expected to contain the following parameters:
+                    'MachineId',
+                    'Config',
+                    'Secret',
+                    'UUID'
+
+        All other POST requests are expected to contain the following parameters:
+                    'SubmissionFileId',
+                    'Message',
+                    'ErrorCode',
+                    'Action',
+                    'PerfData',
+                    'Secret',
+                    'UUID'
+
+        GET requests are expected to contain the following parameters:
+                    'Secret',
+                    'UUID'
+
+        GET reponses deliver the following elements in the header:
+                    'SubmissionFileId',
+                    'Timeout',
+                    'Action',
+                    'PostRunValidation'
     '''
+    try:
+        if request.method == 'GET':
+            secret = request.GET['Secret']
+            uuid = request.GET['UUID']
+        elif request.method == 'POST':
+            secret = request.POST['Secret']
+            uuid = request.POST['UUID']
+    except Exception as e:
+        logger.error("Error finding the neccessary data in the executor request: "+str(e))
+        raise PermissionDenied
+
     if secret != settings.JOB_EXECUTOR_SECRET:
         raise PermissionDenied
 
-    remote_host = request.META["REMOTE_ADDR"]
-
     try:
-        machine = TestMachine.objects.get(host=remote_host)
+        machine = TestMachine.objects.get(host=uuid)
         machine.last_contact = datetime.now()
         machine.save()
     except:
         # ask for configuration of new execution hosts by returning the according action
-        machine = TestMachine(host=remote_host, last_contact=datetime.now())
+        machine = TestMachine(host=uuid, last_contact=datetime.now())
         machine.save()
         response = HttpResponse()
         response['Action'] = 'get_config'
@@ -225,22 +261,34 @@ def jobs(request, secret):
 
 
 @csrf_exempt
-def machines(request, secret):
+def machines(request):
     ''' This is the view used by the executor.py scripts for putting machine details.
         A visible shared secret in the request is no problem, since the executors come
         from trusted networks. The secret only protects this view from outside foreigners.
+
+        POST requests are expected to contain the following parameters:
+                    'Config',
+                    'Secret',
+                    'UUID'
     '''
-    if secret != settings.JOB_EXECUTOR_SECRET:
-        raise PermissionDenied
     if request.method == "POST":
         try:
+            secret = request.POST['Secret']
+            uuid = request.POST['UUID']
+        except Exception as e:
+            logger.error("Error finding the neccessary data in the executor request: "+str(e))
+            raise PermissionDenied
+
+        if secret != settings.JOB_EXECUTOR_SECRET:
+            raise PermissionDenied
+        try:
             # Find machine database entry for this host
-            machine = TestMachine.objects.get(host=request.META["REMOTE_ADDR"])
+            machine = TestMachine.objects.get(host=uuid)
             machine.last_contact = datetime.now()
             machine.save()
         except:
             # Machine is not known so far, create new record
-            machine = TestMachine(host=request.META["REMOTE_ADDR"], last_contact=datetime.now())
+            machine = TestMachine(host=uuid, last_contact=datetime.now())
             machine.save()
         # POST request contains all relevant machine information
         machine.config = request.POST['Config']

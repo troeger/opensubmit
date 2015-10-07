@@ -17,6 +17,8 @@ class AdminBackend(AdminSite):
 admin_backend = AdminBackend(name="admin")
 admin_backend.register(User, UserAdmin)
 admin_backend.register(Course, CourseAdmin)
+admin_backend.register(TestMachine)
+
 
 class TeacherBackend(AdminSite):
     site_header = "Teacher Backend"

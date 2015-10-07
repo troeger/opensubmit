@@ -91,8 +91,7 @@ class Course(models.Model):
         return qs
 
 class TestMachine(models.Model):
-    host = models.TextField(null=True, 
-                            help_text="IP address of the test machine, as given in the HTTP REMOTE_ADDR header information.<br/>We recommend to run the executor script on the test machine with the 'register' parameter instead.")
+    host = models.TextField(null=True, help_text="UUID of the test machine, independent from IP address.")
     last_contact = models.DateTimeField(editable=False, default=timezone.now)
     config = models.TextField(null=True, help_text="Host configuration, as shown to the students, in JSON format.")
 
@@ -461,7 +460,7 @@ class Submission(models.Model):
                 # The soft deadline has passed
                 pass  # do nothing.
 
-        self.log('DEBUG', "Submission can be modified.")
+        #self.log('DEBUG', "Submission can be modified.")
         return True
 
     def can_withdraw(self, user=None):

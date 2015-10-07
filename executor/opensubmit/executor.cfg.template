@@ -1,16 +1,19 @@
 [Server]
 
-# The OpenSubmit server 
-url=http://localhost:8000								
+# The OpenSubmit server
+url=http://localhost:8000
 
 # Shared secret, must match to /etc/submit/settings.ini on the server
-secret=49846zut93purfh977TTTiuhgalkjfnk89				
+secret=49846zut93purfh977TTTiuhgalkjfnk89
+
+# UUID of this executor
+uuid=<replaced by opensubmit-exec configure>
 
 [Execution]
 
 # Place where downloaded archives are extracted, compiled and validated
 # The executor will create sub-directories per fetched job
-directory=/tmp/										
+directory=/tmp/
 
 # Script interpreter to be used for the validation scripts
 script_runner=python
@@ -36,7 +39,7 @@ format=%(asctime)-15s (%(process)d): %(message)s
 file=/tmp/executor.log
 
 # If false, logging goes to console
-to_file=False											
+to_file=False
 
 # Log level, as described in the Python logging module documentation
 level=DEBUG

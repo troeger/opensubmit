@@ -40,7 +40,7 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
         Send some result to the OpenSubmit web server.
     '''
     if len(msg)>10000:
-        # We need to truncate excessive console output, 
+        # We need to truncate excessive console output,
         # since this goes into the database.
         msg=msg[1:10000]
         msg+="\n[Output truncated]"
@@ -50,13 +50,19 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
     # There are cases where the program was not finished, but we still deliver a result
     # Transmitting "None" is a bad idea, so we use a special code instead
     if error_code==None:
-        error_code=-9999    
+        error_code=-9999
     # Prepare response HTTP package
-    post_data = [('SubmissionFileId',submission_file_id),('Message',msg),('ErrorCode',error_code),('Action',action),('PerfData',perfdata)]    
+    post_data = [   ('SubmissionFileId',submission_file_id),
+                    ('Message',msg),
+                    ('ErrorCode',error_code),
+                    ('Action',action),
+                    ('PerfData',perfdata),
+                    ('Secret',config.get("Server","secret")),
+                    ('UUID',config.get("Server","uuid")) ]
     try:
         post_data = urlencode(post_data)
         post_data = post_data.encode('utf-8')
-        urlopen('%s/jobs/secret=%s'%(config.get("Server","url"), config.get("Server","secret")), post_data)  
+        urlopen('%s/jobs/'%config.get("Server","url"), post_data)
     except HTTPError as e:
         logging.error(str(e))
 
@@ -138,7 +144,9 @@ def _fetch_job(config):
 
     '''
     try:
-        result = urlopen("%s/jobs/secret=%s"%(config.get("Server","url"),config.get("Server","secret")))
+        result = urlopen("%s/jobs/?Secret=%s&UUID=%s"%(  config.get("Server","url"),
+                                                        config.get("Server","secret"),
+                                                        config.get("Server","uuid")))
         fname=config.get("Execution","directory")+datetime.now().isoformat()
         headers=result.info()
         if headers['Action'] == 'get_config':
@@ -330,12 +338,16 @@ def send_config(config_file):
     output.append(["OpenCL libraries", _infos_cmd("find /usr/lib/ -iname '*opencl*'")])
     output.append(["NVidia SMI", _infos_cmd("nvidia-smi -q")])
     output.append(["OpenCL Details", _infos_opencl()])
+
     logger.debug("Sending config data: "+str(output))
-    post_data = [('Config',json.dumps(output)),('Name',_infos_cmd("hostname"))]
+    post_data = [   ('Config',json.dumps(output)),
+                    ("UUID",config.get("Server","uuid")),
+                    ("Secret",config.get("Server","secret"))
+                ]
     post_data = urlencode(post_data)
     post_data = post_data.encode('utf-8')
     try:
-        urlopen('%s/machines/secret=%s'%(config.get("Server","url"), config.get("Server","secret")), post_data)
+        urlopen('%s/machines/'% config.get("Server","url"), post_data)
     except Exception as e:
         logger.error("Could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
 

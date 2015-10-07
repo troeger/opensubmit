@@ -342,33 +342,6 @@ def machine(request, machine_id):
     additional = len(Submission.pending_full_tests.all())
     return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
 
-
-@csrf_exempt
-def machines(request, secret):
-    ''' This is the view used by the executor.py scripts for putting machine details.
-        A visible shared secret in the request is no problem, since the executors come
-        from trusted networks. The secret only protects this view from outside foreigners.
-    '''
-    if secret != JOB_EXECUTOR_SECRET:
-        raise PermissionDenied
-    if request.method == "POST":
-        try:
-            # Find machine database entry for this host
-            machine = TestMachine.objects.get(host=request.POST['Name'])
-            machine.last_contact = datetime.now()
-            machine.save()
-        except:
-            # Machine is not known so far, create new record
-            machine = TestMachine(host=request.POST['Name'], last_contact=datetime.now())
-            machine.save()
-        # POST request contains all relevant machine information
-        machine.config = request.POST['Config']
-        machine.save()
-        return HttpResponse(status=201)
-    else:
-        return HttpResponse(status=500)
-
-
 @login_required
 def withdraw(request, subm_id):
     # submission should only be deletable by their creators
