@@ -28,9 +28,9 @@ def apache_config(config):
     from opensubmit import settings
     f = open(APACHE_CONFIG_FILE,'w')
     print "Generating Apache configuration in "+APACHE_CONFIG_FILE
-    if len(settings.FORCE_SCRIPT_NAME)>0:
-        script_trailing_slash   = '/'+settings.FORCE_SCRIPT_NAME+'/'
-        script_notrailing_slash = '/'+settings.FORCE_SCRIPT_NAME
+    if len(settings.FORCE_SCRIPT_NAME)>1:
+        script_trailing_slash   = settings.FORCE_SCRIPT_NAME+'/'
+        script_notrailing_slash = settings.FORCE_SCRIPT_NAME
     else:
         script_trailing_slash = '/'
         script_notrailing_slash = '/'
