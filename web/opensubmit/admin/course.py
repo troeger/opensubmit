@@ -11,7 +11,8 @@ def assignments(course):
 def actions(course):
     allow_tags=True
     result  = format_html('<a href="%s">Download course archive</a><br/>'%reverse('coursearchive', args=(course.pk,)))
-    result += format_html('<a href="%s">Show grading table</a>'%reverse('gradingtable', args=(course.pk,)))
+    result += format_html('<a href="%s">Show grading table</a><br/>'%reverse('gradingtable', args=(course.pk,)))
+    result += format_html('<a href="%s">eMail to students</a>'%reverse('mail2all', args=(course.pk,)))
     return result
 
 class CourseAdmin(django.contrib.admin.ModelAdmin):

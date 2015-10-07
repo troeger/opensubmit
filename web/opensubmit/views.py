@@ -14,7 +14,7 @@ from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
-from django.core.mail import mail_managers, send_mail
+from django.core.mail import mail_managers, send_mail, send_mass_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,7 +25,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
 
-from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
+from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
 from models import inform_student, inform_course_owner, open_assignments
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
@@ -216,6 +216,47 @@ def gradingtable(request, course_id):
         columns.append("%s / %s" % (numpassed, len(assignments)))
         resulttable.append(columns)
     return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments, 'resulttable': sorted(resulttable)})
+
+def _replace_placeholders(text, user, course):
+    return text.replace("#FIRSTNAME#", user.first_name.strip()) \
+               .replace("#LASTNAME#", user.last_name.strip())   \
+               .replace("#COURSENAME#", course.title.strip())
+
+@login_required
+@staff_member_required
+def mail2all(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    # Re-compute list of recipients on every request, for latest updates
+    students = User.objects.filter(profile__courses__pk = course_id)
+    maillist = ','.join(students.values_list('email', flat=True))
+
+    if request.method == "POST":
+        if 'subject' in request.POST and 'message' in request.POST:
+            # Initial form submission, render preview
+            request.session['subject'] = request.POST['subject']
+            request.session['message'] = request.POST['message']
+            student = students[0]
+            preview_subject = _replace_placeholders(request.POST['subject'], student, course)
+            preview_message = _replace_placeholders(request.POST['message'], student, course)
+            return render(request, 'mail_preview.html',
+                            {'preview_subject': preview_subject,
+                             'preview_message': preview_message,
+                             'preview_from': request.user.email,
+                             'course': course})
+        elif 'subject' in request.session and 'message' in request.session:
+            # Positive preview, send it
+            data = [(_replace_placeholders(request.session['subject'], s, course),
+                     _replace_placeholders(request.session['message'], s, course),
+                     request.user.email,
+                     [s.email]) for s in students]
+            sent = send_mass_mail(data, fail_silently=True)
+            messages.add_message(request, messages.INFO, '%u message(s) sent.'%sent)
+            return redirect('teacher:opensubmit_course_changelist')
+
+    # show empty form in all other cases
+    mailform = MailForm()
+    return render(request, 'mail_form.html', {'maillist': maillist, 'course': course, 'mailform': mailform })
+
 
 
 @login_required
