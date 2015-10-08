@@ -248,7 +248,8 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
 
         Return stdout of the job execution and a boolean flag of the execution was successfull
     '''
-    logger.debug("Changing to target directory.")
+    dircontent=os.listdir(finalpath)
+    logger.debug("Content before start: "+str(dircontent))
     logger.debug("Installing signal handler for timeout")
     signal.signal(signal.SIGALRM, _handle_alarm)
     logger.info("Spawning process for "+str(cmd))
@@ -295,7 +296,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         shutil.rmtree(finalpath, ignore_errors=True)
         return output, False
     else:
-        dircontent = subprocess.check_output(["ls","-ln"])
+        dircontent = subprocess.check_output(["ls","-ln",finalpath])
         dircontent = dircontent.decode("utf-8")
         output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
         _send_result(config, "%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
@@ -399,7 +400,7 @@ def run(config_file):
             return True
         elif action == 'test_validity' or action == 'test_full':
             # prepare the output file for validator performance results
-            perfdata_fname = finalpath+"/perfresults.csv" 
+            perfdata_fname = finalpath+"/perfresults.csv"
             open(perfdata_fname,"w").close()
             # run configure script, if available.
             output, success = _run_job(config, finalpath,['./configure'],submid, action, timeout, True)
