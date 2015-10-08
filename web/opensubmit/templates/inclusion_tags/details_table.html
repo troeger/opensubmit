@@ -16,13 +16,13 @@
             <td>File</td>
             <td>
                 <a href="{{ submission.file_upload.get_absolute_url }}">{{ submission.file_upload.attachment|basename }}</a> 
-                {% if submission.file_upload.test_compile %}
+                {% if submission.get_compile_result %}
                     <h5>Compilation test result:</h5>
-                    <code>{{ submission.file_upload.test_compile|linebreaks }}</code>
+                    <code>{{ submission.get_compile_result.result|linebreaks }}</code>
                 {% endif %}
-                {% if submission.file_upload.test_validity %}
+                {% if submission.get_validation_result %}
                     <h5>Validity test result:</h5>
-                    <code>{{ submission.file_upload.test_validity|linebreaks }}</code>
+                    <code>{{ submission.get_validation_result.result|linebreaks }}</code>
                     {% if submission.assignment.validity_script_download %}
                         <br/>(<a href="{% url 'download' submission.assignment.pk 'validity_testscript' %}">Download</a> the validation script)
                     {% endif %}
