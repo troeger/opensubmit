@@ -25,6 +25,10 @@ def apache_config(config):
     '''
         Generate a valid Apache configuration file, based on the given settings.
     '''
+    if os.path.exists(APACHE_CONFIG_FILE):
+        print "Apache config already exists, I am not touching it, to protect your changes."
+        return
+
     from opensubmit import settings
     f = open(APACHE_CONFIG_FILE,'w')
     print "Generating Apache configuration in "+APACHE_CONFIG_FILE
