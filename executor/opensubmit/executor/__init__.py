@@ -53,7 +53,7 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
         error_code=-9999
     # Prepare response HTTP package
     post_data = [   ('SubmissionFileId',submission_file_id),
-                    ('Message',msg),
+                    ('Message',msg.encode('utf-8')),
                     ('ErrorCode',error_code),
                     ('Action',action),
                     ('PerfData',perfdata),
