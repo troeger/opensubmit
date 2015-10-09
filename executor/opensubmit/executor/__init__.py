@@ -15,6 +15,10 @@ logger=logging.getLogger('OpenSubmitExecutor')
 # Expected in validator ZIP packages
 VALIDATOR_FNAME = 'validator.py'
 
+# Configuration defaults, if option is not given.
+# This is mainly intended for backward-ompatbility to older INI files.
+defaults = {('Execution','cleanup'): True}
+
 def read_config(config_file):
     '''
         Fill config dictionary, already check and interpret some values.
@@ -22,18 +26,33 @@ def read_config(config_file):
     config = ConfigParser.RawConfigParser()
     config.readfp(open(config_file))
 
+    # Before doing anything else, configure logging
     if config.getboolean("Logging","to_file"):
-        handler = logging.FileHandler('/tmp/executor.log')
+        handler = logging.FileHandler(config.get("Logging","file"))
     else:
         handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter(config.get("Logging","format")))
     logger.addHandler(handler)
     logger.setLevel(config.get("Logging","level"))
 
+    # set defaults for non-existing options
+    for key, value in defaults.iteritems():
+        if not config.has_option(key[0], key[1]):
+            logger.debug('%s option not in INI file, assuming %s'%(str(key), str(value)))
+            config.set(key[0], key[1], value)
+
+    # sanity check for directory specification
     targetdir=config.get("Execution","directory")
     assert(targetdir.startswith('/'))
     assert(targetdir.endswith('/'))
     return config
+
+def _cleanup(config, finalpath):
+    if config.get('Execution', 'cleanup') == True:
+        logger.info('Removing downloads at '+finalpath)
+        shutil.rmtree(finalpath, ignore_errors=True)
+    else:
+        logger.info('Keeping data for debugging: '+finalpath)
 
 def _send_result(config, msg, error_code, submission_file_id, action, perfdata=None):
     '''
@@ -200,6 +219,7 @@ def _unpack_job(config, fname, submid, action):
     '''
     # os.chroot is not working with tarfile support
     finalpath=config.get("Execution","directory")+str(submid)+"/"
+    # Overwrite still existing data from debug session (cleanup=False)
     shutil.rmtree(finalpath, ignore_errors=True)
     os.makedirs(finalpath)
     if zipfile.is_zipfile(fname):
@@ -218,7 +238,7 @@ def _unpack_job(config, fname, submid, action):
     else:
         os.remove(fname)
         _send_result(config, "This is not a valid compressed file.",-1, submid, action)
-        shutil.rmtree(finalpath, ignore_errors=True)
+        _cleanup(config, finalpath)
         return None
     dircontent=os.listdir(finalpath)
     logger.debug("Content after decompression: "+str(dircontent))
@@ -286,21 +306,21 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             return "", True             # act like nothing had happened
         else:
             logger.info("Exception on process execution: "+str(e))
-            shutil.rmtree(finalpath, ignore_errors=True)
+            _cleanup(config, finalpath)
             return "", False
     if proc.returncode == 0:
         logger.info("Executed with error code 0: \n\n"+output)
         return output, True
     elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
         _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
-        shutil.rmtree(finalpath, ignore_errors=True)
+        _cleanup(config, finalpath)
         return output, False
     else:
         dircontent = subprocess.check_output(["ls","-ln",finalpath])
         dircontent = dircontent.decode("utf-8")
         output=output+"\n\nDirectory content as I see it:\n\n"+dircontent
         _send_result(config, "%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
-        shutil.rmtree(finalpath, ignore_errors=True)
+        _cleanup(config, finalpath)
         return output, False
 
 def _kill_deadlocked_jobs(config):
@@ -396,7 +416,7 @@ def run(config_file):
             if not success:
                 return False
             _send_result(config, output, 0, submid, action)
-            shutil.rmtree(finalpath, ignore_errors=True)
+            _cleanup(config, finalpath)
             return True
         elif action == 'test_validity' or action == 'test_full':
             # prepare the output file for validator performance results
@@ -421,7 +441,7 @@ def run(config_file):
                 return False
             perfdata= open(perfdata_fname,"r").read()
             _send_result(config, output, 0, submid, action, perfdata)
-            shutil.rmtree(finalpath, ignore_errors=True)
+            _cleanup(config, finalpath)
             return True
         else:
             # unknown action, programming error in the server

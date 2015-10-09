@@ -15,6 +15,12 @@ uuid=<replaced by opensubmit-exec configure>
 # The executor will create sub-directories per fetched job
 directory=/tmp/
 
+# Delete all student files after the executor did its work.
+# Disable this to debug problems that are only reproducible by running the
+# downloaded student code manually.
+# Disabling this will obviousely fill your hard disk very quickly.
+cleanup=True
+
 # Script interpreter to be used for the validation scripts
 script_runner=python
 
@@ -42,7 +48,7 @@ file=/tmp/executor.log
 to_file=False
 
 # Log level, as described in the Python logging module documentation
-level=DEBUG
+level=INFO
 
 
 
