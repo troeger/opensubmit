@@ -10,7 +10,7 @@
 '''
 import subprocess
 
-output = subprocess.check_output(['helloworld'])
+output = subprocess.check_output(['./helloworld'])
 if 'Hello World' in output:
 	exit(0)
 else:
