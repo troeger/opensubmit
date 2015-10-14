@@ -48,7 +48,7 @@ def read_config(config_file):
     return config
 
 def _cleanup(config, finalpath):
-    if config.get('Execution', 'cleanup') == True:
+    if config.getboolean('Execution', 'cleanup') == True:
         logger.info('Removing downloads at '+finalpath)
         shutil.rmtree(finalpath, ignore_errors=True)
     else:
