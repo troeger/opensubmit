@@ -35,15 +35,6 @@ pidfile=/tmp/executor.pid
 # This also means that you should not use this account for interactive work
 timeout=3600
 
-# The size of execution result output should be limited, because it goes into the database
-# This value limits the size to the given characters. 
-#       0 means no message except message below, 
-#     -1  no limitation, 
-#      any other positive value limites the result output size. 
-# The default is 10000 characters. If this value is exceeded "\n[Output truncated]" will be added 
-# to the truncated output.
-message_size=10000
-
 [Logging]
 
 # Logging format, as described in the Python logging module documentation
