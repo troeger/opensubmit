@@ -58,10 +58,11 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
     '''
         Send some result to the OpenSubmit web server.
     '''
-    if len(msg)>10000:
+    message_size=config.getint('Execution','message_size')
+    if message_size>-1 and len(msg)>message_size:
         # We need to truncate excessive console output,
         # since this goes into the database.
-        msg=msg[1:10000]
+        msg=msg[1:message_size]
         msg+="\n[Output truncated]"
     if not perfdata:
         perfdata=""
