@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.core.mail import send_mail, EmailMessage
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
-from settings import MAIN_URL, MEDIA_URL, MEDIA_ROOT
+from settings import MAIN_URL, MEDIA_ROOT
 from itertools import chain
 
 

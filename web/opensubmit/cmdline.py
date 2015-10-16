@@ -32,31 +32,34 @@ def apache_config(config):
     from opensubmit import settings
     f = open(APACHE_CONFIG_FILE,'w')
     print "Generating Apache configuration in "+APACHE_CONFIG_FILE
-    if len(settings.FORCE_SCRIPT_NAME)>1:
-        script_trailing_slash   = settings.FORCE_SCRIPT_NAME+'/'
-        script_notrailing_slash = settings.FORCE_SCRIPT_NAME
-    else:
-        script_trailing_slash = '/'
-        script_notrailing_slash = '/'
+    subdir = (len(settings.HOST_DIR)>0)
     text = """
     # OpenSubmit Configuration for Apache 2.4
     # These directives are expected to live in some <VirtualHost> block
-
-    Alias {script_trailing_slash}static/ {static_path}/
+    """
+    if subdir:
+        text += "Alias /%s/static/ %s\n"%(settings.HOST_DIR, settings.STATIC_ROOT)
+        text += "    Alias /%s%s %s\n"%(settings.HOST_DIR, settings.MEDIA_URL_RELATIVE, settings.MEDIA_ROOT)
+        text += "    WSGIScriptAlias /%s %s/wsgi.py\n"%(settings.HOST_DIR, settings.SCRIPT_ROOT)
+    else:
+        text += "Alias /static/ %s\n"%(settings.STATIC_ROOT)
+        text += "    Alias %s %s\n"%(settings.MEDIA_URL_RELATIVE, settings.MEDIA_ROOT)
+        text += "    WSGIScriptAlias / %s/wsgi.py"%(settings.SCRIPT_ROOT)
+    text += """
+    WSGIPassAuthorization On
     <Directory {static_path}>
          Require all granted
     </Directory>
-    WSGIScriptAlias {script_notrailing_slash} {install_path}/wsgi.py
-    WSGIPassAuthorization On
+    <Directory {media_path}>
+         Require all granted
+    </Directory>
     <Directory {install_path}>
          <Files wsgi.py>
               Require all granted
          </Files>
     </Directory>
-    """.format( script_trailing_slash=script_trailing_slash, 
-                script_notrailing_slash=script_notrailing_slash,
-                static_path=settings.STATIC_ROOT,
-                install_path=settings.SCRIPT_ROOT)
+    """.format(static_path=settings.STATIC_ROOT, media_path=settings.MEDIA_ROOT, install_path=settings.SCRIPT_ROOT)
+
     f.write(text)
     f.close()
 
@@ -86,7 +89,7 @@ def fix_permissions(filepath):
         # TODO: This is Debian / Ubuntu specific, make it more generic.
 
     '''
-    try:              
+    try:
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
@@ -125,7 +128,7 @@ def check_web_config_consistency(config):
     check_file(log_file)
     # If SQLite database, adjust file system permissions for the web server
     if config.get('database','DATABASE_ENGINE') == 'sqlite3':
-        print "Fixing SqLite database permissions"        
+        print "Fixing SqLite database permissions"
         check_file(config.get('database','DATABASE_NAME'))
     # everything ok
     return True

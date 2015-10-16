@@ -1,10 +1,11 @@
 from django.conf.urls import patterns, include, url
+from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth.decorators import login_required
 
 from opensubmit.admin import teacher_backend, admin_backend
 
-import settings
+from settings import MEDIA_ROOT, MEDIA_URL_RELATIVE
 
 urlpatterns = patterns('',
     url(r'^$', 'opensubmit.views.index', name='index'),
@@ -31,5 +32,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin_backend.urls))
 )
 
-# disables itself when DEBUG==FALSE
+# only working when DEBUG==FALSE
+# on production systems, both static and media files must be served directly by Apache
 urlpatterns += staticfiles_urlpatterns()
+urlpatterns += static(MEDIA_URL_RELATIVE, document_root=MEDIA_ROOT)

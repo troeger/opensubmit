@@ -7,11 +7,15 @@ from ConfigParser import SafeConfigParser
 import pkg_resources
 VERSION = pkg_resources.require("opensubmit-web")[0].version
 
-# The following section determines which configuration file to load.
-# It also deduces whether we are in a live environment (is_production,
-# which forces DEBUG to False), or in a development environment (al-
-# lowing DEBUG mode).
+# Some helper functions
+
 def find_config_info():
+    '''
+        Determine which configuration file to load.
+        Returns list with path to config file and boolean flag for production system status.
+
+        Exiting the whole application if no config file is found.
+    '''
     # config_info: (<config file path>, <is production>, )
     system_config_directories = {
         'win32': os.path.expandvars('$APPDATA'),
@@ -42,15 +46,39 @@ def find_config_info():
     print("No configuration file found. Please create settings_dev.ini or call 'opensubmit-web configure' on production systems.", file=sys.stderr)
     exit(-1)
 
+def ensure_slash(leading, trailing, text):
+    '''
+        Slashes are the main source of joy in Django path and URL setups.
+        Using this method in the rest of the script should make problems and expectations
+        way more explicit.
+        It is too early for logging here, so we need to use ugly screen outputs.
+    '''
+    if len(text)==0:
+        if leading:
+            print("'%s' should have a leading slash, but it is empty."%text)
+            exit(-1)
+        if trailing:
+            print("'%s' should have a trailing slash, but it is empty."%text)
+            exit(-1)
+        return text
+    if not text[0]=='/' and leading:
+        print("'%s' should have a leading slash."%text)
+        exit(-1)
+    if not text[-1]=='/' and trailing:
+        print("'%s' should have a trailing slash."%text)
+        exit(-1)
+    if text[0]=='/' and not leading:
+        print("'%s' should have no leading slash."%text)
+        exit(-1)
+    if text[-1]=='/' and not trailing:
+        print("'%s' should have no trailing slash."%text)
+        exit(-1)
+    return text
+
+# Find configuration file and open it.
 config_file_path, is_production = find_config_info()
-try:
-    config_fp = open(config_file_path, 'r')
-except IOError:
-    print("ERROR: Cannot open configuration file {}! Exiting.".format(config_file_path), file=sys.stderr)
-    sys.exit(-1)
-
+config_fp = open(config_file_path, 'r')
 print("Choosing {} as configuration file".format(config_file_path), file=sys.stderr)
-
 config = SafeConfigParser()
 config.readfp(config_fp)
 
@@ -66,39 +94,56 @@ DATABASES = {
     }
 }
 
+# Set debug mode based on configuration file.
+# We have the production indicator from above, which could also determine this value.
+# But sometimes, you still need Django stack traces in your production system, so we ignore it here.
+# Yes, this is a security problem. Get over it and believe in your admins.
 DEBUG = bool(config.get('general', 'DEBUG'))
 TEMPLATE_DEBUG = DEBUG
 
-# Let the user specify the complete URL, and split it up accordingly
-# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-if len(config.get('server', 'HOST_DIR')) > 0:
-    MAIN_URL = config.get('server', 'HOST') + '/' + config.get('server', 'HOST_DIR')
+# Determine MAIN_URL / FORCE_SCRIPT option
+HOST =     ensure_slash(False, False, config.get('server', 'HOST'))
+HOST_DIR = ensure_slash(False, False, config.get('server', 'HOST_DIR'))
+if len(HOST_DIR) > 0:
+    MAIN_URL = ensure_slash(False, False, HOST + '/' + HOST_DIR)
+    FORCE_SCRIPT_NAME = ensure_slash(True, False, '/'+HOST_DIR)
 else:
-    MAIN_URL = config.get('server', 'HOST')
-FORCE_SCRIPT_NAME = '/'+config.get('server', 'HOST_DIR')
+    MAIN_URL = ensure_slash(False, False, HOST)
+    FORCE_SCRIPT_NAME = ensure_slash(False, False, '')
 
+# Determine some settings based on the MAIN_URL
 LOGIN_URL = MAIN_URL
 LOGIN_ERROR_URL = MAIN_URL
-LOGIN_REDIRECT_URL = MAIN_URL+'/dashboard/'
 
-MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
-MEDIA_URL = MAIN_URL + '/files/'
+# Determine some settings based on the MAIN_URL
+LOGIN_REDIRECT_URL = ensure_slash(False, True, MAIN_URL+'/dashboard/')
 
-# Root of the installation, without leading slash
-SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# Local file system storage for uploads
+MEDIA_ROOT = ensure_slash(True, True, config.get('server', 'MEDIA_ROOT'))
+
+# URL for the file uploads, directly served by Apache on production systems
+MEDIA_URL_RELATIVE = ensure_slash(True, True, '/files/')
+MEDIA_URL = ensure_slash(False, True, MAIN_URL + MEDIA_URL_RELATIVE)
+
+# Root of the installation
+SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
 
 LOG_FILE = config.get('server', 'LOG_FILE')
 
 if is_production:
-    STATIC_ROOT = SCRIPT_ROOT + '/static-production/'
-    STATIC_URL = MAIN_URL + '/static/'
+    # Root folder for static files
+    STATIC_ROOT = ensure_slash(True, True, SCRIPT_ROOT + '/static-production/')
     STATICFILES_DIRS = (SCRIPT_ROOT + '/static/', )
+    # Absolute URL for static files, directly served by Apache on production systems
+    STATIC_URL = ensure_slash(False, True, MAIN_URL + '/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
-    STATIC_ROOT = 'static/'
-    STATIC_URL = '/static/'
+    # Root folder for static files
+    STATIC_ROOT = ensure_slash(False, True, 'static/')
+    # Realtive URL for static files
+    STATIC_URL = ensure_slash(True, True,'/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     ALLOWED_HOSTS = ['localhost']
 
@@ -192,16 +237,6 @@ LOGGING = {
             'propagate': True,
         },
     }
-}
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissions',
-    ]
 }
 
 TEMPLATE_CONTEXT_PROCESSORS = (
