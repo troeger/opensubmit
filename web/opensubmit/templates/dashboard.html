@@ -37,7 +37,7 @@
                             <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
                             <td><a href="{{ assignment.download }}">{{ assignment }}</a>
     			{% if assignment.attachment_test_validity and assignment.validity_script_download %}
-    				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation skript)</a>
+    				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation script)</a>
     			{% endif %}
     			</td>
                             <td>{{ assignment.publish_at }}</td>
