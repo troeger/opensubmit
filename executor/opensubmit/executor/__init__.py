@@ -149,20 +149,22 @@ def _fetch_validator(url, path):
             logger.error("Error while fetching validator from "+url)
             return False
 
+        finalname = path+VALIDATOR_FNAME
+
         if zipfile.is_zipfile(download_file):
             logger.debug("Validator is a ZIP file, unpacking it.")
             f=zipfile.ZipFile(download_file, 'r')
             f.extractall(path)
             os.remove(download_file)
             # ZIP file is expected to contain VALIDATOR_FNAME
-            if not os.path.exists(path+VALIDATOR_FNAME):
+            if not os.path.exists(finalname):
                 logger.error("Validator ZIP package does not contain "+VALIDATOR_FNAME)
                 #TODO: Ugly hack, make error reporting better
                 _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
         else:
-            logger.debug("Validator is a single file, renaming it.")
-            os.rename(download_file,path+VALIDATOR_FNAME)
-        os.chmod(path+VALIDATOR_FNAME, stat.S_IXUSR|stat.S_IRUSR)
+            logger.debug("Validator is a single file, renaming it to "+finalname)
+            os.rename(download_file, finalname)
+        os.chmod(finalname, stat.S_IXUSR|stat.S_IRUSR)
 
 
 def _fetch_job(config):
@@ -218,7 +220,10 @@ def _unpack_job(config, fname, submid, action):
         Returns None on error, or path were the compressed data now lives
     '''
     # os.chroot is not working with tarfile support
-    finalpath=config.get("Execution","directory")+str(submid)+"/"
+    basepath=config.get("Execution","directory")
+    if not basepath.endswith('/'):
+        basepath += '/'
+    finalpath=basepath+str(submid)+"/"
     # Overwrite still existing data from debug session (cleanup=False)
     shutil.rmtree(finalpath, ignore_errors=True)
     os.makedirs(finalpath)
@@ -244,9 +249,9 @@ def _unpack_job(config, fname, submid, action):
     logger.debug("Content after decompression: "+str(dircontent))
     if len(dircontent)==0:
         _send_result(config, "Your compressed upload is empty - no files in there.",-1, submid, action)
-    elif len(dircontent)==1 and os.path.isdir(finalpath+os.sep+dircontent[0]):
+    elif len(dircontent)==1 and os.path.isdir(finalpath+dircontent[0]+os.sep):
         logger.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..."%(dircontent[0]))
-        finalpath=finalpath+os.sep+dircontent[0]
+        finalpath=finalpath+dircontent[0]+os.sep
     return finalpath
 
 def _handle_alarm(signum, frame):
@@ -420,7 +425,7 @@ def run(config_file):
             return True
         elif action == 'test_validity' or action == 'test_full':
             # prepare the output file for validator performance results
-            perfdata_fname = finalpath+"/perfresults.csv"
+            perfdata_fname = finalpath+"perfresults.csv"
             open(perfdata_fname,"w").close()
             # run configure script, if available.
             output, success = _run_job(config, finalpath,['./configure'],submid, action, timeout, True)
@@ -436,7 +441,7 @@ def run(config_file):
             logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
             os.environ['LD_LIBRARY_PATH']=finalpath
             # execute validator
-            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
+            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
             if not success:
                 return False
             perfdata= open(perfdata_fname,"r").read()
