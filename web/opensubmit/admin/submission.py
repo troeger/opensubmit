@@ -194,10 +194,13 @@ class SubmissionAdmin(ModelAdmin):
             field values for 'grading'.
             When no object is given in the form, the this is a new manual submission
         '''
-        if hasattr(self, 'obj'):
-            if self.obj and db_field.name == "grading":
-                kwargs['queryset'] = self.obj.assignment.gradingScheme.gradings
-
+        if db_field.name == "grading":
+            submurl = kwargs['request'].path
+            try:
+                submid = int(submurl.split('/')[-2])
+                kwargs["queryset"] = Submission.objects.get(pk=submid).assignment.gradingScheme.gradings
+            except:
+                pass
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):
