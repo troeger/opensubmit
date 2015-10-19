@@ -25,6 +25,7 @@ urlpatterns = patterns('',
     url(r'^machines/$', 'opensubmit.api.machines', name='machines'),
     url(r'^settings/$', 'opensubmit.views.settings', name='settings'),
     url(r'^courses/$', 'opensubmit.views.courses', name='courses'),
+    url(r'^mergeusers/$', 'opensubmit.views.mergeusers', name='mergeusers'),
 
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
     url('', include('social.apps.django_app.urls', namespace='social')),
@@ -36,3 +37,12 @@ urlpatterns = patterns('',
 # on production systems, both static and media files must be served directly by Apache
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(MEDIA_URL_RELATIVE, document_root=MEDIA_ROOT)
+
+import urls
+def show_urls(urllist, depth=0):
+    for entry in urllist:
+        print "  " * depth, entry.regex.pattern
+        if hasattr(entry, 'url_patterns'):
+            show_urls(entry.url_patterns, depth + 1)
+
+show_urls(urls.urlpatterns)

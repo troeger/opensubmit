@@ -4,7 +4,7 @@ import logging
 import string
 import unicodedata
 
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
 from django.core.mail import send_mail, EmailMessage
@@ -204,6 +204,8 @@ def user_unicode(self):
         return u'%s %s (%s@...)' % (self.first_name, self.last_name, shortened)
     elif self.first_name or self.last_name:
         return u'%s %s' % (self.first_name, self.last_name)
+    elif self.username:
+        return u'%s' % (self.username)
     else:
         return u'User %u' % (self.pk)
 User.__unicode__ = user_unicode
@@ -231,6 +233,28 @@ def tutor_courses(user):
     '''
     return list(chain(user.courses_tutoring.all().filter(active__exact=True), user.courses.all().filter(active__exact=True)))
 
+@transaction.atomic
+def move_user_data(primary, secondary):
+    '''
+        Moves all submissions and other data linked to the secondary user into the primary user.
+        Nothing is deleted here, we just modify foreign user keys.
+    '''
+    # Update all submission authorships of the secondary to the primary
+    submissions = Submission.objects.filter(authors__id=secondary.pk)
+    for subm in submissions:
+        if subm.submitter == secondary:
+            subm.submitter = primary;
+        subm.authors.remove(secondary)
+        subm.authors.add(primary)
+        subm.save()
+    # Transfer course registrations
+    try:
+        for course in secondary.profile.courses.all():
+            primary.profile.courses.add(course)
+            primary.profile.save()
+    except UserProfile.DoesNotExist:
+        # That's a database consistency problem, but he will go away anyway
+        pass
 
 class ValidSubmissionFileManager(models.Manager):
     '''
@@ -377,7 +401,7 @@ class Submission(models.Model):
 
     assignment = models.ForeignKey(Assignment, related_name='submissions')
     submitter = models.ForeignKey(User, related_name='submitted')
-    authors = models.ManyToManyField(User, related_name='authored')
+    authors = models.ManyToManyField(User, related_name='authored') # includes also submitter, see submission_post_save() handler
     notes = models.TextField(max_length=200, blank=True)
     file_upload = models.ForeignKey(SubmissionFile, related_name='submissions', blank=True, null=True, verbose_name='New upload')
     created = models.DateTimeField(auto_now_add=True, editable=False)

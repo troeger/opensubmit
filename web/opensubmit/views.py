@@ -27,7 +27,7 @@ from django.forms.models import modelform_factory
 
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
-from models import inform_student, inform_course_owner, open_assignments
+from models import inform_student, inform_course_owner, open_assignments,move_user_data
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 
 
@@ -180,6 +180,28 @@ def update(request, subm_id):
     return render(request, 'update.html', {'submissionFileUpdateForm': updateForm,
                                            'submission': submission})
 
+@login_required
+@staff_member_required
+def mergeusers(request):
+    '''
+        Offers an intermediate admin view to merge existing users.
+    '''
+    if request.method == 'POST':
+        primary=get_object_or_404(User, pk=request.POST['primary_id'])
+        secondary=get_object_or_404(User, pk=request.POST['secondary_id'])
+        try:
+            move_user_data(primary, secondary)
+            messages.info(request, 'Submissions moved to user %u.'%(primary.pk))
+        except:
+            messages.error(request, 'Error during data migration, nothing changed.')
+            return redirect('admin:index')
+        messages.info(request, 'User %u deleted.'%(secondary.pk))
+        secondary.delete()
+        return redirect('admin:index')
+    primary=get_object_or_404(User, pk=request.GET['primary_id'])
+    secondary=get_object_or_404(User, pk=request.GET['secondary_id'])
+    # Determine data to be migrated
+    return render(request, 'mergeusers.html', {'primary': primary, 'secondary': secondary})
 
 @login_required
 @staff_member_required
