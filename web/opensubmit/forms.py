@@ -16,6 +16,8 @@ class SubmissionWithGroups(forms.ModelForm):
         for submission in ass.submissions.all().exclude(state=Submission.WITHDRAWN):
             for author in submission.authors.all():
                 havingSubmissions.append(author.pk)
+        # dismiss deactivated accounts         
+        self.fields['authors'].queryset = User.objects.exclude(is_active=False)
         # See #13
         # self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions).exclude(pk=current_user.pk)
         # since the submitter is added automatically, the number of co-authors may be zero
