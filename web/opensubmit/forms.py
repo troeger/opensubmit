@@ -16,11 +16,8 @@ class SubmissionWithGroups(forms.ModelForm):
         for submission in ass.submissions.all().exclude(state=Submission.WITHDRAWN):
             for author in submission.authors.all():
                 havingSubmissions.append(author.pk)
-        # See #13
-        # self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions).exclude(pk=current_user.pk)
-        # since the submitter is added automatically, the number of co-authors may be zero
-        # self.fields['authors'].required = False
-
+        # The submitter should still be in the list (see #13), but the course owner should not (see #56)
+        self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions).exclude(pk=ass.course.owner.pk)
 
 class SubmissionWithoutGroups(forms.ModelForm):
 
