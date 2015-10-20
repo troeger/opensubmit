@@ -1,7 +1,7 @@
 # User admin interface
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.admin import StackedInline
-from opensubmit.models import UserProfile, tutor_courses
+from opensubmit.models import UserProfile
 from django.shortcuts import render
 from django.contrib import admin
 from django.http import HttpResponseRedirect
@@ -36,7 +36,7 @@ class UserAdmin(DjangoUserAdmin):
             return reverse('admin:index')
         # In most cases, we want to keep the user logged in recently, so we query accordingly
         primary, secondary = queryset.order_by('-date_joined')
-        if len(tutor_courses(primary)) > 0 or len(tutor_courses(secondary)) > 0:
+        if primary.profile.tutor_courses().count() > 0 or secondary.profile.tutor_courses().count() > 0:
             # Since the user is deleted, this is more complicated (course ownership, gradings given etc.)
             modeladmin.message_user(request, "Merging course owners or tutors is not support at the moment.", level=messages.WARNING)
             return reverse('admin:index')

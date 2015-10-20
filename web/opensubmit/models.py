@@ -90,6 +90,16 @@ class Course(models.Model):
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
         return qs
 
+    def gradable_submissions(self):
+        qs = Submission.objects.filter(assignment__course=self)
+        qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+        return qs
+
+    def graded_submissions(self):
+        qs = Submission.objects.filter(assignment__course=self)
+        qs = qs.filter(state__in=[Submission.GRADED])
+        return qs
+
 class TestMachine(models.Model):
     host = models.CharField(null=True, max_length=50, help_text="UUID of the test machine, independent from IP address.")
     address = models.CharField(null=True,  max_length=50, help_text="Internal IP address of the test machine, at the time of registration.")
@@ -219,22 +229,20 @@ class UserProfile(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
+    def tutor_courses(self):
+        '''
+            Returns the list of courses this user is tutor or owner for.
+        '''
+        tutoring = self.user.courses_tutoring.all().filter(active__exact=True)
+        owning = self.user.courses.all().filter(active__exact=True)
+        result = (tutoring | owning).distinct()
+        return result
 
 def user_courses(user):
     '''
         Returns the list of courses this user is subscribed for.
     '''
     return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
-
-
-def tutor_courses(user):
-    '''
-        Returns the list of courses this user is tutor or owner for.
-    '''
-    tutoring = user.courses_tutoring.all().filter(active__exact=True)
-    owning = user.courses.all().filter(active__exact=True)
-    result = (tutoring | owning).distinct()
-    return list(result)
 
 @transaction.atomic
 def move_user_data(primary, secondary):

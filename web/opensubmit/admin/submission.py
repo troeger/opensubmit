@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
-from opensubmit.models import inform_student, tutor_courses, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from opensubmit.models import inform_student, Assignment, Submission, SubmissionFile, SubmissionTestResult
 
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
@@ -55,7 +55,7 @@ class SubmissionStateFilter(SimpleListFilter):
         )
 
     def queryset(self, request, qs):
-        qs = qs.filter(assignment__course__in=tutor_courses(request.user))
+        qs = qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
         if self.value() == 'tobegraded':
             return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         elif self.value() == 'graded':
@@ -74,14 +74,14 @@ class SubmissionAssignmentFilter(SimpleListFilter):
     parameter_name = 'assignmentfilter'
 
     def lookups(self, request, model_admin):
-        tutor_assignments = Assignment.objects.filter(course__in=tutor_courses(request.user))
+        tutor_assignments = Assignment.objects.filter(course__in=list(request.user.profile.tutor_courses()))
         return ((ass.pk, ass.title) for ass in tutor_assignments)
 
     def queryset(self, request, qs):
         if self.value():
             return qs.filter(assignment__exact=self.value())
         else:
-            return qs.filter(assignment__course__in=tutor_courses(request.user))
+            return qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
 
 
 class SubmissionCourseFilter(SimpleListFilter):
@@ -94,13 +94,13 @@ class SubmissionCourseFilter(SimpleListFilter):
     parameter_name = 'coursefilter'
 
     def lookups(self, request, model_admin):
-        return ((c.pk, c.title) for c in tutor_courses(request.user))
+        return ((c.pk, c.title) for c in list(request.user.profile.tutor_courses()))
 
     def queryset(self, request, qs):
         if self.value():
             return qs.filter(assignment__course__exact=self.value())
         else:
-            return qs.filter(assignment__course__in=tutor_courses(request.user))
+            return qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
 
 class SubmissionAdmin(ModelAdmin):
 

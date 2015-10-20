@@ -24,6 +24,7 @@ class TeacherBackend(AdminSite):
     site_header = "Teacher Backend"
     site_title = "OpenSubmit Teacher Backend"
     login_template = "teacher/login.html"
+    index_template = "teacher/index.html"
 
 teacher_backend = TeacherBackend(name="teacher")    
 teacher_backend.register(Grading, GradingAdmin)
