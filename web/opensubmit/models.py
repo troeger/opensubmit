@@ -231,7 +231,10 @@ def tutor_courses(user):
     '''
         Returns the list of courses this user is tutor or owner for.
     '''
-    return list(chain(user.courses_tutoring.all().filter(active__exact=True), user.courses.all().filter(active__exact=True)))
+    tutoring = user.courses_tutoring.all().filter(active__exact=True)
+    owning = user.courses.all().filter(active__exact=True)
+    result = (tutoring | owning).distinct()
+    return list(result)
 
 @transaction.atomic
 def move_user_data(primary, secondary):
