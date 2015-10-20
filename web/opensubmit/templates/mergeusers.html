@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load projecttags %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - Grading Table
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Merging Users</h1>
+</div>
+
+<div id="content" class="flex">
+    <div id="content-main">
+        <form action="." method="post">
+            {% csrf_token %}
+            <table class="table">
+                <thead>
+                    <tr><th>Role <a href="./?primary_id={{secondary.pk}}&secondary_id={{primary.pk}}">(Flip)</a></th><th>User</th><th>ID</th><th>Exists since</th></tr>
+                </thead>
+                <tbody>
+                    <tr style="color: green;"><td>Surviving user</td><td>{{ primary }}</td><td> {{ primary.pk }}</td><td>{{ primary.date_joined}}</td></tr>
+                    <tr style="color: red;"><td>Removed user</td><td>{{ secondary }}</td><td> {{ secondary.pk }}</td><td>{{ secondary.date_joined}}</td></tr>
+                </tbody>
+                </table>
+            <h2>Data migrated</h2>
+                <table class="table">
+                    <thead>
+                        <tr><th>Submission ID</th><th>Last Modification</th><th>Course</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for subm in secondary.authored.all %}
+                        <tr><td>{{ subm.pk }}</td><td>{{ subm.modified }}</td><td>{{ subm.assignment.course }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            <input type="hidden" name="primary_id" value="{{ primary.pk }}"/>
+            <input type="hidden" name="secondary_id" value="{{ secondary.pk }}"/>
+            <button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Merge and Delete</button>
+            <a class="btn btn-default" href="{% url 'admin:index'%}">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
