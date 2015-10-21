@@ -17,7 +17,7 @@ class SubmissionWithGroups(forms.ModelForm):
             for author in submission.authors.all():
                 havingSubmissions.append(author.pk)
         # The submitter should still be in the list (see #13), but the course owner should not (see #56)
-        self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions).exclude(pk=ass.course.owner.pk)
+        self.fields['authors'].queryset = User.objects.exclude(pk__in=havingSubmissions).exclude(pk=ass.course.owner.pk).exclude(is_active=False)
 
 class SubmissionWithoutGroups(forms.ModelForm):
 
