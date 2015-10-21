@@ -37,6 +37,12 @@ $('#id_authors').multiselect('select', {{ user.pk }});
                 <li>After successful building, the application can be verified with the <a href="{% url 'download' assignment.pk 'validity_testscript'%}">test script.</a>.</li>
                 {% endif %}
             </ul>
+            The following test machines will be used for this assignment:
+            <ul class="list">
+            {% for machine in  assignment.test_machines.all %}
+             <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+            {% endfor %}
+            </ul>
             The console output and exit code for the compilation / test run is available in the submission details. {% else %} You can find further information in the <a href="{{ assignment.download }}">assignment description</a>. {% endif %} {% if assignment.course.max_authors > 1 %}
             <br/>A maximum of {{ assignment.course.max_authors }} author(s) is allowed. You are added automatically. {% endif %}
         </div>

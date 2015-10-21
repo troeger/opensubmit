@@ -17,20 +17,27 @@ grade via eMail and the frontend page.
 
 The unique capability of OpenSubmit is the *support for coding
 assignments*, were students upload their programming exercise solution
-as source code archive. OpenSubmit offers a separate executor daemon,
-which runs on another machine and downloads submitted solutions from the
-web server. These archives are unpacked and tested for compilation, so
+as source code archive. OpenSubmit offers an executor daemon that runs 
+on another machine and downloads submitted solutions from the
+web server. These archives are unpacked and compiled, so
 that non-compiling assignment solutions are rejected by the system
-before the deadline. This makes the life of the corrector less
+before the deadline. You can also run an assignment-specific validation
+script that figures out if the student code behaves nicely, before accepting
+it as solution. This makes the life of the corrector less
 miserable, because after the deadline, all gradable solutions are
-‘valid’ (e.g. compile). Students also seem to like the idea of having a
+‘valid’. Students also seem to like the idea of having a
 validated solution, so that they do not fail due to technical
 difficulties at the correctors side.
 
+When the deadline is over, the system can run another invisble test with the
+student code the determine grading-relevant information.
+
 Since OpenSubmit is only for assignment submission, it has no management
 of course participants. Everybody who can perform a successful login can
-submit solutions. We expect you to have an institute-specific authentication
-provider, otherwise you need to contribute your own patches.
+submit solutions. Therefore, we expect you to have an institute-specific 
+authentication provider. OpenSubmit currently supports OpenID and Shibboleth
+out of the box for such cases. You can also offer GitHub, Twitter or Google login
+for determining the student identity.
 
 The `end-user documentation`_ is available in the GitHub Wiki.
 
