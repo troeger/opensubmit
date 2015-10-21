@@ -17,7 +17,7 @@ VALIDATOR_FNAME = 'validator.py'
 
 # Configuration defaults, if option is not given.
 # This is mainly intended for backward-ompatbility to older INI files.
-defaults = {('Execution','cleanup'): True}
+defaults = {('Execution','cleanup'): True, ('Execution','message_size'):10000 }
 
 def read_config(config_file):
     '''
