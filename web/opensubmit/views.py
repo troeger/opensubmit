@@ -205,6 +205,16 @@ def mergeusers(request):
 
 @login_required
 @staff_member_required
+def preview(request, subm_id):
+    '''
+        Renders a preview of the uploaded student archive.
+        This is only intended for the grading procedure, so staff status is needed.
+    '''
+    submission = get_object_or_404(Submission, pk=subm_id)
+    return render(request, 'file_preview.html', {'previews': submission.file_upload.previews()})
+
+@login_required
+@staff_member_required
 def gradingtable(request, course_id):
     gradings = {}
     course = get_object_or_404(Course, pk=course_id)

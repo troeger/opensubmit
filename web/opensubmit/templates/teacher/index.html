@@ -47,14 +47,19 @@
     {% for course in request.user.profile.tutor_courses %}
         <h3>{{ course }}</h3>
         <table style="width:95%"><tr><td>
+            {% if course.gradable_submissions.count > 0 %}
+                <p><a href="{% url 'teacher:opensubmit_submission_changelist' %}?coursefilter={{course.pk}}&statefilter=tobegraded">Do some grading</a></p>
+            {% else %}
+                <p>&nbsp;</p>
+            {% endif %}
             <p><a href="{% url 'gradingtable' course.pk %}">Show grading table</a></p>
             <p><a href="{% url 'mail2all' course.pk %}">eMail to students</a></p>
             <p><a href="{% url 'coursearchive' course.pk %}">Download course archive</a></p>
         </td><td style="text-align: right">
-            <p>Participants: {{ course.participants.count }}</p>
             <p>Open assignments: {{ course.open_assignments.count }}</p>
-            <p>To be graded: {{ course.gradable_submissions.count }}</p>
+            <p>Submissions to be graded: {{ course.gradable_submissions.count }}</p>
             <p>Grading finished, not notified: {{ course.graded_submissions.count }}</p>
+            <p>Course participants: {{ course.participants.count }}</p>
         </td>
         </tr></table>
 

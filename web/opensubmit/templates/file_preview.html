@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load projecttags %}
+{% load bootstrap %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+{% endblock %}
+
+{% block title %}
+    {{ block.super }} - Student Upload Preview
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>File Upload Preview</h1>
+</div>
+
+<div id="content-main">
+	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+	{% for file in previews %}
+	  <div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="heading{{forloop.counter}}">
+	      <h4 class="panel-title">
+	        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
+	          {{ file.name }}
+	        </a>
+	      </h4>
+	    </div>
+	    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
+	      <div class="panel-body">
+	        	<pre class="prettyprint linenums"><code>{{ file.preview }}</code></pre>
+	      </div>
+	    </div>
+	  </div>
+	{% endfor %}
+	</div>
+</div>
+
+
+{% endblock %}

@@ -3,6 +3,7 @@ import os
 import logging
 import string
 import unicodedata
+import zipfile, tarfile
 
 from django.db import models, transaction
 from django.contrib.auth.models import User, Group
@@ -299,10 +300,13 @@ class SubmissionFile(models.Model):
         return self.attachment.name[self.attachment.name.rfind('/') + 1:]
 
     def get_absolute_url(self):
-        # to implement access protection, we implement our own download
-        # this implies that the Apache media serving is disabled
+        # To realize access protection for student files, we implement our own download method here.
+        # This implies that the Apache media serving is disabled.
         assert(len(self.submissions.all()) > 0)
         return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
+
+    def get_preview_url(self):
+        return reverse('preview', args=(self.submissions.all()[0].pk,))
 
     def absolute_path(self):
         return MEDIA_ROOT + "/" + self.attachment.name
@@ -310,10 +314,34 @@ class SubmissionFile(models.Model):
     def is_executed(self):
         return self.fetched is not None
 
+    def previews(self):
+        '''
+            Return preview on file content as dictionary.
+            In order to avoid browser and web server trashing by the students, there is a size limit for the single files shown.
+        '''
+        MAX_PREVIEW_SIZE = 10000
+
+        result = []
+        if zipfile.is_zipfile(self.attachment.path):
+            zf = zipfile.ZipFile(self.attachment.path, 'r')
+            for zipinfo in zf.infolist():
+                if zipinfo.file_size < MAX_PREVIEW_SIZE:
+                    result.append({'name': zipinfo.filename, 'preview': zf.read(zipinfo)})
+                else:
+                    result.append({'name': zipinfo.filename+' (too large)'})
+        elif tarfile.is_tarfile(self.attachment.path):
+            pass
+        else:
+            # single file
+            f=open(self.attachment.path)
+            fname = f.name[f.name.rfind(os.sep)+1:]
+            result = [{'name': fname, 'preview': f.read()},]
+        return result
+
     def test_result_dict(self):
         '''
             Create a compact data structure representation of all result
-            types for this file. 
+            types for this file.
 
             Returns a dictionary where the keys are the result types, and
             the values are dicts of all the other result information.
@@ -573,7 +601,7 @@ class Submission(models.Model):
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
 
-    def _save_test_result(self, machine, text, kind): 
+    def _save_test_result(self, machine, text, kind):
         result = SubmissionTestResult(
             result=text,
             machine=machine,

@@ -8,6 +8,8 @@ from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
 from opensubmit.models import inform_student, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from django.template.loader import render_to_string
+from django.core.urlresolvers import reverse
 
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
@@ -126,20 +128,22 @@ class SubmissionAdmin(ModelAdmin):
     )
 
     def file_link(self, instance):
+        '''
+            Renders the link to the student upload file.
+        '''
         sfile = instance.file_upload
         if not sfile:
             return mark_safe(u'No file submitted by student.')
         else:
-            return mark_safe(u'<a href="%s">%s</a>' % (sfile.get_absolute_url(), sfile.basename()))
+            return mark_safe(u'<a href="%s">%s</a><br/>(<a href="%s" target="_new">Preview</a>)' % (sfile.get_absolute_url(), sfile.basename(), sfile.get_preview_url()))
     file_link.short_description = "Stored upload"
-
 
     def _render_test_result(self, result_obj, enabled):
         if not result_obj:
             if enabled:
                 return mark_safe(u'Enabled, no results.')
             else:
-                return mark_safe(u'Not enabled.')                
+                return mark_safe(u'Not enabled.')
         else:
             return format_html("Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
 
