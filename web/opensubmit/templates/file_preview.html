@@ -8,17 +8,18 @@
 {% endblock %}
 
 {% block title %}
-    {{ block.super }} - Student Upload Preview
+    {{ block.super }} - Archive Preview
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>File Upload Preview</h1>
+    <h1>Archive Preview</h1>
 </div>
 
 <div id="content-main">
 	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
 	{% for file in previews %}
+	    {% if file.preview %}
 	  <div class="panel panel-default">
 	    <div class="panel-heading" role="tab" id="heading{{forloop.counter}}">
 	      <h4 class="panel-title">
@@ -33,6 +34,7 @@
 	      </div>
 	    </div>
 	  </div>
+	     {% endif %}
 	{% endfor %}
 	</div>
 </div>

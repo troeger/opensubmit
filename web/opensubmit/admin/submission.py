@@ -134,8 +134,10 @@ class SubmissionAdmin(ModelAdmin):
         sfile = instance.file_upload
         if not sfile:
             return mark_safe(u'No file submitted by student.')
-        else:
+        elif sfile.is_archive():
             return mark_safe(u'<a href="%s">%s</a><br/>(<a href="%s" target="_new">Preview</a>)' % (sfile.get_absolute_url(), sfile.basename(), sfile.get_preview_url()))
+        else:
+            return mark_safe(u'<a href="%s">%s</a>' % (sfile.get_absolute_url(), sfile.basename()))
     file_link.short_description = "Stored upload"
 
     def _render_test_result(self, result_obj, enabled):

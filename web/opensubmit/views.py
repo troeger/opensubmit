@@ -211,7 +211,10 @@ def preview(request, subm_id):
         This is only intended for the grading procedure, so staff status is needed.
     '''
     submission = get_object_or_404(Submission, pk=subm_id)
-    return render(request, 'file_preview.html', {'previews': submission.file_upload.previews()})
+    if submission.file_upload.is_archive():
+        return render(request, 'file_preview.html', {'previews': submission.file_upload.archive_previews()})
+    else:
+        return redirect(submission.file_upload.get_absolute_url())
 
 @login_required
 @staff_member_required

@@ -314,9 +314,18 @@ class SubmissionFile(models.Model):
     def is_executed(self):
         return self.fetched is not None
 
-    def previews(self):
+    def is_archive(self):
         '''
-            Return preview on file content as dictionary.
+            Determines if the attachment is an archive.
+        '''
+        if zipfile.is_zipfile(self.attachment.path) or tarfile.is_tarfile(self.attachment.path):
+            return True
+        else:
+            return False
+
+    def archive_previews(self):
+        '''
+            Return preview on archive file content as dictionary.
             In order to avoid browser and web server trashing by the students, there is a size limit for the single files shown.
         '''
         MAX_PREVIEW_SIZE = 10000
