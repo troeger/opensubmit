@@ -158,6 +158,7 @@ def check_web_db():
     '''
     print "Testing for neccessary database migrations..."
     django_admin(["migrate"])             # apply schema migrations
+    print "Checking the OpenSubmit permission system..."
     django_admin(["fixperms"])            # configure permission system, of needed
     return True
 
