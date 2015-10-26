@@ -176,14 +176,10 @@ def jobs(request):
                     response['Action'] = 'test_compile'
                 elif sub.state == Submission.TEST_VALIDITY_PENDING:
                     response['Action'] = 'test_validity'
-                    # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = settings.MAIN_URL + "/download/%u/validity_testscript/secret=%s" % (
-                        sub.assignment.pk, settings.JOB_EXECUTOR_SECRET)
+                    response['PostRunValidation'] = sub.assignment.validity_test_url()
                 elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
                     response['Action'] = 'test_full'
-                    # reverse() is messing up here when we have to FORCE_SCRIPT case, so we do manual URL construction
-                    response['PostRunValidation'] = settings.MAIN_URL + "/download/%u/full_testscript/secret=%s" % (
-                        sub.assignment.pk, settings.JOB_EXECUTOR_SECRET)
+                    response['PostRunValidation'] = sub.assignment.full_test_url()
                 else:
                     assert (False)
                 # store date of fetching for determining jobs stucked at the executor
