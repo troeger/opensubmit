@@ -13,6 +13,26 @@ def course(obj):
 	return str(obj.course)
 
 class AssignmentAdminForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        '''
+            The intention here is to correct the shown download URL for already existing test script uploads,
+            which is suprisingly hard.
+            The URL comes as read-only field from the underlying storage system implementation, which
+            generates it from the relative file path and MEDIA_URL. Since we want to control all media file downloads,
+            MEDIA_URL is not given in OpenSubmit, so the resulting URL does not exist. Since test scripts are not
+            a separate model as submission files (*sick*), we cannot use the elegant get_absolute_url() override to
+            fix the download URL for a test script. Instead, we hack the widget rendering here.
+        '''
+        super(AssignmentAdminForm, self).__init__(*args, **kwargs)
+        self.fields['attachment_test_validity'].widget.template_with_initial = (
+            '%(initial_text)s: <a href="'+self.instance.validity_test_url()+'">%(initial)s</a> '
+            '%(clear_template)s<br />%(input_text)s: %(input)s'
+        )
+        self.fields['attachment_test_full'].widget.template_with_initial = (
+            '%(initial_text)s: <a href="'+self.instance.full_test_url()+'">%(initial)s</a> '
+            '%(clear_template)s<br />%(input_text)s: %(input)s'
+        )
+
     def clean(self):
         '''
             Check if such an assignment configuration makes sense, and reject it otherwise.
