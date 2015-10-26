@@ -137,10 +137,6 @@ LOGIN_REDIRECT_URL = ensure_slash(False, True, MAIN_URL+'/dashboard/')
 # Local file system storage for uploads
 MEDIA_ROOT = ensure_slash_from_config(config, True, True, ('server', 'MEDIA_ROOT'))
 
-# URL for the file uploads, directly served by Apache on production systems
-MEDIA_URL_RELATIVE = ensure_slash(True, True, '/files/')
-MEDIA_URL = ensure_slash(False, True, MAIN_URL + MEDIA_URL_RELATIVE)
-
 # Root of the installation
 SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
 

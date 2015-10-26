@@ -301,7 +301,7 @@ class SubmissionFile(models.Model):
 
     def get_absolute_url(self):
         # To realize access protection for student files, we implement our own download method here.
-        # This implies that the Apache media serving is disabled.
+        # This implies that the Apache media serving (MEDIA_URL) is disabled.
         assert(len(self.submissions.all()) > 0)
         return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
 

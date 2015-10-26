@@ -43,18 +43,13 @@ def apache_config(config):
     """
     if subdir:
         text += "Alias /%s/static/ %s\n"%(settings.HOST_DIR, settings.STATIC_ROOT)
-        text += "    Alias /%s%s %s\n"%(settings.HOST_DIR, settings.MEDIA_URL_RELATIVE, settings.MEDIA_ROOT)
         text += "    WSGIScriptAlias /%s %s/wsgi.py\n"%(settings.HOST_DIR, settings.SCRIPT_ROOT)
     else:
         text += "Alias /static/ %s\n"%(settings.STATIC_ROOT)
-        text += "    Alias %s %s\n"%(settings.MEDIA_URL_RELATIVE, settings.MEDIA_ROOT)
         text += "    WSGIScriptAlias / %s/wsgi.py"%(settings.SCRIPT_ROOT)
     text += """
     WSGIPassAuthorization On
     <Directory {static_path}>
-         Require all granted
-    </Directory>
-    <Directory {media_path}>
          Require all granted
     </Directory>
     <Directory {install_path}>
@@ -62,7 +57,7 @@ def apache_config(config):
               Require all granted
          </Files>
     </Directory>
-    """.format(static_path=settings.STATIC_ROOT, media_path=settings.MEDIA_ROOT, install_path=settings.SCRIPT_ROOT)
+    """.format(static_path=settings.STATIC_ROOT, install_path=settings.SCRIPT_ROOT)
 
     f.write(text)
     f.close()
