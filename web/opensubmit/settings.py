@@ -134,7 +134,9 @@ LOGIN_URL = MAIN_URL
 LOGIN_ERROR_URL = MAIN_URL
 LOGIN_REDIRECT_URL = ensure_slash(False, True, MAIN_URL+'/dashboard/')
 
-# Local file system storage for uploads
+# Local file system storage for uploads.
+# Please note that MEDIA_URL is intentionally not set, since all media
+# downloads have to use our download API URL for checking permissions.
 MEDIA_ROOT = ensure_slash_from_config(config, True, True, ('server', 'MEDIA_ROOT'))
 
 # Root of the installation

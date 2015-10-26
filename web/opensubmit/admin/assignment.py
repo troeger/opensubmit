@@ -5,6 +5,8 @@ from django.db.models import Q
 from opensubmit.models import Course
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse
 
 def course(obj):
 	''' Course name as string.'''
@@ -51,13 +53,13 @@ class AssignmentAdmin(ModelAdmin):
             ('Time',
                 {   'fields': ('publish_at', ('soft_deadline', 'hard_deadline'))}),
             ('Submission and Validation',
-                {   'fields': (('has_attachment', 'attachment_test_timeout'), 'attachment_test_compile', ('attachment_test_validity', \
-                      'validity_script_download'), 'attachment_test_full'),
+                {   'fields': (('has_attachment', 'attachment_test_timeout'), 'attachment_test_compile', \
+                               ('attachment_test_validity', 'validity_script_download'), \
+                                'attachment_test_full'),
                 }),
             ('Test Machines',
                 {'fields': ('test_machines',)}),
     )
-
 
     def get_queryset(self, request):
         ''' Restrict the listed assignments for the current user.'''

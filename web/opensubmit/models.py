@@ -14,6 +14,7 @@ from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_ROOT
 from itertools import chain
 
+from opensubmit import settings
 
 logger = logging.getLogger('OpenSubmit')
 
