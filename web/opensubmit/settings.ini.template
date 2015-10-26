@@ -46,7 +46,7 @@ DATABASE_ENGINE: sqlite3
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: /var/lib/opensubmit/database.sqlite
+DATABASE_NAME: database.sqlite
 
 # The user name for accessing the database. Not needed for SQLite.
 DATABASE_USER:

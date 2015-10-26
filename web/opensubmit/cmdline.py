@@ -62,14 +62,13 @@ def apache_config(config):
     f.write(text)
     f.close()
 
-def check_path(filepath):
+def check_path(directory):
     '''
         Checks if the directories for this path exist, and creates them in case.
     '''
-    directory = os.path.dirname(filepath)
     if directory != '':
         if not os.path.exists(directory):
-            os.makedirs(directory, 0755)   # rwxr-xr-x
+            os.makedirs(directory, 0775)   # rwxrwxr-x
 
 def check_file(filepath):
     '''
@@ -79,7 +78,7 @@ def check_file(filepath):
 
         TODO: This is Debian / Ubuntu specific.
     '''
-    check_path(filepath)
+    check_path(os.path.dirname(filepath))
     if not os.path.exists(filepath):
         print "WARNING: File does not exist. Creating it: %s"%filepath
         open(filepath, 'a').close()
@@ -87,6 +86,7 @@ def check_file(filepath):
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
+        os.chmod(filepath, 0660) # rw-rw---
     except:
         print "WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it."%filepath
 
@@ -142,10 +142,10 @@ def check_web_config():
     except IOError:
         print "ERROR: Seems like the config file %s does not exist."%WEB_CONFIG_FILE
         print "       I am creating a new one. Please edit it and re-run this command."
-        if not os.path.exists(CONFIG_PATH):
-            os.makedirs(CONFIG_PATH)
+        check_path(CONFIG_PATH)
         orig = resource_filename(Requirement.parse("opensubmit-web"),WEB_TEMPLATE)
-        shutil.copy(orig,WEB_CONFIG_FILE)
+        shutil.copy(orig, WEB_CONFIG_FILE)
+        check_file(WEB_CONFIG_FILE)
         return None    # Manual editing is needed before further proceeding with the fresh file
 
 def check_web_db():
@@ -157,10 +157,6 @@ def check_web_db():
     print "Checking the OpenSubmit permission system..."
     django_admin(["fixperms"])            # configure permission system, of needed
     return True
-
-def check_warnings():
-    if warning_counter > 0:
-        print("There were warnings, please check the output above.")
 
 def console_script():
     '''
