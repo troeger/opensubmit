@@ -1,9 +1,9 @@
-from opensubmit.tests.cases import StudentTestCase
+from opensubmit.tests.cases import StudentTestCase, SubmitAdminTestCase
 from django.contrib.auth.models import User
 
-class ViewsTestCase(StudentTestCase):
+class StudentViewsTestCase(StudentTestCase):
     def setUp(self):
-        super(ViewsTestCase, self).setUp()
+        super(StudentViewsTestCase, self).setUp()
         self.val_sub = self.createValidatedSubmission(self.current_user)
 
     def testIndexView(self):
@@ -48,3 +48,15 @@ class ViewsTestCase(StudentTestCase):
         response=self.c.get('/machine/%u/'%self.machine.pk)
         self.assertEquals(response.status_code, 200)
 
+class AdminViewsTestCase(SubmitAdminTestCase):
+    def testGradingTableView(self):
+        response=self.c.get('/course/%u/gradingtable/'%self.course.pk)
+        self.assertEquals(response.status_code, 200)
+
+    def testDownloadArchiveView(self):
+        response=self.c.get('/course/%u/archive/'%self.course.pk)
+        self.assertEquals(response.status_code, 200)
+
+    def testMailView(self):
+        response=self.c.get('/course/%u/mail2all/'%self.course.pk)
+        self.assertEquals(response.status_code, 200)

@@ -41,17 +41,6 @@ class BackendTestCase(TutorACLTestCase):
         for ass in self.allAssignments:
             assert(ass.title in ass_str_list)
 
-    def testGradingTable(self):
-        courseadm = CourseAdmin(Course, AdminSite())
-        response = courseadm.showGradingTable(self.request, Course.objects)
-        self.assertEquals(response.status_code, 302)
-
-    def testDownloadArchive(self):
-        courseadm = CourseAdmin(Course, AdminSite())
-        response = courseadm.downloadArchive(self.request, Course.objects)
-        # Redirects to course archive view
-        self.assertEquals(response.status_code, 302)
-
     def testGradingBackend(self):
         from opensubmit.admin.grading import means_passed, grading_schemes
         self.assertEquals(means_passed(self.passGrade), True)
@@ -172,18 +161,18 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         self.assertEquals(subcount, len(self.all_submissions))
 
     def testGradingTableView(self):
-        response = self.c.get('/course/%u/gradingtable'%self.course.pk)
+        response = self.c.get('/course/%u/gradingtable/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
 
     def testArchiveView(self):
-        response = self.c.get('/course/%u/archive'%self.course.pk)
+        response = self.c.get('/course/%u/archive/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
         # Test if the download is really a ZIP file
         f = StringIO.StringIO(response.content)
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity
-            self.assertIsNone(zipped_file.testzip())        
+            self.assertIsNone(zipped_file.testzip())
             # Try to find a file some student stored in a sub-folder on it's own, targets #18
             found_stud_subfile = False
             for entry in zipped_file.filelist:

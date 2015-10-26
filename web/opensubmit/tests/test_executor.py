@@ -7,7 +7,9 @@ from django.contrib.auth.models import User
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
 
-from opensubmit import executor
+import os.path, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../executor/opensubmit' ))
+import executor
 
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 

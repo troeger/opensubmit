@@ -21,7 +21,8 @@ class StudentSubmissionWebTestCase(SubmitTestCase):
 class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
 
     def testCanSubmit(self):
-        self.loginUser(self.enrolled_students[0])
+        submitter = self.enrolled_students[0]
+        self.loginUser(submitter)
         cases = {
             self.openAssignment: (True, (200, 302, )),
             self.softDeadlinePassedAssignment: (True, (200, 302, )),
@@ -31,27 +32,30 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
         for assignment in cases:
             response = self.c.post('/assignments/%s/new/' % assignment.pk, {
                 'notes': 'This is a test submission.',
+                'authors': str(submitter.user.pk)
             })
             expect_success, expected_responses = cases[assignment]
             self.assertIn(response.status_code, expected_responses)
-            
+
             submission_exists = Submission.objects.filter(
                 assignment__exact=assignment,
-                submitter__exact=self.enrolled_students[0].user,
+                submitter__exact=submitter.user,
             ).exists()
             self.assertEquals(submission_exists, expect_success)
 
     def testNonEnrolledCannotSubmit(self):
-        self.loginUser(self.not_enrolled_students[0])
+        submitter = self.not_enrolled_students[0]
+        self.loginUser(submitter)
         response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
             'notes': """This submission will fail because the user
                         is not enrolled in the course that the
                         assignment belongs to""",
+            'authors': str(submitter.user.pk)
         })
         self.assertEquals(response.status_code, 403)
 
         submission_count = Submission.objects.filter(
-            submitter__exact=self.not_enrolled_students[0].user,
+            submitter__exact=submitter.user,
             assignment__exact=self.openAssignment,
         ).count()
         self.assertEquals(submission_count, 0)
@@ -89,14 +93,16 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
         self.assertEquals(submission_count, 0)
 
     def testCannotDoubleSubmitThroughTeam(self):
-        self.loginUser(self.enrolled_students[1])
+        submitter = self.enrolled_students[1]
+        self.loginUser(submitter)
         response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
             'notes': """This is an assignment that student1 has published.""",
+            'authors': str(submitter.user.pk)
         })
         self.assertIn(response.status_code, (302, 200, ))
 
         first_submission_exists = Submission.objects.filter(
-            submitter__exact=self.enrolled_students[1].user,
+            submitter__exact=submitter.user,
             assignment__exact=self.openAssignment,
         ).exists()
         self.assertTrue(first_submission_exists)
