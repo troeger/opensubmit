@@ -195,6 +195,14 @@ INSTALLED_APPS = (
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+     },   
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
@@ -217,6 +225,7 @@ LOGGING = {
 	'file': {
 	    'level':   'DEBUG',
 	    'class':   'logging.FileHandler',
+	    'formatter': 'verbose',
 	    'filename':   LOG_FILE
         }
     },
