@@ -1,12 +1,12 @@
 # Administration script functionality on the production system
 # We cover some custom actions and a small subset of django-admin here
 
-import os, pwd, grp, urllib
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
-
-import sys, shutil
+import os, pwd, grp, urllib, sys, shutil
 from ConfigParser import RawConfigParser
 from pkg_resources import Requirement, resource_filename
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
+from django.core.exceptions import ImproperlyConfigured
 
 #TODO: DRY is missing here, the same paths are stored in settings.py
 CONFIG_PATH = '/etc/opensubmit'
@@ -19,7 +19,11 @@ def django_admin(args):
         Run something like it would be done through Django's manage.py.
     '''
     from django.core.management import execute_from_command_line
-    execute_from_command_line([sys.argv[0]]+args)
+    try:
+        execute_from_command_line([sys.argv[0]]+args)
+    except ImproperlyConfigured as e:
+        print(str(e))
+        exit(-1)
 
 def apache_config(config):
     '''
@@ -63,32 +67,27 @@ def apache_config(config):
     f.write(text)
     f.close()
 
-def ensure_path_exists(dirpath):
-    if os.path.exists(dirpath):
-        return
-    parent_dirpath = os.path.dirname(dirpath)
-    if not os.path.exists(parent_dirpath):
-        ensure_path_exists(parent_dirpath)
-    print "WARNING: Path does not exist. Creating it: %s"%dirpath
-    os.mkdir(dirpath)
-    fix_permissions(dirpath)
+def check_path(filepath):
+    '''
+        Checks if the directories for this path exist, and creates them in case.
+    '''
+    directory = os.path.dirname(filepath)
+    if directory != '':
+        if not os.path.exists(directory):
+            os.makedirs(directory, 0755)   # rwxr-xr-x
 
-def ensure_file_exists(filepath):
-    ensure_path_exists(os.path.dirname(filepath))
+def check_file(filepath):
+    '''
+        - Checks if the parent directories for this path exist.
+        - Checks that the file exists.
+        - Donates the file to the web server user.
+
+        TODO: This is Debian / Ubuntu specific.
+    '''
+    check_path(filepath)
     if not os.path.exists(filepath):
         print "WARNING: File does not exist. Creating it: %s"%filepath
         open(filepath, 'a').close()
-
-def check_file(filepath):
-    ensure_file_exists(filepath)
-    fix_permissions(filepath)
-
-def fix_permissions(filepath):
-    '''
-        Fix file system permissions to suite the web server.
-        # TODO: This is Debian / Ubuntu specific, make it more generic.
-
-    '''
     try:
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
@@ -107,12 +106,14 @@ def check_web_config_consistency(config):
     }
 
     print "Checking configuration of the OpenSubmit web application..."
+    # Let Django's manage.py load the settings file, to see if this works in general
+    django_admin(["check"])
     # Check configured host
     try:
         urllib.urlopen(config.get("server", "HOST"))
     except Exception as e:
         # This may be ok, when the admin is still setting up to server
-        print "WARNING: The configured HOST seems to be invalid: "+str(e)
+        print "The configured HOST seems to be invalid at the moment: "+str(e)
     # Check configuration dependencies
     for k, v in login_conf_deps.iteritems():
         if config.getboolean('login', k):
@@ -121,7 +122,7 @@ def check_web_config_consistency(config):
                     print "ERROR: You have enabled %s in settings.ini, but %s is not set."%(k, needed)
                     return False
     # Check media path
-    ensure_path_exists(config.get('server', 'MEDIA_ROOT'))
+    check_path(config.get('server', 'MEDIA_ROOT'))
     # Prepare empty log file, in case the web server has no creation rights
     log_file = config.get('server', 'LOG_FILE')
     print "Preparing log file at "+log_file
@@ -189,7 +190,7 @@ def console_script():
         if not check_web_db():
             return
         print("Preparing static files for web server...")
-        django_admin(["collectstatic","--noinput", "-v 0"])
+        django_admin(["collectstatic","--noinput"])
         apache_config(config)
         exit(0)
 
