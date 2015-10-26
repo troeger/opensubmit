@@ -45,6 +45,20 @@ class AssignmentAdmin(ModelAdmin):
 
     form = AssignmentAdminForm
 
+    fieldsets = (
+            ('',
+                {'fields': (('title','course'), 'download', 'gradingScheme')}),
+            ('Time',
+                {   'fields': ('publish_at', ('soft_deadline', 'hard_deadline'))}),
+            ('Submission and Validation',
+                {   'fields': (('has_attachment', 'attachment_test_timeout'), 'attachment_test_compile', ('attachment_test_validity', \
+                      'validity_script_download'), 'attachment_test_full'),
+                }),
+            ('Test Machines',
+                {'fields': ('test_machines',)}),
+    )
+
+
     def get_queryset(self, request):
         ''' Restrict the listed assignments for the current user.'''
         qs = super(AssignmentAdmin, self).get_queryset(request)
