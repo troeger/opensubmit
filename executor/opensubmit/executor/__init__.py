@@ -6,7 +6,7 @@ from urllib import urlencode
 from urllib2 import urlopen, HTTPError, URLError
 import logging, json
 import zipfile, tarfile
-import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle, ConfigParser
+import tempfile, os, platform, shutil, subprocess, signal, stat, sys, fcntl, pickle, ConfigParser
 import time
 from datetime import datetime, timedelta
 
@@ -354,7 +354,7 @@ def _can_run(config):
     if config.getboolean("Execution","serialize"):
         fp = open(config.get("Execution","pidfile"), 'w')
         try:
-            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB) #not aviable in Windows, import fcntl fails
             logger.debug("Got the script lock")
         except IOError:
             logger.debug("Script is already running.")
@@ -366,7 +366,7 @@ def send_config(config_file):
         Sends the registration of this machine to the OpenSubmit web server.
     '''
     config = read_config(config_file)
-    conf = os.uname()
+    conf = platform.uname()
     output = []
     output.append(["Operating system","%s %s (%s)"%(conf[0], conf[2], conf[4])])
     output.append(["CPUID information", _infos_cmd("cpuid")])
