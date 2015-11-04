@@ -24,6 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
+from django.template import loader, Context
 
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
 from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
@@ -220,7 +221,12 @@ def preview(request, subm_id):
 @staff_member_required
 def perftable(request, ass_id):
     assignment = get_object_or_404(Assignment, pk=ass_id)
-    return render(request, 'perfdata.csv', {'submissions': Submission.objects.filter(assignment=assignment)})
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="perf_assignment%u.csv"'%assignment.pk
+    t = loader.get_template('perfdata.csv')
+    c = Context({'submissions': Submission.objects.filter(assignment=assignment)})
+    response.write(t.render(c))
+    return response
 
 @login_required
 @staff_member_required
