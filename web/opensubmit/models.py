@@ -335,10 +335,12 @@ class SubmissionFile(models.Model):
         '''
             Determines if the attachment is an archive.
         '''
-        if zipfile.is_zipfile(self.attachment.path) or tarfile.is_tarfile(self.attachment.path):
-            return True
-        else:
-            return False
+        try:
+            if zipfile.is_zipfile(self.attachment.path) or tarfile.is_tarfile(self.attachment.path):
+                return True
+        except:
+            pass
+        return False
 
     def archive_previews(self):
         '''
