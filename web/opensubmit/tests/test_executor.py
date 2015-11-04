@@ -69,7 +69,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # Check if timeout marking took place
         self.sub.refresh_from_db()
         self.assertEquals(self.sub.state, Submission.TEST_COMPILE_FAILED)
-        assert("timeout" in self.sub.get_compile_result())
+        assert("timeout" in self.sub.get_compile_result().result)
 
     def testTooLongValidation(self):
         self.sub = self.createValidatableSubmission(self.current_user)
@@ -89,7 +89,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # Check if timeout marking took place
         self.sub.refresh_from_db()
         self.assertEquals(self.sub.state, Submission.TEST_VALIDITY_FAILED)
-        assert("timeout" in self.sub.get_validation_result())
+        assert("timeout" in self.sub.get_validation_result().result)
 
     def testTooLongFullTest(self):
         self.sub = self.createValidatableSubmission(self.current_user)
@@ -111,7 +111,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # Check if timeout marking took place
         self.sub.refresh_from_db()
         self.assertEquals(self.sub.state, Submission.TEST_FULL_FAILED)
-        assert("timeout" in self.sub.get_fulltest_result())
+        assert("timeout" in self.sub.get_fulltest_result().result)
 
 
     def testValidationTest(self):

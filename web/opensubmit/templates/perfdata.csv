@@ -1,2 +1,2 @@
 Assignment;Submission ID;Performance Data
-{% for sub in submissions %}{% if sub.get_fulltest_perf %}{{sub.assignment}};{{sub.pk}};{{sub.get_fulltest_perf}}{% endif %}{% endfor %}
+{% for sub in submissions %}{% if sub.get_fulltest_result %}{{sub.assignment}};{{sub.pk}};{{sub.get_fulltest_result.perf_data}}{% endif %}{% endfor %}

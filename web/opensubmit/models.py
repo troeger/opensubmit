@@ -670,33 +670,22 @@ class Submission(models.Model):
         self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST, perf_data)
 
     def get_compile_result(self):
-        record = self._get_test_result(SubmissionTestResult.COMPILE_TEST)
-        if record:
-            return record.result
-        else:
-            None
+        '''
+            Return the most recent compile result object for this submission.
+        '''
+        return self._get_test_result(SubmissionTestResult.COMPILE_TEST)
 
     def get_validation_result(self):
-        record = self._get_test_result(SubmissionTestResult.VALIDITY_TEST)
-        if record:
-            return record.result
-        else:
-            None
+        '''
+            Return the most recent validity test result object for this submission.
+        '''
+        return self._get_test_result(SubmissionTestResult.VALIDITY_TEST)
 
     def get_fulltest_result(self):
-        record = self._get_test_result(SubmissionTestResult.FULL_TEST)
-        if record:
-            return record.result
-        else:
-            None
-
-    def get_fulltest_perf(self):
-        record = self._get_test_result(SubmissionTestResult.FULL_TEST)
-        if record:
-            return record.perf_data
-        else:
-            None
-
+        '''
+            Return the most recent full test result object for this submission.
+        '''
+        return self._get_test_result(SubmissionTestResult.FULL_TEST)
 
 class SubmissionTestResult(models.Model):
     '''
