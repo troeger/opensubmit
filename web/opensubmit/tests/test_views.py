@@ -72,3 +72,11 @@ class AdminViewsTestCase(SubmitAdminTestCase):
     def testNewCourseView(self):
         response=self.c.get('/teacher/opensubmit/course/add/')
         self.assertEquals(response.status_code, 200)
+
+    def testPerfDataView(self):
+        sub1 = self.createValidatedSubmission(self.current_user)
+        sub2 = self.createValidatedSubmission(self.current_user)
+        response=self.c.get('/assignments/%u/perftable/'%sub1.assignment.pk)
+        # Resulting CSV should have header line + 2 result lines + empty final line
+        self.assertEquals(len(response.content.split('\n')), 3+1)
+        self.assertEquals(response.status_code, 200)

@@ -287,19 +287,21 @@ class SubmitTestCase(TestCase):
         '''
         sf = self.createSubmissionFile()
         result_compile  = SubmissionTestResult(
-            kind=SubmissionTestResult.COMPILE_TEST, 
+            kind=SubmissionTestResult.COMPILE_TEST,
             result="Compilation ok.",
             machine=test_machine,
             submission_file=sf
             ).save()
         result_validity = SubmissionTestResult(
-            kind=SubmissionTestResult.VALIDITY_TEST, 
+            kind=SubmissionTestResult.VALIDITY_TEST,
             result="Validation ok.",
             machine=self.machine,
+            perf_data = "41;42;43",
             submission_file=sf).save()
         result_full     = SubmissionTestResult(
-            kind=SubmissionTestResult.FULL_TEST, 
+            kind=SubmissionTestResult.FULL_TEST,
             result="Full test ok.",
+            perf_data = "77;88;99",
             machine=self.machine,
             submission_file=sf).save()
         return sf
