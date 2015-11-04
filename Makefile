@@ -7,6 +7,9 @@ build:
 tests:
 	export PYTHONPATH=../executor/opensubmit:$PYTHONPATH; pushd web; ./manage.py test; popd
 
+coverage:
+	pushd web; coverage run --source='.' manage.py test opensubmit.tests; coverage html; popd
+
 clean:
 	rm -rf ./cmdline/dist
 	rm -rf ./cmdline/build
