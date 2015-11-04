@@ -60,3 +60,11 @@ class AdminViewsTestCase(SubmitAdminTestCase):
     def testMailView(self):
         response=self.c.get('/course/%u/mail2all/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
+
+    def testNewAssignmentView(self):
+        response=self.c.get('/teacher/opensubmit/assignment/add/')
+        self.assertEquals(response.status_code, 200)
+
+    def testNewCourseView(self):
+        response=self.c.get('/teacher/opensubmit/course/add/')
+        self.assertEquals(response.status_code, 200)
