@@ -1,3 +1,7 @@
+'''
+    Tets cases focusing on the access rights of students.
+'''
+
 from opensubmit.tests.cases import *
 
 from opensubmit.models import Course, Assignment, Submission

@@ -1,3 +1,9 @@
+'''
+    Test cases for the executor code.
+
+    Note the neccessary python search path manipulation below.
+'''
+
 import os, time
 
 from django.test import LiveServerTestCase

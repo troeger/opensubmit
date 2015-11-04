@@ -1,3 +1,7 @@
+'''
+    Test cases for views, both in student frontend and teacher backend.
+'''
+
 from opensubmit.tests.cases import StudentTestCase, SubmitAdminTestCase
 from django.contrib.auth.models import User
 

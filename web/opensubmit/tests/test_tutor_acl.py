@@ -13,7 +13,7 @@ class TutorACLTestCase(SubmitTutorTestCase):
 
     def testCanUseTeacherBackend(self):
         response = self.c.get('/teacher/opensubmit/submission/')
-        self.assertEquals(response.status_code, 200)        
+        self.assertEquals(response.status_code, 200)
 
     def testCannotUseAdminBackend(self):
         response = self.c.get('/admin/auth/user/')
