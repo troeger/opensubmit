@@ -15,8 +15,11 @@ def course(obj):
 
 def perf_link(obj):
     ''' Link to performance data.'''
-    return format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
-perf_link.short_description = "Performance data"
+    if obj.has_perf_results():
+        return format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
+    else:
+        return format_html('')
+perf_link.short_description = "Submission Summaries"
 
 
 class AssignmentAdminForm(forms.ModelForm):

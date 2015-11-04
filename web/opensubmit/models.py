@@ -144,6 +144,13 @@ class Assignment(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
+    def has_perf_results(self):
+        '''
+            Figure out if any submission for this assignment has performance data being available.
+        '''
+        num_results = SubmissionTestResult.objects.filter(perf_data__isnull=False).filter(submission_file__submissions__assignment=self).count()
+        return num_results != 0
+
     def validity_test_url(self):
         '''
             Return absolute download URL for validity test script.
