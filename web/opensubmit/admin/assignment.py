@@ -7,10 +7,17 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 def course(obj):
 	''' Course name as string.'''
 	return str(obj.course)
+
+def perf_link(obj):
+    ''' Link to performance data.'''
+    return format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
+perf_link.short_description = "Performance data"
+
 
 class AssignmentAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -63,7 +70,7 @@ class AssignmentAdminForm(forms.ModelForm):
             raise ValidationError('For using test machines, you need to enable compilation, validation or full test.')
 
 class AssignmentAdmin(ModelAdmin):
-    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme']
+    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme', perf_link]
 
     form = AssignmentAdminForm
 

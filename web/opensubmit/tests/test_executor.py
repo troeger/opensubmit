@@ -1,4 +1,4 @@
-import os
+import os, time
 
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings, skipUnless
@@ -53,9 +53,74 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
 
+    def testTooLongCompile(self):
+        self.sub = self.createValidatableSubmission(self.current_user)
+        # set very short timeout
+        self.sub.assignment.attachment_test_timeout=1
+        self.sub.assignment.save()
+        # mock that this submission was already fetched for compilation, and the result never returned
+        self.sub.save_fetch_date()
+        # wait for the timeout
+        time.sleep(2)
+        # Fire up the executor, should mark the submission as timed out
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        self.assertEquals(False, self._runExecutor())       # No job is available
+        # Check if timeout marking took place
+        self.sub.refresh_from_db()
+        self.assertEquals(self.sub.state, Submission.TEST_COMPILE_FAILED)
+        assert("timeout" in self.sub.get_compile_result())
+
+    def testTooLongValidation(self):
+        self.sub = self.createValidatableSubmission(self.current_user)
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        # perform compilation step
+        self.assertEquals(True, self._runExecutor())
+        # set very short timeout
+        self.sub.assignment.attachment_test_timeout=1
+        self.sub.assignment.save()
+        # mock that this submission was already fetched for validation, and the result never returned
+        self.sub.save_fetch_date()
+        # wait for the timeout
+        time.sleep(2)
+        # Fire up the executor, should mark the submission as timed out
+        self.assertEquals(False, self._runExecutor())       # No job is available
+        # Check if timeout marking took place
+        self.sub.refresh_from_db()
+        self.assertEquals(self.sub.state, Submission.TEST_VALIDITY_FAILED)
+        assert("timeout" in self.sub.get_validation_result())
+
+    def testTooLongFullTest(self):
+        self.sub = self.createValidatableSubmission(self.current_user)
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        # perform compilation step
+        self.assertEquals(True, self._runExecutor())
+        # perform validation step
+        self.assertEquals(True, self._runExecutor())
+        # set very short timeout
+        self.sub.assignment.attachment_test_timeout=1
+        self.sub.assignment.save()
+        # mock that this submission was already fetched for full test, and the result never returned
+        self.sub.save_fetch_date()
+        # wait for the timeout
+        time.sleep(2)
+        # Fire up the executor, should mark the submission as timed out
+        self.assertEquals(False, self._runExecutor())       # No job is available
+        # Check if timeout marking took place
+        self.sub.refresh_from_db()
+        self.assertEquals(self.sub.state, Submission.TEST_FULL_FAILED)
+        assert("timeout" in self.sub.get_fulltest_result())
+
+
     def testValidationTest(self):
-        # We need a fully working compile run beforehand
-        self.testCompileTest()
+        # compile
+        self.sub = self.createValidatableSubmission(self.current_user)
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        self.assertEquals(True, self._runExecutor())
+        # validate
         self.assertEquals(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,

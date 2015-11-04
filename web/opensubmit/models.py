@@ -4,6 +4,8 @@ import logging
 import string
 import unicodedata
 import zipfile, tarfile
+from datetime import datetime, timedelta
+
 
 from django.db import models, transaction
 from django.contrib.auth.models import User, Group
@@ -625,36 +627,67 @@ class Submission(models.Model):
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
 
-    def _save_test_result(self, machine, text, kind):
+    def _save_test_result(self, machine, text, kind, perf_data):
         result = SubmissionTestResult(
             result=text,
             machine=machine,
-            kind=kind)
+            kind=kind,
+            perf_data=perf_data)
         self.file_upload.test_results.add(result)
 
     def _get_test_result(self, kind):
         try:
-            return self.file_upload.test_results.get(kind=kind)
+            return self.file_upload.test_results.filter(kind=kind).order_by('-created')[0]
         except:
             return None
 
+    def save_fetch_date(self):
+        self.file_upload.fetched = datetime.now()
+        self.file_upload.save()
+
+    def get_fetch_date(self):
+        return self.file_upload.fetched
+
+    def clean_fetch_date(self):
+        self.file_upload.fetched = None
+        self.file_upload.save()
+
     def save_compile_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST)
+        self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST, None)
 
-    def save_validation_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST)
+    def save_validation_result(self, machine, text, perf_data):
+        self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST, perf_data)
 
-    def save_fulltest_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST)
+    def save_fulltest_result(self, machine, text, perf_data):
+        self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST, perf_data)
 
     def get_compile_result(self):
-        return self._get_test_result(SubmissionTestResult.COMPILE_TEST)
+        record = self._get_test_result(SubmissionTestResult.COMPILE_TEST)
+        if record:
+            return record.result
+        else:
+            None
 
     def get_validation_result(self):
-        return self._get_test_result(SubmissionTestResult.VALIDITY_TEST)
+        record = self._get_test_result(SubmissionTestResult.VALIDITY_TEST)
+        if record:
+            return record.result
+        else:
+            None
 
     def get_fulltest_result(self):
-        return self._get_test_result(SubmissionTestResult.FULL_TEST)
+        record = self._get_test_result(SubmissionTestResult.FULL_TEST)
+        if record:
+            return record.result
+        else:
+            None
+
+    def get_fulltest_perf(self):
+        record = self._get_test_result(SubmissionTestResult.FULL_TEST)
+        if record:
+            return record.perf_data
+        else:
+            None
 
 
 class SubmissionTestResult(models.Model):

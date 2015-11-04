@@ -92,11 +92,6 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         submissions = self.submadm.get_queryset(self.request)
         self.assertSequenceEqual(submissions, self.all_submissions)
 
-    # def testGetPerformanceResult(self):
-    #     csv_response = self.submadm.getPerformanceResultsAction(self.request, Submission.objects.all())
-    #     assert(csv_response.status_code == 200)
-    #     assert('text/csv' in str(csv_response))   
-
     def testCloseAndNotify(self):
         from django.core import mail
         # Everything in status 'SUBMITTED', so no mail should be sent
@@ -163,6 +158,11 @@ class SubmissionBackendTestCase(TutorACLTestCase):
     def testGradingTableView(self):
         response = self.c.get('/course/%u/gradingtable/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
+
+    def testGetPerformanceResult(self):
+        response = self.c.get('/assignments/%u/perftable/'%self.sub1.assignment.pk)
+        self.assertEquals(response.status_code, 200)
+        assert('text/' in str(response))        # content type
 
     def testArchiveView(self):
         response = self.c.get('/course/%u/archive/'%self.course.pk)

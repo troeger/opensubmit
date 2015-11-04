@@ -218,6 +218,12 @@ def preview(request, subm_id):
 
 @login_required
 @staff_member_required
+def perftable(request, ass_id):
+    assignment = get_object_or_404(Assignment, pk=ass_id)
+    return render(request, 'perfdata.csv', {'submissions': Submission.objects.filter(assignment=assignment)})
+
+@login_required
+@staff_member_required
 def gradingtable(request, course_id):
     gradings = {}
     course = get_object_or_404(Course, pk=course_id)
