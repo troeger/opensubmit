@@ -275,7 +275,8 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     try:
         proc = subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
         logger.debug("Starting timeout counter: %u seconds"%timeout)
-        timer = threading.Timer(timeout, _handle_alarm, args=[proc]).start()
+        timer = threading.Timer(timeout, _handle_alarm, args=[proc])
+        timer.start()
         output = None
         stderr = None
         try:
