@@ -35,6 +35,15 @@ pidfile=/tmp/executor.pid
 # This also means that you should not use this account for interactive work
 timeout=3600
 
+# Limit the size of result message to a number of bytes, because of database entry
+# size. <=0 means no limit, any positive value limits the message size
+message_size=10000
+
+# Customize the compilation command to be executed
+compile_cmd=make
+
+
+
 [Logging]
 
 # Logging format, as described in the Python logging module documentation

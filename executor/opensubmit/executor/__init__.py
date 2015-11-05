@@ -6,7 +6,7 @@ from urllib import urlencode
 from urllib2 import urlopen, HTTPError, URLError
 import logging, json
 import zipfile, tarfile
-import tempfile, os, shutil, subprocess, signal, stat, sys, fcntl, pickle, ConfigParser
+import tempfile, os, platform, shutil, subprocess, threading, lockfile, stat, sys, pickle, ConfigParser
 import time
 from datetime import datetime, timedelta
 
@@ -17,7 +17,7 @@ VALIDATOR_FNAME = 'validator.py'
 
 # Configuration defaults, if option is not given.
 # This is mainly intended for backward-ompatbility to older INI files.
-defaults = {('Execution','cleanup'): True}
+defaults = {('Execution','cleanup'): True,('Execution','message_size'):10000,('Execution','compile_cmd'):'make'}
 
 def read_config(config_file):
     '''
@@ -58,13 +58,14 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
     '''
         Send some result to the OpenSubmit web server.
     '''
-    if len(msg)>10000:
+    message_size = config.getint('Execution','message_size')
+    if message_size > 0 and len(msg) > message_size:
         # We need to truncate excessive console output,
         # since this goes into the database.
-        msg=msg[1:10000]
-        msg+="\n[Output truncated]"
+        msg = msg[1:message_size]
+        msg += "\n[Output truncated]"
     if not perfdata:
-        perfdata=""
+        perfdata = ""
     logger.info("Test for submission file %s completed with error code %s: %s"%(submission_file_id, str(error_code), msg))
     # There are cases where the program was not finished, but we still deliver a result
     # Transmitting "None" is a bad idea, so we use a special code instead
@@ -254,17 +255,12 @@ def _unpack_job(config, fname, submid, action):
         finalpath=finalpath+dircontent[0]+os.sep
     return finalpath
 
-def _handle_alarm(signum, frame):
+def _handle_alarm(process):
     '''
         Signal handler for timeout implementation
     '''
-    # Needed for compatibility with both MacOS X and Linux
-    if 'self' in frame.f_locals:
-        pid=frame.f_locals['self'].pid
-    else:
-        pid=frame.f_back.f_locals['self'].pid
-    logger.info("Got alarm signal, killing %s due to timeout."%(str(pid)))
-    os.killpg(pid, signal.SIGTERM)
+    logger.info("Got alarm signal, killing %s due to timeout."%(str(process.pid)))
+    process.terminate()
 
 def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=False):
     '''
@@ -275,15 +271,13 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     '''
     dircontent=os.listdir(finalpath)
     logger.debug("Content before start: "+str(dircontent))
-    logger.debug("Installing signal handler for timeout")
-    signal.signal(signal.SIGALRM, _handle_alarm)
     logger.info("Spawning process for "+str(cmd))
     try:
-        proc=subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
+        proc = subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
         logger.debug("Starting timeout counter: %u seconds"%timeout)
-        signal.alarm(timeout)
-        output=None
-        stderr=None
+        timer = threading.Timer(timeout, _handle_alarm, args=[proc]).start()
+        output = None
+        stderr = None
         try:
             output, stderr = proc.communicate()
             logger.debug("Process terminated")
@@ -297,7 +291,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             stderr = ""
         else:
             stderr=stderr.decode("utf-8")
-        signal.alarm(0)
+        timer.cancel()
         if action=='test_compile':
             action_title='Compilation'
         elif action=='test_validity':
@@ -352,12 +346,15 @@ def _can_run(config):
         If this is the case, then check if another script instance is still running.
     '''
     if config.getboolean("Execution","serialize"):
-        fp = open(config.get("Execution","pidfile"), 'w')
+        lock = lockfile.LockFile(config.get("Execution","pidfile"))
         try:
-            fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            logger.debug("Got the script lock")
-        except IOError:
-            logger.debug("Script is already running.")
+            if lock.is_locked() and !lock.i_am_locking():
+               return False
+            else:
+               lock.acquire()
+               logger.debug("Got the script lock")
+        except:
+            logger.debug("Script is already running. " + str(sys.exc_info()))
             return False
     return True
 
@@ -366,10 +363,10 @@ def send_config(config_file):
         Sends the registration of this machine to the OpenSubmit web server.
     '''
     config = read_config(config_file)
-    conf = os.uname()
+    conf = platform.uname()
     output = []
     output.append(["Operating system","%s %s (%s)"%(conf[0], conf[2], conf[4])])
-    output.append(["CPUID information", _infos_cmd("cpuid")])
+    output.append(["CPUID information", platform.processor()])
     output.append(["CC information", _infos_cmd("cc -v")])
     output.append(["JDK information", _infos_cmd("java -version")])
     output.append(["MPI information", _infos_cmd("mpirun -version")])
@@ -400,28 +397,35 @@ def run(config_file):
         Returns boolean that indicates success.
     '''
     config = read_config(config_file)
+    compile_cmd = config.get('Execution','compile_cmd')
     _kill_deadlocked_jobs(config)
     if _can_run(config):
+        lock = lockfile.LockFile(config.get("Execution","pidfile"))
         # fetch any available job
         fname, submid, action, timeout, validator_url=_fetch_job(config)
         if not fname:
+            lock.release()
             return False
         # decompress download, only returns on success
         finalpath=_unpack_job(config, fname, submid, action)
         if not finalpath:
+            lock.release()
             return False
         # perform action defined by the server for this download
         if action == 'test_compile':
             # run configure script, if available.
             output, success = _run_job(config, finalpath,['./configure'],submid, action, timeout, True)
             if not success:
+                lock.release()
                 return False
             # build it, only returns on success
-            output, success = _run_job(config, finalpath,['make'],submid, action, timeout)
+            output, success = _run_job(config, finalpath,compile_cmd.split(' '),submid, action, timeout)
             if not success:
+                lock.release()
                 return False
             _send_result(config, output, 0, submid, action)
             _cleanup(config, finalpath)
+            lock.release()
             return True
         elif action == 'test_validity' or action == 'test_full':
             # prepare the output file for validator performance results
@@ -430,10 +434,12 @@ def run(config_file):
             # run configure script, if available.
             output, success = _run_job(config, finalpath,['./configure'],submid, action, timeout, True)
             if not success:
+                lock.release()
                 return False
             # build it
-            output, success = _run_job(config, finalpath,['make'],submid,action,timeout)
+            output, success = _run_job(config, finalpath,compile_cmd.split(' '),submid,action,timeout)
             if not success:
+                lock.release()
                 return False
             # fetch validator into target directory
             _fetch_validator(validator_url, finalpath)
@@ -443,10 +449,12 @@ def run(config_file):
             # execute validator
             output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
             if not success:
+                lock.release()
                 return False
             perfdata= open(perfdata_fname,"r").read()
             _send_result(config, output, 0, submid, action, perfdata)
             _cleanup(config, finalpath)
+            lock.release()
             return True
         else:
             # unknown action, programming error in the server
