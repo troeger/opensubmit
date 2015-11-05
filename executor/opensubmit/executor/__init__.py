@@ -348,7 +348,7 @@ def _can_run(config):
     if config.getboolean("Execution","serialize"):
         lock = lockfile.LockFile(config.get("Execution","pidfile"))
         try:
-            if lock.is_locked() and !lock.i_am_locking():
+            if lock.is_locked() and not lock.i_am_locking():
                return False
             else:
                lock.acquire()
@@ -466,5 +466,8 @@ if __name__ == "__main__":
         send_config(sys.argv[2])
     elif len(sys.argv) > 2 and sys.argv[1] == "run":
         run(sys.argv[2])
+    elif len(sys.argv) > 2 and sys.argv[1] == "unlock":
+        config=read_config(sys.argv[2])
+        lockfile.FileLock(config.get("Execution","pidfile")).break_lock()
     else:
-        print("python -m opensubmit.executor [register|run] executor.ini")
+        print("python -m opensubmit.executor [register|run|unlock] executor.ini")
