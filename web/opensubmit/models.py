@@ -371,7 +371,13 @@ class SubmissionFile(models.Model):
                 else:
                     result.append({'name': zipinfo.filename+' (too large)'})
         elif tarfile.is_tarfile(self.attachment.path):
-            pass
+            tf = tarfile.open(self.attachment.path,'r')
+            for tarinfo in tf.getmembers():
+                if tarinfo.isfile():
+                    if tarinfo.size < MAX_PREVIEW_SIZE:
+                        result.append({'name': tarinfo.name, 'preview': tf.extractfile(tarinfo).read()})
+                    else:
+                        result.append({'name': tarinfo.name+' (too large)'})
         else:
             # single file
             f=open(self.attachment.path)
