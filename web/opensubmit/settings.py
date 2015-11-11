@@ -14,38 +14,25 @@ NOT_CONFIGURED_VALUE = '***not configured***'
 def find_config_info():
     '''
         Determine which configuration file to load.
-        Returns list with path to config file and boolean flag for production system status.
+        Returns path to config file and boolean flag for production system status.
 
-        Exiting the whole application if no config file is found.
+        Precedence rules are as follows:
+        - Developer configuration overrides production configuration on developer machine.
+        - Linux production system are more likely to happen than Windows developer machines.
+
+        Throws exception if no config file is found. This terminates the application loading.
     '''
-    # config_info: (<config file path>, <is production>, )
-    system_config_directories = {
-        'win32': os.path.expandvars('$APPDATA'),
-        'default': '/etc',
-    }
-
-    if sys.platform in system_config_directories:
-        system_config_directory = system_config_directories[sys.platform]
-    else:
-        system_config_directory = system_config_directories['default']
-
-    config_directories = [
-        os.path.join(os.path.dirname(__file__)),
-        os.path.join(system_config_directory, 'opensubmit'),
-    ]
-
-    config_files = (
-        ('settings_dev.ini', False, ),
-        ('settings.ini', True, ),
+    config_info = (
+        (os.path.dirname(__file__)+'/settings_dev.ini',            False),  # Linux / Mac development system
+        ('/etc/opensubmit/settings.ini',                            True),  # Linux production system
+        (os.path.expandvars('$APPDATA')+'opensubmit/settings.ini', False),  # Windows development system
     )
 
-    for config_file, production in config_files:
-        for config_path in config_directories:
-            config_file_path = os.path.join(config_path, config_file)
-            if os.path.isfile(config_file_path):
-                return (config_file_path, production, )
+    for config_file, production in config_info:
+        if os.path.isfile(config_file):
+            return (config_file, production, )
 
-    raise ImproperlyConfigured("No configuration file found. Please create settings_dev.ini or call 'opensubmit-web configure' on production systems.")
+    raise IOError("No configuration file found.")
 
 def ensure_configured(text):
     '''
@@ -96,7 +83,7 @@ def ensure_slash_from_config(config, leading, trailing, configvar):
 
 # Find configuration file and open it.
 config_file_path, is_production = find_config_info()
-print config_file_path
+print("Using "+config_file_path)
 config_fp = open(config_file_path, 'r')
 config = SafeConfigParser()
 config.readfp(config_fp)
@@ -113,10 +100,8 @@ DATABASES = {
     }
 }
 
-# Set debug mode based on configuration file.
 # We have the is_production indicator from above, which could also determine this value.
-# But sometimes, you still need Django stack traces in your production system, so we ignore it here.
-# Yes, this may be a security problem.
+# But sometimes, you need Django stack traces in your production system for debugging.
 DEBUG = bool(config.get('general', 'DEBUG'))
 TEMPLATE_DEBUG = DEBUG
 
@@ -147,8 +132,6 @@ if config.has_option('general', 'SCRIPT_ROOT'):
     SCRIPT_ROOT = ensure_slash(True, False,config.get('general', 'SCRIPT_ROOT'))
 else:
     SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
-
-LOG_FILE = config.get('server', 'LOG_FILE')
 
 if is_production:
     # Root folder for static files
@@ -212,6 +195,9 @@ INSTALLED_APPS = (
     'grappelli',
     'opensubmit',
 )
+
+LOG_FILE = config.get('server', 'LOG_FILE')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -125,7 +125,8 @@ def check_web_config_consistency(config):
 
 def check_web_config(config_path):
     '''
-        Everything related to configuration file checks.
+        Try to load the Django settings.
+        If this does not work, than settings file does not exist.
     '''
     WEB_CONFIG_FILE = config_path+'/settings.ini'
     WEB_TEMPLATE = "opensubmit/settings.ini.template"                   # relative to package path
@@ -136,7 +137,7 @@ def check_web_config(config_path):
         print "Config file found at "+WEB_CONFIG_FILE
         return config
     except IOError:
-        print "ERROR: Seems like the config file %s does not exist."%WEB_CONFIG_FILE
+        print "ERROR: Seems like the config file does not exist."
         print "       I am creating a new one. Please edit it and re-run this command."
         check_path(config_path)
         orig = resource_filename(Requirement.parse("opensubmit-web"),WEB_TEMPLATE)
@@ -160,11 +161,10 @@ def console_script(fsroot='/'):
 
         The argument allows the test suite to override the root of all paths used in here.
     '''
+
     if len(sys.argv) == 1:
         print "opensubmit-web [configure|createsuperuser|help]"
         exit(0)
-
-    CONFIG_PATH = fsroot+'etc/opensubmit'
 
     if "help" in sys.argv:
         print "configure:        Check config files and database for correct installation of the OpenSubmit web server."
@@ -173,7 +173,7 @@ def console_script(fsroot='/'):
         return 0
 
     if "configure" in sys.argv:
-        config = check_web_config(CONFIG_PATH)
+        config = check_web_config(fsroot+'etc/opensubmit')
         if not config:
             return          # Let them first fix the config file before trying a DB access
         if not check_web_config_consistency(config):
@@ -182,7 +182,7 @@ def console_script(fsroot='/'):
             return
         print("Preparing static files for web server...")
         django_admin(["collectstatic","--noinput"])
-        apache_config(config, CONFIG_PATH+'/apache24.conf')
+        apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
         return 0
 
     if "createsuperuser" in sys.argv:
