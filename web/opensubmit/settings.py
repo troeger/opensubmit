@@ -96,6 +96,7 @@ def ensure_slash_from_config(config, leading, trailing, configvar):
 
 # Find configuration file and open it.
 config_file_path, is_production = find_config_info()
+print config_file_path
 config_fp = open(config_file_path, 'r')
 config = SafeConfigParser()
 config.readfp(config_fp)
@@ -140,7 +141,12 @@ LOGIN_REDIRECT_URL = ensure_slash(False, True, MAIN_URL+'/dashboard/')
 MEDIA_ROOT = ensure_slash_from_config(config, True, True, ('server', 'MEDIA_ROOT'))
 
 # Root of the installation
-SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
+# This is normally detected automatically, so the settings.ini template does
+# not contain the value. For the test suite, however, we need the override option.
+if config.has_option('general', 'SCRIPT_ROOT'):
+    SCRIPT_ROOT = ensure_slash(True, False,config.get('general', 'SCRIPT_ROOT'))
+else:
+    SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
 
 LOG_FILE = config.get('server', 'LOG_FILE')
 
@@ -155,7 +161,7 @@ if is_production:
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
     # Root folder for static files
-    STATIC_ROOT = ensure_slash(False, True, 'static/')
+    STATIC_ROOT = ensure_slash(True, True, SCRIPT_ROOT+'/static/')
     # Relative URL for static files
     STATIC_URL = ensure_slash(True, True,'/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

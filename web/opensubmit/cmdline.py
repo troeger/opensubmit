@@ -1,41 +1,35 @@
-# Administration script functionality on the production system
-# We cover some custom actions and a small subset of django-admin here
+'''
+    This module contains administrative functionality available on production systems as command-line tool.
+'''
 
 import os, pwd, grp, urllib, sys, shutil
 from ConfigParser import RawConfigParser
 from pkg_resources import Requirement, resource_filename
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
-from django.core.exceptions import ImproperlyConfigured
-
-#TODO: DRY is missing here, the same paths are stored in settings.py
-CONFIG_PATH = '/etc/opensubmit'
-WEB_CONFIG_FILE = CONFIG_PATH+'/settings.ini'
-WEB_TEMPLATE = "opensubmit/settings.ini.template"                   # relative to package path
-APACHE_CONFIG_FILE = CONFIG_PATH+'/apache24.conf'
 
 def django_admin(args):
     '''
         Run something like it would be done through Django's manage.py.
     '''
     from django.core.management import execute_from_command_line
+    from django.core.exceptions import ImproperlyConfigured
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
     try:
         execute_from_command_line([sys.argv[0]]+args)
     except ImproperlyConfigured as e:
         print(str(e))
         exit(-1)
 
-def apache_config(config):
+def apache_config(config, outputfile):
     '''
         Generate a valid Apache configuration file, based on the given settings.
     '''
-    if os.path.exists(APACHE_CONFIG_FILE):
-        os.rename(APACHE_CONFIG_FILE, APACHE_CONFIG_FILE+".old")
-        print "Renamed existing Apache config file to "+APACHE_CONFIG_FILE+".old"
+    if os.path.exists(outputfile):
+        os.rename(outputfile, outputfile+".old")
+        print "Renamed existing Apache config file to "+outputfile+".old"
 
     from opensubmit import settings
-    f = open(APACHE_CONFIG_FILE,'w')
-    print "Generating Apache configuration in "+APACHE_CONFIG_FILE
+    f = open(outputfile,'w')
+    print "Generating Apache configuration in "+outputfile
     subdir = (len(settings.HOST_DIR)>0)
     text = """
     # OpenSubmit Configuration for Apache 2.4
@@ -129,10 +123,12 @@ def check_web_config_consistency(config):
     # everything ok
     return True
 
-def check_web_config():
+def check_web_config(config_path):
     '''
         Everything related to configuration file checks.
     '''
+    WEB_CONFIG_FILE = config_path+'/settings.ini'
+    WEB_TEMPLATE = "opensubmit/settings.ini.template"                   # relative to package path
     print "Looking for config files ..."
     config = RawConfigParser()
     try:
@@ -142,7 +138,7 @@ def check_web_config():
     except IOError:
         print "ERROR: Seems like the config file %s does not exist."%WEB_CONFIG_FILE
         print "       I am creating a new one. Please edit it and re-run this command."
-        check_path(CONFIG_PATH)
+        check_path(config_path)
         orig = resource_filename(Requirement.parse("opensubmit-web"),WEB_TEMPLATE)
         shutil.copy(orig, WEB_CONFIG_FILE)
         check_file(WEB_CONFIG_FILE)
@@ -158,22 +154,26 @@ def check_web_db():
     django_admin(["fixperms"])            # configure permission system, of needed
     return True
 
-def console_script():
+def console_script(fsroot='/'):
     '''
         The main entry point for the production administration script 'opensubmit-web', installed by setuptools.
+
+        The argument allows the test suite to override the root of all paths used in here.
     '''
     if len(sys.argv) == 1:
         print "opensubmit-web [configure|createsuperuser|help]"
         exit(0)
 
+    CONFIG_PATH = fsroot+'etc/opensubmit'
+
     if "help" in sys.argv:
         print "configure:        Check config files and database for correct installation of the OpenSubmit web server."
         print "createsuperuser:  (Re-)Creates the superuser account for the OpenSubmit installation."
         print "help:             Print this help"
-        exit(0)
+        return 0
 
     if "configure" in sys.argv:
-        config = check_web_config()
+        config = check_web_config(CONFIG_PATH)
         if not config:
             return          # Let them first fix the config file before trying a DB access
         if not check_web_config_consistency(config):
@@ -182,8 +182,8 @@ def console_script():
             return
         print("Preparing static files for web server...")
         django_admin(["collectstatic","--noinput"])
-        apache_config(config)
-        exit(0)
+        apache_config(config, CONFIG_PATH+'/apache24.conf')
+        return 0
 
     if "createsuperuser" in sys.argv:
         django_admin(["createsuperuser"])
