@@ -102,7 +102,7 @@ DATABASES = {
 
 # We have the is_production indicator from above, which could also determine this value.
 # But sometimes, you need Django stack traces in your production system for debugging.
-DEBUG = bool(config.get('general', 'DEBUG'))
+DEBUG = config.getboolean('general', 'DEBUG')
 TEMPLATE_DEBUG = DEBUG
 
 # Determine MAIN_URL / FORCE_SCRIPT option
