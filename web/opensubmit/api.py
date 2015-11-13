@@ -70,6 +70,9 @@ def jobs(request):
         A visible shared secret in the request is no problem, since the executors come
         from trusted networks. The secret only protects this view from outside foreigners.
 
+        TODO: Make it a real API, based on some framework.
+        TODO: Factor out state model from this method into some model.
+
         POST requests with 'Action'='get_config' are expected to contain the following parameters:
                     'MachineId',
                     'Config',
@@ -250,7 +253,24 @@ def jobs(request):
             # full tests may be performed several times and are meant to be a silent activity
             # therefore, we send no mail to the student here
         else:
-            mail_managers('Warning: Inconsistent job state', str(sub.pk), fail_silently=True)
+            msg = '''
+                Dear OpenSubmit administrator,
+
+                the executors returned some result, but this does not fit to the current submission state.
+                This is a strong indication for a bug in OpenSubmit - sorry for that.
+                The system will ignore the report from executor and mark the job as to be repeated.
+                Please report this on the project GitHub page for further investigation.
+
+                Submission ID: %u
+                Submission File ID reported by the executor: %u
+                Action reported by the executor: %s
+                Current state of the submission: %s (%s)
+                Message from the executor: %s
+                Error code from the executor: %u
+                '''%(   sub.pk, submission_file.pk, request.POST['Action'],
+                        sub.state_for_tutors(), sub.state,
+                        request.POST['Message'], error_code )
+            mail_managers('Warning: Inconsistent job state', msg, fail_silently=True)
         sub.clean_fetch_date()
         sub.save()
         return HttpResponse(status=201)
@@ -258,7 +278,7 @@ def jobs(request):
 
 @csrf_exempt
 def machines(request):
-    ''' This is the view used by the executor.py scripts for putting machine details.
+    ''' This is the view used by the executor.py scripts for sending machine details.
         A visible shared secret in the request is no problem, since the executors come
         from trusted networks. The secret only protects this view from outside foreigners.
 
@@ -268,7 +288,6 @@ def machines(request):
                     'UUID'
     '''
     if request.method == "POST":
-        print request.POST
         try:
             secret = request.POST['Secret']
             uuid = request.POST['UUID']

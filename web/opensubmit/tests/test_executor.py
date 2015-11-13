@@ -6,12 +6,16 @@
 
 import os, time
 
+from django.core import mail
 from django.test import LiveServerTestCase
 from django.test.utils import override_settings, skipUnless
 from opensubmit.tests.cases import StudentTestCase
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
+
+from opensubmit import settings
 
 import os.path, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../executor/opensubmit' ))
@@ -145,6 +149,28 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         )
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
+
+    def testInconsistentStateEMail(self):
+        '''
+            Test operator email on inconsistent state.
+            Since executor execution and submission sending is one step,
+            we need to mock the incoming invalid executor request.
+        '''
+        self.sub = self.createValidatableSubmission(self.current_user)
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        self.sub.state = Submission.TEST_FULL_PENDING
+        self.sub.save()
+        post_data = {   'Secret': settings.JOB_EXECUTOR_SECRET,
+                        'UUID': test_machine.host,
+                        'Action': 'test_compile',
+                        'SubmissionFileId': self.sub.file_upload.pk,
+                        'PerfData': '',
+                        'ErrorCode': 0,
+                        'Message': 'In A Bottle'}
+        response = self.c.post(reverse('jobs'),post_data)
+        self.assertNotEqual(len(mail.outbox), 0)
+        self.assertIn('Action reported by the executor: test_compile', mail.outbox[0].message().as_string())
 
     def testAssignmentSpecificTestMachine(self):
         # Register two test machines T1 and T2

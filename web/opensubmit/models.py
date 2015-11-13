@@ -626,6 +626,10 @@ class Submission(models.Model):
         return self.is_closed()
 
     def get_initial_state(self):
+        '''
+            Return first state for this submission after upload,
+            which depends on the kind of assignment.
+        '''
         if not self.assignment.attachment_is_tested():
             return Submission.SUBMITTED
         else:
@@ -637,7 +641,16 @@ class Submission(models.Model):
                 return Submission.TEST_FULL_PENDING
 
     def state_for_students(self):
+        '''
+            Return human-readable description of current state for students.
+        '''
         return dict(self.STUDENT_STATES)[self.state]
+
+    def state_for_tutors(self):
+        '''
+            Return human-readable description of current state for tutors.
+        '''
+        return dict(self.STATES)[self.state]
 
     def grading_file_url(self):
         # to implement access protection, we implement our own download
