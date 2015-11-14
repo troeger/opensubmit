@@ -59,7 +59,8 @@
             <p>Open assignments: {{ course.open_assignments.count }}</p>
             <p>Submissions to be graded: {{ course.gradable_submissions.count }}</p>
             <p>Grading finished, not notified: {{ course.graded_submissions.count }}</p>
-            <p>Course participants: {{ course.participants.count }}</p>
+            <p>Registered students: {{ course.participants.count }}</p>
+            <p>Authoring students: {{ course.authors.count }}</p>
         </td>
         </tr></table>
 

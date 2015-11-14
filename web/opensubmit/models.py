@@ -95,13 +95,20 @@ class Course(models.Model):
         return qs
 
     def gradable_submissions(self):
-        qs = Submission.objects.filter(assignment__course=self)
+        qs = self.valid_submissions()
         qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         return qs
 
     def graded_submissions(self):
-        qs = Submission.objects.filter(assignment__course=self)
-        qs = qs.filter(state__in=[Submission.GRADED])
+        qs = self.valid_submissions().filter(state__in=[Submission.GRADED])
+        return qs
+
+    def authors(self):
+        qs = self.valid_submissions().values_list('authors',flat=True).distinct()
+        return qs
+
+    def valid_submissions(self):
+        qs = Submission.objects.filter(assignment__course=self).exclude(state=Submission.WITHDRAWN)
         return qs
 
 class TestMachine(models.Model):
@@ -143,6 +150,28 @@ class Assignment(models.Model):
 
     class Meta:
         app_label = 'opensubmit'
+
+    def gradable_submissions(self):
+        qs = self.valid_submissions()
+        qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+        return qs
+
+    def grading_unfinished_submissions(self):
+        qs = self.valid_submissions()
+        qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS])
+        return qs
+
+    def graded_submissions(self):
+        qs = self.valid_submissions().filter(state__in=[Submission.GRADED])
+        return qs
+
+    def authors(self):
+        qs = self.valid_submissions().values_list('authors',flat=True).distinct()
+        return qs
+
+    def valid_submissions(self):
+        qs = self.submissions.exclude(state=Submission.WITHDRAWN)
+        return qs
 
     def has_perf_results(self):
         '''

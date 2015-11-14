@@ -1,6 +1,7 @@
 # Assignment admin interface
 
 from django.contrib.admin import ModelAdmin
+from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from opensubmit.models import Course
 from django import forms
@@ -8,19 +9,6 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
-
-def course(obj):
-	''' Course name as string.'''
-	return str(obj.course)
-
-def perf_link(obj):
-    ''' Link to performance data.'''
-    if obj.has_perf_results():
-        return format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
-    else:
-        return format_html('')
-perf_link.short_description = "Submission Summaries"
-
 
 class AssignmentAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -73,8 +61,40 @@ class AssignmentAdminForm(forms.ModelForm):
             and not d['attachment_test_compile']:
             raise ValidationError('For using test machines, you need to enable compilation, validation or full test.')
 
+def course(obj):
+    ''' Course name as string.'''
+    return str(obj.course)
+
+def num_subm(obj):
+    return obj.valid_submissions().count()
+num_subm.short_description = "Submissions"
+
+def num_authors(obj):
+    return obj.authors().count()
+num_authors.short_description = "Authors"
+
+def num_finished(obj):
+    return obj.graded_submissions().count()
+num_finished.short_description = "Grading finished"
+
+def num_unfinished(obj):
+    unfinished=obj.grading_unfinished_submissions().count()
+    gradable  =obj.gradable_submissions().count()
+    return "%u (%u)"%(unfinished, gradable)
+num_unfinished.short_description = "To be graded (unfinished)"
+
+def perf_link(obj):
+    ''' Link to performance data overview.'''
+    if obj.has_perf_results():
+        return format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
+    else:
+        return format_html('')
+perf_link.short_description = ""
+
+
 class AssignmentAdmin(ModelAdmin):
-    list_display = ['__unicode__', course, 'has_attachment', 'soft_deadline', 'hard_deadline', 'gradingScheme', perf_link]
+    list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_subm, num_authors, num_unfinished, num_finished, perf_link]
+    list_filter = ('course',)
 
     form = AssignmentAdminForm
 
