@@ -80,7 +80,7 @@ num_finished.short_description = "Grading finished"
 def num_unfinished(obj):
     unfinished=obj.grading_unfinished_submissions().count()
     gradable  =obj.gradable_submissions().count()
-    return "%u (%u)"%(unfinished, gradable)
+    return "%u (%u)"%(gradable, unfinished)
 num_unfinished.short_description = "To be graded (unfinished)"
 
 def perf_link(obj):
@@ -93,7 +93,7 @@ perf_link.short_description = ""
 
 
 class AssignmentAdmin(ModelAdmin):
-    list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_subm, num_authors, num_unfinished, num_finished, perf_link]
+    list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_authors, num_subm, num_finished, num_unfinished, perf_link]
     list_filter = ('course',)
 
     form = AssignmentAdminForm
