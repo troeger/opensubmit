@@ -391,12 +391,18 @@ class SubmissionFile(models.Model):
         '''
         MAX_PREVIEW_SIZE = 10000
 
+        def sanitize(text):
+            try:
+                return unicode(text, errors='ignore')
+            except:
+                return unicode("(unreadable text data)")
+
         result = []
         if zipfile.is_zipfile(self.attachment.path):
             zf = zipfile.ZipFile(self.attachment.path, 'r')
             for zipinfo in zf.infolist():
                 if zipinfo.file_size < MAX_PREVIEW_SIZE:
-                    result.append({'name': zipinfo.filename, 'preview': zf.read(zipinfo)})
+                    result.append({'name': zipinfo.filename, 'preview': sanitize(zf.read(zipinfo))})
                 else:
                     result.append({'name': zipinfo.filename+' (too large)'})
         elif tarfile.is_tarfile(self.attachment.path):
@@ -404,14 +410,14 @@ class SubmissionFile(models.Model):
             for tarinfo in tf.getmembers():
                 if tarinfo.isfile():
                     if tarinfo.size < MAX_PREVIEW_SIZE:
-                        result.append({'name': tarinfo.name, 'preview': tf.extractfile(tarinfo).read()})
+                        result.append({'name': tarinfo.name, 'preview': sanitize(tf.extractfile(tarinfo).read())})
                     else:
                         result.append({'name': tarinfo.name+' (too large)'})
         else:
             # single file
             f=open(self.attachment.path)
             fname = f.name[f.name.rfind(os.sep)+1:]
-            result = [{'name': fname, 'preview': f.read()},]
+            result = [{'name': fname, 'preview': sanitize(f.read())},]
         return result
 
     def test_result_dict(self):
