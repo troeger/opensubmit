@@ -27,8 +27,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
 
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
-from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
-from models import inform_student, inform_course_owner, open_assignments,move_user_data
+from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
+from models.userprofile import db_fixes, move_user_data
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 
 
@@ -68,7 +68,7 @@ def courses(request):
             return redirect('dashboard')
     else:
         coursesForm = UserProfileForm(instance=profile)
-    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': user_courses(request.user)})
+    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': request.user.profile.user_courses()})
 
 
 @login_required
@@ -88,8 +88,8 @@ def dashboard(request):
         'archived': archived,
         'user': request.user,
         'username': username,
-        'courses' : user_courses(request.user),
-        'assignments': open_assignments(request.user),
+        'courses' : request.user.profile.user_courses(),
+        'assignments': request.user.profile.open_assignments(),
         'machines': TestMachine.objects.all()}
     )
 
@@ -142,7 +142,7 @@ def new(request, ass_id):
             submission.save()
             messages.info(request, "New submission saved.")
             if submission.state == Submission.SUBMITTED:
-                inform_course_owner(request, submission)
+                submission.inform_course_owner(request)
             return redirect('dashboard')
         else:
             messages.error(request, "Please correct your submission information.")
@@ -402,7 +402,7 @@ def withdraw(request, subm_id):
         submission.state = Submission.WITHDRAWN
         submission.save()
         messages.info(request, 'Submission successfully withdrawn.')
-        inform_course_owner(request, submission)
+        submission.inform_course_owner(request)
         return redirect('dashboard')
     else:
         return render(request, 'withdraw.html', {'submission': submission})

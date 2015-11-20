@@ -19,7 +19,8 @@ from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
-from opensubmit.models import logger
+
+logger = logging.getLogger('OpenSubmit')
 
 rootdir=os.getcwd()
 

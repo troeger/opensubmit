@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
 from opensubmit import settings
-from opensubmit.models import Assignment, Submission, TestMachine, inform_student, SubmissionFile, inform_course_owner
+from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
 
 
 def download(request, obj_id, filetype, secret=None):
@@ -153,11 +153,11 @@ def jobs(request):
                         if sub.state == Submission.TEST_COMPILE_PENDING:
                             sub.state = Submission.TEST_COMPILE_FAILED
                             sub.save_compile_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.")
-                            inform_student(sub, sub.state)
+                            sub.inform_student(sub.state)
                         if sub.state == Submission.TEST_VALIDITY_PENDING:
                             sub.save_validation_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
                             sub.state = Submission.TEST_VALIDITY_FAILED
-                            inform_student(sub, sub.state)
+                            sub.inform_student(sub.state)
                         if sub.state == Submission.TEST_FULL_PENDING:
                             sub.save_fulltest_result(machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.", None)
                             sub.state = Submission.TEST_FULL_FAILED
@@ -223,10 +223,10 @@ def jobs(request):
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
                     sub.state = Submission.SUBMITTED_TESTED
-                    inform_course_owner(request, sub)
+                    sub.inform_course_owner(request)
             else:
                 sub.state = Submission.TEST_COMPILE_FAILED
-            inform_student(sub, sub.state)
+            sub.inform_student(sub.state)
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             sub.save_validation_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
@@ -234,15 +234,15 @@ def jobs(request):
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
                     sub.state = Submission.SUBMITTED_TESTED
-                    inform_course_owner(request, sub)
+                    sub.inform_course_owner(request)
             else:
                 sub.state = Submission.TEST_VALIDITY_FAILED
-            inform_student(sub, sub.state)
+            sub.inform_student(sub.state)
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
             sub.save_fulltest_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
                 sub.state = Submission.SUBMITTED_TESTED
-                inform_course_owner(request, sub)
+                sub.inform_course_owner(request)
             else:
                 sub.state = Submission.TEST_FULL_FAILED
                 # full tests may be performed several times and are meant to be a silent activity

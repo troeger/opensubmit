@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
-from opensubmit.models import inform_student, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from opensubmit.models import Assignment, Submission, SubmissionFile, SubmissionTestResult
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -269,7 +269,7 @@ class SubmissionAdmin(ModelAdmin):
         mails = []
         qs = queryset.filter(Q(state=Submission.GRADED))
         for subm in qs:
-            inform_student(subm, Submission.CLOSED)
+            subm.inform_student(Submission.CLOSED)
             mails.append(str(subm.pk))
         qs.update(state=Submission.CLOSED)      # works in bulk because inform_student never fails
         if len(mails) == 0:

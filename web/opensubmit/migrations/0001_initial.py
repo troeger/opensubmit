@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import opensubmit.models
+from opensubmit.models.submissionfile import upload_path
 import django.utils.timezone
 from django.conf import settings
 
@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True, null=True)),
                 ('grading_notes', models.TextField(max_length=1000, null=True, blank=True)),
-                ('grading_file', models.FileField(null=True, upload_to=opensubmit.models.upload_path, blank=True)),
+                ('grading_file', models.FileField(null=True, upload_to=upload_path, blank=True)),
                 ('state', models.CharField(default=b'R', max_length=2, choices=[(b'R', b'Received'), (b'W', b'Withdrawn'), (b'S', b'Submitted'), (b'PC', b'Compilation test pending'), (b'FC', b'Compilation test failed'), (b'PV', b'Validity test pending'), (b'FV', b'Validity test failed'), (b'PF', b'Full test pending'), (b'FF', b'All but full test passed, grading pending'), (b'ST', b'All tests passed, grading pending'), (b'GP', b'Grading not finished'), (b'G', b'Grading finished'), (b'C', b'Closed, student notified'), (b'CT', b'Closed, full test pending')])),
                 ('assignment', models.ForeignKey(related_name=b'submissions', to='opensubmit.Assignment')),
                 ('authors', models.ManyToManyField(help_text=b'', related_name=b'authored', to=settings.AUTH_USER_MODEL)),
@@ -94,7 +94,7 @@ class Migration(migrations.Migration):
             name='SubmissionFile',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('attachment', models.FileField(upload_to=opensubmit.models.upload_path)),
+                ('attachment', models.FileField(upload_to=upload_path)),
                 ('fetched', models.DateTimeField(null=True, editable=False)),
                 ('replaced_by', models.ForeignKey(blank=True, to='opensubmit.SubmissionFile', null=True)),
             ],
