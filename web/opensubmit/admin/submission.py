@@ -7,7 +7,11 @@ from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
-from opensubmit.models import inform_student, tutor_courses, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from opensubmit.models import inform_student, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from django.template.loader import render_to_string
+from django.core.urlresolvers import reverse
+from django.contrib import messages
+from django.utils import timesince
 
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
@@ -55,7 +59,7 @@ class SubmissionStateFilter(SimpleListFilter):
         )
 
     def queryset(self, request, qs):
-        qs = qs.filter(assignment__course__in=tutor_courses(request.user))
+        qs = qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
         if self.value() == 'tobegraded':
             return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         elif self.value() == 'graded':
@@ -74,14 +78,14 @@ class SubmissionAssignmentFilter(SimpleListFilter):
     parameter_name = 'assignmentfilter'
 
     def lookups(self, request, model_admin):
-        tutor_assignments = Assignment.objects.filter(course__in=tutor_courses(request.user))
+        tutor_assignments = Assignment.objects.filter(course__in=list(request.user.profile.tutor_courses()))
         return ((ass.pk, ass.title) for ass in tutor_assignments)
 
     def queryset(self, request, qs):
         if self.value():
             return qs.filter(assignment__exact=self.value())
         else:
-            return qs.filter(assignment__course__in=tutor_courses(request.user))
+            return qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
 
 
 class SubmissionCourseFilter(SimpleListFilter):
@@ -94,13 +98,13 @@ class SubmissionCourseFilter(SimpleListFilter):
     parameter_name = 'coursefilter'
 
     def lookups(self, request, model_admin):
-        return ((c.pk, c.title) for c in tutor_courses(request.user))
+        return ((c.pk, c.title) for c in list(request.user.profile.tutor_courses()))
 
     def queryset(self, request, qs):
         if self.value():
             return qs.filter(assignment__course__exact=self.value())
         else:
-            return qs.filter(assignment__course__in=tutor_courses(request.user))
+            return qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
 
 class SubmissionAdmin(ModelAdmin):
 
@@ -112,10 +116,10 @@ class SubmissionAdmin(ModelAdmin):
     actions = ['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
 
     fieldsets = (
-            ('', 
-                {'fields': ('assignment',),}),
-            ('Authors', 
-                {   'fields': ('authors','submitter'),
+            ('General',
+                {'fields': ('assignment_info','submitter','modified'),}),
+            ('Authors',
+                {   'fields': ('authors',),
                     'classes': ('grp-collapse grp-closed',)
                 }),
             ('Submission and test results',
@@ -125,21 +129,35 @@ class SubmissionAdmin(ModelAdmin):
                 {'fields': ('grading_status', 'grading', 'grading_notes', 'grading_file',),}),
     )
 
+    def assignment_info(self, instance):
+        message = '%s<br/>%s<br/>'%(instance.assignment, instance.assignment.course)
+        message += 'Deadline: %s (%s ago)'%(instance.assignment.hard_deadline, timesince.timesince(instance.assignment.hard_deadline))
+        if instance.can_modify(instance.submitter):
+            message += '''<p><ul style="width:45%" class="messagelist"><li class="warning">Warning: Assignment is still open.
+                Saving grading information will disable withdrawal and re-upload for the authors.
+            </li></ul><p>'''
+        return mark_safe(message)
+    assignment_info.short_description = "Assignment"
+
     def file_link(self, instance):
+        '''
+            Renders the link to the student upload file.
+        '''
         sfile = instance.file_upload
         if not sfile:
             return mark_safe(u'No file submitted by student.')
+        elif sfile.is_archive():
+            return mark_safe(u'<a href="%s">%s</a><br/>(<a href="%s" target="_new">Preview</a>)' % (sfile.get_absolute_url(), sfile.basename(), sfile.get_preview_url()))
         else:
             return mark_safe(u'<a href="%s">%s</a>' % (sfile.get_absolute_url(), sfile.basename()))
     file_link.short_description = "Stored upload"
-
 
     def _render_test_result(self, result_obj, enabled):
         if not result_obj:
             if enabled:
                 return mark_safe(u'Enabled, no results.')
             else:
-                return mark_safe(u'Not enabled.')                
+                return mark_safe(u'Not enabled.')
         else:
             return format_html("Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
 
@@ -162,9 +180,10 @@ class SubmissionAdmin(ModelAdmin):
     fulltest_result.allow_tags = True
 
     def grading_status(self, instance):
-        return mark_safe(u'''<input type="radio" name="newstate" value="unfinished">Grading not finished</input>
-                        <input type="radio" name="newstate" value="finished">Grading finished</input>
-        ''')
+        message = '''<input type="radio" name="newstate" value="unfinished">&nbsp;Grading not finished</input>
+            <input type="radio" name="newstate" value="finished">&nbsp;Grading finished</input>
+        '''
+        return mark_safe(message)
     grading_status.short_description = "Status"
 
 
@@ -182,7 +201,7 @@ class SubmissionAdmin(ModelAdmin):
             is the documented way to do that.
         '''
         # Pseudo-fields generated by functions always must show up in the readonly list
-        pseudo_fields = ('file_link', 'compile_result', 'validation_result','fulltest_result', 'grading_status')
+        pseudo_fields = ('file_link', 'compile_result', 'validation_result','fulltest_result', 'grading_status', 'assignment_info', 'modified')
         if obj:
             return ('assignment', 'submitter', 'notes')+pseudo_fields
         else:

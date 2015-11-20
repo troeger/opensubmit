@@ -8,19 +8,20 @@
 [general]
 # Enabling this will lead to detailed developer error information as result page
 # whenever something goes wrong on server side.
-# In production systems, you never want that to be enabled for obvious security reasons.
+# In production systems, you never want that to be enabled, for obvious security reasons.
 DEBUG: False
 
 [server]
 # This is the root host url were the OpenSubmit tool is offered by your web server.
 # If you serve the content from a subdirectory, please specify it too, without leading or trailing slashes,
 # otherwise leave it empty.
-HOST: https://<this machine>
+HOST: ***not configured***
 HOST_DIR: submit
 
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
-MEDIA_ROOT: <media storage path>
+# Make sure that the path starts and ends with a slash.
+MEDIA_ROOT: ***not configured***
 
 # This is the logging file. The web server must be allowed to write into it.
 LOG_FILE: /var/log/opensubmit.log
@@ -45,13 +46,13 @@ DATABASE_ENGINE: sqlite3
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: <database>
+DATABASE_NAME: database.sqlite
 
 # The user name for accessing the database. Not needed for SQLite.
-DATABASE_USER: 
+DATABASE_USER:
 
 # The user password for accessing the database. Not needed for SQLite.
-DATABASE_PASSWORD: 
+DATABASE_PASSWORD:
 
 # The host name for accessing the database. Not needed for SQLite.
 # An empty settings means that the database is on the same host as the web server.
@@ -74,7 +75,7 @@ SHARED_SECRET: 49846zut93purfh977TTTiuhgalkjfnk89
 # with the tool itself. Exceptions that happen due to bugs or other issues
 # are sent to this address.
 ADMIN_NAME: Super Admin
-ADMIN_EMAIL: root@<my domain>
+ADMIN_EMAIL: root@localhost
 
 [login]
 # Enables or disables login with OpenID

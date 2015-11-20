@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import urllib
 import zipfile
+import csv
 
 from datetime import timedelta, datetime
 
@@ -202,6 +203,33 @@ def mergeusers(request):
     secondary=get_object_or_404(User, pk=request.GET['secondary_id'])
     # Determine data to be migrated
     return render(request, 'mergeusers.html', {'primary': primary, 'secondary': secondary})
+
+@login_required
+@staff_member_required
+def preview(request, subm_id):
+    '''
+        Renders a preview of the uploaded student archive.
+        This is only intended for the grading procedure, so staff status is needed.
+    '''
+    submission = get_object_or_404(Submission, pk=subm_id)
+    if submission.file_upload.is_archive():
+        return render(request, 'file_preview.html', {'previews': submission.file_upload.archive_previews()})
+    else:
+        return redirect(submission.file_upload.get_absolute_url())
+
+@login_required
+@staff_member_required
+def perftable(request, ass_id):
+    assignment = get_object_or_404(Assignment, pk=ass_id)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="perf_assignment%u.csv"'%assignment.pk
+    writer = csv.writer(response)
+    writer.writerow(['Assignment','Submission ID','Performance Data'])
+    for sub in assignment.submissions.all():
+        result = sub.get_fulltest_result()
+        if result:
+            writer.writerow([sub.assignment, sub.pk, result.perf_data])
+    return response
 
 @login_required
 @staff_member_required

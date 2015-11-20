@@ -5,15 +5,15 @@ from django.contrib.auth.decorators import login_required
 
 from opensubmit.admin import teacher_backend, admin_backend
 
-from settings import MEDIA_ROOT, MEDIA_URL_RELATIVE
-
 urlpatterns = patterns('',
     url(r'^$', 'opensubmit.views.index', name='index'),
     url(r'^logout/$', 'opensubmit.views.logout', name='logout'),
     url(r'^dashboard/$', 'opensubmit.views.dashboard', name='dashboard'),
     url(r'^details/(?P<subm_id>\d+)/$', 'opensubmit.views.details', name='details'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', 'opensubmit.views.new', name='new'),
+    url(r'^assignments/(?P<ass_id>\d+)/perftable/$', 'opensubmit.views.perftable', name='perftable'),
     url(r'^withdraw/(?P<subm_id>\d+)/$', 'opensubmit.views.withdraw', name='withdraw'),
+    url(r'^preview/(?P<subm_id>\d+)/$', 'opensubmit.views.preview', name='preview'),
     url(r'^update/(?P<subm_id>\d+)/$', 'opensubmit.views.update', name='update'),
     url(r'^course/(?P<course_id>\d+)/gradingtable/$', 'opensubmit.views.gradingtable', name='gradingtable'),
     url(r'^course/(?P<course_id>\d+)/archive/$', 'opensubmit.views.coursearchive', name='coursearchive'),
@@ -34,15 +34,13 @@ urlpatterns = patterns('',
 )
 
 # only working when DEBUG==FALSE
-# on production systems, both static and media files must be served directly by Apache
+# on production systems, static files are served directly by Apache
 urlpatterns += staticfiles_urlpatterns()
-urlpatterns += static(MEDIA_URL_RELATIVE, document_root=MEDIA_ROOT)
 
-import urls
-def show_urls(urllist, depth=0):
-    for entry in urllist:
-        print "  " * depth, entry.regex.pattern
-        if hasattr(entry, 'url_patterns'):
-            show_urls(entry.url_patterns, depth + 1)
-
-show_urls(urls.urlpatterns)
+# import urls
+# def show_urls(urllist, depth=0):
+#     for entry in urllist:
+#         print "  " * depth, entry.regex.pattern
+#         if hasattr(entry, 'url_patterns'):
+#             show_urls(entry.url_patterns, depth + 1)
+# show_urls(urls.urlpatterns)

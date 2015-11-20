@@ -3,6 +3,9 @@ import os
 import logging
 import string
 import unicodedata
+import zipfile, tarfile
+from datetime import datetime, timedelta
+
 
 from django.db import models, transaction
 from django.contrib.auth.models import User, Group
@@ -13,6 +16,7 @@ from django.core.urlresolvers import reverse
 from settings import MAIN_URL, MEDIA_ROOT
 from itertools import chain
 
+from opensubmit import settings
 
 logger = logging.getLogger('OpenSubmit')
 
@@ -90,6 +94,23 @@ class Course(models.Model):
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
         return qs
 
+    def gradable_submissions(self):
+        qs = self.valid_submissions()
+        qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+        return qs
+
+    def graded_submissions(self):
+        qs = self.valid_submissions().filter(state__in=[Submission.GRADED])
+        return qs
+
+    def authors(self):
+        qs = self.valid_submissions().values_list('authors',flat=True).distinct()
+        return qs
+
+    def valid_submissions(self):
+        qs = Submission.objects.filter(assignment__course=self).exclude(state=Submission.WITHDRAWN)
+        return qs
+
 class TestMachine(models.Model):
     host = models.CharField(null=True, max_length=50, help_text="UUID of the test machine, independent from IP address.")
     address = models.CharField(null=True,  max_length=50, help_text="Internal IP address of the test machine, at the time of registration.")
@@ -118,7 +139,7 @@ class Assignment(models.Model):
     gradingScheme = models.ForeignKey(GradingScheme, related_name="assignments", verbose_name="grading scheme")
     publish_at = models.DateTimeField(default=timezone.now)
     soft_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline shown to students. After this point in time, submissions are still possible. Leave empty for only using a hard deadline.")
-    hard_deadline = models.DateTimeField(help_text="Deadline after which submissions are no longer possible.")      
+    hard_deadline = models.DateTimeField(help_text="Deadline after which submissions are no longer possible.")
     has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only fill the notes field.")
     attachment_test_timeout = models.IntegerField(default=30, verbose_name="Timout for tests", help_text="Timeout (in seconds) after which the compilation / validation test / full test is cancelled. The submission is marked as invalid in this case. Intended for student code with deadlocks.")
     attachment_test_compile = models.BooleanField(default=False, verbose_name="Compile test ?", help_text="If activated, the student upload is uncompressed and 'make' is executed on one of the test machines.")
@@ -129,6 +150,55 @@ class Assignment(models.Model):
 
     class Meta:
         app_label = 'opensubmit'
+
+    def gradable_submissions(self):
+        qs = self.valid_submissions()
+        qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+        return qs
+
+    def grading_unfinished_submissions(self):
+        qs = self.valid_submissions()
+        qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS])
+        return qs
+
+    def graded_submissions(self):
+        qs = self.valid_submissions().filter(state__in=[Submission.GRADED])
+        return qs
+
+    def authors(self):
+        qs = self.valid_submissions().values_list('authors',flat=True).distinct()
+        return qs
+
+    def valid_submissions(self):
+        qs = self.submissions.exclude(state=Submission.WITHDRAWN)
+        return qs
+
+    def has_perf_results(self):
+        '''
+            Figure out if any submission for this assignment has performance data being available.
+        '''
+        num_results = SubmissionTestResult.objects.filter(perf_data__isnull=False).filter(submission_file__submissions__assignment=self).count()
+        return num_results != 0
+
+    def validity_test_url(self):
+        '''
+            Return absolute download URL for validity test script.
+            Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
+        '''
+        if self.pk:
+            return settings.MAIN_URL + "/download/%u/validity_testscript/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
+        else:
+            return None
+
+    def full_test_url(self):
+        '''
+            Return absolute download URL for full test script.
+            Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
+        '''
+        if self.pk:
+            return settings.MAIN_URL + "/download/%u/full_testscript/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
+        else:
+            return None
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""
@@ -219,22 +289,20 @@ class UserProfile(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
+    def tutor_courses(self):
+        '''
+            Returns the list of courses this user is tutor or owner for.
+        '''
+        tutoring = self.user.courses_tutoring.all().filter(active__exact=True)
+        owning = self.user.courses.all().filter(active__exact=True)
+        result = (tutoring | owning).distinct()
+        return result
 
 def user_courses(user):
     '''
         Returns the list of courses this user is subscribed for.
     '''
     return UserProfile.objects.get(user=user).courses.filter(active__exact=True)
-
-
-def tutor_courses(user):
-    '''
-        Returns the list of courses this user is tutor or owner for.
-    '''
-    tutoring = user.courses_tutoring.all().filter(active__exact=True)
-    owning = user.courses.all().filter(active__exact=True)
-    result = (tutoring | owning).distinct()
-    return list(result)
 
 @transaction.atomic
 def move_user_data(primary, secondary):
@@ -291,10 +359,13 @@ class SubmissionFile(models.Model):
         return self.attachment.name[self.attachment.name.rfind('/') + 1:]
 
     def get_absolute_url(self):
-        # to implement access protection, we implement our own download
-        # this implies that the Apache media serving is disabled
+        # To realize access protection for student files, we implement our own download method here.
+        # This implies that the Apache media serving (MEDIA_URL) is disabled.
         assert(len(self.submissions.all()) > 0)
         return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
+
+    def get_preview_url(self):
+        return reverse('preview', args=(self.submissions.all()[0].pk,))
 
     def absolute_path(self):
         return MEDIA_ROOT + "/" + self.attachment.name
@@ -302,10 +373,57 @@ class SubmissionFile(models.Model):
     def is_executed(self):
         return self.fetched is not None
 
+    def is_archive(self):
+        '''
+            Determines if the attachment is an archive.
+        '''
+        try:
+            if zipfile.is_zipfile(self.attachment.path) or tarfile.is_tarfile(self.attachment.path):
+                return True
+        except:
+            pass
+        return False
+
+    def archive_previews(self):
+        '''
+            Return preview on archive file content as dictionary.
+            In order to avoid browser and web server trashing by the students, there is a size limit for the single files shown.
+        '''
+        MAX_PREVIEW_SIZE = 10000
+
+        def sanitize(text):
+            try:
+                return unicode(text, errors='ignore')
+            except:
+                return unicode("(unreadable text data)")
+
+        result = []
+        if zipfile.is_zipfile(self.attachment.path):
+            zf = zipfile.ZipFile(self.attachment.path, 'r')
+            for zipinfo in zf.infolist():
+                if zipinfo.file_size < MAX_PREVIEW_SIZE:
+                    result.append({'name': zipinfo.filename, 'preview': sanitize(zf.read(zipinfo))})
+                else:
+                    result.append({'name': zipinfo.filename+' (too large)'})
+        elif tarfile.is_tarfile(self.attachment.path):
+            tf = tarfile.open(self.attachment.path,'r')
+            for tarinfo in tf.getmembers():
+                if tarinfo.isfile():
+                    if tarinfo.size < MAX_PREVIEW_SIZE:
+                        result.append({'name': tarinfo.name, 'preview': sanitize(tf.extractfile(tarinfo).read())})
+                    else:
+                        result.append({'name': tarinfo.name+' (too large)'})
+        else:
+            # single file
+            f=open(self.attachment.path)
+            fname = f.name[f.name.rfind(os.sep)+1:]
+            result = [{'name': fname, 'preview': sanitize(f.read())},]
+        return result
+
     def test_result_dict(self):
         '''
             Create a compact data structure representation of all result
-            types for this file. 
+            types for this file.
 
             Returns a dictionary where the keys are the result types, and
             the values are dicts of all the other result information.
@@ -543,6 +661,10 @@ class Submission(models.Model):
         return self.is_closed()
 
     def get_initial_state(self):
+        '''
+            Return first state for this submission after upload,
+            which depends on the kind of assignment.
+        '''
         if not self.assignment.attachment_is_tested():
             return Submission.SUBMITTED
         else:
@@ -554,7 +676,16 @@ class Submission(models.Model):
                 return Submission.TEST_FULL_PENDING
 
     def state_for_students(self):
+        '''
+            Return human-readable description of current state for students.
+        '''
         return dict(self.STUDENT_STATES)[self.state]
+
+    def state_for_tutors(self):
+        '''
+            Return human-readable description of current state for tutors.
+        '''
+        return dict(self.STATES)[self.state]
 
     def grading_file_url(self):
         # to implement access protection, we implement our own download
@@ -565,37 +696,57 @@ class Submission(models.Model):
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
 
-    def _save_test_result(self, machine, text, kind): 
+    def _save_test_result(self, machine, text, kind, perf_data):
         result = SubmissionTestResult(
             result=text,
             machine=machine,
-            kind=kind)
+            kind=kind,
+            perf_data=perf_data)
         self.file_upload.test_results.add(result)
 
     def _get_test_result(self, kind):
         try:
-            return self.file_upload.test_results.get(kind=kind)
+            return self.file_upload.test_results.filter(kind=kind).order_by('-created')[0]
         except:
             return None
 
+    def save_fetch_date(self):
+        self.file_upload.fetched = datetime.now()
+        self.file_upload.save()
+
+    def get_fetch_date(self):
+        return self.file_upload.fetched
+
+    def clean_fetch_date(self):
+        self.file_upload.fetched = None
+        self.file_upload.save()
+
     def save_compile_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST)
+        self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST, None)
 
-    def save_validation_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST)
+    def save_validation_result(self, machine, text, perf_data):
+        self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST, perf_data)
 
-    def save_fulltest_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST)
+    def save_fulltest_result(self, machine, text, perf_data):
+        self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST, perf_data)
 
     def get_compile_result(self):
+        '''
+            Return the most recent compile result object for this submission.
+        '''
         return self._get_test_result(SubmissionTestResult.COMPILE_TEST)
 
     def get_validation_result(self):
+        '''
+            Return the most recent validity test result object for this submission.
+        '''
         return self._get_test_result(SubmissionTestResult.VALIDITY_TEST)
 
     def get_fulltest_result(self):
+        '''
+            Return the most recent full test result object for this submission.
+        '''
         return self._get_test_result(SubmissionTestResult.FULL_TEST)
-
 
 class SubmissionTestResult(models.Model):
     '''
