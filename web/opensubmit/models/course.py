@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from .assignment import Assignment
+from .submission import Submission
 
 class Course(models.Model):
     title = models.CharField(max_length=200)
