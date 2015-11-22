@@ -1,3 +1,7 @@
+'''
+    Test cases focusing on the access rights of tutors.
+'''
+
 import StringIO, zipfile
 
 from django import http

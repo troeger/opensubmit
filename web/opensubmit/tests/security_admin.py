@@ -1,3 +1,7 @@
+'''
+    Test cases focusing on the access rights of admins.
+'''
+
 from django.contrib.auth.models import User
 from opensubmit.models import Assignment, Course, SubmissionFile
 from opensubmit.tests.cases import MockRequest, SubmitAdminTestCase

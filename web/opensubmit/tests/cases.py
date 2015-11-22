@@ -1,3 +1,6 @@
+'''
+    Base functionality for OpenSubmit test suite.
+'''
 import datetime
 import logging
 import json
