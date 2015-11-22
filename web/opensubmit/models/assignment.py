@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 from .submission import Submission
+from .submissiontestresult import SubmissionTestResult
 
 from opensubmit.settings import MAIN_URL, JOB_EXECUTOR_SECRET
 
