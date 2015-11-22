@@ -63,6 +63,30 @@ class AdminViewsTestCase(SubmitAdminTestCase):
         response=self.c.get('/teacher/opensubmit/assignment/')
         self.assertEquals(response.status_code, 200)
 
+    def testCourseListView(self):
+        response=self.c.get('/teacher/opensubmit/course/')
+        self.assertEquals(response.status_code, 200)
+
+    def testGradingSchemeListView(self):
+        response=self.c.get('/teacher/opensubmit/gradingscheme/')
+        self.assertEquals(response.status_code, 200)
+
+    def testGradingListView(self):
+        response=self.c.get('/teacher/opensubmit/grading/')
+        self.assertEquals(response.status_code, 200)
+
+    def testSubmissionFileListView(self):
+        response=self.c.get('/teacher/opensubmit/submissionfile/')
+        self.assertEquals(response.status_code, 200)
+
+    def testSubmissionListView(self):
+        response=self.c.get('/teacher/opensubmit/submission/')
+        self.assertEquals(response.status_code, 200)
+
+    def testTestMachineListView(self):
+        response=self.c.get('/teacher/opensubmit/testmachine/')
+        self.assertEquals(response.status_code, 200)
+
     def testGradingTableView(self):
         response=self.c.get('/course/%u/gradingtable/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
