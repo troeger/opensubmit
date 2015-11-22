@@ -55,6 +55,14 @@ class StudentViewsTestCase(StudentTestCase):
         self.assertEquals(response.status_code, 200)
 
 class AdminViewsTestCase(SubmitAdminTestCase):
+    def testTeacherDashboardView(self):
+        response=self.c.get('/teacher/')
+        self.assertEquals(response.status_code, 200)
+
+    def testAssignmentListView(self):
+        response=self.c.get('/teacher/opensubmit/assignment/')
+        self.assertEquals(response.status_code, 200)
+
     def testGradingTableView(self):
         response=self.c.get('/course/%u/gradingtable/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
