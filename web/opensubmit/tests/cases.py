@@ -341,7 +341,7 @@ class SubmitTestCase(TestCase):
         sub.save()
         return sub
 
-    def createSubmission(self, user, assignment, authors=[]):
+    def createSubmission(self, user, assignment):
         sub = Submission(
             assignment=assignment,
             submitter=user.user,
@@ -349,11 +349,6 @@ class SubmitTestCase(TestCase):
             state=Submission.SUBMITTED
         )
         sub.save()
-
-        if authors:
-            [sub.authors.add(author) for author in authors]
-        sub.save()
-
         return sub
 
 class MockRequest(http.HttpRequest):
@@ -373,16 +368,6 @@ class SubmitAdminTestCase(SubmitTestCase):
         assert(self.current_user.user.is_active)
         assert(self.current_user.user.is_superuser)
         assert(self.current_user.user.is_staff)        
-
-class SubmitTeacherTestCase(SubmitTestCase):
-    def setUp(self):
-        super(SubmitTeacherTestCase, self).setUp()
-        self.loginUser(self.teacher)
-        # Test for amok-running post_save handlers (we had such a case)
-        assert(self.current_user.user.is_active)
-        assert(not self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)        
-
 
 class SubmitTutorTestCase(SubmitTestCase):
     def setUp(self):

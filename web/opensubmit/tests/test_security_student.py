@@ -148,25 +148,23 @@ class StudentWithdrawSubmissionWebTestCase(StudentSubmissionWebTestCase):
                 self.assertNotEqual(submission.state, Submission.WITHDRAWN, submission)
 
     def testCannotWithdrawOtherUsers(self):
+        '''
+            Create submissions as one user and check that another user cannot withdraw them.
+        '''
         self.loginUser(self.enrolled_students[1])
         self.createSubmissions()
 
         self.loginUser(self.enrolled_students[0])
         cases = {
-            self.openAssignmentSub: (False, (403, )),
-            self.softDeadlinePassedAssignmentSub: (False, (403, )),
-            self.hardDeadlinePassedAssignmentSub: (False, (403, )),
+            self.openAssignmentSub: 403,
+            self.softDeadlinePassedAssignmentSub: 403,
+            self.hardDeadlinePassedAssignmentSub: 403,
         }
         for submission in cases:
             response = self.c.post('/withdraw/%s/' % submission.pk, {'confirm': '1', })
-            expect_submission_withdrawn, expected_responses = cases[submission]
-            self.assertIn(response.status_code, expected_responses)
-            
+            self.assertEquals(response.status_code, cases[submission])
             submission = Submission.objects.get(pk__exact=submission.pk)
-            if expect_submission_withdrawn:
-                self.assertEquals(submission.state, Submission.WITHDRAWN)
-            else:
-                self.assertNotEqual(submission.state, Submission.WITHDRAWN)
+            self.assertNotEqual(submission.state, Submission.WITHDRAWN)
 
     def testCannotWithdrawGraded(self):
         self.loginUser(self.enrolled_students[0])
