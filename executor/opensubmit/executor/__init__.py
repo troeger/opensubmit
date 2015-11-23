@@ -54,6 +54,9 @@ def read_config(config_file):
     return config
 
 def _cleanup(config, finalpath):
+    '''
+        Remove all created while evaluating the submission
+    '''
     if config.getboolean("Execution", "cleanup") == True:
         logger.info("Removing downloads at " + finalpath)
         shutil.rmtree(finalpath, ignore_errors=True) 
@@ -79,22 +82,23 @@ def _send_result(config, msg, error_code, submission_file_id, action, perfdata=N
         error_code=-9999
     try:
     # Prepare response HTTP package
-        post_data = [   ("SubmissionFileId",submission_file_id),
+        post_data = [("SubmissionFileId",submission_file_id),
                     ("Message",msg.encode("utf-8",errors="ignore")),
                     ("ErrorCode",error_code),
                     ("Action",action),
                     ("PerfData",perfdata),
                     ("Secret",config.get("Server","secret")),
-                    ("UUID",config.get("Server","uuid")) ]
+                    ("UUID",config.get("Server","uuid"))
+                    ]
     
         post_data = urlencode(post_data)
         post_data = post_data.encode("utf-8",errors="ignore")
         urlopen("%s/jobs/"%config.get("Server","url"), post_data)
     except Exception as e:
-        logging.error("ERROR send_result: " + str(e)
+        logging.error("ERROR send_result: " + str(e))
 
 def _infos_host():
-    '''
+    ''' 
         Determine our own IP adress. This seems to be far more complicated than you would think:
     '''
     try:
@@ -158,7 +162,7 @@ def _fetch_validator(url, path):
             with open(download_file,"wb") as target:
                 target.write(result.read())
         except Exception as e:
-            logger.error("ERROR while fetching validator from " + url + " " + str(e)
+            logger.error("ERROR while fetching validator from " + url + " " + str(e))
             return False
 
         finalname = path + VALIDATOR_FNAME
@@ -171,7 +175,7 @@ def _fetch_validator(url, path):
                     zip.extractall(path)
                 os.remove(download_file)
             except Exception as e:
-                logger.error("ERROR extracting ZIP: " + str(e)
+                logger.error("ERROR extracting ZIP: " + str(e))
             # ZIP file is expected to contain VALIDATOR_FNAME
             if not os.path.exists(finalname):
                 logger.error("ERROR validator ZIP package does not contain " + VALIDATOR_FNAME)
@@ -182,11 +186,11 @@ def _fetch_validator(url, path):
                 logger.debug("Validator is a single file, renaming it to " + finalname)
                 os.rename(download_file, finalname)
             except Exception as e:
-                logger.error("ERROR renaming validator: " + str(e)
+                logger.error("ERROR renaming validator: " + str(e))
         try:
             os.chmod(finalname, stat.S_IXUSR|stat.S_IRUSR)
         except Exception as e:
-            logger.error("ERROR setting attributes to validator: " + str(e)
+            logger.error("ERROR setting attributes to validator: " + str(e))
 
 
 def _fetch_job(config):
@@ -227,13 +231,13 @@ def _fetch_job(config):
             logger.debug("Nothing to do.")
             return [None]*5
         else:
-            logger.error("ERROR HTTP return code: "str(e))
+            logger.error("ERROR HTTP return code: " + str(e))
             return [None]*5
     except URLError as e:
         logger.error("ERROR could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
         return [None]*5
     except Exception as e:
-        logger.error("ERROR unknown: " + str(e)
+        logger.error("ERROR unknown: " + str(e))
         return [None]*5
 
 def _unpack_job(config, fname, submid, action):
@@ -254,7 +258,7 @@ def _unpack_job(config, fname, submid, action):
         shutil.rmtree(finalpath, ignore_errors=True)
         os.makedirs(finalpath)
     except Exception as e:
-        logger.error("ERROR creating directory: " + str(e)
+        logger.error("ERROR creating directory: " + str(e))
     if zipfile.is_zipfile(fname):
         logger.debug("Valid ZIP file")
         try:
@@ -263,7 +267,7 @@ def _unpack_job(config, fname, submid, action):
                 zip.extractall(finalpath)
             os.remove(fname)
         except Exception as e:
-            logger.error("Error extracting ZIP: " + str(e)
+            logger.error("Error extracting ZIP: " + str(e))
     elif tarfile.is_tarfile(fname):
         logger.debug("Valid TAR file")
         try:
@@ -272,12 +276,12 @@ def _unpack_job(config, fname, submid, action):
                 tar.extractall(finalpath)
             os.remove(fname)
         except Exception as e:
-            logger.error("ERROR extract TAR: " + str(e)      
+            logger.error("ERROR extract TAR: " + str(e))      
     else:
         try:
             os.remove(fname)
         except Exception as e:
-            logger.error("ERROR could not remove: " + str(e)
+            logger.error("ERROR could not remove: " + str(e))
         _send_result(config, "This is not a valid compressed file.",-1, submid, action)
         _cleanup(config, finalpath)
         return None
@@ -344,7 +348,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             logger.debug("Cancel timeout")
             timer.cancel()
         except Exception as e:
-            logger.error(str(e)
+            logger.error("ERROR cancel timeout " + str(e))
         
         if action == "test_compile":
             action_title = "Compilation"
@@ -372,8 +376,8 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     else:
         try:
             dircontent = if platform.system()=="Windows" subprocess.check_output(["cmd.exe","/c","dir", "/b", finalpath]) else subprocess.check_output(["ls","-ln",finalpath])
-        except:
-            logger.error("ERROR getting directory content. " + str(sys.exc_info()))
+        except Exception as e:
+            logger.error("ERROR getting directory content. " + str(e))
             dircontent = "Not available."
         dircontent = dircontent.decode("utf-8",errors="ignore")
         output = output + "\n\nDirectory content as I see it:\n\n" + dircontent
@@ -414,8 +418,8 @@ def _can_run(config):
             else:
                lock.acquire()
                logger.debug("Got the script lock")
-        except:
-            logger.error("ERROR locking. " + str(sys.exc_info()))           
+        except Exception as e:
+            logger.error("ERROR locking. " + str(e))           
             return False
     return True
 
@@ -430,11 +434,11 @@ def send_config(config_file):
     try:
        from cpuinfo import cpuinfo
        cpu=cpuinfo.get_cpu_info()
-       cpu_info=cpu["brand"] + ", " + cpu["vendor_id"] + ", " +cpu["arch"] + ", #" + str(cpu["count"])
+       conf=cpu["brand"] + ", " + cpu["vendor_id"] + ", " +cpu["arch"] + ", #" + str(cpu["count"])
     except:
-       cpu_info=platform.processor() #may be empty on Linux because of partial implemtation of platform
+       conf=platform.processor() #may be empty on Linux because of partial implemtation in platform
        
-    output.append(["CPUID information", cpu_info)
+    output.append(["CPUID information", conf)
      
     if platform.system()=="Windows":
        conf = _infos_cmd("cl.exe|@echo off","") #force returncode 0
@@ -543,7 +547,7 @@ def run(config_file):
             return True
         else:
             # unknown action, programming error in the server
-            logger.error("Unknown action keyword from server: "+action)
+            logger.error("Unknown action keyword from server: " + action)
             logger.debug("Release lock")
             lock.release()
             return False
