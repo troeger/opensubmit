@@ -332,7 +332,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             output, stderr = proc.communicate()
             logger.debug("Process terminated")
         except Exception as e:
-            logger.debug("Seems like the process got killed by the timeout handler: " + str(e)
+            logger.debug("Seems like the process got killed by the timeout handler: " + str(e))
         
         if output == None:
             output = ""
