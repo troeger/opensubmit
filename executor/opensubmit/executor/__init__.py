@@ -375,7 +375,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         return output, False
     else:
         try:
-            dircontent = if platform.system()=="Windows" subprocess.check_output(["cmd.exe","/c","dir", "/b", finalpath]) else subprocess.check_output(["ls","-ln",finalpath])
+            dircontent = subprocess.check_output(["cmd.exe","/c","dir", "/b", finalpath]) if platform.system()=="Windows" else subprocess.check_output(["ls","-ln",finalpath])
         except Exception as e:
             logger.error("ERROR getting directory content. " + str(e))
             dircontent = "Not available."
@@ -400,7 +400,7 @@ def _kill_deadlocked_jobs(config):
         if proc.username == username and proc.pid != ourpid:
             runtime = time.time() - proc.create_time
             logger.debug("This user already runs %u for %u seconds." % (proc.pid, runtime))
-            if runtime > timeout):
+            if runtime > timeout:
                 logger.debug("Killing %u due to exceeded runtime." % proc.pid)
                 proc.kill()
 
@@ -438,7 +438,7 @@ def send_config(config_file):
     except:
        conf=platform.processor() #may be empty on Linux because of partial implemtation in platform
        
-    output.append(["CPUID information", conf)
+    output.append(["CPUID information", conf])
      
     if platform.system()=="Windows":
        conf = _infos_cmd("cl.exe|@echo off","") #force returncode 0
@@ -557,13 +557,6 @@ if __name__ == "__main__":
         send_config(sys.argv[2])
     elif len(sys.argv) > 2 and sys.argv[1] == "run":
         run(sys.argv[2])
-    elif len(sys.argv) > 2 and sys.argv[1] == "unlock":
-        config=read_config(sys.argv[2])
-        try:
-            FileLock(config.get("Execution","pidfile")).break_lock()
-            print "Lock removed."
-        except:
-            print "ERROR breaking lock: " + str(sys.exc_info())
     else:
         print("python -m opensubmit.executor [register|run|unlock] executor.ini")
     print "Exit"

@@ -71,6 +71,7 @@ def console_script():
     if "help" in sys.argv:
         print "configure: Check config files and registration of a OpenSubmit test machine."
         print "run:       Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab."
+        print "unlock:    Break the script lock, because of crashed script."    
         print "help:      Print this help"
         exit(0)
 
@@ -84,7 +85,17 @@ def console_script():
         from . import send_config
         send_config(EXECUTOR_CONFIG_FILE)
         exit(0)
-
+    if "unlock" in sys.argv:
+        from . import read_config
+        config=read_config(EXECUTOR_CONFIG_FILE)
+        try:
+            from lockfile import FileLock
+            FileLock(config.get("Execution","pidfile")).break_lock()
+            print "Lock removed."
+        except Exception as e:
+            print "ERROR breaking lock: " + str(e)
+        
+        
     if "run" in sys.argv:
         from . import run
         run(EXECUTOR_CONFIG_FILE)
