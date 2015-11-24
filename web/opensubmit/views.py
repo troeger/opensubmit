@@ -108,9 +108,6 @@ def details(request, subm_id):
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
 
-    if not ass.is_visible(user=request.user):
-        raise Http404()
-
     # Check whether submissions are allowed.
     if not ass.can_create_submission(user=request.user):
         raise PermissionDenied("You are not allowed to create a submission for this assignment")

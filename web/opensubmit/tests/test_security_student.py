@@ -30,7 +30,7 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
             self.openAssignment: (True, (200, 302, )),
             self.softDeadlinePassedAssignment: (True, (200, 302, )),
             self.hardDeadlinePassedAssignment: (False, (403, )),
-            self.unpublishedAssignment: (False, (404, )),
+            self.unpublishedAssignment: (False, (403, )),
         }
         for assignment in cases:
             response = self.c.post('/assignments/%s/new/' % assignment.pk, {

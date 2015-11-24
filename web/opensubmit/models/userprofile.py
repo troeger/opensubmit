@@ -25,14 +25,15 @@ class UserProfile(models.Model):
 
     def user_courses(self):
         '''
-            Returns the list of courses this user is subscribed for.
+            Returns the list of courses this user is subscribed for, or owning, or tutoring.
+            This leads to the fact that tutors and owners don't need course membership.
         '''
-        return UserProfile.objects.get(user=self.user).courses.filter(active__exact=True)
+        registered=self.courses.filter(active__exact=True).distinct()
+        return (self.tutor_courses() | registered).distinct()
 
     def open_assignments(self):
-        ''' Returns the list of open assignments from the viewpoint of this user.
-            The caller can request the information under consideration of existing submission
-            from this user (the dashboard case) or under ignorance of them (the signal handler case).
+        '''
+            Returns the list of open assignments from the viewpoint of this user.
         '''
         qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
         qs = qs.filter(publish_at__lt=timezone.now())
@@ -40,7 +41,6 @@ class UserProfile(models.Model):
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
         waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
-
 
 def db_fixes(user):
     '''

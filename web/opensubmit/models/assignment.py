@@ -92,16 +92,23 @@ class Assignment(models.Model):
         return unicode(self.title)
 
     def can_create_submission(self, user=None):
+        '''
+            Central access control for submitting things related to assignments.
+        '''
+
         if user:
-            if user.is_superuser:
-                # Super users are allowed to submit after the deadline.
+            # Super users, course owners and tutors should be able to test their validations
+            # before the submission is officially possible.
+            # They should also be able to submit after the deadline.
+            if user.is_superuser or user is self.course.owner or self.course.tutors.filter(pk=user.pk).exists():
                 return True
-            if user is self.course.owner:
-                # The course owner is allowed to submit after the deadline.
-                return True
-            if self.course.tutors.filter(pk=user.pk).exists():
-                # Tutors are allowed to submit after the deadline.
-                return True
+            if self.course not in user.profile.user_courses():
+                # The user is not enrolled in this assignment's course.
+                return False
+
+            if user.authored.filter(assignment=self).exclude(state=Submission.WITHDRAWN).count() > 0:
+                # User already has a valid submission for this assignment.
+                return False
 
         if self.hard_deadline < timezone.now():
             # Hard deadline has been reached.
@@ -111,33 +118,11 @@ class Assignment(models.Model):
             # The assignment has not yet been published.
             return False
 
-        if user:
-            if self.course not in user.profile.user_courses():
-                # The user is not enrolled in this assignment's course.
-                return False
-
-            if user.authored.filter(assignment=self).exclude(state=Submission.WITHDRAWN).count() > 0:
-                # User already has a valid submission for this assignment.
-                return False
-
         return True
 
     def authors_valid(self, authors=()):
         for author in authors:
             if not self.can_create_submission(author):
                 return False
-
-        return True
-
-    def is_visible(self, user=None):
-        if user:
-            if self.course.is_owner_or_tutor(user):
-                return True
-
-        if not self.course.is_visible(user):
-            return False
-
-        if self.publish_at > timezone.now():
-            return False
 
         return True

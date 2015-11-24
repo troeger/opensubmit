@@ -29,16 +29,6 @@ class Course(models.Model):
     def is_owner_or_tutor(self, user):
         return self.is_owner(user) or self.is_tutor(user)
 
-    def is_visible(self, user=None):
-        if user:
-            if self.is_owner_or_tutor(user):
-                return True
-
-        if not self.active:
-            return False
-
-        return True
-
     def open_assignments(self):
         qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
         qs = qs.filter(publish_at__lt=timezone.now())
