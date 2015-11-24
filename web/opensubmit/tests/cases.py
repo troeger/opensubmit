@@ -43,7 +43,61 @@ FAST_PASSWORD_HASHERS = (
 
 @override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
 class SubmitTestCase(TestCase):
+    '''
+        A test case base class with several resources being prepared:
+
+        Users:
+        - self.admin
+        - self.teacher
+        - self.another_teacher
+        - self.tutor
+        - self.enrolled_students
+        - self.not_enrolled_students
+        - self.current_user (the one currently logged-in)
+
+        No user is logged-in after setup.
+
+        Courses:
+        - self.course (by self.teacher)
+        - self.anotherCourse (by self.another_teacher)
+        - self.inactiveCourse
+        - self.all_courses
+
+        Assignments:
+        - self.openAssignment (in self.course)
+        - self.validatedAssignment (in self.course)
+        - self.softDeadlinePassedAssignment (in self.course)
+        - self.hardDeadlinePassedAssignment (in self.course)
+        - self.unpublishedAssignment (in self.course)
+        - self.allAssignments
+
+        Gradings:
+        - self.passGrade
+        - self.failGrade
+        - self.passFailGrading
+
+        The class offers some convinience functions:
+        - createTestMachine(self, test_host)
+        - createSubmissionFile(self)
+        - createTestedSubmissionFile(self, test_machine)
+        - createValidatableSubmission(self, user)
+        - createValidatedSubmission(self, user, test_host='127.0.0.1')
+        - createSubmission(self, user, assignment)
+    '''
     current_user = None
+
+    def setUp(self):
+        super(SubmitTestCase, self).setUp()
+        self.logger = logging.getLogger('OpenSubmit')
+        self.loggerLevelOld = self.logger.level
+        self.logger.setLevel(logging.WARN)
+        self.setUpUsers()
+        self.setUpCourses()
+        self.setUpGradings()
+        self.setUpAssignments()
+
+    def tearDown(self):
+        self.logger.setLevel(self.loggerLevelOld)
 
     def createUser(self, user_dict):
         args = dict(user_dict)
@@ -253,19 +307,6 @@ class SubmitTestCase(TestCase):
         self.unpublishedAssignment.save()
         self.allAssignments.append(self.unpublishedAssignment)        
 
-    def setUp(self):
-        super(SubmitTestCase, self).setUp()
-        self.logger = logging.getLogger('OpenSubmit')
-        self.loggerLevelOld = self.logger.level
-        self.logger.setLevel(logging.WARN)
-        self.setUpUsers()
-        self.setUpCourses()
-        self.setUpGradings()
-        self.setUpAssignments()
-
-    def tearDown(self):
-        self.logger.setLevel(self.loggerLevelOld)
-
     def createTestMachine(self, test_host):
         '''
             Create test machine entry. The configuration information
@@ -360,28 +401,37 @@ class MockRequest(http.HttpRequest):
         self._messages = FallbackStorage(self)
 
 class SubmitAdminTestCase(SubmitTestCase):
+    '''
+        Test case with an admin logged-in.
+    '''
     def setUp(self):
         super(SubmitAdminTestCase, self).setUp()
         self.loginUser(self.admin)
-        self.request = MockRequest(self.admin.user)        
+        self.request = MockRequest(self.admin.user)
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
         assert(self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)        
+        assert(self.current_user.user.is_staff)
 
 class SubmitTutorTestCase(SubmitTestCase):
+    '''
+        Test case with a tutor logged-in.
+    '''
     def setUp(self):
         super(SubmitTutorTestCase, self).setUp()
         self.loginUser(self.tutor)
-        self.request = MockRequest(self.tutor.user)        
+        self.request = MockRequest(self.tutor.user)
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
         assert(not self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)       
+        assert(self.current_user.user.is_staff)
 
 class StudentTestCase(SubmitTestCase):
+    '''
+        Test case with a student logged-in.
+    '''
     def setUp(self):
         super(StudentTestCase, self).setUp()
         self.loginUser(self.enrolled_students[0])
-        self.request = MockRequest(self.enrolled_students[0].user)        
+        self.request = MockRequest(self.enrolled_students[0].user)
 
