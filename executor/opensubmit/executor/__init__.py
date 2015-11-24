@@ -434,7 +434,7 @@ def send_config(config_file):
     try:
        from cpuinfo import cpuinfo
        cpu=cpuinfo.get_cpu_info()
-       conf=cpu["brand"] + ", " + cpu["vendor_id"] + ", " +cpu["arch"] + ", #" + str(cpu["count"])
+       conf="%s, %s, %s Family %d Model %d Stepping %d #%d" % (cpu["brand"],cpu["vendor_id"],cpu["arch"],cpu['family'],cpu['model'],cpu['stepping'],cpu["count"])
     except:
        conf=platform.processor() #may be empty on Linux because of partial implemtation in platform
        
