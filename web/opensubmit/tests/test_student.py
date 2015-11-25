@@ -46,6 +46,33 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
             ).exists()
             self.assertEquals(submission_exists, expect_success)
 
+    def testCanUpdate(self):
+        submitter = self.enrolled_students[0]
+        self.loginUser(submitter)
+
+        # pending compilation, update not allowed
+        sub = self.createValidatableSubmission(self.current_user)
+        response = self.c.post('/update/%u/' % sub.pk)
+        self.assertEquals(response.status_code, 400)
+
+        # test successful, update not allowed
+        sub = self.createValidatedSubmission(self.current_user)
+        response = self.c.post('/update/%u/' % sub.pk)
+        self.assertEquals(response.status_code, 400)
+
+        # Move submission into valid state for re-upload
+        sub.state = Submission.TEST_VALIDITY_FAILED
+        sub.save()
+
+        # Try to update file with invalid form data
+        response = self.c.post('/update/%u/' % sub.pk, {'attachment':'bar'})   # invalid form data
+        self.assertEquals(response.status_code, 200)    # render update view, again
+
+        # Try to update file with correct POST data
+        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip") as f:
+            response = self.c.post('/update/%u/' % sub.pk, {'attachment': f})
+            self.assertEquals(response.status_code, 302)    # redirect to dashboard after upload
+
     def testNonEnrolledCannotSubmit(self):
         submitter = self.not_enrolled_students[0]
         self.loginUser(submitter)
