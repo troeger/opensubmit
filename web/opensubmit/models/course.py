@@ -20,15 +20,6 @@ class Course(models.Model):
     def __unicode__(self):
         return unicode(self.title)
 
-    def is_owner(self, user):
-        return user == self.owner
-
-    def is_tutor(self, user):
-        return self.tutors.filter(pk=user.pk).exists()
-
-    def is_owner_or_tutor(self, user):
-        return self.is_owner(user) or self.is_tutor(user)
-
     def open_assignments(self):
         qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
         qs = qs.filter(publish_at__lt=timezone.now())
