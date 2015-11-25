@@ -369,7 +369,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     if proc.returncode == 0:
         logger.info("Executed with error code 0: \n\n" + output)
         return output, True
-    elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
+    elif (proc.returncode == 0-signal.SIGKILL) or (proc.returncode == None):
         _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
         _cleanup(config, finalpath)
         return output, False
