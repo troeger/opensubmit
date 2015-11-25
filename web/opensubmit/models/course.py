@@ -28,18 +28,29 @@ class Course(models.Model):
         return qs
 
     def gradable_submissions(self):
-        qs = self.valid_submissions()
+        '''
+            Queryset for the gradable submissions that are worth a look by tutors.
+        '''
+        qs = self._valid_submissions()
         qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         return qs
 
     def graded_submissions(self):
-        qs = self.valid_submissions().filter(state__in=[Submission.GRADED])
+        '''
+            Queryset for the graded submissions, which are worth closing.
+        '''
+        qs = self._valid_submissions().filter(state__in=[Submission.GRADED])
         return qs
 
     def authors(self):
-        qs = self.valid_submissions().values_list('authors',flat=True).distinct()
+        '''
+            Queryset for all distinct authors this course had so far. Important for statistics.
+            Note that this may be different from the list of people being registered for the course,
+            f.e. when they submit something and the leave the course.
+        '''
+        qs = self._valid_submissions().values_list('authors',flat=True).distinct()
         return qs
 
-    def valid_submissions(self):
+    def _valid_submissions(self):
         qs = Submission.objects.filter(assignment__course=self).exclude(state=Submission.WITHDRAWN)
         return qs
