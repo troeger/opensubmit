@@ -23,14 +23,24 @@ class AssignmentAdminForm(forms.ModelForm):
         '''
         super(AssignmentAdminForm, self).__init__(*args, **kwargs)
         if self.instance.pk:        # makes only sense if this is not a new assignment to be created
-            self.fields['attachment_test_validity'].widget.template_with_initial = (
-                '%(initial_text)s: <a href="'+self.instance.validity_test_url()+'">%(initial)s</a> '
-                '%(clear_template)s<br />%(input_text)s: %(input)s'
-            )
-            self.fields['attachment_test_full'].widget.template_with_initial = (
-                '%(initial_text)s: <a href="'+self.instance.full_test_url()+'">%(initial)s</a> '
-                '%(clear_template)s<br />%(input_text)s: %(input)s'
-            )
+            if self.instance.validity_test_url():
+                self.fields['attachment_test_validity'].widget.template_with_initial = (
+                    '%(initial_text)s: <a href="'+self.instance.validity_test_url()+'">%(initial)s</a> '
+                    '%(clear_template)s<br />%(input_text)s: %(input)s'
+                )
+            else:
+                self.fields['attachment_test_validity'].widget.template_with_initial = (
+                    '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
+                )
+            if self.instance.full_test_url():
+                self.fields['attachment_test_full'].widget.template_with_initial = (
+                    '%(initial_text)s: <a href="'+self.instance.full_test_url()+'">%(initial)s</a> '
+                    '%(clear_template)s<br />%(input_text)s: %(input)s'
+                )
+            else:
+                self.fields['attachment_test_full'].widget.template_with_initial = (
+                    '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
+                )
 
     def clean(self):
         '''

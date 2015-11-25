@@ -123,6 +123,11 @@ class AdminViewsTestCase(SubmitAdminTestCase):
         response=self.c.get('/teacher/opensubmit/assignment/add/')
         self.assertEquals(response.status_code, 200)
 
+    def testEditAssignmentView(self):
+        for ass in self.allAssignments:
+            response=self.c.get('/teacher/opensubmit/assignment/%u/'%ass.pk)
+            self.assertEquals(response.status_code, 200)
+
     def testNewCourseView(self):
         response=self.c.get('/teacher/opensubmit/course/add/')
         self.assertEquals(response.status_code, 200)
