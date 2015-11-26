@@ -17,10 +17,19 @@ class StudentViewsTestCase(StudentTestCase):
         response=self.c.get('/')
         self.assertEquals(response.status_code, 302)
 
+    def testIndexWithoutLoginView(self):
+        self.c.logout()
+        response=self.c.get('/')
+        self.assertEquals(response.status_code, 200)
+
     def testLogoutView(self):
         # User is already logged in, expecting redirect
         response=self.c.get('/logout/')
         self.assertEquals(response.status_code, 302)
+
+    def testNewSubmissionView(self):
+        response=self.c.get('/assignments/%s/new/' % self.openAssignment.pk)
+        self.assertEquals(response.status_code, 200)
 
     def testSettingsView(self):
         response=self.c.get('/settings/')
@@ -39,6 +48,14 @@ class StudentViewsTestCase(StudentTestCase):
     def testCoursesView(self):
         response=self.c.get('/courses/')
         self.assertEquals(response.status_code, 200)
+
+    def testChangeCoursesView(self):
+        response=self.c.get('/courses/')
+        self.assertEquals(response.status_code, 200)
+        # Send new data, saving should redirect to dashboard
+        course_ids = [str(self.course.pk), str(self.anotherCourse.pk)]
+        response=self.c.post('/courses/', {u'courses': course_ids})
+        self.assertEquals(response.status_code, 302)
 
     def testEnforcedUserSettingsView(self):
         self.current_user.user.first_name=""
@@ -97,6 +114,11 @@ class AdminViewsTestCase(SubmitAdminTestCase):
 
     def testMailView(self):
         response=self.c.get('/course/%u/mail2all/'%self.course.pk)
+        self.assertEquals(response.status_code, 200)
+
+    def testMergeUsersView(self):
+        response=self.c.get('/mergeusers/?primary_id=%u&secondary_id=%u'%
+            (self.enrolled_students[0].user.pk, self.enrolled_students[1].user.pk))
         self.assertEquals(response.status_code, 200)
 
     def testPreviewView(self):

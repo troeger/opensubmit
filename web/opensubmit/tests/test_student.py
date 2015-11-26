@@ -23,22 +23,24 @@ class StudentSubmissionWebTestCase(SubmitTestCase):
 
 class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
 
-    def testCanSubmit(self):
+    def testCanSubmitWithoutFile(self):
         submitter = self.enrolled_students[0]
         self.loginUser(submitter)
+        # expect dashboard redirect -> 302
+        # expect permission error -> 403
         cases = {
-            self.openAssignment: (True, (200, 302, )),
-            self.softDeadlinePassedAssignment: (True, (200, 302, )),
-            self.hardDeadlinePassedAssignment: (False, (403, )),
-            self.unpublishedAssignment: (False, (403, )),
+            self.openAssignment: (True, 302),
+            self.softDeadlinePassedAssignment: (True, 302),
+            self.hardDeadlinePassedAssignment: (False, 403),
+            self.unpublishedAssignment: (False, 403),
         }
         for assignment in cases:
             response = self.c.post('/assignments/%s/new/' % assignment.pk, {
                 'notes': 'This is a test submission.',
                 'authors': str(submitter.user.pk)
             })
-            expect_success, expected_responses = cases[assignment]
-            self.assertIn(response.status_code, expected_responses)
+            expect_success, expected_response = cases[assignment]
+            self.assertEquals(response.status_code, expected_response)
 
             submission_exists = Submission.objects.filter(
                 assignment__exact=assignment,
@@ -46,7 +48,25 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
             ).exists()
             self.assertEquals(submission_exists, expect_success)
 
-    def testCanUpdate(self):
+    def testCanSubmitWithFile(self):
+        submitter = self.enrolled_students[0]
+        self.loginUser(submitter)
+        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip") as f:
+            response = self.c.post('/assignments/%s/new/' % self.validatedAssignment.pk, {
+                'notes': 'This is a test submission.',
+                'authors': str(submitter.user.pk),
+                'attachment': f
+            })
+        # expect dashboard redirect
+        self.assertEquals(response.status_code, 302)
+
+        submission_exists = Submission.objects.filter(
+            assignment__exact=self.validatedAssignment,
+            submitter__exact=submitter.user,
+        ).exists()
+        self.assertTrue(submission_exists)
+
+    def testCannotUpdate(self):
         submitter = self.enrolled_students[0]
         self.loginUser(submitter)
 
@@ -60,7 +80,12 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
         response = self.c.post('/update/%u/' % sub.pk)
         self.assertEquals(response.status_code, 400)
 
+    def testCanUpdateInvalidData(self):
+        submitter = self.enrolled_students[0]
+        self.loginUser(submitter)
+
         # Move submission into valid state for re-upload
+        sub = self.createValidatableSubmission(self.current_user)
         sub.state = Submission.TEST_VALIDITY_FAILED
         sub.save()
 
@@ -68,9 +93,18 @@ class StudentCreateSubmissionWebTestCase(StudentSubmissionWebTestCase):
         response = self.c.post('/update/%u/' % sub.pk, {'attachment':'bar'})   # invalid form data
         self.assertEquals(response.status_code, 200)    # render update view, again
 
+    def testCanUpdateValidData(self):
+        submitter = self.enrolled_students[0]
+        self.loginUser(submitter)
+
+        # Move submission into valid state for re-upload
+        sub = self.createValidatableSubmission(self.current_user)
+        sub.state = Submission.TEST_VALIDITY_FAILED
+        sub.save()
+
         # Try to update file with correct POST data
         with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip") as f:
-            response = self.c.post('/update/%u/' % sub.pk, {'attachment': f})
+            response = self.c.post('/update/%u/' % sub.pk, {'notes': '', 'attachment': f})
             self.assertEquals(response.status_code, 302)    # redirect to dashboard after upload
 
     def testNonEnrolledCannotSubmit(self):
