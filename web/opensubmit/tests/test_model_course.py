@@ -73,13 +73,3 @@ class CourseModelStudentTestCase(StudentTestCase):
         sub = self.createSubmission(self.current_user, self.openAssignment)
         self.assertEquals(qs.count(), len(sub.authors.all()))
 
-class CourseModelTutorTestCase(SubmitTutorTestCase):
-    def setUp(self):
-        super(CourseModelTutorTestCase, self).setUp()
-
-class CourseModelAdminTestCase(SubmitAdminTestCase):
-    def setUp(self):
-        super(CourseModelAdminTestCase, self).setUp()
-
-
-

@@ -15,6 +15,12 @@ class AdminTestCase(SubmitAdminTestCase, TeacherTestCaseSet):
             (self.enrolled_students[0].user.pk, self.enrolled_students[1].user.pk))
         self.assertEquals(response.status_code, 200)
 
+    def testMergeUsersAction(self):
+        response=self.c.post('/mergeusers/', {
+            'primary_id':self.enrolled_students[0].user.pk,
+            'secondary_id':self.enrolled_students[1].user.pk})
+        self.assertEquals(response.status_code, 302)
+
     def testNewCourseView(self):
         response=self.c.get('/admin/opensubmit/course/add/')
         self.assertEquals(response.status_code, 200)

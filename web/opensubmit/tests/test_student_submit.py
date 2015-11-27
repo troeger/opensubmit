@@ -10,17 +10,6 @@ from opensubmit.models import UserProfile
 
 class StudentSubmissionTestCase(SubmitTestCase):
 
-    def createSubmissions(self):
-        self.openAssignmentSub = self.createSubmission(self.current_user, self.openAssignment)
-        self.softDeadlinePassedAssignmentSub = self.createSubmission(self.current_user, self.softDeadlinePassedAssignment)
-        self.hardDeadlinePassedAssignmentSub = self.createSubmission(self.current_user, self.hardDeadlinePassedAssignment)
-
-        self.submissions = (
-            self.openAssignmentSub,
-            self.softDeadlinePassedAssignmentSub,
-            self.hardDeadlinePassedAssignmentSub,
-        )
-
     def testCanSubmitWithoutFile(self):
         submitter = self.enrolled_students[0]
         self.loginUser(submitter)
