@@ -1,8 +1,6 @@
 '''
-    Test cases focusing on the access rights of tutors.
+    Test cases focusing on the model admin extensions.
 '''
-
-import StringIO, zipfile
 
 from django import http
 from django.contrib.admin.sites import AdminSite
@@ -10,40 +8,8 @@ from opensubmit.tests.cases import SubmitTutorTestCase, MockRequest
 from opensubmit.models import Assignment, Course, SubmissionFile, Submission, GradingScheme
 from opensubmit.admin.course import CourseAdmin
 
-class TutorACLTestCase(SubmitTutorTestCase):
+class ModelAdminTestCase(SubmitTutorTestCase):
 
-    def setUp(self):
-        super(TutorACLTestCase, self).setUp()
-
-    def testCanUseTeacherBackend(self):
-        response = self.c.get('/teacher/opensubmit/submission/')
-        self.assertEquals(response.status_code, 200)
-
-    def testCannotUseAdminBackend(self):
-        response = self.c.get('/admin/auth/user/')
-        self.assertEquals(response.status_code, 403)        # 302: can access the model in principle, 403: can never access the app label
-
-class BackendTestCase(TutorACLTestCase):
-    '''
-        Test different teacher backend functions.
-    '''
-    def testAssignmentBackend(self):
-        from opensubmit.admin.assignment import AssignmentAdmin
-        from opensubmit.admin.assignment import course as course_title
-        assadm = AssignmentAdmin(Assignment, AdminSite())
-        assignments_shown = assadm.get_queryset(self.request)
-        for assignment in assignments_shown:
-            self.assertEquals(assignment.course, self.course)
-            self.assertEquals(course_title(assignment), self.course.title)
-
-    def testCourseBackend(self):
-        from opensubmit.admin.course import assignments as course_assignments
-        courseadm = CourseAdmin(Course, AdminSite())
-        num_courses = courseadm.get_queryset(self.request).count()
-        self.assertEquals(num_courses, 1)
-        ass_str_list = course_assignments(self.course)
-        for ass in self.allAssignments:
-            assert(ass.title in ass_str_list)
 
     def testGradingBackend(self):
         from opensubmit.admin.grading import means_passed, grading_schemes
@@ -71,17 +37,32 @@ class BackendTestCase(TutorACLTestCase):
     def testGradingSchemeAdminRendering(self):
         from opensubmit.admin.gradingscheme import GradingSchemeAdmin
         gsadmin = GradingSchemeAdmin(GradingScheme, AdminSite())
-        assert('GradingSchemeForm' in str(gsadmin.get_form(self.request))) 
+        assert('GradingSchemeForm' in str(gsadmin.get_form(self.request)))
 
+    def testAssignmentBackend(self):
+        from opensubmit.admin.assignment import AssignmentAdmin
+        assadm = AssignmentAdmin(Assignment, AdminSite())
+        assignments_shown = assadm.get_queryset(self.request).count()
+        # should get all of them
+        self.assertEquals(len(self.allAssignments), assignments_shown)
 
-class SubmissionBackendTestCase(TutorACLTestCase):
+    def testCourseBackend(self):
+        from opensubmit.admin.course import assignments as course_assignments
+        courseadm = CourseAdmin(Course, AdminSite())
+        num_courses = courseadm.get_queryset(self.request).count()
+        self.assertEquals(num_courses, 1)
+        ass_str_list = course_assignments(self.course)
+        for ass in self.allAssignments:
+            assert(ass.title in ass_str_list)
+
+class SubmissionModelAdminTestCase(SubmitTutorTestCase):
     '''
-        Test submission-related teacher backend functions, which needs more setUp
-        than the other teacher backend test cases.
+        Test submission model admin functions, which needs more setUp
+        than the other cases.
     '''
     def setUp(self):
         from opensubmit.admin.submission import SubmissionAdmin
-        super(SubmissionBackendTestCase, self).setUp()
+        super(SubmissionModelAdminTestCase, self).setUp()
         self.sub1 = self.createSubmission(self.current_user, self.openAssignment)
         self.sub2 = self.createSubmission(self.current_user, self.softDeadlinePassedAssignment)
         self.val_sub = self.createValidatedSubmission(self.current_user)
@@ -158,32 +139,4 @@ class SubmissionBackendTestCase(TutorACLTestCase):
         submfilter = SubmissionCourseFilter(self.request, {'coursefilter': self.course.pk}, Submission, None)
         subcount = submfilter.queryset(self.request, Submission.objects.all()).count()      
         self.assertEquals(subcount, len(self.all_submissions))
-
-    def testGradingTableView(self):
-        response = self.c.get('/course/%u/gradingtable/'%self.course.pk)
-        self.assertEquals(response.status_code, 200)
-
-    def testGetPerformanceResult(self):
-        response = self.c.get('/assignments/%u/perftable/'%self.sub1.assignment.pk)
-        self.assertEquals(response.status_code, 200)
-        assert('text/' in str(response))        # content type
-
-    def testArchiveView(self):
-        response = self.c.get('/course/%u/archive/'%self.course.pk)
-        self.assertEquals(response.status_code, 200)
-        # Test if the download is really a ZIP file
-        f = StringIO.StringIO(response.content)
-        zipped_file = zipfile.ZipFile(f, 'r')
-        try:
-            # Check ZIP file validity
-            self.assertIsNone(zipped_file.testzip())
-            # Try to find a file some student stored in a sub-folder on it's own, targets #18
-            found_stud_subfile = False
-            for entry in zipped_file.filelist:
-                if "student_folder/folder_in_folder/student_file_in_subfolder" in entry.filename:
-                    found_stud_subfile = True
-            assert(found_stud_subfile)
-        finally:
-            zipped_file.close()
-            f.close()        
 

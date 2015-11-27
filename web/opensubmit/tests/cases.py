@@ -413,6 +413,19 @@ class SubmitAdminTestCase(SubmitTestCase):
         assert(self.current_user.user.is_superuser)
         assert(self.current_user.user.is_staff)
 
+class SubmitTeacherTestCase(SubmitTestCase):
+    '''
+        Test case with an teacher (course owner) logged-in.
+    '''
+    def setUp(self):
+        super(SubmitTeacherTestCase, self).setUp()
+        self.loginUser(self.teacher)
+        self.request = MockRequest(self.teacher.user)
+        # Test for amok-running post_save handlers (we had such a case)
+        assert(self.current_user.user.is_active)
+        assert(self.current_user.user.is_staff)
+
+
 class SubmitTutorTestCase(SubmitTestCase):
     '''
         Test case with a tutor logged-in.
