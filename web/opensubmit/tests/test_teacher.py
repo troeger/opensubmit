@@ -4,6 +4,7 @@
 
 import StringIO, zipfile
 
+from opensubmit.models import Submission
 from opensubmit.tests.cases import SubmitTeacherTestCase
 from opensubmit.tests.test_tutor import TutorTestCaseSet
 from django.contrib.auth.models import User
@@ -35,6 +36,10 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         self.assertEquals(response.status_code, 200)
 
     def testGradingTableView(self):
+        sub = self.createValidatedSubmission(self.current_user)
+        sub.grading = self.passGrade
+        sub.state = Submission.CLOSED
+        sub.save()
         response = self.c.get('/course/%u/gradingtable/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
 
@@ -45,6 +50,15 @@ class TeacherTestCaseSet(TutorTestCaseSet):
     def testMailView(self):
         response=self.c.get('/course/%u/mail2all/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
+
+    def testMailSending(self):
+        # POST with parameters leads to preview, which stores relevant information in session
+        response=self.c.post('/course/%u/mail2all/'%self.course.pk, {'subject': 'Foo', 'message': 'bar'})
+        self.assertEquals(response.status_code, 200)
+        # POST without parameters leads to sending of data stored in session
+        # Expect redirect to overview
+        response=self.c.post('/course/%u/mail2all/'%self.course.pk)
+        self.assertEquals(response.status_code, 302)
 
     def testPerfDataView(self):
         sub1 = self.createValidatedSubmission(self.current_user)
