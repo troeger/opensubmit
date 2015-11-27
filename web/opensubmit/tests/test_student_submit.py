@@ -47,11 +47,13 @@ class StudentSubmissionTestCase(SubmitTestCase):
         # expect dashboard redirect
         self.assertEquals(response.status_code, 302)
 
-        submission_exists = Submission.objects.filter(
+        sub = Submission.objects.get(
             assignment__exact=self.validatedAssignment,
-            submitter__exact=submitter.user,
-        ).exists()
-        self.assertTrue(submission_exists)
+            submitter__exact=submitter.user)
+
+        assert(sub)
+        assert(sub.file_upload)
+        assert(sub.file_upload.md5)
 
     def testCannotUpdate(self):
         submitter = self.enrolled_students[0]

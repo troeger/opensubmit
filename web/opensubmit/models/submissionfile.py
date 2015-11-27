@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 
 from opensubmit.settings import MEDIA_ROOT
 
-import zipfile, tarfile, unicodedata, os
+import zipfile, tarfile, unicodedata, os, hashlib
 
 def upload_path(instance, filename):
     '''
@@ -35,12 +35,20 @@ class SubmissionFile(models.Model):
     attachment = models.FileField(upload_to=upload_path, verbose_name="File upload")
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True, editable=False)
+    md5 = models.CharField(max_length=36, null=True, blank=True)
 
     class Meta:
         app_label = 'opensubmit'
 
     def __unicode__(self):
         return unicode(self.attachment.name)
+
+    def save(self, *args, **kwargs):
+        md5 = hashlib.md5()
+        for chunk in self.attachment.chunks():
+            md5.update(chunk)
+        self.md5 = md5.hexdigest()
+        super(SubmissionFile, self).save(*args, **kwargs)
 
     def basename(self):
         return self.attachment.name[self.attachment.name.rfind('/') + 1:]
