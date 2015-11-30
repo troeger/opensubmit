@@ -49,7 +49,7 @@ def read_config(config_file):
 
     # sanity check for directory specification
     targetdir=config.get("Execution", "directory")
-    if os.name is not 'nt':
+    if platform.system() is not "Windows":
         assert(targetdir.startswith("/")) # need a work around here 
     assert(targetdir.endswith(os.sep))
     return config
@@ -277,7 +277,7 @@ def _unpack_job(config, fname, submid, action):
                 tar.extractall(finalpath)
             os.remove(fname)
         except Exception as e:
-            logger.error("ERROR extract TAR: " + str(e))      
+            logger.error("ERROR extracting TAR: " + str(e))      
     else:
         try:
             os.remove(fname)
@@ -302,7 +302,10 @@ def _handle_alarm(proc):
     # Needed for compatibility with both MacOS X, Linux and Windows
     logger.info("Got alarm signal, killing %d due to timeout." % proc.pid)
     try:
-        os.killpg(proc.pid, signal.SIGKILL) #not available on Windows proc.terminate kills not the whole process group!
+        if platform.system() == "Windows":
+            proc.terminate()
+        else:
+            os.killpg(proc.pid, signal.SIGTERM) #not available on Windows proc.terminate kills not the whole process group!
     except Exception as e:
         logger.error("ERROR killing process: %d" % proc.pid)
 
@@ -370,7 +373,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     if proc.returncode == 0:
         logger.info("Executed with error code 0: \n\n" + output)
         return output, True
-    elif (proc.returncode == 0-signal.SIGKILL) or (proc.returncode == None):
+    elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
         _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
         _cleanup(config, finalpath)
         return output, False
@@ -403,7 +406,10 @@ def _kill_deadlocked_jobs(config):
             logger.debug("This user already runs %u for %u seconds." % (proc.pid, runtime))
             if runtime > timeout:
                 logger.debug("Killing %u due to exceeded runtime." % proc.pid)
-                proc.kill()
+                try:
+                    proc.kill()
+                except Exception as e:
+                    logger.error("ERROR killing process %d." % proc.pid)
 
 def _can_run(config):
     '''
@@ -478,18 +484,18 @@ def run(config_file):
         Returns boolean that indicates success.
     '''
     config = read_config(config_file)
-    compile_cmd=config.get("Execution","compile_cmd")
+    compile_cmd = config.get("Execution","compile_cmd")
     _kill_deadlocked_jobs(config)
     lock = FileLock(config.get("Execution","pidfile"))
     if _can_run(config):
         # fetch any available job
-        fname, submid, action, timeout, validator_url=_fetch_job(config)
+        fname, submid, action, timeout, validator_url = _fetch_job(config)
         if not fname:
             logger.debug("Release lock")
             lock.release()
             return False
         # decompress download, only returns on success
-        finalpath=_unpack_job(config, fname, submid, action)
+        finalpath = _unpack_job(config, fname, submid, action)
         if not finalpath:
             logger.debug("Release lock")
             lock.release()
@@ -503,7 +509,7 @@ def run(config_file):
                 lock.release()
                 return False
             # build it, only returns on success
-            output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid, action, timeout)
+            output, success = _run_job(config, finalpath, compile_cmd.split(" "), submid, action, timeout)
             if not success:
                 logger.debug("Release lock")
                 lock.release()
@@ -559,5 +565,5 @@ if __name__ == "__main__":
     elif len(sys.argv) > 2 and sys.argv[1] == "run":
         run(sys.argv[2])
     else:
-        print("python -m opensubmit.executor [register|run|unlock] executor.ini")
+        print("python -m opensubmit.executor [register|run] executor.ini")
     print "Exit"
