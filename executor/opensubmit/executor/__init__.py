@@ -49,7 +49,8 @@ def read_config(config_file):
 
     # sanity check for directory specification
     targetdir=config.get("Execution", "directory")
-    assert(targetdir.startswith("/")) # not portable
+    if os.name is not 'nt':
+        assert(targetdir.startswith("/")) # need a work around here 
     assert(targetdir.endswith(os.sep))
     return config
 
@@ -59,7 +60,7 @@ def _cleanup(config, finalpath):
     '''
     if config.getboolean("Execution", "cleanup") == True:
         logger.info("Removing downloads at " + finalpath)
-        shutil.rmtree(finalpath, ignore_errors=True) 
+        shutil.rmtree(finalpath, ignore_errors=True) #fails often on windows
     else:
         logger.info("Keeping data for debugging: " + finalpath)
 
@@ -248,17 +249,17 @@ def _unpack_job(config, fname, submid, action):
 
         Returns None on error, or path were the compressed data now lives
     '''
-    # os.chroot is not working with tarfile support
     basepath = config.get("Execution","directory")
-    if not basepath.endswith(os.sep):
-        basepath += os.sep
-    finalpath = basepath+str(submid) + os.sep
-    try:
-        # Overwrite still existing data from debug session (cleanup=False)
-        shutil.rmtree(finalpath, ignore_errors=True)
-        os.makedirs(finalpath)
+    try: 
+        #use a new temp dir for each run, to skip problems with file locks on Windows
+        finalpath = tempfile.mkdtemp(prefix=str(submid)+'_', dir=basepath)
     except Exception as e:
-        logger.error("ERROR creating directory: " + str(e))
+        logger.error("ERROR could not create temp dir: " + str(e))
+        return None
+        
+    if not finalpath.endswith(os.sep):
+        finalpath += os.sep
+    
     if zipfile.is_zipfile(fname):
         logger.debug("Valid ZIP file")
         try:
@@ -298,10 +299,10 @@ def _handle_alarm(proc):
     '''
         Signal handler for timeout implementation
     '''
-    # Needed for compatibility with both MacOS X and Linux
+    # Needed for compatibility with both MacOS X, Linux and Windows
     logger.info("Got alarm signal, killing %d due to timeout." % proc.pid)
     try:
-        os.killpg(proc.pid, signal.SIGKILL)
+        os.killpg(proc.pid, signal.SIGKILL) #not available on Windows proc.terminate kills not the whole process group!
     except Exception as e:
         logger.error("ERROR killing process: %d" % proc.pid)
 
