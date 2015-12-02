@@ -18,14 +18,14 @@ We found the following duplicate file uploads for this assignment:
 	{% if duplicate_set.list|length > 1 %}
 		<h3>File checksum {{ duplicate_set.grouper }}</h3>
 		<table class="table">
-		<tr><th>File upload</th><th>Submission</th><th>Authors</th><th></th></tr>
+		<tr><th>File upload</th><th></th><th>Submission</th><th>Authors</th></tr>
 		{% for submfile in duplicate_set.list %}
 			{% with submission=submfile.submissions.all.0 %}
 				<tr>
 					<td><a href="{% url 'teacher:opensubmit_submissionfile_change' submfile.pk %}">#{{submfile.pk}} ({{submfile}})</a></td>
+					<td><a href="{{ submfile.get_preview_url }}" target="_new">Preview</a></td>
 					<td><a href="{% url 'teacher:opensubmit_submission_change' submission %}">#{{submission}}</a></td>
 					<td>{{ submission.authors.all|join:", " }}</td>
-					<td><a href="{{ submfile.get_preview_url }}" target="_new">Preview File Upload</a></td>
 				</tr>
 			{% endwith %}
 		{% endfor %}
