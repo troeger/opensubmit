@@ -52,6 +52,13 @@ class Assignment(models.Model):
         qs = self.submissions.exclude(state=Submission.WITHDRAWN)
         return qs
 
+    def uploads(self):
+        '''
+            Return a queryset for all non-replaced file uploads for  this assignment.
+        '''
+        from .submissionfile import SubmissionFile
+        return SubmissionFile.valid_ones.filter(submissions__assignment=self)
+
     def has_perf_results(self):
         '''
             Figure out if any submission for this assignment has performance data being available.

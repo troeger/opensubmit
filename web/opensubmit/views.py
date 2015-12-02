@@ -230,6 +230,14 @@ def perftable(request, ass_id):
 
 @login_required
 @staff_member_required
+def duplicates(request, ass_id):
+    assignment = get_object_or_404(Assignment, pk=ass_id)
+    return render(request, 'duplicates.html', {
+        'assignment': assignment
+    })
+
+@login_required
+@staff_member_required
 def gradingtable(request, course_id):
     gradings = {}
     course = get_object_or_404(Course, pk=course_id)

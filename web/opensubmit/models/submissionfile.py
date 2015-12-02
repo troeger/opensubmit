@@ -30,12 +30,13 @@ class SubmissionFile(models.Model):
         The "fetched" field defines the time stamp when the file was fetched for
         checking by some executor. On result retrieval, this timestamp is emptied
         again, which allows to find 'stucked' executor jobs on the server side.
+        The "md5" field keeps a checksum of the file upload, for duplicate detection.
     '''
 
     attachment = models.FileField(upload_to=upload_path, verbose_name="File upload")
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True, editable=False)
-    md5 = models.CharField(max_length=36, null=True, blank=True)
+    md5 = models.CharField(max_length=36, null=True, blank=True, editable=False)
 
     class Meta:
         app_label = 'opensubmit'
@@ -43,11 +44,20 @@ class SubmissionFile(models.Model):
     def __unicode__(self):
         return unicode(self.attachment.name)
 
-    def save(self, *args, **kwargs):
+    def attachment_md5(self):
+        '''
+            Calculate the checksum of the currently stored binary file.
+        '''
         md5 = hashlib.md5()
         for chunk in self.attachment.chunks():
             md5.update(chunk)
-        self.md5 = md5.hexdigest()
+        return md5.hexdigest()
+
+    def save(self, *args, **kwargs):
+        '''
+            Before saving the model instance, update the MD5 field first.
+        '''
+        self.md5 = self.attachment_md5()
         super(SubmissionFile, self).save(*args, **kwargs)
 
     def basename(self):

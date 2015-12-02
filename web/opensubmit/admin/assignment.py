@@ -93,17 +93,17 @@ def num_unfinished(obj):
     return "%u (%u)"%(gradable, unfinished)
 num_unfinished.short_description = "To be graded (unfinished)"
 
-def perf_link(obj):
-    ''' Link to performance data overview.'''
+def view_links(obj):
+    ''' Link to performance data and duplicate overview.'''
+    result=format_html('')
     if obj.has_perf_results():
-        return format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
-    else:
-        return format_html('')
-perf_link.short_description = ""
-
+        result+=format_html('<a href="%s" style="white-space: nowrap">Performance data</a>'%reverse('perftable', args=(obj.pk,)))
+    result+=format_html('<a href="%s" style="white-space: nowrap">Duplicate report</a>'%reverse('duplicates', args=(obj.pk,)))
+    return result
+view_links.short_description = ""
 
 class AssignmentAdmin(ModelAdmin):
-    list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_authors, num_subm, num_finished, num_unfinished, perf_link]
+    list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_authors, num_subm, num_finished, num_unfinished, view_links]
     list_filter = ('course',)
 
     form = AssignmentAdminForm
