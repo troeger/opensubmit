@@ -114,6 +114,7 @@ class SubmissionAdmin(ModelAdmin):
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
 
     fieldsets = (
             ('General',
