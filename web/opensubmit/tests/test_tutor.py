@@ -3,7 +3,7 @@
 '''
 
 from opensubmit.tests.cases import SubmitTutorTestCase
-from opensubmit.models import SubmissionFile, Assignment
+from opensubmit.models import SubmissionFile, Assignment, Submission
 from django.contrib.admin.sites import AdminSite
 from django.core.files import File
 
@@ -33,6 +33,21 @@ class TutorTestCaseSet():
     def testGradingTableView(self):
         response=self.c.get('/course/%u/gradingtable/'%self.course.pk)
         self.assertEquals(response.status_code, 200)
+
+    def testDuplicateReportView(self):
+        # Using this method twice generates a duplicate upload
+        sub1 = self.createValidatableSubmission(self.enrolled_students[0])
+        sub2 = self.createValidatableSubmission(self.enrolled_students[1])
+        sub3 = self.createValidatableSubmission(self.enrolled_students[2])
+        sub3.state=Submission.WITHDRAWN
+        sub3.save()
+        response=self.c.get('/assignments/%u/duplicates/'%self.validatedAssignment.pk)
+        self.assertEquals(response.status_code, 200)
+        # expect both submissions to be in the report
+        self.assertIn('#%u'%sub1.pk, str(response))
+        self.assertIn('#%u'%sub2.pk, str(response))
+        # expect withdrawn submissions to be left out
+        self.assertNotIn('#%u'%sub3.pk, str(response))
 
     def testPreviewView(self):
         sub1 = self.createValidatedSubmission(self.current_user)
