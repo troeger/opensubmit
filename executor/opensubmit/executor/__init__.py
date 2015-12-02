@@ -169,29 +169,36 @@ def _fetch_validator(config, url, path):
         finalname = path + VALIDATOR_FNAME
 
         if zipfile.is_zipfile(download_file):
-            logger.debug("Validator is a ZIP file, unpacking it.")         
-            
+            logger.debug("Validator is a ZIP file, unpacking it.")
+
             try:
                 with zipfile.ZipFile(download_file, "r") as zip:
                     zip.extractall(path)
                 os.remove(download_file)
             except Exception as e:
                 logger.error("ERROR extracting ZIP: " + str(e))
+                #TODO: Ugly hack, make error reporting better
+                _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
+                return False
             # ZIP file is expected to contain VALIDATOR_FNAME
             if not os.path.exists(finalname):
                 logger.error("ERROR validator ZIP package does not contain " + VALIDATOR_FNAME)
                 #TODO: Ugly hack, make error reporting better
                 _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
+                return False
         else:
             try:
                 logger.debug("Validator is a single file, renaming it to " + finalname)
                 os.rename(download_file, finalname)
             except Exception as e:
                 logger.error("ERROR renaming validator: " + str(e))
+                return False
         try:
             os.chmod(finalname, stat.S_IXUSR|stat.S_IRUSR)
         except Exception as e:
             logger.error("ERROR setting attributes to validator: " + str(e))
+            return False
+        return True
 
 
 def _fetch_job(config):
@@ -536,7 +543,10 @@ def run(config_file):
                 lock.release()
                 return False
             # fetch validator into target directory
-            _fetch_validator(config, validator_url, finalpath)
+            if not _fetch_validator(config, validator_url, finalpath):
+                logger.debug("Validator fetching failed, cancelling task")
+                lock.release()
+                return False
             # Allow submission to load their own libraries
             logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
             os.environ["LD_LIBRARY_PATH"]=finalpath
