@@ -147,7 +147,7 @@ def _infos_cmd(cmd, stdhndl=" 2>&1", e_shell=True):
     except Exception as e:
         return ""
 
-def _fetch_validator(url, path):
+def _fetch_validator(config, url, path):
         '''
             Fetch validator script from the given URL and put it under the given target file.
 
@@ -536,7 +536,7 @@ def run(config_file):
                 lock.release()
                 return False
             # fetch validator into target directory
-            _fetch_validator(validator_url, finalpath)
+            _fetch_validator(config, validator_url, finalpath)
             # Allow submission to load their own libraries
             logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
             os.environ["LD_LIBRARY_PATH"]=finalpath
