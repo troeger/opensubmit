@@ -235,6 +235,9 @@ class Submission(models.Model):
     def is_closed(self):
         return self.state in [self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
 
+    def is_grading_finished(self):
+        return self.state in [self.GRADED, self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
+
     def show_grading(self):
         return self.is_closed()
 
