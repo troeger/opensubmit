@@ -18,10 +18,11 @@ def upload_path(instance, filename):
 class ValidSubmissionFileManager(models.Manager):
     '''
         A model manager used by SubmissionFile. It returns only submission files
-        that were not replaced.
+        that were not replaced, for submission that were not withdrawn.
     '''
     def get_queryset(self):
-        return super(ValidSubmissionFileManager, self).get_queryset().filter(replaced_by=None)
+        from .submission import Submission
+        return super(ValidSubmissionFileManager, self).get_queryset().filter(replaced_by=None).exclude(submissions__state=Submission.WITHDRAWN)
 
 class SubmissionFile(models.Model):
     '''
