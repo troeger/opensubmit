@@ -10,9 +10,9 @@ import tempfile, os, platform, shutil, subprocess, signal, stat, sys, pickle, Co
 import time
 from threading import Timer
 from datetime import datetime, timedelta
-from lockfile import FileLock
 
 logger=logging.getLogger("OpenSubmitExecutor")
+platform_sys = platform.system() #Windows Linux Darwin
 
 # Expected in validator ZIP packages
 VALIDATOR_FNAME = "validator.py"
@@ -49,7 +49,7 @@ def read_config(config_file):
 
     # sanity check for directory specification
     targetdir=config.get("Execution", "directory")
-    if platform.system() is not "Windows":
+    if platform_sys is not "Windows":
         assert(targetdir.startswith("/")) # need a work around here 
     assert(targetdir.endswith(os.sep))
     return config
@@ -302,8 +302,9 @@ def _handle_alarm(proc):
     # Needed for compatibility with both MacOS X, Linux and Windows
     logger.info("Got alarm signal, killing %d due to timeout." % proc.pid)
     try:
-        if platform.system() == "Windows":
-            proc.terminate()
+        if platform_sys == "Windows":
+            os.system("taskkill /PID %d /T /F"%proc.pid )
+            #proc.terminate()
         else:
             os.killpg(proc.pid, signal.SIGTERM) #not available on Windows proc.terminate kills not the whole process group!
     except Exception as e:
@@ -322,7 +323,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     logger.info("Spawning process for " + str(cmd))
     
     try:
-        if platform.system() == "Windows":
+        if platform_sys == "Windows":
             proc = subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         else:
             proc = subprocess.Popen(cmd, cwd=finalpath, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
@@ -373,13 +374,14 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
     if proc.returncode == 0:
         logger.info("Executed with error code 0: \n\n" + output)
         return output, True
-    elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
+    #     Unix SIGTERM                               unknown                      Windows Kill 
+    elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None) or (proc.returncode == 1):
         _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
         _cleanup(config, finalpath)
         return output, False
     else:
         try:
-            dircontent = subprocess.check_output(["cmd.exe","/c","dir", "/b", finalpath]) if platform.system()=="Windows" else subprocess.check_output(["ls","-ln",finalpath])
+            dircontent = subprocess.check_output(["cmd.exe","/c","dir", "/b", finalpath]) if platform_sys=="Windows" else subprocess.check_output(["ls","-ln",finalpath])
         except Exception as e:
             logger.error("ERROR getting directory content. " + str(e))
             dircontent = "Not available."
@@ -407,26 +409,38 @@ def _kill_deadlocked_jobs(config):
             if runtime > timeout:
                 logger.debug("Killing %u due to exceeded runtime." % proc.pid)
                 try:
-                    proc.kill()
+                    if platform_sys == "Windows":
+                        os.system("taskkill /PID %d /T /F" % proc.pid )
+                    else:
+                        proc.kill()
                 except Exception as e:
-                    logger.error("ERROR killing process %d." % proc.pid)
+                    logger.error("ERROR killing process %u." % proc.pid)
 
 def _can_run(config):
     '''
         Determines if the executor is configured to run fetched jobs one after the other.
         If this is the case, then check if another script instance is still running.
     '''
-    if config.getboolean("Execution", "serialize"):
-        lock = FileLock(config.get("Execution", "pidfile")) 
-        try: 
-            if lock.is_locked() and not lock.i_am_locking():
-               logger.debug("Already locked")
-               return False
-            else:
-               lock.acquire()
-               logger.debug("Got the script lock")
-        except Exception as e:
-            logger.error("ERROR locking. " + str(e))           
+    import psutil,io
+    
+    if config.getboolean("Execution","serialize"):
+        logger.debug("Check for running instance.")
+        try:
+            with io.open(config.get("Execution","pidfile"),'r+') as f:
+                pid = f.readline()
+                mypid = os.getpid()
+                if pid.isdigit():
+                    pid=int(pid)                
+                    # should never happen that our pid is already in there, but it is possbile because of PID reuse
+                    if psutil.pid_exists(pid) and mypid!=pid:
+                        logger.debug("Another instance exists %d"%pid)
+                        return False         
+                logger.debug("PID %d is invalid updating PID: %d" % (pid,mypid))
+                f.truncate(0)
+                f.seek(0,io.SEEK_SET)
+                f.write(unicode(os.getpid()))
+         except Exception as e:
+            logger.error("ERROR updating PID %s"%e)
             return False
     return True
 
@@ -447,7 +461,7 @@ def send_config(config_file):
        
     output.append(["CPUID information", conf])
      
-    if platform.system()=="Windows":
+    if platform_sys=="Windows":
        conf = _infos_cmd("cl.exe|@echo off","") #force returncode 0
        conf = conf.split("\n")[0] #extract version info
     else:
@@ -486,79 +500,59 @@ def run(config_file):
     config = read_config(config_file)
     compile_cmd = config.get("Execution","compile_cmd")
     _kill_deadlocked_jobs(config)
-    lock = FileLock(config.get("Execution","pidfile"))
-    if _can_run(config):
-        # fetch any available job
-        fname, submid, action, timeout, validator_url = _fetch_job(config)
-        if not fname:
-            logger.debug("Release lock")
-            lock.release()
-            return False
-        # decompress download, only returns on success
-        finalpath = _unpack_job(config, fname, submid, action)
-        if not finalpath:
-            logger.debug("Release lock")
-            lock.release()
-            return False
-        # perform action defined by the server for this download
-        if action == "test_compile":
-            # run configure script, if available.
-            output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
-            if not success:
-                logger.debug("Release lock")
-                lock.release()
+        if _can_run(config):
+            # fetch any available job
+            fname, submid, action, timeout, validator_url = _fetch_job(config)
+            if not fname:
                 return False
-            # build it, only returns on success
-            output, success = _run_job(config, finalpath, compile_cmd.split(" "), submid, action, timeout)
-            if not success:
-                logger.debug("Release lock")
-                lock.release()
+            # decompress download, only returns on success
+            finalpath = _unpack_job(config, fname, submid, action)
+            if not finalpath:
                 return False
-            _send_result(config, output, 0, submid, action)
-            _cleanup(config, finalpath)
-            logger.debug("Release lock")
-            lock.release()
-            return True
-        elif action == "test_validity" or action == "test_full":
-            # prepare the output file for validator performance results
-            perfdata_fname = finalpath+"perfresults.csv"
-            open(perfdata_fname,"w").close()
-            # run configure script, if available.
-            output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
-            if not success:
-                logger.debug("Release lock")
-                lock.release()
+            # perform action defined by the server for this download
+            if action == "test_compile":
+                # run configure script, if available.
+                output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+                if not success:
+                    return False
+                # build it, only returns on success
+                output, success = _run_job(config, finalpath, compile_cmd.split(" "), submid, action, timeout)
+                if not success:
+                    return False
+                _send_result(config, output, 0, submid, action)
+                _cleanup(config, finalpath)
+                return True
+            elif action == "test_validity" or action == "test_full":
+                # prepare the output file for validator performance results
+                perfdata_fname = finalpath+"perfresults.csv"
+                open(perfdata_fname,"w").close()
+                # run configure script, if available.
+                output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+                if not success:
+                    return False
+                # build it
+                output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
+                if not success:
+                    return False
+                # fetch validator into target directory
+                _fetch_validator(validator_url, finalpath)
+                # Allow submission to load their own libraries
+                logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
+                os.environ["LD_LIBRARY_PATH"]=finalpath
+                # execute validator
+                output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
+                if not success:
+                    return False
+                perfdata= open(perfdata_fname,"r").read()
+                _send_result(config, output, 0, submid, action, perfdata)
+                _cleanup(config, finalpath)
+                return True
+            else:
+                # unknown action, programming error in the server
+                logger.error("Unknown action keyword from server: " + action)
                 return False
-            # build it
-            output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
-            if not success:
-                logger.debug("Release lock")
-                lock.release()
-                return False
-            # fetch validator into target directory
-            _fetch_validator(validator_url, finalpath)
-            # Allow submission to load their own libraries
-            logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
-            os.environ["LD_LIBRARY_PATH"]=finalpath
-            # execute validator
-            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
-            if not success:
-                logger.debug("Release lock")
-                lock.release()
-                return False
-            perfdata= open(perfdata_fname,"r").read()
-            _send_result(config, output, 0, submid, action, perfdata)
-            _cleanup(config, finalpath)
-            logger.debug("Release lock")
-            lock.release()
-            return True
-        else:
-            # unknown action, programming error in the server
-            logger.error("Unknown action keyword from server: " + action)
-            logger.debug("Release lock")
-            lock.release()
-            return False
-        
+
+                
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "register":
         send_config(sys.argv[2])

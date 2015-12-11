@@ -85,17 +85,6 @@ def console_script():
         from . import send_config
         send_config(EXECUTOR_CONFIG_FILE)
         exit(0)
-    if "unlock" in sys.argv:
-        from . import read_config
-        config=read_config(EXECUTOR_CONFIG_FILE)
-        try:
-            from lockfile import FileLock
-            FileLock(config.get("Execution","pidfile")).break_lock()
-            print "Lock removed."
-        except Exception as e:
-            print "ERROR breaking lock: " + str(e)
-        
-        
     if "run" in sys.argv:
         from . import run
         run(EXECUTOR_CONFIG_FILE)
