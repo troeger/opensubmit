@@ -5,6 +5,7 @@ import datetime
 import logging
 import json
 import os
+import shutil
 
 from django import http
 
@@ -90,7 +91,7 @@ class SubmitTestCase(TestCase):
         super(SubmitTestCase, self).setUp()
         self.logger = logging.getLogger('OpenSubmit')
         self.loggerLevelOld = self.logger.level
-        self.logger.setLevel(logging.WARN)
+        self.logger.setLevel(logging.DEBUG)
         self.setUpUsers()
         self.setUpCourses()
         self.setUpGradings()
@@ -320,11 +321,13 @@ class SubmitTestCase(TestCase):
         self.machine.save()
         return self.machine
 
-    def createSubmissionFile(self):
+    def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
         from django.core.files import File as DjangoFile
-        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip"), unicode("working_withsubdir.zip")))
-        sf.save()  
-        return sf      
+        fname=relpath[relpath.rfind(os.sep)+1:]
+        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
+        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf.save()
+        return sf
 
     def createTestedSubmissionFile(self, test_machine):
         '''

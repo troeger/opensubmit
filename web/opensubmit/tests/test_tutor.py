@@ -60,10 +60,7 @@ class TutorTestCaseSet():
         '''
         sub1 = self.createValidatedSubmission(self.current_user)
         for fname in [u'broken_preview.gz', u'broken_preview2.gz', u'broken_preview.zip']:
-            f=File(open(u"opensubmit/tests/submfiles/"+fname), fname)
-            subfile = SubmissionFile()
-            subfile.attachment=f
-            subfile.save()
+            subfile = self.createSubmissionFile("/opensubmit/tests/submfiles/"+fname)
             sub1.file_upload=subfile
             sub1.save()
             response=self.c.get('/preview/%u/'%sub1.pk)

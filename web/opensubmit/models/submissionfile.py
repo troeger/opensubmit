@@ -6,6 +6,9 @@ from opensubmit.settings import MEDIA_ROOT
 
 import zipfile, tarfile, unicodedata, os, hashlib
 
+import logging
+logger = logging.getLogger('OpenSubmit')
+
 def upload_path(instance, filename):
     '''
         Sanitize the user-provided file name, add timestamp for uniqness.
@@ -47,12 +50,55 @@ class SubmissionFile(models.Model):
 
     def attachment_md5(self):
         '''
-            Calculate the checksum of the currently stored binary file.
+            Calculate the checksum of the file upload.
+            For binary files (e.g. PDFs), the MD5 of the file itself is used.
+
+            Archives are unpacked and the MD5 is generated from the sanitized textfiles
+            in the archive. This is done with some smartness:
+            - Whitespace and tabs are removed before comparison.
+            - For MD5, ordering is important, so we compute it on the sorted list of
+              file hashes.
         '''
-        md5 = hashlib.md5()
-        for chunk in self.attachment.chunks():
-            md5.update(chunk)
-        return md5.hexdigest()
+        MAX_MD5_FILE_SIZE = 10000
+        md5_set = []
+
+        def md5_add_text(text):
+            try:
+                text=unicode(text, errors='ignore')
+                text=text.replace(' ','').replace('\n','').replace('\t','')
+                md5_set.append(hashlib.md5(text).hexdigest())
+            except:
+                # not unicode decodable
+                pass
+
+        def md5_add_file(f):
+            try:
+                md5 = hashlib.md5()
+                for chunk in f.chunks():
+                    md5.update(chunk)
+                md5_set.append(md5.hexdigest())
+            except:
+                pass
+
+        try:
+            if zipfile.is_zipfile(self.attachment.path):
+                zf = zipfile.ZipFile(self.attachment.path, 'r')
+                for zipinfo in zf.infolist():
+                    if zipinfo.file_size < MAX_MD5_FILE_SIZE:
+                        md5_add_text(zf.read(zipinfo))
+            elif tarfile.is_tarfile(self.attachment.path):
+                tf = tarfile.open(self.attachment.path,'r')
+                for tarinfo in tf.getmembers():
+                    if tarinfo.isfile():
+                        if tarinfo.size < MAX_MD5_FILE_SIZE:
+                            md5_add_text(tf.extractfile(tarinfo).read())
+            else:
+                md5_add_file(self.attachment)
+        except Exception as e:
+            logger.warning("Exception on archive MD5 computation, using file checksum: "+str(e))
+
+        return hashlib.md5(str(sorted(md5_set))).hexdigest()
+
 
     def save(self, *args, **kwargs):
         '''
