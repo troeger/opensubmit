@@ -247,6 +247,16 @@ class SubmissionAdmin(ModelAdmin):
             subm.save()
     setInitialStateAction.short_description = "Mark as new incoming submission"
 
+    def setGradingNotFinishedStateAction(self, request, queryset):
+        '''
+            Set all marked submissions to "grading not finished".
+            This is intended to support grading corrections on a larger scale.
+        '''
+        for subm in queryset:
+            subm.state = Submission.GRADING_IN_PROGRESS
+            subm.save()
+    setGradingNotFinishedStateAction.short_description = "Set grading status to unfinished"
+
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions, or for solutions in the middle of grading
         qs = queryset.filter(Q(state=Submission.SUBMITTED_TESTED) | Q(state=Submission.TEST_FULL_FAILED) | Q(state=Submission.CLOSED))
