@@ -4,6 +4,7 @@ from opensubmit.models import SubmissionFile
 class Command(BaseCommand):
     help = 'Refreshes all MD5 checksums for uploaded files'
     def handle(self, *args, **options):
+        print("Scanning existing file uploads ...")
     	files = SubmissionFile.valid_ones.all()
     	for f in files:
     		print("Updating checksum for %s ..."%(str(f)))

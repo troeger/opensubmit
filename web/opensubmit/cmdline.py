@@ -163,12 +163,14 @@ def console_script(fsroot='/'):
     '''
 
     if len(sys.argv) == 1:
-        print "opensubmit-web [configure|createsuperuser|help]"
+        print "opensubmit-web [configure|createsuperuser|fixperms|fixchecksums|help]"
         exit(0)
 
     if "help" in sys.argv:
         print "configure:        Check config files and database for correct installation of the OpenSubmit web server."
         print "createsuperuser:  (Re-)Creates the superuser account for the OpenSubmit installation."
+        print "fixperms:         Check and fix student and tutor permissions"
+        print "fixchecksums:     Re-create all student file checksums (for duplicate detection)"
         print "help:             Print this help"
         return 0
 
@@ -183,7 +185,12 @@ def console_script(fsroot='/'):
         print("Preparing static files for web server...")
         django_admin(["collectstatic","--noinput"])
         apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
-        return 0
 
     if "createsuperuser" in sys.argv:
         django_admin(["createsuperuser"])
+
+    if "fixperms" in sys.argv:
+        django_admin(["fixperms"])
+
+    if "fixchecksums" in sys.argv:
+        django_admin(["fixchecksums"])

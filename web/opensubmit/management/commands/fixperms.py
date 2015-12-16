@@ -5,4 +5,5 @@ from opensubmit.signalhandlers import check_permission_system
 class Command(BaseCommand):
     help = 'Makes sure that the OpenSubmit permission system is up and valid'
     def handle(self, *args, **options):
-		check_permission_system()
+        print("Scanning existing users ...")
+        check_permission_system()
