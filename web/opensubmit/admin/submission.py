@@ -56,6 +56,7 @@ class SubmissionStateFilter(SimpleListFilter):
         return (
             ('tobegraded', _('To be graded')),
             ('graded', _('Grading finished')),
+            ('closed', _('Closed')),
         )
 
     def queryset(self, request, qs):
@@ -64,6 +65,8 @@ class SubmissionStateFilter(SimpleListFilter):
             return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
         elif self.value() == 'graded':
             return qs.filter(state__in=[Submission.GRADED])
+        elif self.value() == 'closed':
+            return qs.filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])
         else:
             return qs
 
