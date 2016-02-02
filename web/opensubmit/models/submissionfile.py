@@ -97,7 +97,8 @@ class SubmissionFile(models.Model):
         except Exception as e:
             logger.warning("Exception on archive MD5 computation, using file checksum: "+str(e))
 
-        return hashlib.md5(str(sorted(md5_set))).hexdigest()
+        result=hashlib.md5(str(sorted(md5_set))).hexdigest()
+        return result
 
 
     def save(self, *args, **kwargs):
