@@ -14,16 +14,21 @@
 <table class='table'>
 	<thead>
 		<tr>
-			<th colspan='2'>Student</th>
+			<th>#</th>
+			<th>Last Name</th>
+			<th>First Name</th>
+			<th>Student ID</th>
 			{% for assignment in assignments %}
 				<th>{{ assignment.title }}</th>
 			{% endfor %}
 			<th>Passed assignments</th>
+			<th>Sum of gradings</th>
 		</tr>
 	</thread>
 	<tbody>
 	{% for row in resulttable %}
 		<tr>
+			<td>{{ forloop.counter }}</td>
 			{% for col in row %}
 			<td nowrap>
 				{{ col }}

@@ -255,20 +255,31 @@ def gradingtable(request, course_id):
     for author, gradlist in gradings.iteritems():
         columns = []
         numpassed = 0
+        pointsum = 0
         columns.append(author.last_name)
         columns.append(author.first_name)
+        if author.profile.student_id:
+            columns.append('('+author.profile.student_id+')')
+        else:
+            columns.append('')
         for assignment in assignments:
             if assignment.pk in gradlist:
-                if gradlist[assignment.pk] is not None:
-                    passed = gradlist[assignment.pk].means_passed
-                    columns.append(gradlist[assignment.pk])
+                grade = gradlist[assignment.pk]
+                if grade is not None:
+                    passed = grade.means_passed
+                    columns.append(grade)
                     if passed:
                         numpassed += 1
+                    try:
+                        pointsum += int(str(grade))
+                    except:
+                        pass
                 else:
                     columns.append('-')
             else:
                 columns.append('-')
         columns.append("%s / %s" % (numpassed, len(assignments)))
+        columns.append("%u" % pointsum)
         resulttable.append(columns)
     return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments, 'resulttable': sorted(resulttable)})
 
