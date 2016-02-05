@@ -11,6 +11,10 @@ section {
     vertical-align: middle;
 }
 
+.vertical-text {
+    transform: rotate(90deg);
+}
+
 .footer {
     margin-top: 35px;
     padding: 35px 0px 35px 0px;

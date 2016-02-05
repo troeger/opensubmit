@@ -9,3 +9,6 @@ class Grading(models.Model):
 
     def __unicode__(self):
         return unicode(self.title)
+
+    def means_failed(self):
+    	return not self.means_passed

@@ -259,7 +259,7 @@ def gradingtable(request, course_id):
         columns.append(author.last_name)
         columns.append(author.first_name)
         if author.profile.student_id:
-            columns.append('('+author.profile.student_id+')')
+            columns.append(author.profile.student_id)
         else:
             columns.append('')
         for assignment in assignments:
@@ -275,9 +275,9 @@ def gradingtable(request, course_id):
                     except:
                         pass
                 else:
-                    columns.append('-')
+                    columns.append('N/A')
             else:
-                columns.append('-')
+                columns.append('')
         columns.append("%s / %s" % (numpassed, len(assignments)))
         columns.append("%u" % pointsum)
         resulttable.append(columns)

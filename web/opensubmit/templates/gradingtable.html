@@ -12,14 +12,13 @@
 <script type="text/javascript" src="{{STATIC_URL}}DataTables/datatables.min.js"></script>
 {% endblock %}
 
-
 {% block docready %}
+{{ block.super }}
 var table=$('#gradings').DataTable( {
-    buttons: [
-        'copy', 'excel', 'pdf'
-    ]
+	paging: false,
+    buttons: [{extend: 'excel', text: 'Download Excel file'}]
 });
-table.buttons().container().appendTo( $('table', table.table().container() ) );
+table.buttons().container().prependTo( $('div.col-sm-12', table.table().container() ) );
 {% endblock %}
 
 {% block content %}
@@ -27,7 +26,7 @@ table.buttons().container().appendTo( $('table', table.table().container() ) );
     <h1>Grading Table - {{ course }}</h1>
 </div>
 
-<table id="gradings" class="table table-striped table-bordered">
+<table id="gradings" class="table table-bordered table-condensed table-hover">
 	<thead>
 		<tr>
 			<th>#</th>
@@ -46,12 +45,15 @@ table.buttons().container().appendTo( $('table', table.table().container() ) );
 		<tr>
 			<td>{{ forloop.counter }}</td>
 			{% for col in row %}
-			<td nowrap>
-				{{ col }}
 				{% if col.means_passed %}
-					(<img src="{{ STATIC_URL }}admin/img/icon-yes.gif"/>)
+				<td class="success" nowrap>
+				{% elif col.means_failed %}
+				<td class="danger" nowrap>
+				{% else %}
+				<td nowrap>
 				{% endif %}
-			</td>
+				{{ col }}
+				</td>
 			{% endfor %}
 		</tr>
 	{% endfor %}
