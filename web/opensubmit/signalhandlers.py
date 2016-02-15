@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User, Group, Permission
-from opensubmit.models import Submission, Course
+from opensubmit.models import Submission, Course, SubmissionFile
 
 STUDENT_TUTORS_GROUP_NAME = "Student Tutors"
 COURSE_OWNERS_GROUP_NAME = "Course Owners"
@@ -64,6 +64,15 @@ def post_user_save(sender,instance, signal, created, **kwargs):
     """
     if instance.is_staff and created:
         check_permission_system()
+
+@receiver(post_save, sender=SubmissionFile)
+def submissionfile_post_save(sender,instance, signal, created, **kwargs):
+    '''
+        Update MD5 field for newly uploaded files.
+    '''
+    if created:
+        instance.md5 = instance.attachment_md5()
+        instance.save()
 
 @receiver(post_save, sender=Submission)
 def submission_post_save(sender, instance, **kwargs):

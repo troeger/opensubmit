@@ -100,14 +100,6 @@ class SubmissionFile(models.Model):
         result=hashlib.md5(str(sorted(md5_set))).hexdigest()
         return result
 
-
-    def save(self, *args, **kwargs):
-        '''
-            Before saving the model instance, update the MD5 field first.
-        '''
-        self.md5 = self.attachment_md5()
-        super(SubmissionFile, self).save(*args, **kwargs)
-
     def basename(self):
         return self.attachment.name[self.attachment.name.rfind('/') + 1:]
 
