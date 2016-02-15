@@ -55,6 +55,22 @@ class StudentSubmissionTestCase(SubmitTestCase):
         assert(sub.file_upload)
         assert(sub.file_upload.md5)
 
+    def testMD5OnSubmitGeneration(self):
+        def submit(submitter, filename):
+            self.loginUser(submitter)
+            with open(rootdir+"/opensubmit/tests/submfiles/"+filename) as f:
+                response = self.c.post('/assignments/%s/new/' % self.fileAssignment.pk, {
+                    'notes': 'This is a test submission.',
+                    'authors': str(submitter.user.pk),
+                    'attachment': f
+                })
+                return Submission.objects.get(
+                    assignment__exact=self.fileAssignment,
+                    submitter__exact=submitter.user)
+        md5_1 = submit(self.enrolled_students[0], 'django.pdf').file_upload.md5
+        md5_2 = submit(self.enrolled_students[1], 'python.pdf').file_upload.md5
+        self.assertNotEquals(md5_1, md5_2)
+
     def testCannotUpdate(self):
         submitter = self.enrolled_students[0]
         self.loginUser(submitter)

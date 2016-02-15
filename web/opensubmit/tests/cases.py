@@ -251,6 +251,18 @@ class SubmitTestCase(TestCase):
         )
         self.openAssignment.save()
         self.allAssignments.append(self.openAssignment)
+        self.fileAssignment = Assignment(
+            title='File assignment',
+            course=self.course,
+            download='http://example.org/assignments/1/download',
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=True
+        )
+        self.fileAssignment.save()
+        self.allAssignments.append(self.fileAssignment)
 
         self.validatedAssignment = Assignment(
             title='Validated assignment',
