@@ -1,56 +1,90 @@
-from __future__ import print_function
-
 import sys
 import os
 from ConfigParser import SafeConfigParser
 
+from django.core.exceptions import ImproperlyConfigured
+
 import pkg_resources
 VERSION = pkg_resources.require("opensubmit-web")[0].version
 
-# The following section determines which configuration file to load.
-# It also deduces whether we are in a live environment (is_production,
-# which forces DEBUG to False), or in a development environment (al-
-# lowing DEBUG mode).
+NOT_CONFIGURED_VALUE = '***not configured***'
+
+# Some helper functions
+
 def find_config_info():
-    # config_info: (<config file path>, <is production>, )
-    system_config_directories = {
-        'win32': os.path.expandvars('$APPDATA'),
-        'default': '/etc',
-    }
+    '''
+        Determine which configuration file to load.
+        Returns path to config file and boolean flag for production system status.
 
-    if sys.platform in system_config_directories:
-        system_config_directory = system_config_directories[sys.platform]
-    else:
-        system_config_directory = system_config_directories['default']
+        Precedence rules are as follows:
+        - Developer configuration overrides production configuration on developer machine.
+        - Linux production system are more likely to happen than Windows developer machines.
 
-    config_directories = [
-        os.path.join(os.path.dirname(__file__)),
-        os.path.join(system_config_directory, 'opensubmit'),
-    ]
-
-    config_files = (
-        ('settings_dev.ini', False, ),
-        ('settings.ini', True, ),
+        Throws exception if no config file is found. This terminates the application loading.
+    '''
+    config_info = (
+        (os.path.dirname(__file__)+'/settings_dev.ini',            False),  # Linux / Mac development system
+        ('/etc/opensubmit/settings.ini',                            True),  # Linux production system
+        (os.path.expandvars('$APPDATA')+'opensubmit/settings.ini', False),  # Windows development system
     )
 
-    for config_file, production in config_files:
-        for config_path in config_directories:
-            config_file_path = os.path.join(config_path, config_file)
-            if os.path.isfile(config_file_path):
-                return (config_file_path, production, )
+    for config_file, production in config_info:
+        if os.path.isfile(config_file):
+            return (config_file, production, )
 
-    print("No configuration file found. Please create settings_dev.ini or call 'opensubmit-web configure' on production systems.", file=sys.stderr)
-    exit(-1)
+    raise IOError("No configuration file found.")
 
+def ensure_configured(text):
+    '''
+        Ensure that the configuration variable value does not have the default setting.
+    '''
+    if text == NOT_CONFIGURED_VALUE:
+        raise ImproperlyConfigured("It is not configured.")
+    return text
+
+def ensure_slash(leading, trailing, text):
+    '''
+        Slashes are the main source of joy in Django path and URL setups.
+        Using this method in the rest of the script should make problems and expectations
+        way more explicit.
+
+        The 'leading' parameter defines if a leading slash is expected.
+        The 'trailing' parameter defines if a trailing slash is expected.
+
+        It is too early for logging here, so we use the appropriate Django exception.
+    '''
+    text = ensure_configured(text)
+    if len(text)==0:
+        if leading:
+            raise ImproperlyConfigured("'%s' should have a leading slash, but it is empty."%text)
+        if trailing:
+            raise ImproperlyConfigured("'%s' should have a trailing slash, but it is empty."%text)
+        return text
+    if not text[0]=='/' and leading:
+        raise ImproperlyConfigured("'%s' should have a leading slash."%text)
+    if not text[-1]=='/' and trailing:
+        raise ImproperlyConfigured("'%s' should have a trailing slash."%text)
+    if text[0]=='/' and not leading:
+        raise ImproperlyConfigured("'%s' shouldn't have a leading slash."%text)
+    if text[-1]=='/' and not trailing:
+        raise ImproperlyConfigured("'%s' shouldn't have a trailing slash."%text)
+    return text
+
+def ensure_slash_from_config(config, leading, trailing, configvar):
+    '''
+        Read configuration file variable and make sure that leading and trailing slashes are correct.
+        This indirection allows to add the config variable name to the exception details.
+    '''
+    try:
+        return ensure_slash(leading, trailing, config.get(*configvar))
+    except ImproperlyConfigured as e:
+        # The message attribute is deprecated since Python 2.7, so this is the better way to change the text
+        raise ImproperlyConfigured("The value of configuration variable %s did not pass the sanity check. %s"%(str(configvar),e.message))
+
+# Find configuration file and open it.
 config_file_path, is_production = find_config_info()
-try:
-    config_fp = open(config_file_path, 'r')
-except IOError:
-    print("ERROR: Cannot open configuration file {}! Exiting.".format(config_file_path), file=sys.stderr)
-    sys.exit(-1)
-
-print("Choosing {} as configuration file".format(config_file_path), file=sys.stderr)
-
+print("Using "+config_file_path)
+config_fp = open(config_file_path, 'r')
 config = SafeConfigParser()
 config.readfp(config_fp)
 
@@ -58,7 +92,7 @@ config.readfp(config_fp)
 DATABASES = {
     'default': {
         'ENGINE':   'django.db.backends.' + config.get('database', 'DATABASE_ENGINE'),
-        'NAME':     config.get('database', 'DATABASE_NAME'),
+        'NAME':     ensure_configured(config.get('database', 'DATABASE_NAME')),
         'USER':     config.get('database', 'DATABASE_USER'),
         'PASSWORD': config.get('database', 'DATABASE_PASSWORD'),
         'HOST':     config.get('database', 'DATABASE_HOST'),
@@ -66,39 +100,53 @@ DATABASES = {
     }
 }
 
-DEBUG = bool(config.get('general', 'DEBUG'))
+# We have the is_production indicator from above, which could also determine this value.
+# But sometimes, you need Django stack traces in your production system for debugging.
+DEBUG = config.getboolean('general', 'DEBUG')
 TEMPLATE_DEBUG = DEBUG
 
-# Let the user specify the complete URL, and split it up accordingly
-# FORCE_SCRIPT_NAME is needed for handling subdirs accordingly on Apache
-if len(config.get('server', 'HOST_DIR')) > 0:
-    MAIN_URL = config.get('server', 'HOST') + '/' + config.get('server', 'HOST_DIR')
+# Determine MAIN_URL / FORCE_SCRIPT option
+HOST =     ensure_slash_from_config(config, False, False, ('server', 'HOST'))
+HOST_DIR = ensure_slash_from_config(config, False, False, ('server', 'HOST_DIR'))
+if len(HOST_DIR) > 0:
+    MAIN_URL          = HOST + '/' + HOST_DIR
+    FORCE_SCRIPT_NAME = '/' + HOST_DIR
 else:
-    MAIN_URL = config.get('server', 'HOST')
-FORCE_SCRIPT_NAME = '/'+config.get('server', 'HOST_DIR')
+    MAIN_URL = HOST
+    FORCE_SCRIPT_NAME = ensure_slash(False, False, '')
 
+# Determine some settings based on the MAIN_URL
 LOGIN_URL = MAIN_URL
 LOGIN_ERROR_URL = MAIN_URL
-LOGIN_REDIRECT_URL = MAIN_URL+'/dashboard/'
+LOGIN_REDIRECT_URL = ensure_slash(False, True, MAIN_URL+'/dashboard/')
 
-MEDIA_ROOT = config.get('server', 'MEDIA_ROOT')
-MEDIA_URL = MAIN_URL + '/files/'
+# Local file system storage for uploads.
+# Please note that MEDIA_URL is intentionally not set, since all media
+# downloads have to use our download API URL for checking permissions.
+MEDIA_ROOT = ensure_slash_from_config(config, True, True, ('server', 'MEDIA_ROOT'))
 
-# Root of the installation, without leading slash
-SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-LOG_FILE = config.get('server', 'LOG_FILE')
+# Root of the installation
+# This is normally detected automatically, so the settings.ini template does
+# not contain the value. For the test suite, however, we need the override option.
+if config.has_option('general', 'SCRIPT_ROOT'):
+    SCRIPT_ROOT = ensure_slash(True, False,config.get('general', 'SCRIPT_ROOT'))
+else:
+    SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
 
 if is_production:
-    STATIC_ROOT = SCRIPT_ROOT + '/static-production/'
-    STATIC_URL = MAIN_URL + '/static/'
+    # Root folder for static files
+    STATIC_ROOT = ensure_slash(True, True, SCRIPT_ROOT + '/static-production/')
     STATICFILES_DIRS = (SCRIPT_ROOT + '/static/', )
+    # Absolute URL for static files, directly served by Apache on production systems
+    STATIC_URL = ensure_slash(False, True, MAIN_URL + '/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
-    STATIC_ROOT = 'static/'
-    STATIC_URL = '/static/'
+    # Root folder for static files
+    STATIC_ROOT = ensure_slash(True, True, SCRIPT_ROOT+'/static/')
+    # Relative URL for static files
+    STATIC_URL = ensure_slash(True, True,'/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     ALLOWED_HOSTS = ['localhost']
 
@@ -149,6 +197,9 @@ INSTALLED_APPS = (
     'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit',
 )
+
+LOG_FILE = config.get('server', 'LOG_FILE')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -160,6 +211,14 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugTrue'
         },
     },
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+     },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
@@ -171,10 +230,11 @@ LOGGING = {
             'filters': ['require_debug_true'],
             'class':   'logging.StreamHandler'
         },
-	'file': {
-	    'level':   'DEBUG',
-	    'class':   'logging.FileHandler',
-	    'filename':   LOG_FILE
+    'file': {
+        'level':   'DEBUG',
+        'class':   'logging.FileHandler',
+        'formatter': 'verbose',
+        'filename':   LOG_FILE
         }
     },
     'loggers': {
@@ -194,16 +254,6 @@ LOGGING = {
             'propagate': True,
         },
     }
-}
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissions',
-    ]
 }
 
 TEMPLATE_CONTEXT_PROCESSORS = (

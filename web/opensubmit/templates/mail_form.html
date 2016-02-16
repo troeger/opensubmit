@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load projecttags %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - eMail
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>eMail - {{ course }}</h1>
+</div>
+
+<p>
+Option 1: <a href="mailto:{{maillist}}">Use your own eMail program</a>.
+</p>
+
+<p>
+Option 2: Copy the following list for further processing:
+
+<pre>{{maillist}}</pre>
+</p>
+
+<p>
+Option 3: Send individual mails with the form below. Supported placeholders are <i>#FIRSTNAME#</i>, <i>#LASTNAME#</i> and <i>#COURSENAME#</i>:
+</ul>
+
+<form class="form" role="form" action="." method="post">
+	{% csrf_token %}
+	{{ mailform|bootstrap }}
+	<button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Preview</button>
+</form>
+
+
+{% endblock %}

@@ -1,2 +1,3 @@
 include opensubmit/executor.cfg.template
 include requirements.txt
+include VERSION

@@ -1,16 +1,25 @@
 [Server]
 
-# The OpenSubmit server 
-url=http://localhost:8000								
+# The OpenSubmit server
+url=http://localhost:8000
 
 # Shared secret, must match to /etc/submit/settings.ini on the server
-secret=49846zut93purfh977TTTiuhgalkjfnk89				
+secret=49846zut93purfh977TTTiuhgalkjfnk89
+
+# UUID of this executor
+uuid=<replaced by opensubmit-exec configure>
 
 [Execution]
 
 # Place where downloaded archives are extracted, compiled and validated
 # The executor will create sub-directories per fetched job
-directory=/tmp/										
+directory=/tmp/
+
+# Delete all student files after the executor did its work.
+# Disable this to debug problems that are only reproducible by running the
+# downloaded student code manually.
+# Disabling this will obviousely fill your hard disk very quickly.
+cleanup=True
 
 # Script interpreter to be used for the validation scripts
 script_runner=python
@@ -26,6 +35,15 @@ pidfile=/tmp/executor.pid
 # This also means that you should not use this account for interactive work
 timeout=3600
 
+# Limit the size of result message to a number of bytes, because of database entry
+# size. <=0 means no limit, any positive value limits the message size
+message_size=10000
+
+# Customize the compilation command to be executed
+compile_cmd=make
+
+
+
 [Logging]
 
 # Logging format, as described in the Python logging module documentation
@@ -36,10 +54,10 @@ format=%(asctime)-15s (%(process)d): %(message)s
 file=/tmp/executor.log
 
 # If false, logging goes to console
-to_file=False											
+to_file=False
 
 # Log level, as described in the Python logging module documentation
-level=DEBUG
+level=INFO
 
 
 

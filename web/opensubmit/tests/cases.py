@@ -1,7 +1,11 @@
+'''
+    Base functionality for OpenSubmit test suite.
+'''
 import datetime
 import logging
 import json
 import os
+import shutil
 
 from django import http
 
@@ -19,7 +23,8 @@ from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
-from opensubmit.models import logger
+
+logger = logging.getLogger('OpenSubmit')
 
 rootdir=os.getcwd()
 
@@ -39,7 +44,61 @@ FAST_PASSWORD_HASHERS = (
 
 @override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
 class SubmitTestCase(TestCase):
+    '''
+        A test case base class with several resources being prepared:
+
+        Users:
+        - self.admin
+        - self.teacher
+        - self.another_teacher
+        - self.tutor
+        - self.enrolled_students
+        - self.not_enrolled_students
+        - self.current_user (the one currently logged-in)
+
+        No user is logged-in after setup.
+
+        Courses:
+        - self.course (by self.teacher)
+        - self.anotherCourse (by self.another_teacher)
+        - self.inactiveCourse
+        - self.all_courses
+
+        Assignments:
+        - self.openAssignment (in self.course)
+        - self.validatedAssignment (in self.course)
+        - self.softDeadlinePassedAssignment (in self.course)
+        - self.hardDeadlinePassedAssignment (in self.course)
+        - self.unpublishedAssignment (in self.course)
+        - self.allAssignments
+
+        Gradings:
+        - self.passGrade
+        - self.failGrade
+        - self.passFailGrading
+
+        The class offers some convinience functions:
+        - createTestMachine(self, test_host)
+        - createSubmissionFile(self)
+        - createTestedSubmissionFile(self, test_machine)
+        - createValidatableSubmission(self, user)
+        - createValidatedSubmission(self, user, test_host='127.0.0.1')
+        - createSubmission(self, user, assignment)
+    '''
     current_user = None
+
+    def setUp(self):
+        super(SubmitTestCase, self).setUp()
+        self.logger = logging.getLogger('OpenSubmit')
+        self.loggerLevelOld = self.logger.level
+        self.logger.setLevel(logging.DEBUG)
+        self.setUpUsers()
+        self.setUpCourses()
+        self.setUpGradings()
+        self.setUpAssignments()
+
+    def tearDown(self):
+        self.logger.setLevel(self.loggerLevelOld)
 
     def createUser(self, user_dict):
         args = dict(user_dict)
@@ -192,6 +251,18 @@ class SubmitTestCase(TestCase):
         )
         self.openAssignment.save()
         self.allAssignments.append(self.openAssignment)
+        self.fileAssignment = Assignment(
+            title='File assignment',
+            course=self.course,
+            download='http://example.org/assignments/1/download',
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=True
+        )
+        self.fileAssignment.save()
+        self.allAssignments.append(self.fileAssignment)
 
         self.validatedAssignment = Assignment(
             title='Validated assignment',
@@ -249,19 +320,6 @@ class SubmitTestCase(TestCase):
         self.unpublishedAssignment.save()
         self.allAssignments.append(self.unpublishedAssignment)        
 
-    def setUp(self):
-        super(SubmitTestCase, self).setUp()
-        self.logger = logging.getLogger('OpenSubmit')
-        self.loggerLevelOld = self.logger.level
-        self.logger.setLevel(logging.WARN)
-        self.setUpUsers()
-        self.setUpCourses()
-        self.setUpGradings()
-        self.setUpAssignments()
-
-    def tearDown(self):
-        self.logger.setLevel(self.loggerLevelOld)
-
     def createTestMachine(self, test_host):
         '''
             Create test machine entry. The configuration information
@@ -275,11 +333,13 @@ class SubmitTestCase(TestCase):
         self.machine.save()
         return self.machine
 
-    def createSubmissionFile(self):
+    def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
         from django.core.files import File as DjangoFile
-        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip"), unicode("working_withsubdir.zip")))
-        sf.save()  
-        return sf      
+        fname=relpath[relpath.rfind(os.sep)+1:]
+        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
+        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf.save()
+        return sf
 
     def createTestedSubmissionFile(self, test_machine):
         '''
@@ -287,19 +347,21 @@ class SubmitTestCase(TestCase):
         '''
         sf = self.createSubmissionFile()
         result_compile  = SubmissionTestResult(
-            kind=SubmissionTestResult.COMPILE_TEST, 
+            kind=SubmissionTestResult.COMPILE_TEST,
             result="Compilation ok.",
             machine=test_machine,
             submission_file=sf
             ).save()
         result_validity = SubmissionTestResult(
-            kind=SubmissionTestResult.VALIDITY_TEST, 
+            kind=SubmissionTestResult.VALIDITY_TEST,
             result="Validation ok.",
             machine=self.machine,
+            perf_data = "41;42;43",
             submission_file=sf).save()
         result_full     = SubmissionTestResult(
-            kind=SubmissionTestResult.FULL_TEST, 
+            kind=SubmissionTestResult.FULL_TEST,
             result="Full test ok.",
+            perf_data = "77;88;99",
             machine=self.machine,
             submission_file=sf).save()
         return sf
@@ -335,7 +397,7 @@ class SubmitTestCase(TestCase):
         sub.save()
         return sub
 
-    def createSubmission(self, user, assignment, authors=[]):
+    def createSubmission(self, user, assignment):
         sub = Submission(
             assignment=assignment,
             submitter=user.user,
@@ -343,11 +405,6 @@ class SubmitTestCase(TestCase):
             state=Submission.SUBMITTED
         )
         sub.save()
-
-        if authors:
-            [sub.authors.add(author) for author in authors]
-        sub.save()
-
         return sub
 
 class MockRequest(http.HttpRequest):
@@ -359,38 +416,50 @@ class MockRequest(http.HttpRequest):
         self._messages = FallbackStorage(self)
 
 class SubmitAdminTestCase(SubmitTestCase):
+    '''
+        Test case with an admin logged-in.
+    '''
     def setUp(self):
         super(SubmitAdminTestCase, self).setUp()
         self.loginUser(self.admin)
-        self.request = MockRequest(self.admin.user)        
+        self.request = MockRequest(self.admin.user)
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
         assert(self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)        
+        assert(self.current_user.user.is_staff)
 
 class SubmitTeacherTestCase(SubmitTestCase):
+    '''
+        Test case with an teacher (course owner) logged-in.
+    '''
     def setUp(self):
         super(SubmitTeacherTestCase, self).setUp()
         self.loginUser(self.teacher)
+        self.request = MockRequest(self.teacher.user)
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
-        assert(not self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)        
+        assert(self.current_user.user.is_staff)
 
 
 class SubmitTutorTestCase(SubmitTestCase):
+    '''
+        Test case with a tutor logged-in.
+    '''
     def setUp(self):
         super(SubmitTutorTestCase, self).setUp()
         self.loginUser(self.tutor)
-        self.request = MockRequest(self.tutor.user)        
+        self.request = MockRequest(self.tutor.user)
         # Test for amok-running post_save handlers (we had such a case)
         assert(self.current_user.user.is_active)
         assert(not self.current_user.user.is_superuser)
-        assert(self.current_user.user.is_staff)       
+        assert(self.current_user.user.is_staff)
 
 class StudentTestCase(SubmitTestCase):
+    '''
+        Test case with a student logged-in.
+    '''
     def setUp(self):
         super(StudentTestCase, self).setUp()
         self.loginUser(self.enrolled_students[0])
-        self.request = MockRequest(self.enrolled_students[0].user)        
+        self.request = MockRequest(self.enrolled_students[0].user)
 

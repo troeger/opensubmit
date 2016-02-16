@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import django.utils.timezone
 from django.conf import settings
-import opensubmit.models
+from opensubmit.models.submissionfile import upload_path
 
 
 class Migration(migrations.Migration):
@@ -127,7 +127,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='submission',
             name='grading_file',
-            field=models.FileField(help_text=b'Additional information about the grading as file.', null=True, upload_to=opensubmit.models.upload_path, blank=True),
+            field=models.FileField(help_text=b'Additional information about the grading as file.', null=True, upload_to=upload_path, blank=True),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -137,7 +137,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='submissionfile',
             name='attachment',
-            field=models.FileField(upload_to=opensubmit.models.upload_path, verbose_name=b'File upload'),
+            field=models.FileField(upload_to=upload_path, verbose_name=b'File upload'),
         ),
         migrations.AlterField(
             model_name='submissionfile',

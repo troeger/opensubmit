@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load projecttags %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - Duplicate Report
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Duplicate Report for {{ assignment }}</h1>
+</div>
+
+<div id="content-main">
+We found the following duplicate file uploads for this assignment:
+{% regroup assignment.uploads_by_md5 by md5 as duplicates %}
+{% for duplicate_set in duplicates %}
+	{% if duplicate_set.list|length > 1 %}
+		<h3>File checksum {{ duplicate_set.grouper }}</h3>
+		<table class="table">
+		<tr><th>File upload</th><th>Submission</th><th>Authors</th><th>Grading finished?</tr>
+		{% for submfile in duplicate_set.list %}
+			{% with submission=submfile.submissions.all.0 %}
+				<tr>
+					<td><a href="{% url 'teacher:opensubmit_submissionfile_change' submfile.pk %}">{{submfile}}</a> (<a href="{{ submfile.get_preview_url }}" target="_new">Preview</a>)</td>
+					<td><a href="{% url 'teacher:opensubmit_submission_change' submission %}">#{{submission}}</a></td>
+					<td>{{ submission.authors.all|join:", " }}</td>
+					<td>{% if submission.is_grading_finished %}Yes{% else %}No{%endif%} ({{submission.grading}})</td>
+				</tr>
+			{% endwith %}
+		{% endfor %}
+	{% endif %}
+	</table>
+{% endfor %}
+</div>
+{% endblock %}

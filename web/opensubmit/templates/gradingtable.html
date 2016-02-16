@@ -6,31 +6,55 @@
     {{ block.super }} - Grading Table
 {% endblock %}
 
+{% block scripts %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}DataTables/datatables.min.css"/>
+<script type="text/javascript" src="{{STATIC_URL}}DataTables/datatables.min.js"></script>
+{% endblock %}
+
+{% block docready %}
+{{ block.super }}
+var table=$('#gradings').DataTable( {
+	paging: false,
+    buttons: [{extend: 'excel', text: 'Download Excel file'},
+              {extend: 'csv', text: 'Download CSV file'}]
+});
+table.buttons().container().prependTo( $('div.col-sm-12', table.table().container() ) );
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <h1>Grading Table - {{ course }}</h1>
 </div>
 
-<table class='table'>
+<table id="gradings" class="table table-bordered table-condensed table-hover">
 	<thead>
 		<tr>
-			<th colspan='2'>Student</th>
+			<th>#</th>
+			<th>Last Name</th>
+			<th>First Name</th>
+			<th>Student ID</th>
 			{% for assignment in assignments %}
 				<th>{{ assignment.title }}</th>
 			{% endfor %}
 			<th>Passed assignments</th>
+			<th>Sum of gradings</th>
 		</tr>
 	</thread>
 	<tbody>
 	{% for row in resulttable %}
 		<tr>
+			<td>{{ forloop.counter }}</td>
 			{% for col in row %}
-			<td nowrap>
-				{{ col }}
 				{% if col.means_passed %}
-					(<img src="{{ STATIC_URL }}admin/img/icon-yes.gif"/>)
+				<td class="success" nowrap>
+				{% elif col.means_failed %}
+				<td class="danger" nowrap>
+				{% else %}
+				<td nowrap>
 				{% endif %}
-			</td>
+				{{ col }}
+				</td>
 			{% endfor %}
 		</tr>
 	{% endfor %}

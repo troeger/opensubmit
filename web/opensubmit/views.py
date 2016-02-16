@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import urllib
 import zipfile
+import csv
 
 from datetime import timedelta, datetime
 
@@ -14,7 +15,7 @@ from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
-from django.core.mail import mail_managers, send_mail
+from django.core.mail import mail_managers, send_mail, send_mass_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -25,9 +26,9 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
 
-from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
-from models import user_courses, SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, db_fixes
-from models import inform_student, inform_course_owner, open_assignments
+from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
+from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
+from models.userprofile import db_fixes, move_user_data
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 
 
@@ -67,7 +68,7 @@ def courses(request):
             return redirect('dashboard')
     else:
         coursesForm = UserProfileForm(instance=profile)
-    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': user_courses(request.user)})
+    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': request.user.profile.user_courses()})
 
 
 @login_required
@@ -87,8 +88,8 @@ def dashboard(request):
         'archived': archived,
         'user': request.user,
         'username': username,
-        'courses' : user_courses(request.user),
-        'assignments': open_assignments(request.user),
+        'courses' : request.user.profile.user_courses(),
+        'assignments': request.user.profile.open_assignments(),
         'machines': TestMachine.objects.all()}
     )
 
@@ -106,9 +107,6 @@ def details(request, subm_id):
 @login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
-
-    if not ass.is_visible(user=request.user):
-        raise Http404()
 
     # Check whether submissions are allowed.
     if not ass.can_create_submission(user=request.user):
@@ -141,7 +139,7 @@ def new(request, ass_id):
             submission.save()
             messages.info(request, "New submission saved.")
             if submission.state == Submission.SUBMITTED:
-                inform_course_owner(request, submission)
+                submission.inform_course_owner(request)
             return redirect('dashboard')
         else:
             messages.error(request, "Please correct your submission information.")
@@ -180,6 +178,63 @@ def update(request, subm_id):
     return render(request, 'update.html', {'submissionFileUpdateForm': updateForm,
                                            'submission': submission})
 
+@login_required
+@staff_member_required
+def mergeusers(request):
+    '''
+        Offers an intermediate admin view to merge existing users.
+    '''
+    if request.method == 'POST':
+        primary=get_object_or_404(User, pk=request.POST['primary_id'])
+        secondary=get_object_or_404(User, pk=request.POST['secondary_id'])
+        try:
+            move_user_data(primary, secondary)
+            messages.info(request, 'Submissions moved to user %u.'%(primary.pk))
+        except:
+            messages.error(request, 'Error during data migration, nothing changed.')
+            return redirect('admin:index')
+        messages.info(request, 'User %u deleted.'%(secondary.pk))
+        secondary.delete()
+        return redirect('admin:index')
+    primary=get_object_or_404(User, pk=request.GET['primary_id'])
+    secondary=get_object_or_404(User, pk=request.GET['secondary_id'])
+    # Determine data to be migrated
+    return render(request, 'mergeusers.html', {'primary': primary, 'secondary': secondary})
+
+@login_required
+@staff_member_required
+def preview(request, subm_id):
+    '''
+        Renders a preview of the uploaded student archive.
+        This is only intended for the grading procedure, so staff status is needed.
+    '''
+    submission = get_object_or_404(Submission, pk=subm_id)
+    if submission.file_upload.is_archive():
+        return render(request, 'file_preview.html', {'previews': submission.file_upload.archive_previews()})
+    else:
+        return redirect(submission.file_upload.get_absolute_url())
+
+@login_required
+@staff_member_required
+def perftable(request, ass_id):
+    assignment = get_object_or_404(Assignment, pk=ass_id)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="perf_assignment%u.csv"'%assignment.pk
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Assignment','Submission ID','Authors','Performance Data'])
+    for sub in assignment.submissions.all():
+        result = sub.get_fulltest_result()
+        if result:
+            writer.writerow([sub.assignment, sub.pk, ", ".join(sub.authors.values_list('username', flat=True).order_by('username')), result.perf_data])
+    return response
+
+@login_required
+@staff_member_required
+def duplicates(request, ass_id):
+    assignment = get_object_or_404(Assignment, pk=ass_id)
+    return render(request, 'duplicates.html', {
+        'assignment': assignment
+    })
 
 @login_required
 @staff_member_required
@@ -200,22 +255,74 @@ def gradingtable(request, course_id):
     for author, gradlist in gradings.iteritems():
         columns = []
         numpassed = 0
+        pointsum = 0
         columns.append(author.last_name)
         columns.append(author.first_name)
+        if author.profile.student_id:
+            columns.append(author.profile.student_id)
+        else:
+            columns.append('')
         for assignment in assignments:
             if assignment.pk in gradlist:
-                if gradlist[assignment.pk] is not None:
-                    passed = gradlist[assignment.pk].means_passed
-                    columns.append(gradlist[assignment.pk])
+                grade = gradlist[assignment.pk]
+                if grade is not None:
+                    passed = grade.means_passed
+                    columns.append(grade)
                     if passed:
                         numpassed += 1
+                    try:
+                        pointsum += int(str(grade))
+                    except:
+                        pass
                 else:
-                    columns.append('-')
+                    columns.append('N/A')
             else:
-                columns.append('-')
+                columns.append('')
         columns.append("%s / %s" % (numpassed, len(assignments)))
+        columns.append("%u" % pointsum)
         resulttable.append(columns)
     return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments, 'resulttable': sorted(resulttable)})
+
+def _replace_placeholders(text, user, course):
+    return text.replace("#FIRSTNAME#", user.first_name.strip()) \
+               .replace("#LASTNAME#", user.last_name.strip())   \
+               .replace("#COURSENAME#", course.title.strip())
+
+@login_required
+@staff_member_required
+def mail2all(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    # Re-compute list of recipients on every request, for latest updates
+    students = User.objects.filter(profile__courses__pk = course_id)
+    maillist = ','.join(students.values_list('email', flat=True))
+
+    if request.method == "POST":
+        if 'subject' in request.POST and 'message' in request.POST:
+            # Initial form submission, render preview
+            request.session['subject'] = request.POST['subject']
+            request.session['message'] = request.POST['message']
+            student = students[0]
+            preview_subject = _replace_placeholders(request.POST['subject'], student, course)
+            preview_message = _replace_placeholders(request.POST['message'], student, course)
+            return render(request, 'mail_preview.html',
+                            {'preview_subject': preview_subject,
+                             'preview_message': preview_message,
+                             'preview_from': request.user.email,
+                             'course': course})
+        elif 'subject' in request.session and 'message' in request.session:
+            # Positive preview, send it
+            data = [(_replace_placeholders(request.session['subject'], s, course),
+                     _replace_placeholders(request.session['message'], s, course),
+                     request.user.email,
+                     [s.email]) for s in students]
+            sent = send_mass_mail(data, fail_silently=True)
+            messages.add_message(request, messages.INFO, '%u message(s) sent.'%sent)
+            return redirect('teacher:opensubmit_course_changelist')
+
+    # show empty form in all other cases
+    mailform = MailForm()
+    return render(request, 'mail_form.html', {'maillist': maillist, 'course': course, 'mailform': mailform })
+
 
 
 @login_required
@@ -301,33 +408,6 @@ def machine(request, machine_id):
     additional = len(Submission.pending_full_tests.all())
     return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
 
-
-@csrf_exempt
-def machines(request, secret):
-    ''' This is the view used by the executor.py scripts for putting machine details.
-        A visible shared secret in the request is no problem, since the executors come
-        from trusted networks. The secret only protects this view from outside foreigners.
-    '''
-    if secret != JOB_EXECUTOR_SECRET:
-        raise PermissionDenied
-    if request.method == "POST":
-        try:
-            # Find machine database entry for this host
-            machine = TestMachine.objects.get(host=request.POST['Name'])
-            machine.last_contact = datetime.now()
-            machine.save()
-        except:
-            # Machine is not known so far, create new record
-            machine = TestMachine(host=request.POST['Name'], last_contact=datetime.now())
-            machine.save()
-        # POST request contains all relevant machine information
-        machine.config = request.POST['Config']
-        machine.save()
-        return HttpResponse(status=201)
-    else:
-        return HttpResponse(status=500)
-
-
 @login_required
 def withdraw(request, subm_id):
     # submission should only be deletable by their creators
@@ -338,7 +418,7 @@ def withdraw(request, subm_id):
         submission.state = Submission.WITHDRAWN
         submission.save()
         messages.info(request, 'Submission successfully withdrawn.')
-        inform_course_owner(request, submission)
+        submission.inform_course_owner(request)
         return redirect('dashboard')
     else:
         return render(request, 'withdraw.html', {'submission': submission})
