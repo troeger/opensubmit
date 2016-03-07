@@ -20,6 +20,7 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 
+from opensubmit.tests import TEST_HOST
 from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
@@ -43,6 +44,7 @@ FAST_PASSWORD_HASHERS = (
 
 
 @override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
+@override_settings(MAIN_URL='http://'+TEST_HOST+'/')
 class SubmitTestCase(TestCase):
     '''
         A test case base class with several resources being prepared:
