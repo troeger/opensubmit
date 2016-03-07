@@ -12,7 +12,7 @@ from django import http
 from django.conf import settings
 from django.utils import timezone
 
-from django.test import TestCase, LiveServerTestCase
+from django.test import TransactionTestCase, LiveServerTestCase
 from django.test.utils import override_settings
 from django.test.client import Client
 
@@ -45,7 +45,7 @@ FAST_PASSWORD_HASHERS = (
 
 @override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
 @override_settings(MAIN_URL='http://'+TEST_HOST+'/')
-class SubmitTestCase(TestCase):
+class SubmitTestCase(TransactionTestCase):
     '''
         A test case base class with several resources being prepared:
 

@@ -68,11 +68,13 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
 
-        # Make sure that only one executor run was successful
+        # Span a number of threads, each triggering the executor
+        # This only creates a real test case if executor serialization is off (see tests/executor.cfg)
         NUM_THREADS = 50
         return_codes = utils.run_parallel(NUM_THREADS, self._runExecutor)
-        self.assertEquals(len(filter((lambda x: x is True),  return_codes)), 1)
-        self.assertEquals(len(filter((lambda x: x is False), return_codes)), NUM_THREADS-1)
+        # Compile + validation + full test makes 3 expected successful runs
+        self.assertEquals(len(filter((lambda x: x is True),  return_codes)), 3)
+        self.assertEquals(len(filter((lambda x: x is False), return_codes)), NUM_THREADS-3)
 
         # Make sure that compilation result is given
         results = SubmissionTestResult.objects.filter(

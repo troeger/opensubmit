@@ -8,6 +8,8 @@ from time import timezone
 
 logger = logging.getLogger('OpenSubmit')
 
+from django.db import transaction
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers
 from django.http import HttpResponseForbidden, Http404, HttpResponse
@@ -112,93 +114,78 @@ def jobs(request):
     if secret != settings.JOB_EXECUTOR_SECRET:
         raise PermissionDenied
 
-    try:
-        logger.debug("Test machine is known, updating last contact timestamp")
-        machine = TestMachine.objects.get(host=uuid)
-        machine.last_contact = datetime.now()
-        machine.save()
-    except:
+    # Update last_contact information for test machine
+    machine, created = TestMachine.objects.update_or_create(host=uuid, defaults={'last_contact':datetime.now()})
+    if created:
         # ask for configuration of new execution hosts by returning the according action
-        logger.debug("Test machine is unknown, asking executor for configuration")
-        machine = TestMachine(host=uuid, last_contact=datetime.now())
-        machine.save()
+        logger.debug("Test machine is unknown, creating entry and asking executor for configuration.")
         response = HttpResponse()
         response['Action'] = 'get_config'
         response['MachineId'] = machine.pk
         return response
 
     if request.method == "GET":
-        subm = Submission.pending_student_tests.filter(assignment__in=machine.assignments.all()).all()
-        if len(subm) == 0:
-            logger.debug("No pending compile or validation jobs")
-            subm = Submission.pending_full_tests.filter(assignment__in=machine.assignments.all()).all()
-            if len(subm) == 0:
-                logger.debug("No pending full test jobs")
-                raise Http404
-        for sub in subm:
-            logger.debug("Got %u executor jobs"%(len(subm)))
-            assert (sub.file_upload)  # must be given when the state model is correct
-            if (machine in sub.assignment.test_machines.all()):
-                # Machine is a candidate for this job
-                fetch_date = sub.get_fetch_date()
-                if fetch_date:
-                    # This job was already fetched, check how long ago this happened
-                    max_delay = timedelta(seconds=sub.assignment.attachment_test_timeout)
-                    if fetch_date + max_delay < datetime.now():
-                        logger.debug("Resetting executor fetch status for submission %u, due to timeout"%sub.pk)
-                        # Stuff that has timed out
-                        # we mark it as failed so that the user gets informed
-                        # TODO:  Late delivery for such a submission by the executor witll break everything
-                        sub.clean_fetch_date()
-                        if sub.state == Submission.TEST_COMPILE_PENDING:
-                            sub.state = Submission.TEST_COMPILE_FAILED
-                            sub.save_compile_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.")
-                            sub.inform_student(sub.state)
-                        if sub.state == Submission.TEST_VALIDITY_PENDING:
-                            sub.save_validation_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
-                            sub.state = Submission.TEST_VALIDITY_FAILED
-                            sub.inform_student(sub.state)
-                        if sub.state == Submission.TEST_FULL_PENDING:
-                            sub.save_fulltest_result(machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.", None)
-                            sub.state = Submission.TEST_FULL_FAILED
-                        sub.save()
-                        continue
-                    else:
-                        logger.debug("Submission %u was already fetched, still waiting for it"%sub.pk)
-                else:
-                    # Requesting machine fits, not fetched so far
-                    # create HTTP response with file download
-                    f = sub.file_upload.attachment
-                    # on dev server, we sometimes have stale database entries
-                    if not os.access(f.path, os.F_OK):
-                        mail_managers('Warning: Missing file',
-                                      'Missing file on storage for submission file entry %u: %s' % (
-                                          sub.file_upload.pk, str(sub.file_upload.attachment)), fail_silently=True)
-                        continue
-                    response = HttpResponse(f, content_type='application/binary')
-                    response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
-                    response['SubmissionFileId'] = str(sub.file_upload.pk)
-                    response['Timeout'] = sub.assignment.attachment_test_timeout
-                    if sub.state == Submission.TEST_COMPILE_PENDING:
-                        response['Action'] = 'test_compile'
-                    elif sub.state == Submission.TEST_VALIDITY_PENDING:
-                        response['Action'] = 'test_validity'
-                        response['PostRunValidation'] = sub.assignment.validity_test_url()
-                    elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
-                        response['Action'] = 'test_full'
-                        response['PostRunValidation'] = sub.assignment.full_test_url()
-                    else:
-                        assert (False)
-                    # store date of fetching for determining jobs stucked at the executor
-                    sub.save_fetch_date()
-                    # 'touch' submission so that it becomes sorted to the end of the queue if something goes wrong
-                    sub.modified = datetime.now()
-                    sub.save()
-                    return response
-            else:
-                logger.debug("Requesting machine is not responsible for submission %u"%sub.pk)
-        # candidate submissions did not fit
-        raise Http404
+        # Clean up submissions where the answer from the executors took too long
+        pending_submissions = Submission.pending_tests.filter(file_upload__fetched__isnull=False)
+        #logger.debug("%u pending submission(s)"%(len(pending_submissions)))
+        for sub in pending_submissions:
+            max_delay = timedelta(seconds=sub.assignment.attachment_test_timeout)
+            if sub.file_upload.fetched + max_delay < datetime.now():
+                logger.debug("Resetting executor fetch status for submission %u, due to timeout"%sub.pk)
+                # TODO:  Late delivery for such a submission by the executor may lead to result overwriting. Check this.
+                sub.clean_fetch_date()
+                if sub.state == Submission.TEST_COMPILE_PENDING:
+                    sub.state = Submission.TEST_COMPILE_FAILED
+                    sub.save_compile_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.")
+                    sub.inform_student(sub.state)
+                if sub.state == Submission.TEST_VALIDITY_PENDING:
+                    sub.save_validation_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
+                    sub.state = Submission.TEST_VALIDITY_FAILED
+                    sub.inform_student(sub.state)
+                if sub.state == Submission.TEST_FULL_PENDING:
+                    sub.save_fulltest_result(machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.", None)
+                    sub.state = Submission.TEST_FULL_FAILED
+                sub.save()
+
+        # Now get an appropriate submission. 
+        submissions = Submission.pending_tests
+        submissions = submissions.filter(assignment__in=machine.assignments.all()) \
+                                 .filter(file_upload__isnull=False) \
+                                 .filter(file_upload__fetched__isnull=True)        
+        if len(submissions) == 0:
+            # Nothing found to be fetchable
+            #logger.debug("No pending work for executors")
+            raise Http404
+        else:
+            sub=submissions[0]
+        sub.save_fetch_date()
+        sub.modified=datetime.now()
+        sub.save()
+
+        # create HTTP response with file download
+        f = sub.file_upload.attachment
+        # on dev server, we sometimes have stale database entries
+        if not os.access(f.path, os.F_OK):
+            mail_managers('Warning: Missing file',
+                          'Missing file on storage for submission file entry %u: %s' % (
+                              sub.file_upload.pk, str(sub.file_upload.attachment)), fail_silently=True)
+            raise Http404
+        response = HttpResponse(f, content_type='application/binary')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
+        response['SubmissionFileId'] = str(sub.file_upload.pk)
+        response['Timeout'] = sub.assignment.attachment_test_timeout
+        if sub.state == Submission.TEST_COMPILE_PENDING:
+            response['Action'] = 'test_compile'
+        elif sub.state == Submission.TEST_VALIDITY_PENDING:
+            response['Action'] = 'test_validity'
+            response['PostRunValidation'] = sub.assignment.validity_test_url()
+        elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
+            response['Action'] = 'test_full'
+            response['PostRunValidation'] = sub.assignment.full_test_url()
+        else:
+            assert (False)
+        logger.debug("Delivering submission %u as new %s job"%(sub.pk, response['Action']))
+        return response
 
     elif request.method == "POST":
         # first check if this is just configuration data, and not a job result
@@ -213,41 +200,52 @@ def jobs(request):
         perf_data = request.POST['PerfData'].strip()
         submission_file = get_object_or_404(SubmissionFile, pk=sid)
         sub = submission_file.submissions.all()[0]
+        logger.debug("Storing executor results for submission %u"%(sub.pk))
         error_code = int(request.POST['ErrorCode'])
         if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
             sub.save_compile_result(machine, request.POST['Message'])
             if error_code == 0:
                 if sub.assignment.attachment_test_validity:
+                    logger.debug("Compile working, setting state to pending validity test")
                     sub.state = Submission.TEST_VALIDITY_PENDING
                 elif sub.assignment.attachment_test_full:
+                    logger.debug("Compile working, setting state to pending full test")
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
+                    logger.debug("Compile working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
                     sub.inform_course_owner(request)
             else:
+                logger.debug("Compile test not working, setting state to failed")
                 sub.state = Submission.TEST_COMPILE_FAILED
             sub.inform_student(sub.state)
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             sub.save_validation_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
                 if sub.assignment.attachment_test_full:
+                    logger.debug("Validity test working, setting state to pending full test")
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
+                    logger.debug("Validity test working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
                     sub.inform_course_owner(request)
             else:
+                logger.debug("Validity test not working, setting state to failed")
                 sub.state = Submission.TEST_VALIDITY_FAILED
             sub.inform_student(sub.state)
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
             sub.save_fulltest_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
+                logger.debug("Full test working, setting state to tested")
                 sub.state = Submission.SUBMITTED_TESTED
                 sub.inform_course_owner(request)
             else:
+                logger.debug("Full test not working, setting state to failed")
                 sub.state = Submission.TEST_FULL_FAILED
                 # full tests may be performed several times and are meant to be a silent activity
                 # therefore, we send no mail to the student here
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.CLOSED_TEST_FULL_PENDING:
+            logger.debug("Closed full test done, setting state to closed again")
             sub.save_fulltest_result(machine, request.POST['Message'], perf_data)
             sub.state = Submission.CLOSED
             # full tests may be performed several times and are meant to be a silent activity
@@ -271,8 +269,9 @@ def jobs(request):
                         sub.state_for_tutors(), sub.state,
                         request.POST['Message'], error_code )
             mail_managers('Warning: Inconsistent job state', msg, fail_silently=True)
-        sub.clean_fetch_date()
+        # Mark work as done
         sub.save()
+        sub.clean_fetch_date()
         return HttpResponse(status=201)
 
 
