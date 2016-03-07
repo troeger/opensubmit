@@ -9,7 +9,7 @@ from datetime import datetime
 from .submissionfile import upload_path
 from .submissiontestresult import SubmissionTestResult
 
-from opensubmit.settings import MAIN_URL
+from django.conf import settings
 
 import logging
 logger = logging.getLogger('OpenSubmit')
@@ -339,17 +339,17 @@ class Submission(models.Model):
         if state == Submission.TEST_COMPILE_FAILED:
             subject = 'Warning: Your submission did not pass the compilation test'
             message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, MAIN_URL)
+            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.TEST_VALIDITY_FAILED:
             subject = 'Warning: Your submission did not pass the validation test'
             message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, MAIN_URL)
+            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.CLOSED:
             subject = 'Grading completed'
             message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, MAIN_URL)
+            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
         else:
             return
 
