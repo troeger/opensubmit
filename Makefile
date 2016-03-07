@@ -5,6 +5,8 @@ build:
 	mv web/dist/* .
 
 tests:
+	pushd executor; pip install -r requirements.txt; popd
+	pushd web; pip install -r requirements.txt; popd
 	export PYTHONPATH=../executor/opensubmit:$PYTHONPATH; pushd web; ./manage.py test; popd
 
 coverage:
