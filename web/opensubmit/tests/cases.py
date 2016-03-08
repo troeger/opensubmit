@@ -33,17 +33,7 @@ class AnonStruct(object):
     def __init__(self, entries):
         self.__dict__.update(entries)
 
-
-class FastPBKDF2SHA1PasswordHasher(PBKDF2SHA1PasswordHasher):
-    iterations = 1
-
-
-FAST_PASSWORD_HASHERS = (
-    'opensubmit.tests.cases.FastPBKDF2SHA1PasswordHasher',
-) + settings.PASSWORD_HASHERS
-
-
-@override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher',])
 @override_settings(MAIN_URL='http://'+TEST_HOST+'/')
 class SubmitTestCase(TransactionTestCase):
     '''

@@ -297,8 +297,9 @@ class Submission(models.Model):
             result=text,
             machine=machine,
             kind=kind,
-            perf_data=perf_data)
-        self.file_upload.test_results.add(result)
+            perf_data=perf_data,
+            submission_file=self.file_upload)
+        result.save()
 
     def _get_test_result(self, kind):
         try:

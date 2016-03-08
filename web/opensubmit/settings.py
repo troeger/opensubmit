@@ -103,7 +103,6 @@ DATABASES = {
 # We have the is_production indicator from above, which could also determine this value.
 # But sometimes, you need Django stack traces in your production system for debugging.
 DEBUG = config.getboolean('general', 'DEBUG')
-TEMPLATE_DEBUG = DEBUG
 
 # Determine MAIN_URL / FORCE_SCRIPT option
 HOST =     ensure_slash_from_config(config, False, False, ('server', 'HOST'))
@@ -165,10 +164,28 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 SECRET_KEY = config.get("server", "SECRET_KEY")
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'OPTIONS': {'debug': DEBUG, 
+                    'context_processors':
+                                            ("django.contrib.auth.context_processors.auth",
+                                             "django.template.context_processors.debug",
+                                             "django.template.context_processors.i18n",
+                                             "django.template.context_processors.media",
+                                             "django.template.context_processors.static",
+                                             "django.template.context_processors.tz",
+                                             "django.contrib.messages.context_processors.messages",
+                                             "opensubmit.contextprocessors.footer",
+                                             "django.template.context_processors.request",
+                                             "social.apps.django_app.context_processors.backends",
+                                             "social.apps.django_app.context_processors.login_redirect"
+                                            )
+                    },
+        'APP_DIRS': True,
+    },
+]
 
 TEST_RUNNER = 'opensubmit.tests.DiscoverRunner'
 
@@ -253,16 +270,6 @@ LOGGING = {
         },
     }
 }
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.static',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'opensubmit.contextprocessors.footer',
-    'django.core.context_processors.request',
-    'social.apps.django_app.context_processors.backends',
-    'social.apps.django_app.context_processors.login_redirect'
-)
 
 LOGIN_GOOGLE =  config.getboolean('login', 'LOGIN_GOOGLE')
 LOGIN_OPENID =  config.getboolean('login', 'LOGIN_OPENID')

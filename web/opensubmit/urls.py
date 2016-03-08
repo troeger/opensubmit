@@ -3,36 +3,36 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth.decorators import login_required
 
-from opensubmit.admin import teacher_backend, admin_backend
+from opensubmit import views, admin, api
 
-urlpatterns = patterns('',
-    url(r'^$', 'opensubmit.views.index', name='index'),
-    url(r'^logout/$', 'opensubmit.views.logout', name='logout'),
-    url(r'^dashboard/$', 'opensubmit.views.dashboard', name='dashboard'),
-    url(r'^details/(?P<subm_id>\d+)/$', 'opensubmit.views.details', name='details'),
-    url(r'^assignments/(?P<ass_id>\d+)/new/$', 'opensubmit.views.new', name='new'),
-    url(r'^assignments/(?P<ass_id>\d+)/perftable/$', 'opensubmit.views.perftable', name='perftable'),
-    url(r'^assignments/(?P<ass_id>\d+)/duplicates/$', 'opensubmit.views.duplicates', name='duplicates'),
-    url(r'^withdraw/(?P<subm_id>\d+)/$', 'opensubmit.views.withdraw', name='withdraw'),
-    url(r'^preview/(?P<subm_id>\d+)/$', 'opensubmit.views.preview', name='preview'),
-    url(r'^update/(?P<subm_id>\d+)/$', 'opensubmit.views.update', name='update'),
-    url(r'^course/(?P<course_id>\d+)/gradingtable/$', 'opensubmit.views.gradingtable', name='gradingtable'),
-    url(r'^course/(?P<course_id>\d+)/archive/$', 'opensubmit.views.coursearchive', name='coursearchive'),
-    url(r'^course/(?P<course_id>\d+)/mail2all/$', 'opensubmit.views.mail2all', name='mail2all'),
-    url(r'^jobs/$', 'opensubmit.api.jobs', name='jobs'),
-    url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', 'opensubmit.api.download', name='download_secret'),
-    url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', 'opensubmit.api.download', name='download'),
-    url(r'^machine/(?P<machine_id>\d+)/$', 'opensubmit.views.machine', name='machine'),
-    url(r'^machines/$', 'opensubmit.api.machines', name='machines'),
-    url(r'^settings/$', 'opensubmit.views.settings', name='settings'),
-    url(r'^courses/$', 'opensubmit.views.courses', name='courses'),
-    url(r'^mergeusers/$', 'opensubmit.views.mergeusers', name='mergeusers'),
+urlpatterns = [
+    url(r'^$', views.index, name='index'),
+    url(r'^logout/$', views.logout, name='logout'),
+    url(r'^dashboard/$', views.dashboard, name='dashboard'),
+    url(r'^details/(?P<subm_id>\d+)/$', views.details, name='details'),
+    url(r'^assignments/(?P<ass_id>\d+)/new/$', views.new, name='new'),
+    url(r'^assignments/(?P<ass_id>\d+)/perftable/$', views.perftable, name='perftable'),
+    url(r'^assignments/(?P<ass_id>\d+)/duplicates/$', views.duplicates, name='duplicates'),
+    url(r'^withdraw/(?P<subm_id>\d+)/$', views.withdraw, name='withdraw'),
+    url(r'^preview/(?P<subm_id>\d+)/$', views.preview, name='preview'),
+    url(r'^update/(?P<subm_id>\d+)/$', views.update, name='update'),
+    url(r'^course/(?P<course_id>\d+)/gradingtable/$', views.gradingtable, name='gradingtable'),
+    url(r'^course/(?P<course_id>\d+)/archive/$', views.coursearchive, name='coursearchive'),
+    url(r'^course/(?P<course_id>\d+)/mail2all/$', views.mail2all, name='mail2all'),
+    url(r'^jobs/$', api.jobs, name='jobs'),
+    url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', api.download, name='download_secret'),
+    url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', api.download, name='download'),
+    url(r'^machine/(?P<machine_id>\d+)/$', views.machine, name='machine'),
+    url(r'^machines/$', api.machines, name='machines'),
+    url(r'^settings/$', views.settings, name='settings'),
+    url(r'^courses/$', views.courses, name='courses'),
+    url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
 
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
     url('', include('social.apps.django_app.urls', namespace='social')),
-    url(r'^teacher/', include(teacher_backend.urls)),
-    url(r'^admin/', include(admin_backend.urls))
-)
+    url(r'^teacher/', include(admin.teacher_backend.urls)),
+    url(r'^admin/', include(admin.admin_backend.urls))
+]
 
 # only working when DEBUG==FALSE
 # on production systems, static files are served directly by Apache
