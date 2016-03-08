@@ -140,6 +140,8 @@ if is_production:
     STATIC_URL = ensure_slash(False, True, MAIN_URL + '/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
+    if ':' in ALLOWED_HOSTS[0]:
+        ALLOWED_HOSTS = [ALLOWED_HOSTS[0].split(':')[0]]
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
     # Root folder for static files
