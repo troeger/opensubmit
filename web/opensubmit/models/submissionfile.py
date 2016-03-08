@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 
-from opensubmit.settings import MEDIA_ROOT
+from django.conf import settings
 
 import zipfile, tarfile, unicodedata, os, hashlib
 
@@ -113,7 +113,7 @@ class SubmissionFile(models.Model):
         return reverse('preview', args=(self.submissions.all()[0].pk,))
 
     def absolute_path(self):
-        return MEDIA_ROOT + "/" + self.attachment.name
+        return settings.MEDIA_ROOT + "/" + self.attachment.name
 
     def is_executed(self):
         return self.fetched is not None

@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
-
+from opensubmit.tests import utils
 from opensubmit import settings
 
 import os.path, sys
@@ -62,6 +62,28 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         )
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
+
+    def testParallelExecutorsCompileTest(self):
+        self.sub = self.createValidatableSubmission(self.current_user) 
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+
+        # Span a number of threads, each triggering the executor
+        # This only creates a real test case if executor serialization is off (see tests/executor.cfg)
+        NUM_THREADS = 50
+        return_codes = utils.run_parallel(NUM_THREADS, self._runExecutor)
+        # Compile + validation + full test makes 3 expected successful runs
+        self.assertEquals(len(filter((lambda x: x is True),  return_codes)), 3)
+        self.assertEquals(len(filter((lambda x: x is False), return_codes)), NUM_THREADS-3)
+
+        # Make sure that compilation result is given
+        results = SubmissionTestResult.objects.filter(
+            submission_file=self.sub.file_upload,
+            kind=SubmissionTestResult.COMPILE_TEST
+        )
+        self.assertEquals(1, len(results))
+        self.assertNotEquals(0, len(results[0].result))
+
 
     def testTooLongCompile(self):
         self.sub = self.createValidatableSubmission(self.current_user)

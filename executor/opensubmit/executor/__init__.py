@@ -54,7 +54,35 @@ def read_config(config_file):
     assert(targetdir.endswith(os.sep))
     return config
 
-def _cleanup(config, finalpath):
+def _acquire_lock(config):
+    '''
+        Determines if the executor is configured to run fetched jobs one after the other.
+        If this is the case, then check if another script instance is still running.
+    '''
+    if config.getboolean("Execution", "serialize"):
+        lock = FileLock(config.get("Execution", "pidfile")) 
+        try: 
+            if lock.is_locked() and not lock.i_am_locking():
+               logger.debug("Already locked")
+               return False
+            else:
+               lock.acquire()
+               logger.debug("Got the script lock")
+        except Exception as e:
+            logger.error("ERROR locking. " + str(e))           
+            return False
+    return True
+
+def _cleanup_lock(config):
+    '''
+        Release locks, if set.
+    '''
+    if config.getboolean("Execution", "serialize"):
+        lock = FileLock(config.get("Execution","pidfile"))
+        logger.debug("Releasing lock")
+        lock.release()
+
+def _cleanup_files(config, finalpath):
     '''
         Remove all created while evaluating the submission
     '''
@@ -291,7 +319,7 @@ def _unpack_job(config, fname, submid, action):
         except Exception as e:
             logger.error("ERROR could not remove: " + str(e))
         _send_result(config, "This is not a valid compressed file.",-1, submid, action)
-        _cleanup(config, finalpath)
+        _cleanup_files(config, finalpath)
         return None
     dircontent = os.listdir(finalpath)
     logger.debug("Content after decompression: "+str(dircontent))
@@ -374,7 +402,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             return "", True             # act like nothing had happened
         else:
             logger.info("Exception on process execution: " + str(sys.exc_info()))
-            _cleanup(config, finalpath)
+            _cleanup_files(config, finalpath)
             return "", False
     
     if proc.returncode == 0:
@@ -382,7 +410,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         return output, True
     elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
         _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
-        _cleanup(config, finalpath)
+        _cleanup_files(config, finalpath)
         return output, False
     else:
         try:
@@ -393,7 +421,7 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         dircontent = dircontent.decode("utf-8",errors="ignore")
         output = output + "\n\nDirectory content as I see it:\n\n" + dircontent
         _send_result(config, "%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
-        _cleanup(config, finalpath)
+        _cleanup_files(config, finalpath)
         return output, False
 
 def _kill_deadlocked_jobs(config):
@@ -417,25 +445,6 @@ def _kill_deadlocked_jobs(config):
                     proc.kill()
                 except Exception as e:
                     logger.error("ERROR killing process %d." % proc.pid)
-
-def _can_run(config):
-    '''
-        Determines if the executor is configured to run fetched jobs one after the other.
-        If this is the case, then check if another script instance is still running.
-    '''
-    if config.getboolean("Execution", "serialize"):
-        lock = FileLock(config.get("Execution", "pidfile")) 
-        try: 
-            if lock.is_locked() and not lock.i_am_locking():
-               logger.debug("Already locked")
-               return False
-            else:
-               lock.acquire()
-               logger.debug("Got the script lock")
-        except Exception as e:
-            logger.error("ERROR locking. " + str(e))           
-            return False
-    return True
 
 def send_config(config_file):
     '''
@@ -493,38 +502,37 @@ def run(config_file):
     config = read_config(config_file)
     compile_cmd = config.get("Execution","compile_cmd")
     _kill_deadlocked_jobs(config)
-    lock = FileLock(config.get("Execution","pidfile"))
-    if _can_run(config):
+    if _acquire_lock(config):
         # fetch any available job
         fname, submid, action, timeout, validator_url = _fetch_job(config)
         if not fname:
-            logger.debug("Release lock")
-            lock.release()
+            logger.debug("Nothing to do")
+            _cleanup_lock(config)
             return False
         # decompress download, only returns on success
         finalpath = _unpack_job(config, fname, submid, action)
         if not finalpath:
-            logger.debug("Release lock")
-            lock.release()
+            logger.debug("Nothing to find in download")
+            _cleanup_lock(config)
             return False
         # perform action defined by the server for this download
         if action == "test_compile":
             # run configure script, if available.
             output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
             if not success:
-                logger.debug("Release lock")
-                lock.release()
+                logger.debug("Configure failed")
+                _cleanup_lock(config)
                 return False
             # build it, only returns on success
             output, success = _run_job(config, finalpath, compile_cmd.split(" "), submid, action, timeout)
             if not success:
-                logger.debug("Release lock")
-                lock.release()
+                logger.debug("Compilation failed")
+                _cleanup_lock(config)
                 return False
             _send_result(config, output, 0, submid, action)
-            _cleanup(config, finalpath)
-            logger.debug("Release lock")
-            lock.release()
+            _cleanup_files(config, finalpath)
+            logger.debug("Compilation worked")
+            _cleanup_lock(config)
             return True
         elif action == "test_validity" or action == "test_full":
             # prepare the output file for validator performance results
@@ -533,19 +541,19 @@ def run(config_file):
             # run configure script, if available.
             output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
             if not success:
-                logger.debug("Release lock")
-                lock.release()
+                logger.debug("Configure failed")
+                _cleanup_lock(config)
                 return False
             # build it
             output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
             if not success:
-                logger.debug("Release lock")
-                lock.release()
+                logger.debug("Job execution failed")
+                _cleanup_lock(config)
                 return False
             # fetch validator into target directory
             if not _fetch_validator(config, validator_url, finalpath):
                 logger.debug("Validator fetching failed, cancelling task")
-                lock.release()
+                _cleanup_lock(config)
                 return False
             # Allow submission to load their own libraries
             logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
@@ -553,20 +561,19 @@ def run(config_file):
             # execute validator
             output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
             if not success:
-                logger.debug("Release lock")
-                lock.release()
+                logger.debug("Job execution failed")
+                _cleanup_lock(config)
                 return False
             perfdata= open(perfdata_fname,"r").read()
             _send_result(config, output, 0, submid, action, perfdata)
-            _cleanup(config, finalpath)
-            logger.debug("Release lock")
-            lock.release()
+            _cleanup_files(config, finalpath)
+            logger.debug("Validty test worked")
+            _cleanup_lock(config)
             return True
         else:
             # unknown action, programming error in the server
-            logger.error("Unknown action keyword from server: " + action)
-            logger.debug("Release lock")
-            lock.release()
+            logger.error("Unknown action keyword %s from server"%(action,))
+            _cleanup_lock(config)
             return False
         
 if __name__ == "__main__":

@@ -6,10 +6,10 @@ from django.core.urlresolvers import reverse
 
 from datetime import datetime
 
-from .submissionfile import upload_path
+from .submissionfile import upload_path, SubmissionFile
 from .submissiontestresult import SubmissionTestResult
 
-from opensubmit.settings import MAIN_URL
+from django.conf import settings
 
 import logging
 logger = logging.getLogger('OpenSubmit')
@@ -45,6 +45,20 @@ class PendingFullTestsManager(models.Manager):
                         Submission.CLOSED_TEST_FULL_PENDING]
             ).order_by('-state').order_by('-modified')
         return jobs
+
+class PendingTestsManager(models.Manager):
+    '''
+        A combination of both, with focus on getting the full tests later than the validity tests.
+    '''
+    def get_queryset(self):
+        jobs = Submission.objects.filter(
+            state__in=[ Submission.TEST_FULL_PENDING,           # PF
+                        Submission.CLOSED_TEST_FULL_PENDING,    # CT
+                        Submission.TEST_COMPILE_PENDING,        # PC
+                        Submission.TEST_VALIDITY_PENDING ]      # PV
+            ).order_by('-state').order_by('-modified')
+        return jobs
+
 
 class Submission(models.Model):
     '''
@@ -109,6 +123,11 @@ class Submission(models.Model):
     grading_notes = models.TextField(max_length=1000, blank=True, null=True, help_text="Specific notes about the grading for this submission.")
     grading_file = models.FileField(upload_to=upload_path, blank=True, null=True, help_text="Additional information about the grading as file.")
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
+
+    objects = models.Manager()
+    pending_student_tests = PendingStudentTestsManager()
+    pending_full_tests = PendingFullTestsManager()
+    pending_tests = PendingTestsManager()
 
     class Meta:
         app_label = 'opensubmit'
@@ -273,10 +292,6 @@ class Submission(models.Model):
         # this implies that the Apache media serving is disabled
         return reverse('download', args=(self.pk, 'grading_file', ))
 
-    objects = models.Manager()
-    pending_student_tests = PendingStudentTestsManager()
-    pending_full_tests = PendingFullTestsManager()
-
     def _save_test_result(self, machine, text, kind, perf_data):
         result = SubmissionTestResult(
             result=text,
@@ -292,15 +307,13 @@ class Submission(models.Model):
             return None
 
     def save_fetch_date(self):
-        self.file_upload.fetched = datetime.now()
-        self.file_upload.save()
+        SubmissionFile.objects.filter(pk=self.file_upload.pk).update(fetched=datetime.now())
 
     def get_fetch_date(self):
         return self.file_upload.fetched
 
     def clean_fetch_date(self):
-        self.file_upload.fetched = None
-        self.file_upload.save()
+        SubmissionFile.objects.filter(pk=self.file_upload.pk).update(fetched=None)
 
     def save_compile_result(self, machine, text):
         self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST, None)
@@ -339,17 +352,17 @@ class Submission(models.Model):
         if state == Submission.TEST_COMPILE_FAILED:
             subject = 'Warning: Your submission did not pass the compilation test'
             message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, MAIN_URL)
+            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.TEST_VALIDITY_FAILED:
             subject = 'Warning: Your submission did not pass the validation test'
             message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, MAIN_URL)
+            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.CLOSED:
             subject = 'Grading completed'
             message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, MAIN_URL)
+            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
         else:
             return
 
