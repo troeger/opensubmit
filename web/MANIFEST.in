@@ -9,6 +9,7 @@
 
 include opensubmit/settings.ini.template
 include requirements.txt
+include README.rst
 graft opensubmit/static
 graft opensubmit/templates
 graft opensubmit/templatetags
