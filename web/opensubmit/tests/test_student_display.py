@@ -126,20 +126,20 @@ class StudentDisplayTestCase(SubmitTestCase):
 
     def testStudentBecomesCourseOwner(self):
         # Before rights assignment        
-        response = self.c.get('/teacher/opensubmit/course/%u/'%(self.course.pk))
+        response = self.c.get('/teacher/opensubmit/course/%u/change/'%(self.course.pk))
         self.assertEquals(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
         # Assign rights
         old_owner = self.course.owner
         self.course.owner = self.current_user.user
         self.course.save()
         # After rights assignment
-        response = self.c.get('/teacher/opensubmit/course/%u/'%(self.course.pk))
+        response = self.c.get('/teacher/opensubmit/course/%u/change/'%(self.course.pk))
         self.assertEquals(response.status_code, 200)        
         # Take away rights
         self.course.owner = old_owner
         self.course.save()
         # After rights removal
-        response = self.c.get('/teacher/opensubmit/course/%u/'%(self.course.pk))
+        response = self.c.get('/teacher/opensubmit/course/%u/change/'%(self.course.pk))
         self.assertEquals(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
 
     def testCannotUseAdminBackendAsCourseOwner(self):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
 
@@ -10,7 +11,8 @@ setup(
     version = open('VERSION').read(),
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
-    author = 'Peter Troeger',
+    author = 'Peter Tröger',
+    description = 'This is the executor daemon for the OpenSubmit web application.',
     author_email = 'peter@troeger.eu',
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -16,7 +16,7 @@ class TeacherTestCaseSet(TutorTestCaseSet):
 
     def testEditAssignmentView(self):
         for ass in self.allAssignments:
-            response=self.c.get('/teacher/opensubmit/assignment/%u/'%ass.pk)
+            response=self.c.get('/teacher/opensubmit/assignment/%u/change/'%ass.pk)
             self.assertEquals(response.status_code, 200)
 
     def testGradingSchemeListView(self):

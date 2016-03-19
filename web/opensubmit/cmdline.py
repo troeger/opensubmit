@@ -1,5 +1,5 @@
 '''
-    This module contains administrative functionality available on production systems as command-line tool.
+    This module contains administrative functionality that is available as command-line tool "opensubmit-web".
 '''
 
 import os, pwd, grp, urllib, sys, shutil
@@ -77,6 +77,7 @@ def check_file(filepath):
         print "WARNING: File does not exist. Creating it: %s"%filepath
         open(filepath, 'a').close()
     try:
+        print "Setting access rights for %s for www-data user"%(filepath)
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
@@ -118,7 +119,10 @@ def check_web_config_consistency(config):
     check_file(log_file)
     # If SQLite database, adjust file system permissions for the web server
     if config.get('database','DATABASE_ENGINE') == 'sqlite3':
-        print "Fixing SqLite database permissions"
+        name = config.get('database','DATABASE_NAME')
+        if not os.path.isabs(name):
+            print "ERROR: Your SQLite database name must be an absolute path. The web server must have directory access permissions for this path."
+            return False
         check_file(config.get('database','DATABASE_NAME'))
     # everything ok
     return True

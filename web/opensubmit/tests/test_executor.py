@@ -70,7 +70,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
         # Span a number of threads, each triggering the executor
         # This only creates a real test case if executor serialization is off (see tests/executor.cfg)
-        NUM_THREADS = 50
+        NUM_THREADS = 70
         return_codes = utils.run_parallel(NUM_THREADS, self._runExecutor)
         # Compile + validation + full test makes 3 expected successful runs
         self.assertEquals(len(filter((lambda x: x is True),  return_codes)), 3)

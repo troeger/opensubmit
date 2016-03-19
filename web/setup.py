@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os, sys, shutil
 
 from setuptools import setup, find_packages
@@ -12,7 +14,8 @@ setup(
     version = open('VERSION').read(),
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
-    author = 'Peter Troeger',
+    author = 'Peter Tröger',
+    description = 'A web application for managing student assignment solutions in a university environment.',
     author_email = 'peter@troeger.eu',
     classifiers=[
         #   4 - Beta
