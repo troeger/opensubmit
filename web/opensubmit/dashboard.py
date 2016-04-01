@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from grappelli.dashboard import modules, Dashboard
 from grappelli.dashboard.utils import get_admin_site_name
 
-from opensubmit.models import tutor_courses, TestMachine, Submission
+from opensubmit.models import TestMachine, Submission
 
 class Statistics(modules.DashboardModule):
     title = _('Statistics')
@@ -36,7 +36,7 @@ class TeacherDashboard(Dashboard):
             exclude=('django.contrib.*',),
         ))
 
-        courses = tutor_courses(context.request.user)
+        courses = context.request.user.profile.tutor_courses()
 
         from opensubmit.admin.submission import SubmissionCourseFilter, SubmissionStateFilter
         tobegraded = SubmissionStateFilter.qs_tobegraded(Submission.objects.all()).count()
