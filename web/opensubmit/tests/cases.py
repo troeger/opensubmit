@@ -12,7 +12,7 @@ from django import http
 from django.conf import settings
 from django.utils import timezone
 
-from django.test import TestCase, LiveServerTestCase
+from django.test import TransactionTestCase, LiveServerTestCase
 from django.test.utils import override_settings
 from django.test.client import Client
 
@@ -20,6 +20,7 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 
+from opensubmit.tests import TEST_HOST
 from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
@@ -32,18 +33,9 @@ class AnonStruct(object):
     def __init__(self, entries):
         self.__dict__.update(entries)
 
-
-class FastPBKDF2SHA1PasswordHasher(PBKDF2SHA1PasswordHasher):
-    iterations = 1
-
-
-FAST_PASSWORD_HASHERS = (
-    'opensubmit.tests.cases.FastPBKDF2SHA1PasswordHasher',
-) + settings.PASSWORD_HASHERS
-
-
-@override_settings(PASSWORD_HASHERS=FAST_PASSWORD_HASHERS)
-class SubmitTestCase(TestCase):
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher',])
+@override_settings(MAIN_URL='http://'+TEST_HOST+'/')
+class SubmitTestCase(TransactionTestCase):
     '''
         A test case base class with several resources being prepared:
 

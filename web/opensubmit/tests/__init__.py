@@ -4,6 +4,7 @@ import os
 import unittest
 from django.test.utils import setup_test_environment
 
+TEST_HOST='localhost:8001'
 
 class DiscoverRunner(DjangoRunner):
     '''
@@ -11,7 +12,7 @@ class DiscoverRunner(DjangoRunner):
         to get DEBUG=True and a different port number into LiveServerTestCase.
     '''
     def setup_test_environment(self, **kwargs):
-        os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS']='localhost:8000'
+        os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS']=TEST_HOST
         setup_test_environment()
         settings.DEBUG = True
         unittest.installHandler()

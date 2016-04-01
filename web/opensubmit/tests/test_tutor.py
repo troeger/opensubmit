@@ -27,7 +27,7 @@ class TutorTestCaseSet():
 
     def testSubmissionEditView(self):
         sub = self.createValidatedSubmission(self.current_user)
-        response=self.c.get('/teacher/opensubmit/submission/%u/'%sub.pk)
+        response=self.c.get('/teacher/opensubmit/submission/%u/change/'%sub.pk)
         self.assertEquals(response.status_code, 200)
 
     def testGradingTableView(self):
