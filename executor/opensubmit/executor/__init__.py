@@ -181,7 +181,7 @@ def _fetch_validator(url, path):
             if not os.path.exists(finalname):
                 logger.error("ERROR validator ZIP package does not contain " + VALIDATOR_FNAME)
                 #TODO: Ugly hack, make error reporting better
-                _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
+                _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, subfid, action, "")
         else:
             try:
                 logger.debug("Validator is a single file, renaming it to " + finalname)
@@ -199,7 +199,8 @@ def _fetch_job(config):
         Fetch any available work from the OpenSubmit server.
         Returns job information as function result tuple:
             fname     - Fully qualified temporary file name for the job file
-            submid    - ID of this file on the OpenSubmit server
+            subfid    - ID of this file on the OpenSubmit server
+            subid     - ID of the corrosponding submission
             action    - What should be done with this file
             timeout   - What is the timeout for running this job
             validator - URL of the validator script
@@ -214,34 +215,35 @@ def _fetch_job(config):
         if headers["Action"] == "get_config":
             # The server does not know us, so it demands registration before hand.
             logger.info("Machine unknown on server, perform registration first.")
-            return [None]*5
-        submid = headers["SubmissionFileId"]
+            return [None]*6
+        subfid = headers["SubmissionFileId"]
+        subid = headers["SubmissionId"]
         action = headers["Action"]
         timeout = int(headers["Timeout"])
-        logger.info("Retrieved submission file %s for '%s' action: %s" % (submid, action, fname))
+        logger.info("Retrieved submission file %s of submission %s for '%s' action: %s" % (subfid, subid, action, fname))
         if "PostRunValidation" in headers:
             validator = headers["PostRunValidation"]
         else:
             validator = None
         with open(fname,"wb") as target:
             target.write(result.read())
-        logger.debug(str((fname, submid, action, timeout, validator)))
-        return fname, submid, action, timeout, validator
+        logger.debug(str((fname, subfid, subid, action, timeout, validator)))
+        return fname, subfid, subid, action, timeout, validator
     except HTTPError as e:
         if e.code == 404:
             logger.debug("Nothing to do.")
-            return [None]*5
+            return [None]*6
         else:
             logger.error("ERROR HTTP return code: " + str(e))
-            return [None]*5
+            return [None]*6
     except URLError as e:
         logger.error("ERROR could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
-        return [None]*5
+        return [None]*6
     except Exception as e:
         logger.error("ERROR unknown: " + str(e))
-        return [None]*5
+        return [None]*6
 
-def _unpack_job(config, fname, submid, action):
+def _unpack_job(config, fname, subfid, subid, action):
     '''
         Decompress the downloaded file "fname" into the globally defined "targetdir".
         Returns on success, or terminates the executor after notifying the OpenSubmit server
@@ -252,7 +254,7 @@ def _unpack_job(config, fname, submid, action):
     basepath = config.get("Execution","directory")
     try: 
         #use a new temp dir for each run, to skip problems with file locks on Windows
-        finalpath = tempfile.mkdtemp(prefix=str(submid)+'_', dir=basepath)
+        finalpath = tempfile.mkdtemp(prefix=str(subfid)+'-'+str(subid)+'_', dir=basepath)
     except Exception as e:
         logger.error("ERROR could not create temp dir: " + str(e))
         return None
@@ -283,13 +285,13 @@ def _unpack_job(config, fname, submid, action):
             os.remove(fname)
         except Exception as e:
             logger.error("ERROR could not remove: " + str(e))
-        _send_result(config, "This is not a valid compressed file.",-1, submid, action)
+        _send_result(config, "This is not a valid compressed file.",-1, subfid, action)
         _cleanup(config, finalpath)
         return None
     dircontent = os.listdir(finalpath)
     logger.debug("Content after decompression: "+str(dircontent))
     if len(dircontent) == 0:
-        _send_result(config, "Your compressed upload is empty - no files in there.",-1, submid, action)
+        _send_result(config, "Your compressed upload is empty - no files in there.",-1, subfid, action)
     elif len(dircontent) == 1 and os.path.isdir(finalpath + dircontent[0] + os.sep):
         logger.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..." % (dircontent[0]))
         finalpath = finalpath + dircontent[0] + os.sep
@@ -310,7 +312,7 @@ def _handle_alarm(proc):
     except Exception as e:
         logger.error("ERROR killing process: %d" % proc.pid)
 
-def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=False):
+def _run_job(config, finalpath, cmd, subfid, subid, action, timeout, ignore_errors=False):
     '''
         Perform some execution activity with timeout support.
         This is used both for compilation and validator script execution.
@@ -363,11 +365,11 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             action_title = "Testing"
         else:
             assert(False)
-    except:
+    except Exception as e:
         if ignore_errors:
             return "", True             # act like nothing had happened
         else:
-            logger.info("Exception on process execution: " + str(sys.exc_info()))
+            logger.info("Exception on process execution: " + str(e))
             _cleanup(config, finalpath)
             return "", False
     
@@ -376,7 +378,8 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
         return output, True
     #     Unix SIGTERM                               unknown                      Windows Kill 
     elif (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None) or (proc.returncode == 1):
-        _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, submid, action)
+        logger.debug( "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output))
+        _send_result(config, "%s was terminated since it took too long (%u seconds). Output so far:\n\n%s"%(action_title,timeout,output), proc.returncode, subfid, action)
         _cleanup(config, finalpath)
         return output, False
     else:
@@ -387,7 +390,8 @@ def _run_job(config, finalpath, cmd, submid, action, timeout, ignore_errors=Fals
             dircontent = "Not available."
         dircontent = dircontent.decode("utf-8",errors="ignore")
         output = output + "\n\nDirectory content as I see it:\n\n" + dircontent
-        _send_result(config, "%s was not successful:\n\n%s"%(action_title,output), proc.returncode, submid, action)
+        logger.info("%s was not successful: %d\n\n%s"%(action_title,proc.returncode,output))
+        _send_result(config, "%s was not successful:\n\n%s"%(action_title,output), proc.returncode, subfid, action)
         _cleanup(config, finalpath)
         return output, False
 
@@ -502,24 +506,24 @@ def run(config_file):
     _kill_deadlocked_jobs(config)
         if _can_run(config):
             # fetch any available job
-            fname, submid, action, timeout, validator_url = _fetch_job(config)
+            fname, subfid, subid, action, timeout, validator_url = _fetch_job(config)
             if not fname:
                 return False
             # decompress download, only returns on success
-            finalpath = _unpack_job(config, fname, submid, action)
+            finalpath = _unpack_job(config, fname, subfid, subid, action)
             if not finalpath:
                 return False
             # perform action defined by the server for this download
             if action == "test_compile":
                 # run configure script, if available.
-                output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+                output, success = _run_job(config, finalpath,["./configure"],subfid, subid, action, timeout, True)
                 if not success:
                     return False
                 # build it, only returns on success
-                output, success = _run_job(config, finalpath, compile_cmd.split(" "), submid, action, timeout)
+                output, success = _run_job(config, finalpath, compile_cmd.split(" "), subfid, subid, action, timeout)
                 if not success:
                     return False
-                _send_result(config, output, 0, submid, action)
+                _send_result(config, output, 0, subfid, action)
                 _cleanup(config, finalpath)
                 return True
             elif action == "test_validity" or action == "test_full":
@@ -527,11 +531,11 @@ def run(config_file):
                 perfdata_fname = finalpath+"perfresults.csv"
                 open(perfdata_fname,"w").close()
                 # run configure script, if available.
-                output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+                output, success = _run_job(config, finalpath,["./configure"], subfid, subid, action, timeout, True)
                 if not success:
                     return False
                 # build it
-                output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
+                output, success = _run_job(config, finalpath,compile_cmd.split(" "), subfid, subid, action, timeout)
                 if not success:
                     return False
                 # fetch validator into target directory
@@ -540,11 +544,11 @@ def run(config_file):
                 logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
                 os.environ["LD_LIBRARY_PATH"]=finalpath
                 # execute validator
-                output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
+                output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname], subfid, subid,  action, timeout)
                 if not success:
                     return False
                 perfdata= open(perfdata_fname,"r").read()
-                _send_result(config, output, 0, submid, action, perfdata)
+                _send_result(config, output, 0, subfid, action, perfdata)
                 _cleanup(config, finalpath)
                 return True
             else:
