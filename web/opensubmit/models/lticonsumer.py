@@ -21,7 +21,6 @@ def consumer_lookup(key):
     '''
         Consumer function as expected by blti package.
     '''
-    logger.debug("Checking for LTI consumer key '%s'"%key)
     try:
         return LtiConsumer.objects.get(key=key).secret
     except:

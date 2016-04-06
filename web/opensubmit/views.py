@@ -31,6 +31,7 @@ from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, Mai
 from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, lticonsumer
 from models.userprofile import db_fixes, move_user_data
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from social import passthrough
 
 
 def index(request):
@@ -428,14 +429,23 @@ def withdraw(request, subm_id):
 @require_POST
 def lti(request, post_params, consumer_key, *args, **kwargs):
     '''
-        View that is handling the request from an LTI consumer.
-        The BLTI package is making sure that the OAuth signing of the request is valid, and that LTI consumer key and secret were ok.
-        The latter ones are supposed to be configured in the admin interface.
+        Entry point for LTI consumers.
+
+        This view is protected by the BLTI package decorator, which performs all the relevant OAuth signature checking. It also makes
+        sure that the LTI consumer key and secret were ok. The latter ones are supposed to be configured in the admin interface.
+
         We can now trust on the provided data to be from the LTI provider.
+
+        If everything worked out, we store the information the session for the Python Social passthrough provider, which is performing
+        user creation and database storage.
     '''
     # None of them is mandatory
-    lti_userid=post_params.get('user_id', None)
-    lti_lastname=post_params.get('lis_person_name_family', None)
-    lti_email=post_params.get('lis_person_contact_email_primary', None)
-    lti_firstname=post_params.get('lis_person_name_given', None)
-    return redirect('dashboard')
+    data={}
+    data['id']=post_params.get('user_id', None)
+    data['username']=post_params.get('custom_username', None)
+    data['last_name']=post_params.get('lis_person_name_family', None)
+    data['email']=post_params.get('lis_person_contact_email_primary', None)
+    data['first_name']=post_params.get('lis_person_name_given', None)
+    request.session[passthrough.SESSION_VAR]=data
+    return redirect(reverse('social:begin',args=['lti']))
+
