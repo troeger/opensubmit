@@ -30,6 +30,7 @@ urlpatterns = [
 
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
     url('', include('social.apps.django_app.urls', namespace='social')),
+    url(r'^lti/$', views.lti, name='lti'),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
     url(r'^admin/', include(admin.admin_backend.urls))
 ]
