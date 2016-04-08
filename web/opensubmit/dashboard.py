@@ -32,8 +32,8 @@ class TeacherDashboard(Dashboard):
                                 reverse('teacher:opensubmit_assignment_changelist'),
                                 course.pk
                             )
-            links.append(['Manage assignments',ass_url, False])
             links.append(['Show grading table',reverse('gradingtable', args=[course.pk]), False])
+            links.append(['Manage assignments, check for duplicates',ass_url, False])
             links.append(['eMail to students',reverse('mail2all', args=[course.pk]), False])
             links.append(['Edit course',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
             links.append(['Download course archive',reverse('coursearchive', args=[course.pk]), False])
