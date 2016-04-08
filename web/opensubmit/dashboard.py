@@ -36,6 +36,7 @@ class TeacherDashboard(Dashboard):
             links.append(['Show grading table',reverse('gradingtable', args=[course.pk]), False])
             links.append(['eMail to students',reverse('mail2all', args=[course.pk]), False])
             links.append(['Edit course',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
+            links.append(['Download course archive',reverse('coursearchive', args=[course.pk]), False])
 
             # Add course group box to dashboard
             self.children.append(modules.Group(
@@ -58,6 +59,7 @@ class TeacherDashboard(Dashboard):
             title='Recent teacher activities',
             column=3,
         ))
+
 
 class AdminDashboard(Dashboard):
     def init_with_context(self, context):
