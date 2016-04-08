@@ -28,10 +28,10 @@ urlpatterns = [
     url(r'^courses/$', views.courses, name='courses'),
     url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
 
-    url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
     url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
-    url(r'^admin/', include(admin.admin_backend.urls))
+    url(r'^admin/', include(admin.admin_backend.urls)),
+    url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
 ]
 
 # only working when DEBUG==FALSE
