@@ -133,16 +133,16 @@ class SubmissionAdmin(ModelAdmin):
 
     fieldsets = (
             ('General',
-                {'fields': ('assignment_info','submitter','modified'),}),
+                {'fields': ('assignment_info', ('submitter','modified')),}),
             ('Authors',
                 {   'fields': ('authors',),
                     'classes': ('grp-collapse grp-closed',)
                 }),
             ('Submission and test results',
-                {   'fields': ('notes',('file_link','file_upload'),'compile_result','validation_result','fulltest_result'),
+                {   'fields': (('file_link', 'notes') ,'compile_result','validation_result','fulltest_result'),
                 }),
             ('Grading',
-                {'fields': ('grading_status', 'grading', 'grading_notes', 'grading_file',),}),
+                {'fields': (('grading', 'grading_status'), 'grading_notes', 'grading_file',),}),
     )
 
     def assignment_info(self, instance):
