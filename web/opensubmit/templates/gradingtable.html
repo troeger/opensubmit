@@ -1,10 +1,6 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% load projecttags %}
 {% load bootstrap %}
-
-{% block title %}
-    {{ block.super }} - Grading Table
-{% endblock %}
 
 {% block scripts %}
 {{ block.super }}
@@ -24,7 +20,7 @@ table.buttons().container().prependTo( $('div.col-sm-12', table.table().containe
 
 {% block content %}
 <div class="page-header">
-    <h1>Grading Table - {{ course }}</h1>
+    <h3>Grading Table - {{ course }}</h3>
 </div>
 
 <table id="gradings" class="table table-bordered table-condensed table-hover">
