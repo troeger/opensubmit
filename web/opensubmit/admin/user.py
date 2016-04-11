@@ -1,6 +1,5 @@
 # User admin interface
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.admin import StackedInline
 from opensubmit.models import UserProfile
 from django.shortcuts import render
 from django.contrib import admin
@@ -8,12 +7,6 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 
-
-
-class UserProfileInline(StackedInline):
-    model = UserProfile
-    classes = ('grp-collapse grp-open',)
-    inline_classes = ('grp-collapse grp-open',)
 
 def social(user):
     '''
@@ -24,8 +17,33 @@ def social(user):
     except:
         return None
 
+class UserProfileInline(admin.TabularInline):
+    model = UserProfile
+    verbose_name_plural="Student Details"
+    can_delete = False
+#    classes = ('grp-collapse grp-open',)
+    inline_classes = ('grp-collapse grp-open',)
+
 class UserAdmin(DjangoUserAdmin):
     actions = ['mergeusers',]
+    fieldsets = (
+        ("User Data", {
+            "classes": ("grp-collapse grp-open",),
+            "fields": ("username","password","first_name","last_name", "email")
+        }),
+        ("Student Details", {
+            "classes": ("placeholder profile-group",),
+            "fields": ()
+        }),
+        ("Authorization", {
+            "classes": ("grp-collapse grp-open",),
+            "fields": ("is_active", "is_staff", "is_superuser", "groups")
+        }),
+        ("Info", {
+            "classes": ("grp-collapse grp-open",),
+            "fields": ("last_login","date_joined")
+        }),
+    )
 
     inlines = (UserProfileInline, )
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff',  social)

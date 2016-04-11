@@ -52,6 +52,14 @@ class SubmissionStateFilter(SimpleListFilter):
     title = _('Submission Status')
     parameter_name = 'statefilter'
 
+    @staticmethod
+    def qs_tobegraded(qs):
+        return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+
+    @staticmethod
+    def qs_graded(qs):
+        return qs.filter(state__in=[Submission.GRADED])
+
     def lookups(self, request, model_admin):
         return (
             ('tobegraded', _('To be graded')),
@@ -67,7 +75,7 @@ class SubmissionStateFilter(SimpleListFilter):
         if self.value() == 'gradingunfinished':
             return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS])
         elif self.value() == 'graded':
-            return qs.filter(state__in=[Submission.GRADED])
+            return SubmissionStateFilter.qs_graded(qs)
         elif self.value() == 'closed':
             return qs.filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])
         else:
@@ -116,33 +124,32 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'created', 'submitter', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
+    list_display = ['__unicode__', 'created', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setGradingNotFinishedStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
     search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
+    change_list_template = "admin/change_list_filter_sidebar.html"
 
     fieldsets = (
             ('General',
-                {'fields': ('assignment_info','submitter','modified'),}),
+                {'fields': ('assignment_info', ('submitter','modified')),}),
             ('Authors',
                 {   'fields': ('authors',),
                     'classes': ('grp-collapse grp-closed',)
                 }),
             ('Submission and test results',
-                {   'fields': ('notes',('file_link','file_upload'),'compile_result','validation_result','fulltest_result'),
+                {   'fields': (('file_link', 'notes') ,'compile_result','validation_result','fulltest_result'),
                 }),
             ('Grading',
-                {'fields': ('grading_status', 'grading', 'grading_notes', 'grading_file',),}),
+                {'fields': (('grading', 'grading_status'), 'grading_notes', 'grading_file',),}),
     )
 
     def assignment_info(self, instance):
-        message = '%s<br/>%s<br/>'%(instance.assignment, instance.assignment.course)
+        message = '%s (%s)<br/>'%(instance.assignment, instance.assignment.course)
         message += 'Deadline: %s (%s ago)'%(instance.assignment.hard_deadline, timesince.timesince(instance.assignment.hard_deadline))
         if instance.can_modify(instance.submitter):
-            message += '''<p><ul style="width:45%" class="messagelist"><li class="warning">Warning: Assignment is still open.
-                Saving grading information will disable withdrawal and re-upload for the authors.
-            </li></ul><p>'''
+            message += '''<p style="color: red">Warning: Assignment is still open. Saving grading information will disable withdrawal and re-upload for the authors.</p>'''
         return mark_safe(message)
     assignment_info.short_description = "Assignment"
 

@@ -208,10 +208,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.admin.apps.SimpleAdminConfig',
     'social.apps.django_app.default',
     'bootstrapform',
+    'grappelli.dashboard',
     'grappelli',
+    'django.contrib.admin',
+#    'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit',
 )
 
@@ -327,3 +329,9 @@ assert(JOB_EXECUTOR_SECRET is not "")
 
 GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
 GRAPPELLI_SWITCH_USER = True
+GRAPPELLI_INDEX_DASHBOARD = {
+    'opensubmit.admin.teacher_backend': 'opensubmit.dashboard.TeacherDashboard',
+    'opensubmit.admin.admin_backend': 'opensubmit.dashboard.AdminDashboard',
+}
+
+assert(not config.has_section('overrides'))     # factored out
