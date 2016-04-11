@@ -105,6 +105,7 @@ view_links.short_description = ""
 class AssignmentAdmin(ModelAdmin):
     list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_authors, num_subm, num_finished, num_unfinished, view_links]
     list_filter = ('course',)
+    change_list_template = "admin/change_list_filter_sidebar.html"
 
     form = AssignmentAdminForm
 

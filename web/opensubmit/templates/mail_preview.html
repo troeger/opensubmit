@@ -8,24 +8,35 @@
 
 {% block content %}
 <div class="page-header">
-    <h3>eMail - {{ course }}</h3>
+    <h1>eMail - {{ course }}</h1>
 </div>
 
 <p>Example:</p>
 
-From:
-<pre>{{ preview_from }}</pre>
+<fieldset class="module grp-module">
+<div class="form-row grp-row">
+	<div class="field-box">
+		From:<br/>{{ preview_from }}
+	</div>
+</div>
+<div class="form-row grp-row">
+	<div class="field-box">
+		Subject:<br/>{{ preview_subject }}
+	</div>
+</div>
+<div class="form-row grp-row">
+	<div class="field-box">
+		Message:<br/>{{ preview_message }}
+	</div>
+</div>
+</fieldset>
 
-Subject:
-<pre>{{ preview_subject }}</pre>
-
-Message:
-<pre>{{ preview_message }}</pre>
 
 <form class="form" role="form" action="." method="post">
 	{% csrf_token %}
-	<a href="javascript:history.back()" class="btn btn-default"><span class="glyphicon glyphicon-arrow-left"></span> Edit Again</a>
-	<button type="submit" href="." class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Send</button>
+	<a href="javascript:history.back()">Edit Again</a>
+	<br/>
+	<input type="submit" href="." value="Send"></input>
 </form>
 
 {% endblock %}
