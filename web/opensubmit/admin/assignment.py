@@ -111,16 +111,14 @@ class AssignmentAdmin(ModelAdmin):
 
     fieldsets = (
             ('',
-                {'fields': (('title','course'), 'download', 'gradingScheme')}),
+                {'fields': (('title','course'), 'download', 'gradingScheme', 'has_attachment')}),
             ('Time',
                 {   'fields': ('publish_at', ('soft_deadline', 'hard_deadline'))}),
-            ('Submission and Validation',
-                {   'fields': (('has_attachment', 'attachment_test_timeout'), 'attachment_test_compile', \
+            ('File Upload Validation',
+                {   'fields': ('attachment_test_compile',  \
                                ('attachment_test_validity', 'validity_script_download'), \
-                                'attachment_test_full'),
-                }),
-            ('Test Machines',
-                {'fields': ('test_machines',)}),
+                               'attachment_test_full', ('test_machines', 'attachment_test_timeout') )},
+            )
     )
 
     def get_queryset(self, request):

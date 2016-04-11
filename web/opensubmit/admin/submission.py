@@ -146,12 +146,10 @@ class SubmissionAdmin(ModelAdmin):
     )
 
     def assignment_info(self, instance):
-        message = '%s<br/>%s<br/>'%(instance.assignment, instance.assignment.course)
+        message = '%s (%s)<br/>'%(instance.assignment, instance.assignment.course)
         message += 'Deadline: %s (%s ago)'%(instance.assignment.hard_deadline, timesince.timesince(instance.assignment.hard_deadline))
         if instance.can_modify(instance.submitter):
-            message += '''<p><ul style="width:45%" class="messagelist"><li class="warning">Warning: Assignment is still open.
-                Saving grading information will disable withdrawal and re-upload for the authors.
-            </li></ul><p>'''
+            message += '''<p style="color: red">Warning: Assignment is still open. Saving grading information will disable withdrawal and re-upload for the authors.</p>'''
         return mark_safe(message)
     assignment_info.short_description = "Assignment"
 
