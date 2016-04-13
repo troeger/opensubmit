@@ -309,6 +309,8 @@ if LOGIN_SHIB:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.apache.ModShibAuth',)
     LOGIN_SHIB_DESCRIPTION = config.get('login', 'LOGIN_SHIB_DESCRIPTION')
 
+AUTHENTICATION_BACKENDS += ('opensubmit.social.lti.LtiAuth',)
+
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next',]
 SOCIAL_AUTH_PIPELINE = (

@@ -47,15 +47,9 @@ def db_fixes(user):
         Fix users that already exist and never got a user profile attached.
         This may be user accounts that were created by the Django Social or manually by the admin.
 
-        Such users should start with all courses being visible, to not shown them an empty list of
-        open assignments in the course they are looking for.
-
         TODO: This belongs into a User post_save handler.
     '''
     profile, created = UserProfile.objects.get_or_create(user=user)
-    if created:
-        profile.courses = Course.objects.all()
-        profile.save()
 
 def user_unicode(self):
     '''

@@ -46,9 +46,11 @@
                     <li  class="{% block navigation_settings %}{% endblock %}">
                         <a href="{% url 'settings' %}"><span class="glyphicon glyphicon-wrench"></span> Settings</a>
                     </li>
+                    {% if not request.session.ui_disable_logout %}
                     <li class="{% block navigation_logout %}{% endblock %}">
                         <a href="{% url 'logout' %}"><span class="glyphicon glyphicon-off"></span> Logout</a>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
             <!-- /.navbar-collapse -->

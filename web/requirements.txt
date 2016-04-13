@@ -9,3 +9,4 @@ python-social-auth
 python-openid
 python-oauth2
 oauthlib>=0.6.2
+blti
