@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Permission, Group
-from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine, LtiConsumer
+from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine
 from django.contrib.admin.sites import AdminSite
 
 from user import UserAdmin
@@ -20,7 +20,6 @@ admin_backend.register(Course, CourseAdmin)
 admin_backend.register(TestMachine)
 admin_backend.register(Permission)
 admin_backend.register(Group)
-admin_backend.register(LtiConsumer)
 
 
 class TeacherBackend(AdminSite):

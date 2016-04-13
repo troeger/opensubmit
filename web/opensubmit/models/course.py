@@ -13,6 +13,8 @@ class Course(models.Model):
     homepage = models.URLField(max_length=200, verbose_name="Course description link")
     active = models.BooleanField(default=True, help_text="Only assignments and submissions of active courses are shown to students and tutors. Use this flag for archiving past courses.")
     max_authors = models.PositiveSmallIntegerField(default=1, help_text="Maximum number of authors (= group size) for assignments in this course.")
+    lti_key = models.CharField(max_length=100, null=True, help_text="Key to be used by an LTI consumer when accessing this course.")
+    lti_secret = models.CharField(max_length=100, null=True, help_text="Secret to be used by an LTI consumer when accessing this course.")
 
     class Meta:
         app_label = 'opensubmit'
@@ -54,3 +56,12 @@ class Course(models.Model):
     def _valid_submissions(self):
         qs = Submission.objects.filter(assignment__course=self).exclude(state=Submission.WITHDRAWN)
         return qs
+
+def lti_secret(key):
+    '''
+        Consumer function as expected by blti package.
+    '''
+    try:
+        return Course.objects.get(lti_key=key).lti_secret
+    except:
+        return None

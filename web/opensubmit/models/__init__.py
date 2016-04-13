@@ -7,5 +7,4 @@ from .submissionfile import SubmissionFile
 from .submissiontestresult import SubmissionTestResult
 from .assignment import Assignment
 from .userprofile import UserProfile
-from .lticonsumer import LtiConsumer
 

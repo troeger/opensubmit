@@ -28,8 +28,9 @@ from django.forms.models import modelform_factory
 from blti import lti_provider
 
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
-from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile, lticonsumer
+from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
 from models.userprofile import db_fixes, move_user_data
+from models.course import lti_secret
 from settings import JOB_EXECUTOR_SECRET, MAIN_URL
 from social import passthrough
 
@@ -425,7 +426,7 @@ def withdraw(request, subm_id):
     else:
         return render(request, 'withdraw.html', {'submission': submission})
 
-@lti_provider(consumer_lookup=lticonsumer.consumer_lookup, site_url=MAIN_URL)
+@lti_provider(consumer_lookup=lti_secret, site_url=MAIN_URL)
 @require_POST
 def lti(request, post_params, consumer_key, *args, **kwargs):
     '''
