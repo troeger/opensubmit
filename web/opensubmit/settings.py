@@ -212,8 +212,8 @@ INSTALLED_APPS = (
     'bootstrapform',
     'grappelli.dashboard',
     'grappelli',
-#    'django.contrib.admin',
-    'django.contrib.admin.apps.SimpleAdminConfig',
+    'django.contrib.admin',
+#    'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit',
 )
 

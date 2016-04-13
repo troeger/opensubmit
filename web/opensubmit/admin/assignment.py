@@ -105,21 +105,20 @@ view_links.short_description = ""
 class AssignmentAdmin(ModelAdmin):
     list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', num_authors, num_subm, num_finished, num_unfinished, view_links]
     list_filter = ('course',)
+    change_list_template = "admin/change_list_filter_sidebar.html"
 
     form = AssignmentAdminForm
 
     fieldsets = (
             ('',
-                {'fields': (('title','course'), 'download', 'gradingScheme')}),
+                {'fields': (('title','course'), 'download', 'gradingScheme', 'has_attachment')}),
             ('Time',
                 {   'fields': ('publish_at', ('soft_deadline', 'hard_deadline'))}),
-            ('Submission and Validation',
-                {   'fields': (('has_attachment', 'attachment_test_timeout'), 'attachment_test_compile', \
+            ('File Upload Validation',
+                {   'fields': ('attachment_test_compile',  \
                                ('attachment_test_validity', 'validity_script_download'), \
-                                'attachment_test_full'),
-                }),
-            ('Test Machines',
-                {'fields': ('test_machines',)}),
+                               'attachment_test_full', ('test_machines', 'attachment_test_timeout') )},
+            )
     )
 
     def get_queryset(self, request):

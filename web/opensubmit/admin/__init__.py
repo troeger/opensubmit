@@ -26,9 +26,9 @@ admin_backend.register(LtiConsumer)
 class TeacherBackend(AdminSite):
     site_header = "Teacher Backend"
     site_title = "OpenSubmit Teacher Backend"
-    login_template = "teacher/login.html"
-    app_index_template = "teacher/index.html"
-    index_template = "teacher/index.html"
+#    login_template = "teacher/login.html"
+#    app_index_template = "teacher/index.html"
+#    index_template = "teacher/index.html"
 
 teacher_backend = TeacherBackend(name="teacher")
 teacher_backend.register(Grading, GradingAdmin)

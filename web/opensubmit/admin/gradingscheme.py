@@ -2,6 +2,7 @@
 
 from django.contrib.admin import ModelAdmin
 from django.db.models import Q
+from django.core.urlresolvers import resolve
 from opensubmit.models import Course, Grading
 
 def gradings(gradingScheme):
@@ -28,8 +29,10 @@ class GradingSchemeAdmin(ModelAdmin):
     list_display = ['__unicode__', gradings, courses]
 
     def formfield_for_dbfield(self, db_field, **kwargs):
-        ''' Offer only gradings that are not already used by other schemes.'''
-        grad_filter = Q(schemes=None)
+        ''' Offer only gradings that are not used by other schemes, which means they are used by this scheme or not at all.'''
         if db_field.name == "gradings":
-            kwargs['queryset'] = Grading.objects.filter(grad_filter).distinct()
+            request=kwargs['request']
+            obj=resolve(request.path).args[0]
+            filterexpr=Q(schemes=obj) | Q(schemes=None)
+            kwargs['queryset'] = Grading.objects.filter(filterexpr).distinct()
         return super(GradingSchemeAdmin, self).formfield_for_dbfield(db_field, **kwargs)

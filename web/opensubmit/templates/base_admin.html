@@ -1,0 +1,54 @@
+{% load admin_static %}{% load i18n grp_tags %}
+<!DOCTYPE html>
+<html lang="en" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}OpenSubmit - Assignment Submission System{% endblock %}</title>
+
+    {% block scripts %}
+    <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
+    {% endblock %}
+
+    <style type="text/css">
+    {% block style %}
+    @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.css");
+    @import url("{{ STATIC_URL }}grappelli/stylesheets/screen.css");
+    @import url("{{ STATIC_URL }}css/screen.css");
+    {% endblock %}
+    </style>
+
+    <script type="text/javascript">
+    jQuery(document).ready(function() {
+        {% block docready %}
+        {% endblock %}
+    });
+    </script>
+</head>
+
+<body>
+    <header id="grp-header" class="{% block header-class %}{% endblock %}">
+                <div id="grp-navigation">
+                     {% block admin_title %}<h1 id="grp-admin-title">{% if grappelli_admin_title %}{{ grappelli_admin_title }}{% else %}{% get_admin_title %}{% endif %}</h1>{% endblock %}
+                </div>
+    </header>
+    <div class="container">
+        {% for message in messages %}
+                <div class="alert alert-success alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>{{ message }}
+                </div>
+        {% endfor %}
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+
+</html>
