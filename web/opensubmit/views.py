@@ -76,7 +76,29 @@ def courses(request):
 
 @login_required
 def dashboard(request):
+    # Fix database on lower levels for the current user
     db_fixes(request.user)
+    profile = request.user.profile
+
+    # If this is pass-through authentication, we can determine additional information
+    if 'passthroughauth' in request.session:
+        if 'ltikey' in request.session['passthroughauth']:
+            # User coming through LTI. Check the course having this LTI key and enable it for the user.
+            try:
+                ltikey = request.session['passthroughauth']['ltikey']
+                request.session['ui_disable_logout']=True
+                course = Course.objects.get(lti_key=ltikey)
+                profile.courses.add(course)
+                profile.save()
+            except:
+                # This is only a comfort function, so we should not crash the app if that goes wrong
+                pass
+
+    # If the user has no courses enabled, he sees nothing, which irritates students
+    # In such a case, enable all of them for him
+    if profile.courses.count() == 0:
+        profile.courses = Course.objects.all()
+        profile.save()
 
     # if the user settings are not complete (e.f. adter OpenID registration), we MUST fix them first
     if not request.user.first_name or not request.user.last_name or not request.user.email:
@@ -440,8 +462,9 @@ def lti(request, post_params, consumer_key, *args, **kwargs):
         If everything worked out, we store the information the session for the Python Social passthrough provider, which is performing
         user creation and database storage.
     '''
-    # None of them is mandatory
     data={}
+    data['ltikey']=post_params.get('oauth_consumer_key')
+    # None of them is mandatory
     data['id']=post_params.get('user_id', None)
     data['username']=post_params.get('custom_username', None)
     data['last_name']=post_params.get('lis_person_name_family', None)
