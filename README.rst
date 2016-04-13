@@ -29,15 +29,16 @@ miserable, because after the deadline, all gradable solutions are
 validated solution, so that they do not fail due to technical
 difficulties at the correctors side.
 
-When the deadline is over, the system can run another invisble test with the
+When the deadline is over, the system can run another invisible test with the
 student code the determine grading-relevant information.
 
-Since OpenSubmit is only for assignment submission, it has no management
+Since OpenSubmit is only for assignment submission, it has no elaborated management
 of course participants. Everybody who can perform a successful login can
 submit solutions. Therefore, we expect you to have an institute-specific 
 authentication provider. OpenSubmit currently supports OpenID and Shibboleth
 out of the box for such cases. You can also offer GitHub, Twitter or Google login
-for determining the student identity.
+for determining the student identity. A third option is to integrate OpenSubmit
+via LTI in an existing learning management system (LMS).
 
 The `end-user documentation`_ is available in the GitHub Wiki.
 
