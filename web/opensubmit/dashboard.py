@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from opensubmit.models import TestMachine, Submission
 
 class TeacherDashboard(Dashboard):
+    css_classes = ['/static/style.css']
     def init_with_context(self, context):
         # Put database models in  column
         self.children.append(modules.ModelList(
@@ -22,17 +23,16 @@ class TeacherDashboard(Dashboard):
         for course in courses:
             # Prepare course-related links
             links=[]
-            if course.gradable_submissions().all().count() > 0:
-                grading_url="%s?coursefilter=%u&statefilter=tobegraded"%(
-                                    reverse('teacher:opensubmit_submission_changelist'),
-                                    course.pk
-                                )
-                links.append(['Do some grading',grading_url, False])
+            grading_url="%s?coursefilter=%u&statefilter=tobegraded"%(
+                                reverse('teacher:opensubmit_submission_changelist'),
+                                course.pk
+                            )
+            links.append(['Check submissions',grading_url, False])
             ass_url="%s?course__id__exact=%u"%(
                                 reverse('teacher:opensubmit_assignment_changelist'),
                                 course.pk
                             )
-            links.append(['Show grading table',reverse('gradingtable', args=[course.pk]), False])
+            links.append(['Show current grading table',reverse('gradingtable', args=[course.pk]), False])
             links.append(['Manage assignments, check for duplicates',ass_url, False])
             links.append(['eMail to students',reverse('mail2all', args=[course.pk]), False])
             links.append(['Edit course',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
