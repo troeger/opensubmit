@@ -5,7 +5,9 @@ from django.core.urlresolvers import reverse
 from opensubmit.models import TestMachine, Submission
 
 class TeacherDashboard(Dashboard):
-    css_classes = ['/static/style.css']
+    class Media:
+        css = {'all': ('css/admin.css',)}
+
     def init_with_context(self, context):
         # Put database models in  column
         self.children.append(modules.ModelList(
