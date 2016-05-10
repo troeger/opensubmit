@@ -77,7 +77,7 @@ class Assignment(models.Model):
             Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
         '''
         if self.pk and self.has_validity_test():
-            return settings.MAIN_URL + "download/%u/validity_testscript/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
+            return settings.MAIN_URL + "/download/%u/validity_testscript/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
         else:
             return None
 
@@ -87,7 +87,7 @@ class Assignment(models.Model):
             Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
         '''
         if self.pk and self.has_full_test():
-            return settings.MAIN_URL + "download/%u/full_testscript/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
+            return settings.MAIN_URL + "/download/%u/full_testscript/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
         else:
             return None
 
