@@ -187,7 +187,7 @@ def console_script(fsroot='/'):
         if not check_web_db():
             return
         print("Preparing static files for web server...")
-        django_admin(["collectstatic","--noinput"])
+        django_admin(["collectstatic","--noinput","--clear"])
         apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
 
     if "createsuperuser" in sys.argv:
