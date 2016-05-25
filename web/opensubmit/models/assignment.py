@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from .submission import Submission
 from .submissiontestresult import SubmissionTestResult
@@ -42,6 +43,16 @@ class Assignment(models.Model):
     def graded_submissions(self):
         qs = self.valid_submissions().filter(state__in=[Submission.GRADED])
         return qs
+
+    def grading_url(self):
+        '''
+            Determines the teacher backend link to the filtered list of gradable submissions for this assignment.
+        '''
+        grading_url="%s?coursefilter=%u&assignmentfilter=%u&statefilter=tobegraded"%(
+                            reverse('teacher:opensubmit_submission_changelist'),
+                            self.course.pk, self.pk
+                        )
+        return grading_url
 
     def authors(self):
         qs = self.valid_submissions().values_list('authors',flat=True).distinct()

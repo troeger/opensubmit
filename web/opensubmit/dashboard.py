@@ -26,11 +26,7 @@ class TeacherDashboard(Dashboard):
         for course in courses:
             # Prepare course-related links
             links=[]
-            grading_url="%s?coursefilter=%u&statefilter=tobegraded"%(
-                                reverse('teacher:opensubmit_submission_changelist'),
-                                course.pk
-                            )
-            links.append(['Check submissions',grading_url, False])
+            links.append(['Check submissions',course.grading_url(), False])
             ass_url="%s?course__id__exact=%u"%(
                                 reverse('teacher:opensubmit_assignment_changelist'),
                                 course.pk
