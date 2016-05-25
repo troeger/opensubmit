@@ -8,3 +8,23 @@ strong {
     font-weight: normal;
     font-size: 9pt;
 }
+
+.grp-font-color, body {
+    color: #3b3131;
+}
+
+table thead th {
+    color: #3b3131;
+}
+
+table thead th a{
+    color: black;
+}
+
+a{
+    color: black;
+}
+
+.grp-pagination ul li a {
+	color: black;
+}

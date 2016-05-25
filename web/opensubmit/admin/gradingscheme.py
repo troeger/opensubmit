@@ -28,6 +28,10 @@ def courses(gradingScheme):
 class GradingSchemeAdmin(ModelAdmin):
     list_display = ['__unicode__', gradings, courses]
 
+    class Media:
+        css = {'all': ('css/admin.css',)}
+
+
     def formfield_for_dbfield(self, db_field, **kwargs):
         ''' Offer only gradings that are not used by other schemes, which means they are used by this scheme or not at all.'''
         if db_field.name == "gradings":

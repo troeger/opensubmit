@@ -131,6 +131,10 @@ class SubmissionAdmin(ModelAdmin):
     search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
+    class Media:
+        css = {'all': ('css/admin.css',)}
+
+
     fieldsets = (
             ('General',
                 {'fields': ('assignment_info', ('submitter','modified')),}),

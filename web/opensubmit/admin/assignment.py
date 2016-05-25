@@ -107,6 +107,11 @@ class AssignmentAdmin(ModelAdmin):
     list_filter = ('course',)
     change_list_template = "admin/change_list_filter_sidebar.html"
 
+    class Media:
+        css = {'all': ('css/admin.css',)}
+
+
+
     form = AssignmentAdminForm
 
     fieldsets = (

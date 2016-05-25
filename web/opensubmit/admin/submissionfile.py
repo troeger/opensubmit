@@ -16,6 +16,9 @@ not_withdrawn.boolean = True
 class SubmissionFileAdmin(ModelAdmin):
     list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
 
+    class Media:
+        css = {'all': ('css/admin.css',)}
+
     def get_queryset(self, request):
         ''' Restrict the listed submission files for the current user.'''
         qs = super(SubmissionFileAdmin, self).get_queryset(request)
