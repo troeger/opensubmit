@@ -34,8 +34,8 @@ class AnonStruct(object):
         self.__dict__.update(entries)
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher',])
-@override_settings(MAIN_URL='http://'+TEST_HOST+'/')
-class SubmitTestCase(TransactionTestCase):
+@override_settings(MAIN_URL='http://'+TEST_HOST)
+class SubmitTestCase(LiveServerTestCase):
     '''
         A test case base class with several resources being prepared:
 

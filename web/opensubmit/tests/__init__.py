@@ -4,7 +4,7 @@ import os
 import unittest
 from django.test.utils import setup_test_environment
 
-TEST_HOST='localhost:8001'
+TEST_HOST='localhost:8111'
 
 class DiscoverRunner(DjangoRunner):
     '''
