@@ -250,6 +250,12 @@ def jobs(request):
             sub.state = Submission.CLOSED
             # full tests may be performed several times and are meant to be a silent activity
             # therefore, we send no mail to the student here
+        elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_FAILED:
+            # Can happen if the validation is set to failed due to timeout, but the executor delivers the late result.
+            # Happens in reality only with >= 2 executors, since the second one is pulling for new jobs and triggers
+            # the timeout check while the first one is still stucked with the big job.
+            # Can be ignored.
+            logger.debug("Ignoring executor result, since the submission is already marked as failed.")
         else:
             msg = '''
                 Dear OpenSubmit administrator,
