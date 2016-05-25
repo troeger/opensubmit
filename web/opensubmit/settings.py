@@ -198,7 +198,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'social.apps.django_app.middleware.SocialAuthExceptionMiddleware'
+    'social.apps.django_app.middleware.SocialAuthExceptionMiddleware',
+    'opensubmit.middleware.CourseRegister'
 )
 ROOT_URLCONF = 'opensubmit.urls'
 WSGI_APPLICATION = 'opensubmit.wsgi.application'

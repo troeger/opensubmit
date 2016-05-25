@@ -1,6 +1,7 @@
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 
 from .assignment import Assignment
 from .course import Course
@@ -13,6 +14,14 @@ class UserProfile(models.Model):
 
     class Meta:
         app_label = 'opensubmit'
+
+    def add_course_safe(self, id):
+        '''
+            Adds a course for the user after conducting a set of sanity checks.
+        '''
+        course = get_object_or_404(Course, pk=int(id), active=True)
+        if course not in self.courses.all():
+            self.courses.add(course)
 
     def tutor_courses(self):
         '''

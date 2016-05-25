@@ -18,8 +18,7 @@ class TutorTestCaseSet():
         assadm = AssignmentAdmin(Assignment, AdminSite())
         assignments_shown = assadm.get_queryset(self.request)
         for assignment in assignments_shown:
-            self.assertEquals(assignment.course, self.course)
-            self.assertEquals(course_title(assignment), self.course.title)
+            self.assertIn(assignment.course, self.all_courses)
 
     def testSubmissionListView(self):
         response=self.c.get('/teacher/opensubmit/submission/')

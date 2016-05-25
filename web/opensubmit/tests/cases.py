@@ -197,8 +197,8 @@ class SubmitTestCase(LiveServerTestCase):
             max_authors=1,
         )
         self.anotherCourse.save()
-        self.all_courses.append(self.anotherCourse)        
-        
+        self.all_courses.append(self.anotherCourse)
+
         self.inactiveCourse = Course(
             title='Inactive test course',
             active=False,
@@ -229,6 +229,7 @@ class SubmitTestCase(LiveServerTestCase):
         tomorrow = today + datetime.timedelta(days=1)
         next_week = today + datetime.timedelta(weeks=1)
 
+        # List of all assignments being assigned to the "self.course" course
         self.allAssignments = []
 
         self.openAssignment = Assignment(
@@ -243,6 +244,19 @@ class SubmitTestCase(LiveServerTestCase):
         )
         self.openAssignment.save()
         self.allAssignments.append(self.openAssignment)
+
+        self.anotherAssignment = Assignment(
+            title='Another open assignment',
+            course=self.anotherCourse,
+            download='http://example.org/assignments/1/download',
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=False
+        )
+        self.anotherAssignment.save()
+
         self.fileAssignment = Assignment(
             title='File assignment',
             course=self.course,

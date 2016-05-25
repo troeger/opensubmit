@@ -94,12 +94,6 @@ def dashboard(request):
                 # This is only a comfort function, so we should not crash the app if that goes wrong
                 pass
 
-    # If the user has no courses enabled, he sees nothing, which irritates students
-    # In such a case, enable all of them for him
-    if profile.courses.count() == 0:
-        profile.courses = Course.objects.all()
-        profile.save()
-
     # if the user settings are not complete (e.f. adter OpenID registration), we MUST fix them first
     if not request.user.first_name or not request.user.last_name or not request.user.email:
         return redirect('settings')

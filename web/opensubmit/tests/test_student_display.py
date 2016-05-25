@@ -40,6 +40,67 @@ class StudentDisplayTestCase(SubmitTestCase):
             expected_responses = cases[submission]
             self.assertIn(response.status_code, expected_responses)
 
+    def testCanSeeOnlyEnabledCourseAssignments(self):
+        self.loginUser(self.enrolled_students[0])
+        student=self.current_user.user
+
+        # One default course registration in cases.py
+        assignments_before = len(student.profile.open_assignments())
+        # Become part of another course
+        self.anotherCourse.participants.add(student.profile)
+        assignments_after = len(student.profile.open_assignments())
+        self.assertNotEquals(assignments_before, assignments_after)
+
+    def testEnableCourseWithGETInDashboardURL(self):
+        self.loginUser(self.enrolled_students[0])
+        student=self.current_user.user
+
+        # One default course registration in cases.py
+        assignments_before = len(student.profile.open_assignments())
+
+        # Provide GET parameter to enable course to root dir, which performs
+        # a redirection to the dashboard
+        response = self.c.get('/dashboard/?course=%u'%self.anotherCourse.pk)
+        self.assertEquals(response.status_code, 200)
+
+        # Check if course is enabled now, based on assignment count
+        assignments_after = len(student.profile.open_assignments())
+        self.assertNotEquals(assignments_before, assignments_after)
+
+    def testEnableCourseWithGETInRootURL(self):
+        self.loginUser(self.enrolled_students[0])
+        student=self.current_user.user
+
+        # One default course registration in cases.py
+        assignments_before = len(student.profile.open_assignments())
+
+        # Provide GET parameter to enable course to root dir, which performs
+        # a redirection to the dashboard
+        response = self.c.get('/?course=%u'%self.anotherCourse.pk, follow=True)
+        self.assertRedirects(response, '/dashboard/')
+
+        # Check if course is enabled now, based on assignment count
+        assignments_after = len(student.profile.open_assignments())
+        self.assertNotEquals(assignments_before, assignments_after)
+
+    def testEnableCourseWithGETForFreshUser(self):
+        student=self.current_user.user
+
+        student.first_name=""
+        student.save()
+
+        # One default course registration in cases.py
+        assignments_before = len(student.profile.open_assignments())
+
+        # Go to root URL with course demand, redirects to settings, since the user is new
+        response = self.c.get('/?course=%u'%self.anotherCourse.pk, follow=True)
+        self.assertRedirects(response, '/settings/')
+
+        # Check if course is enabled now, based on assignment count
+        assignments_after = len(student.profile.open_assignments())
+        self.assertNotEquals(assignments_before, assignments_after)
+
+
     def testCannotSeeOtherUsers(self):
         self.loginUser(self.enrolled_students[1])
         self.createSubmissions()
