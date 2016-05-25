@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from opensubmit.models import TestMachine, Submission
 
 class TeacherDashboard(Dashboard):
+
     class Media:
         css = {'all': ('css/admin.css',)}
 
@@ -64,28 +65,17 @@ class TeacherDashboard(Dashboard):
 
 
 class AdminDashboard(Dashboard):
+
+    class Media:
+        css = {'all': ('css/admin.css',)}
+
     def init_with_context(self, context):
-        # Show Django models for authorization and authentication
-        self.children.append(modules.AppList(
-                    _(''),
-                    column=1,
-                    collapsible=False,
-                    models=('django.contrib.*',)
-        ))
-
-        # Show Django models for everything else
-        self.children.append(modules.AppList(
-                    _(''),
-                    column=1,
-                    css_classes=('collapse open',),
-                    exclude=('django.contrib.*',)
-        ))
-
-        # append a recent actions module
-        self.children.append(modules.RecentActions(
-            title=_('Recent Actions'),
-            limit=5,
-            collapsible=False,
+        # Put database models in  column
+        self.children.append(modules.ModelList(
+            title='Database Management',
             column=2,
         ))
+
+
+
 

@@ -11,8 +11,8 @@ from submissionfile import SubmissionFileAdmin
 from submission import SubmissionAdmin
 
 class AdminBackend(AdminSite):
-    site_header = "OpenSubmit Admin Backend"
-    site_title = "OpenSubmit Admin Backend"
+	site_header = "Administrator Backend"
+	pass
 
 admin_backend = AdminBackend(name="admin")
 admin_backend.register(User, UserAdmin)
@@ -23,11 +23,8 @@ admin_backend.register(Group)
 
 
 class TeacherBackend(AdminSite):
-    site_header = "Teacher Backend"
-    site_title = "OpenSubmit Teacher Backend"
-#    login_template = "teacher/login.html"
-#    app_index_template = "teacher/index.html"
-#    index_template = "teacher/index.html"
+	site_header = "Teacher Backend"
+	pass
 
 teacher_backend = TeacherBackend(name="teacher")
 teacher_backend.register(Grading, GradingAdmin)

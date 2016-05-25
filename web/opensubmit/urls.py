@@ -2,6 +2,7 @@ from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 
 from opensubmit import views, admin, api
 
@@ -30,7 +31,9 @@ urlpatterns = [
 
     url('', include('social.apps.django_app.urls', namespace='social')),
     url(r'^lti/$', views.lti, name='lti'),
+    url(r'^teacher/opensubmit/$', lambda x: HttpResponseRedirect('/teacher/')),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
+    url(r'^admin/opensubmit/$', lambda x: HttpResponseRedirect('/admin/')),
     url(r'^admin/', include(admin.admin_backend.urls)),
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
 ]
