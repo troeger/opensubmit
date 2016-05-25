@@ -51,24 +51,24 @@ class AssignmentAdminForm(forms.ModelForm):
         super(AssignmentAdminForm, self).clean()
         d = self.cleaned_data
         # Having compilation, validation or full test enabled demands file upload
-        if d['attachment_test_compile'] and not d['has_attachment']:
+        if 'attachment_test_compile' in d and not 'has_attachment' in d:
             raise ValidationError('You cannot have compilation enabled without allowing file upload.')
-        if d['attachment_test_validity'] and not d['has_attachment']:
+        if 'attachment_test_validity' in d and not 'has_attachment' in d:
             raise ValidationError('You cannot have a validation script without allowing file upload.')
-        if d['attachment_test_full'] and not d['has_attachment']:
+        if 'attachment_test_full' in d and not 'has_attachment' in d:
             raise ValidationError('You cannot have a full test script without allowing file upload.')
         # Having compilation, validation or full test enabled demands a test machine
-        if d['attachment_test_compile'] and not len(d['test_machines'])>0:
+        if 'attachment_test_compile' in d and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have compilation enabled without specifying test machines.')
-        if d['attachment_test_validity'] and not len(d['test_machines'])>0:
+        if 'attachment_test_validity' in d and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have a validation script without specifying test machines.')
-        if d['attachment_test_full'] and not len(d['test_machines'])>0:
+        if 'attachment_test_full' in d and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have a full test script without specifying test machines.')
         # Having test machines demands compilation or validation scripts
-        if len(d['test_machines'])>0               \
-            and not d['attachment_test_validity']  \
-            and not d['attachment_test_full']      \
-            and not d['attachment_test_compile']:
+        if 'test_machines' in d and len(d['test_machines'])>0               \
+            and not 'attachment_test_validity' in d  \
+            and not 'attachment_test_full' in d      \
+            and not 'attachment_test_compile' in d:
             raise ValidationError('For using test machines, you need to enable compilation, validation or full test.')
 
 def course(obj):
