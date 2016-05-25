@@ -1,9 +1,22 @@
-{% extends "base_admin.html" %}
+{% extends "admin/base.html" %}
+
 {% load projecttags %}
 {% load bootstrap %}
 
 {% block title %}
     {{ block.super }} - Duplicate Report
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul>
+        <li><a href="{% url 'teacher:index' %}">Home</a></li>
+        <li><a href="{% url 'teacher:opensubmit_assignment_changelist' %}">Assignments</a></li>
+        <li> Duplicates</li>
+    </ul>
+{% endblock %}
+
+{% block extrastyle %}
+<link href="/static/css/admin.css" type="text/css" media="all" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
