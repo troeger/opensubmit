@@ -1,8 +1,31 @@
-{% extends "base_admin.html" %}
+{% extends "admin/base.html" %}
+
 {% load projecttags %}
+{% load bootstrap %}
 
 {% block title %}
     {{ block.super }} - eMail
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul>
+        <li><a href="{% url 'teacher:index' %}">Home</a></li>
+        <li> Write eMail</li>
+    </ul>
+{% endblock %}
+
+{% block extrastyle %}
+<link href="/static/css/admin.css" type="text/css" media="all" rel="stylesheet" />
+
+<style>
+#id_subject {
+	width: 758px;
+}
+#id_message {
+	height: 400px;
+}
+</style>
+
 {% endblock %}
 
 {% block content %}

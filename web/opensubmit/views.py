@@ -342,7 +342,7 @@ def mail2all(request, course_id):
                      [s.email]) for s in students]
             sent = send_mass_mail(data, fail_silently=True)
             messages.add_message(request, messages.INFO, '%u message(s) sent.'%sent)
-            return redirect('teacher:opensubmit_course_changelist')
+            return redirect('teacher:index')
 
     # show empty form in all other cases
     mailform = MailForm()

@@ -1,9 +1,22 @@
-{% extends "base_admin.html" %}
+{% extends "admin/base.html" %}
+
 {% load projecttags %}
 {% load bootstrap %}
 
 {% block title %}
     {{ block.super }} - eMail
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ul>
+        <li><a href="{% url 'teacher:index' %}">Home</a></li>
+        <li><a href="javascript:history.back()">Write eMail</a></li>
+        <li>Preview</li>
+    </ul>
+{% endblock %}
+
+{% block extrastyle %}
+<link href="/static/css/admin.css" type="text/css" media="all" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
@@ -26,7 +39,7 @@
 </div>
 <div class="form-row grp-row">
 	<div class="field-box">
-		Message:<br/>{{ preview_message }}
+		Message:<br/>{{ preview_message|linebreaksbr }}
 	</div>
 </div>
 </fieldset>
@@ -34,9 +47,8 @@
 
 <form class="form" role="form" action="." method="post">
 	{% csrf_token %}
-	<a href="javascript:history.back()">Edit Again</a>
-	<br/>
 	<input type="submit" href="." value="Send"></input>
+
 </form>
 
 {% endblock %}
