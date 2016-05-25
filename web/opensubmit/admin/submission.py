@@ -233,11 +233,8 @@ class SubmissionAdmin(ModelAdmin):
         '''
         if db_field.name == "grading":
             submurl = kwargs['request'].path
-            try:
-                submid = int(submurl.split('/')[-2])
-                kwargs["queryset"] = Submission.objects.get(pk=submid).assignment.gradingScheme.gradings
-            except:
-                pass
+            submid = [int(s) for s in submurl.split('/') if s.isdigit()][0] # Will break with two numbers in the relative URL. This is ok.
+            kwargs["queryset"] = Submission.objects.get(pk=submid).assignment.gradingScheme.gradings
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):
