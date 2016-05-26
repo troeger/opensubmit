@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 from grappelli.dashboard import modules, Dashboard
 from django.core.urlresolvers import reverse
 
+from opensubmit import settings
 from opensubmit.models import TestMachine, Submission
 
 class TeacherDashboard(Dashboard):
@@ -43,7 +44,8 @@ class TeacherDashboard(Dashboard):
                 column=1,
                 children=[
                     modules.LinkList(title="Actions",children=(links)),
-                    modules.DashboardModule(title="Statistics",pre_content=
+                    modules.DashboardModule(title="Info",pre_content=
+                        'Course URL for students: %s/?course=%u<br/>' % (settings.MAIN_URL, course.pk) +
                         "Open assignments: %u<br/>" % course.open_assignments().count() +
                         "Submissions to be graded: %u<br/>" % course.gradable_submissions().count() +
                         "Grading finished, not notified: %u<br/>" % course.graded_submissions().count() +
