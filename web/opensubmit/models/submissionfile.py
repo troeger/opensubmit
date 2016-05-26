@@ -134,7 +134,7 @@ class SubmissionFile(models.Model):
             Return preview on archive file content as dictionary.
             In order to avoid browser and web server trashing by the students, there is a size limit for the single files shown.
         '''
-        MAX_PREVIEW_SIZE = 10000
+        MAX_PREVIEW_SIZE = 1000000
 
         def sanitize(text):
             try:
@@ -149,7 +149,7 @@ class SubmissionFile(models.Model):
                 if zipinfo.file_size < MAX_PREVIEW_SIZE:
                     result.append({'name': zipinfo.filename, 'preview': sanitize(zf.read(zipinfo))})
                 else:
-                    result.append({'name': zipinfo.filename+' (too large)'})
+                    result.append({'name': zipinfo.filename, 'preview': '(maximum size exceeded)'})
         elif tarfile.is_tarfile(self.attachment.path):
             tf = tarfile.open(self.attachment.path,'r')
             for tarinfo in tf.getmembers():
@@ -157,7 +157,7 @@ class SubmissionFile(models.Model):
                     if tarinfo.size < MAX_PREVIEW_SIZE:
                         result.append({'name': tarinfo.name, 'preview': sanitize(tf.extractfile(tarinfo).read())})
                     else:
-                        result.append({'name': tarinfo.name+' (too large)'})
+                        result.append({'name': tarinfo.name, 'preview': '(maximum size exceeded)'})
         else:
             # single file
             f=open(self.attachment.path)
