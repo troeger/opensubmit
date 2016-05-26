@@ -127,7 +127,7 @@ class SubmissionAdmin(ModelAdmin):
     list_display = ['__unicode__', 'modified', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    actions = ['setInitialStateAction', 'setGradingNotFinishedStateAction', 'setFullPendingStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
     search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
@@ -256,7 +256,7 @@ class SubmissionAdmin(ModelAdmin):
         for subm in queryset:
             subm.state = subm.get_initial_state()
             subm.save()
-    setInitialStateAction.short_description = "Mark as new incoming submission"
+    setInitialStateAction.short_description = "Re-run all tests (student visible)"
 
     def setGradingNotFinishedStateAction(self, request, queryset):
         '''
@@ -284,7 +284,7 @@ class SubmissionAdmin(ModelAdmin):
             self.message_user(request, "Nothing changed, no testable submission found.")
         else:
             self.message_user(request, "Changed status of %u submissions." % numchanged)
-    setFullPendingStateAction.short_description = "Restart full test without notification"
+    setFullPendingStateAction.short_description = "Re-run full test (student invisible)"
 
     def closeAndNotifyAction(self, request, queryset):
         ''' Close all submissions were the tutor sayed that the grading is finished,
@@ -301,7 +301,7 @@ class SubmissionAdmin(ModelAdmin):
             self.message_user(request, "Nothing closed, no mails sent.")
         else:
             self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
-    closeAndNotifyAction.short_description = "Close graded submissions + send notification"
+    closeAndNotifyAction.short_description = "Close + send student notification"
 
     # ToDo: Must be refactored to consider new performance data storage model
     # def getPerformanceResultsAction(self, request, queryset):
