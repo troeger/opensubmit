@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, Permission, Group
 from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine
+from opensubmit import settings
 from django.contrib.admin.sites import AdminSite
 
 from user import UserAdmin
@@ -12,6 +13,7 @@ from submission import SubmissionAdmin
 
 class AdminBackend(AdminSite):
 	site_header = "Administrator Backend"
+	site_url = settings.MAIN_URL
 	pass
 
 admin_backend = AdminBackend(name="admin")
@@ -24,6 +26,7 @@ admin_backend.register(Group)
 
 class TeacherBackend(AdminSite):
 	site_header = "Teacher Backend"
+	site_url = settings.MAIN_URL
 	pass
 
 teacher_backend = TeacherBackend(name="teacher")
