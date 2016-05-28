@@ -23,8 +23,8 @@ def find_config_info():
         Throws exception if no config file is found. This terminates the application loading.
     '''
     config_info = (
-        (os.path.dirname(__file__)+'/settings_dev.ini',            False),  # Linux / Mac development system
         ('/etc/opensubmit/settings.ini',                            True),  # Linux production system
+        (os.path.dirname(__file__)+'/settings_dev.ini',            False),  # Linux / Mac development system
         (os.path.expandvars('$APPDATA')+'opensubmit/settings.ini', False),  # Windows development system
     )
 
