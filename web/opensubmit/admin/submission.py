@@ -137,25 +137,25 @@ class SubmissionAdmin(ModelAdmin):
 
     fieldsets = (
             ('General',
-                {'fields': ('assignment_info', ('submitter','modified')),}),
+                {'fields': ('assignment', 'assignment_info', ('submitter','modified')),}),
             ('Authors',
                 {   'fields': ('authors',),
                     'classes': ('grp-collapse grp-closed',)
                 }),
             ('Submission and test results',
-                {   'fields': (('file_link', 'notes') ,'compile_result','validation_result','fulltest_result'),
+                {   'fields': (('file_link', 'file_upload', 'notes') ,'compile_result','validation_result','fulltest_result'),
                 }),
             ('Grading',
                 {'fields': (('grading', 'grading_status'), 'grading_notes', 'grading_file',),}),
     )
 
     def assignment_info(self, instance):
-        message = '%s (%s)<br/>'%(instance.assignment, instance.assignment.course)
+        message = 'Course: %s<br/>'%instance.assignment.course
         message += 'Deadline: %s (%s ago)'%(instance.assignment.hard_deadline, timesince.timesince(instance.assignment.hard_deadline))
         if instance.can_modify(instance.submitter):
             message += '''<p style="color: red">Warning: Assignment is still open. Saving grading information will disable withdrawal and re-upload for the authors.</p>'''
         return mark_safe(message)
-    assignment_info.short_description = "Assignment"
+    assignment_info.short_description = "Details"
 
     def file_link(self, instance):
         '''
