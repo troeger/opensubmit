@@ -130,7 +130,8 @@ def jobs(request):
         #logger.debug("%u pending submission(s)"%(len(pending_submissions)))
         for sub in pending_submissions:
             max_delay = timedelta(seconds=sub.assignment.attachment_test_timeout)
-            if sub.file_upload.fetched + max_delay < datetime.now():
+            #There is a small chance that meanwhile the result was delivered, so fetched became NULL
+            if sub.file_upload.fetched and sub.file_upload.fetched + max_delay < datetime.now():
                 logger.debug("Resetting executor fetch status for submission %u, due to timeout"%sub.pk)
                 # TODO:  Late delivery for such a submission by the executor may lead to result overwriting. Check this.
                 sub.clean_fetch_date()
