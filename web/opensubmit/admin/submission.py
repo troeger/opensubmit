@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
-from opensubmit.models import Assignment, Submission, SubmissionFile, SubmissionTestResult
+from opensubmit.models import Assignment, Submission, SubmissionFile, SubmissionTestResult, Grading
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -233,8 +233,12 @@ class SubmissionAdmin(ModelAdmin):
         '''
         if db_field.name == "grading":
             submurl = kwargs['request'].path
-            submid = [int(s) for s in submurl.split('/') if s.isdigit()][0] # Will break with two numbers in the relative URL. This is ok.
-            kwargs["queryset"] = Submission.objects.get(pk=submid).assignment.gradingScheme.gradings
+            try:
+                # Does not work on new submission action by admin or with a change of URLs. The former is expectable.
+                submid = [int(s) for s in submurl.split('/') if s.isdigit()][0] 
+                kwargs["queryset"] = Submission.objects.get(pk=submid).assignment.gradingScheme.gradings
+            except:
+                kwargs["queryset"] = Grading.objects.none()
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):

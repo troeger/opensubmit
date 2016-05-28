@@ -136,3 +136,7 @@ class TeacherTestCase(SubmitTeacherTestCase, TeacherTestCaseSet):
         '''
         response = self.c.get('/admin/auth/user/')
         self.assertEquals(response.status_code, 403)        # 302: can access the model in principle, 403: can never access the app label
+
+    def testNewSubmissionView(self):
+        response=self.c.get('/teacher/opensubmit/submission/add/')
+        self.assertEquals(response.status_code, 200)
