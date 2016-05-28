@@ -1,11 +1,15 @@
 VAGRANTFILE_API_VERSION = "2"
 
 $script = <<SCRIPT
+  apt-get update
+  sudo apt-get -y install python-pip libpq-dev python-dev apache2 libapache2-mod-wsgi postfix alpine
 
-  pip install -r /vagrant/web/requirements.txt
+  pip uninstall -y opensubmit-web
+  pip install --upgrade /vagrant/opensubmit-web-*
+  opensubmit-web configure
 
-  mkdir -p /etc/opensubmit
   rm -f /etc/opensubmit/settings.ini
+  mkdir -p /etc/opensubmit
   echo "[general]"  >> /etc/opensubmit/settings.ini
   echo "DEBUG: False"  >> /etc/opensubmit/settings.ini
   echo "[server]"  >> /etc/opensubmit/settings.ini
@@ -46,32 +50,16 @@ $script = <<SCRIPT
   service apache2 stop
   rm /etc/apache2/sites-enabled/000-default.conf
   echo "<VirtualHost *:80>" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  Alias /submit/static/   /vagrant/web/opensubmit/static-production/" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  WSGIScriptAlias /submit /vagrant/web/opensubmit/wsgi.py" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  WSGIPassAuthorization On" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  <Directory /vagrant/web/opensubmit/static-production/>" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "    Require all granted" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  </Directory>" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  <Directory /vagrant/web/opensubmit>" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "    <Files wsgi.py>" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "        Require all granted" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "    </Files>" >> /etc/apache2/sites-enabled/000-default.conf
-  echo "  </Directory>" >> /etc/apache2/sites-enabled/000-default.conf
+  echo "  Include /etc/opensubmit/apache24.conf" >> /etc/apache2/sites-enabled/000-default.conf
   echo "</VirtualHost>" >> /etc/apache2/sites-enabled/000-default.conf
 
-  cd /vagrant/web
-  ./manage.py migrate
-  ./manage.py collectstatic --noinput --clear
-
+  opensubmit-web configure
   service apache2 start
 
   date > /etc/vagrant_provisioned_at
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.provision "shell",
-    inline: "sudo apt-get update; sudo apt-get -y install python-pip libpq-dev python-dev apache2 libapache2-mod-wsgi postfix alpine"
   config.vm.box = "ubuntu/trusty32"
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.provision "shell", inline: $script
