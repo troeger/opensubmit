@@ -45,12 +45,14 @@ class TeacherDashboard(Dashboard):
                 children=[
                     modules.LinkList(title="Actions",children=(links)),
                     modules.DashboardModule(title="Info",pre_content=
-                        'Course URL for students: %s/?course=%u<br/>' % (settings.MAIN_URL, course.pk) +
-                        "Open assignments: %u<br/>" % course.open_assignments().count() +
-                        "Submissions to be graded: %u<br/>" % course.gradable_submissions().count() +
-                        "Grading finished, not notified: %u<br/>" % course.graded_submissions().count() +
-                        "Registered students: %u<br/>" % course.participants.count() +
-                        "Authoring students: %u<br/>" % course.authors().count()
+                        '<table style="border: 0px; margin-left: 17px">'+
+                        '<tr><td>Course URL for students       :</td><td>%s/?course=%u</td></tr>' % (settings.MAIN_URL, course.pk) +
+                        "<tr><td>Open assignments              :</td><td>%u</td></tr>" % course.open_assignments().count() +
+                        "<tr><td>Submissions to be graded      :</td><td>%u</td></tr>" % course.gradable_submissions().count() +
+                        "<tr><td>Grading finished, not notified:</td><td>%u</td></tr>" % course.graded_submissions().count() +
+                        "<tr><td>Registered students           :</td><td>%u</td></tr>" % course.participants.count() +
+                        "<tr><td>Authoring students            :</td><td>%u</td></tr>" % course.authors().count() +
+                        "</table>"
                     )
                 ]
             ))
