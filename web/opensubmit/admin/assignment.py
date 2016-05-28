@@ -1,5 +1,6 @@
 # Assignment admin interface
 
+from collections import defaultdict
 from django.contrib.admin import ModelAdmin
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
@@ -49,20 +50,21 @@ class AssignmentAdminForm(forms.ModelForm):
             single field constraints are already clatified by the Django model configuration.
         '''
         super(AssignmentAdminForm, self).clean()
-        d = self.cleaned_data
+        d = defaultdict(lambda: False)
+        d.update(self.cleaned_data)
         # Having compilation, validation or full test enabled demands file upload
-        if 'attachment_test_compile' in d and not 'has_attachment' in d:
+        if d['attachment_test_compile'] and not d['has_attachment']:
             raise ValidationError('You cannot have compilation enabled without allowing file upload.')
-        if 'attachment_test_validity' in d and not 'has_attachment' in d:
+        if d['attachment_test_validity'] and not d['has_attachment']:
             raise ValidationError('You cannot have a validation script without allowing file upload.')
-        if 'attachment_test_full' in d and not 'has_attachment' in d:
+        if d['attachment_test_full'] and not d['has_attachment']:
             raise ValidationError('You cannot have a full test script without allowing file upload.')
         # Having compilation, validation or full test enabled demands a test machine
-        if 'attachment_test_compile' in d and 'test_machines' in d and not len(d['test_machines'])>0:
+        if d['attachment_test_compile'] and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have compilation enabled without specifying test machines.')
-        if 'attachment_test_validity' in d and 'test_machines' in d and not len(d['test_machines'])>0:
+        if d['attachment_test_validity'] and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have a validation script without specifying test machines.')
-        if 'attachment_test_full' in d and 'test_machines' in d and not len(d['test_machines'])>0:
+        if d['attachment_test_full'] and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have a full test script without specifying test machines.')
         # Having test machines demands compilation or validation scripts
         if 'test_machines' in d and len(d['test_machines'])>0               \
