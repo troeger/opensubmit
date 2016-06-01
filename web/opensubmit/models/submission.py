@@ -133,7 +133,7 @@ class Submission(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey('Grading', blank=True, null=True)
-    grading_notes = models.TextField(max_length=1000, blank=True, null=True, help_text="Specific notes about the grading for this submission.")
+    grading_notes = models.TextField(max_length=10000, blank=True, null=True, help_text="Specific notes about the grading for this submission.")
     grading_file = models.FileField(upload_to=upload_path, blank=True, null=True, help_text="Additional information about the grading as file.")
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 
