@@ -228,7 +228,7 @@ def preview(request, subm_id):
     '''
     submission = get_object_or_404(Submission, pk=subm_id)
     if submission.file_upload.is_archive():
-        return render(request, 'file_preview.html', {'previews': submission.file_upload.archive_previews()})
+        return render(request, 'file_preview.html', {'submission': submission, 'previews': submission.file_upload.archive_previews()})
     else:
         return redirect(submission.file_upload.get_absolute_url())
 

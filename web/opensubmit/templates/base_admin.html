@@ -16,7 +16,7 @@
     {% block style %}
     @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.css");
     @import url("{{ STATIC_URL }}grappelli/stylesheets/screen.css");
-    @import url("{{ STATIC_URL }}css/screen.css");
+    @import url("{{ STATIC_URL }}css/admin.css");
     {% endblock %}
     </style>
 
@@ -29,12 +29,25 @@
 </head>
 
 <body>
+
+<div id="container grp-container">
+
     <header id="grp-header" class="{% block header-class %}{% endblock %}">
                 <div id="grp-navigation">
-                     {% block admin_title %}<h1 id="grp-admin-title">{% if grappelli_admin_title %}{{ grappelli_admin_title }}{% else %}{% get_admin_title %}{% endif %}</h1>{% endblock %}
+                    {% block admin_title %}
+                        <h1 id="grp-admin-title">
+                            {% if grappelli_admin_title %}{{ grappelli_admin_title }}{% else %}{% get_admin_title %}{% endif %}
+                        </h1>
+                    {% endblock %}
+                </div>
+                <div id="grp-context-navigation">
+                    <nav id="grp-breadcrumbs" class="">
+                    {% block breadcrumbs %}
+                    {% endblock %}
+                    </nav>
                 </div>
     </header>
-    <div class="container">
+    <article id="grp-content">
         {% for message in messages %}
                 <div class="alert alert-success alert-dismissible" role="alert">
                     <button type="button" class="close" data-dismiss="alert">
@@ -43,11 +56,12 @@
                     </button>{{ message }}
                 </div>
         {% endfor %}
-    </div>
 
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
+        <div id="grp-content-container">
+            {% block content %}{% endblock %}
+        </div>
+    </article>
+</div>
 
 </body>
 
