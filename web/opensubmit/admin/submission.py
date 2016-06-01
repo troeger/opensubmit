@@ -62,6 +62,7 @@ class SubmissionStateFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
+            ('notwithdrawn', _('All, except withdrawn')),
             ('tobegraded', _('To be graded')),
             ('gradingunfinished', _('Grading not finished')),
             ('graded', _('Grading finished')),
@@ -70,9 +71,11 @@ class SubmissionStateFilter(SimpleListFilter):
 
     def queryset(self, request, qs):
         qs = qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
-        if self.value() == 'tobegraded':
+        if   self.value() == 'notwithdrawn':
+            return qs.exclude(state__in=[Submission.WITHDRAWN, Submission.RECEIVED])
+        elif self.value() == 'tobegraded':
             return qs.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
-        if self.value() == 'gradingunfinished':
+        elif self.value() == 'gradingunfinished':
             return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS])
         elif self.value() == 'graded':
             return SubmissionStateFilter.qs_graded(qs)
