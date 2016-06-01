@@ -11,15 +11,17 @@
     {{ block.super }} - Archive Preview
 {% endblock %}
 
+{% setting "MAIN_URL" as main_url %}
+
 {% block breadcrumbs %}
 <ul>
-    <li><a href="/teacher/">Home</a></li>
-    <li><a href="/teacher/opensubmit/">Backend</a></li>
+    <li><a href="{{ main_url }}/teacher/">Home</a></li>
+    <li><a href="{{ main_url }}/teacher/opensubmit/">Backend</a></li>
     <li>
-        <a href="/teacher/opensubmit/submission/?coursefilter={{ submission.assignment.course.pk }}">Submissions</a>
+        <a href="{{ main_url }}/teacher/opensubmit/submission/?coursefilter={{ submission.assignment.course.pk }}">Submissions</a>
     </li>
     <li>
-        <a href="/teacher/opensubmit/submission/{{ submission.pk }}/change/">{{ submission.pk }}</a>
+        <a href="{{ main_url }}/teacher/opensubmit/submission/{{ submission.pk }}/change/">{{ submission.pk }}</a>
     </li>
     <li>Preview</li>
 </ul>
