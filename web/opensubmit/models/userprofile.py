@@ -18,10 +18,12 @@ class UserProfile(models.Model):
     def add_course_safe(self, id):
         '''
             Adds a course for the user after conducting a set of sanity checks.
+            Return the title of the course or an exception.
         '''
         course = get_object_or_404(Course, pk=int(id), active=True)
         if course not in self.courses.all():
             self.courses.add(course)
+        return course.title
 
     def tutor_courses(self):
         '''
