@@ -122,7 +122,7 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'modified', authors, course, 'assignment', 'state', 'grading', grading_notes, grading_file]
+    list_display = ['__unicode__', 'created', 'modified', authors, course, 'assignment', 'state', 'grading', grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
