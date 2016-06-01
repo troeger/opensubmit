@@ -146,6 +146,57 @@ class Submission(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
+    @staticmethod
+    def qs_valid(qs):
+        '''
+            A filtering of the given Submission queryset for all submissions that were successfully validated. This includes the following cases:
+
+            - The submission was submitted and there are no tests.
+            - The submission was successfully validity-tested, regardless of the full test status (not existent / failed / success).
+            - The submission was graded or the grading was already started.
+            - The submission was closed.
+
+            The idea is to get all submissions that were a valid solution, regardless of the point in time where you check the list.
+        '''
+        return qs.filter(state__in=[Submission.SUBMITTED, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.GRADING_IN_PROGRESS, Submission.GRADED, Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])
+
+    @staticmethod
+    def qs_tobegraded(qs):
+        '''
+            A filtering of the given Submission queryset for all submissions that are gradeable. This includes the following cases:
+
+            - The submission was submitted and there are no tests.
+            - The submission was successfully validity-tested, regardless of the full test status (not existent / failed / success).
+            - The grading was already started, but not finished.
+
+            The idea is to get a list of work to be done for the correctors.
+        '''
+        return qs.filter(state__in=[Submission.SUBMITTED, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.GRADING_IN_PROGRESS])
+
+    @staticmethod
+    def qs_notified(qs):
+        '''
+            A filtering of the given Submission queryset for all submissions were students already got notification about their grade. This includes the following cases:
+
+            - The submission was closed.
+            - The submission was closed and full tests were re-started.
+
+            The idea is to get indirectly a list of emails that went out.
+        '''
+        return qs.filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])
+
+    @staticmethod
+    def qs_notwithdrawn(qs):
+        '''
+            A filtering of the given Submission queryset for all submissions that were not withdrawn. This excludes the following cases:
+
+            - The submission was withdrawn.
+            - The submission was received and never left that status due to an error.
+
+            The idea is a list of all submissions, but without the garbage.
+        '''
+        return qs.exclude(state__in=[Submission.WITHDRAWN, Submission.RECEIVED])
+
     def __unicode__(self):
         if self.pk:
             return unicode("%u" % (self.pk))

@@ -52,35 +52,30 @@ class SubmissionStateFilter(SimpleListFilter):
     title = _('Submission Status')
     parameter_name = 'statefilter'
 
-    @staticmethod
-    def qs_tobegraded(qs):
-        return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
-
-    @staticmethod
-    def qs_graded(qs):
-        return qs.filter(state__in=[Submission.GRADED])
-
     def lookups(self, request, model_admin):
         return (
             ('notwithdrawn', _('All, except withdrawn')),
-            ('tobegraded', _('To be graded')),
+            ('valid', _('Valid (compiled / tested)')),
+            ('tobegraded', _('Grading needed')),
             ('gradingunfinished', _('Grading not finished')),
             ('graded', _('Grading finished')),
-            ('closed', _('Closed')),
+            ('closed', _('Closed, student notified')),
         )
 
     def queryset(self, request, qs):
         qs = qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
         if   self.value() == 'notwithdrawn':
-            return qs.exclude(state__in=[Submission.WITHDRAWN, Submission.RECEIVED])
+            return Submission.qs_notwithdrawn(qs)
+        elif self.value() == 'valid':
+            return Submission.qs_valid(qs)
         elif self.value() == 'tobegraded':
-            return qs.filter(state__in=[Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])
+            return Submission.qs_tobegraded(qs)
         elif self.value() == 'gradingunfinished':
             return qs.filter(state__in=[Submission.GRADING_IN_PROGRESS])
         elif self.value() == 'graded':
-            return SubmissionStateFilter.qs_graded(qs)
+            return qs.filter(state__in=[Submission.GRADED])
         elif self.value() == 'closed':
-            return qs.filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING])
+            return Submission.qs_notified(qs)
         else:
             return qs
 
