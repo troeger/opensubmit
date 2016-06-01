@@ -69,7 +69,7 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         self.assertEquals(response.status_code, 200)
         self.assertIn('text/', str(response))        # content type
 
-    def testArchiveView(self):
+    def testCourseArchiveView(self):
         # add some student upload to be stored in the archive
         self.val_sub = self.createValidatedSubmission(self.current_user)
         response = self.c.get('/course/%u/archive/'%self.course.pk)
@@ -89,6 +89,22 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         finally:
             zipped_file.close()
             f.close()
+
+    def testAssignmentArchiveView(self):
+        # add some student upload to be stored in the archive
+        self.val_sub = self.createValidatedSubmission(self.current_user)
+        response = self.c.get('/assignments/%u/archive/'%self.openAssignment.pk)
+        self.assertEquals(response.status_code, 200)
+        # Test if the download is really a ZIP file
+        f = StringIO.StringIO(response.content)
+        zipped_file = zipfile.ZipFile(f, 'r')
+        try:
+            # Check ZIP file validity
+            self.assertIsNone(zipped_file.testzip())
+        finally:
+            zipped_file.close()
+            f.close()
+
 
     def testAddCourseTutorSignalHandler(self):
         # Add another tutor who had no backend rights before

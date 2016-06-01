@@ -23,6 +23,10 @@ class Course(models.Model):
     def __unicode__(self):
         return unicode(self.title)
 
+    def directory_name(self):
+        ''' The course name in a format that is suitable for a directory name.  '''
+        return self.title.replace(" ", "_").replace("\\", "_").replace("/", "_").replace(",","").lower()
+
     def open_assignments(self):
         qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
         qs = qs.filter(publish_at__lt=timezone.now())

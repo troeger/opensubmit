@@ -5,6 +5,8 @@ from django.utils import timezone
 from django.core.urlresolvers import reverse
 
 from datetime import datetime
+import tempfile, zipfile, tarfile
+from django.utils.encoding import smart_text
 
 from .submissionfile import upload_path, SubmissionFile
 from .submissiontestresult import SubmissionTestResult
@@ -13,6 +15,17 @@ from django.conf import settings
 
 import logging
 logger = logging.getLogger('OpenSubmit')
+
+class ValidSubmissionsManager(models.Manager):
+    '''
+        A model manager used by the Submission model. It returns a sorted list
+        of submissions that are not withdrawn.
+    '''
+
+    def get_queryset(self):
+        submissions = Submission.objects.exclude(
+                state__in=[Submission.WITHDRAWN, Submission.RECEIVED]).order_by('pk')
+        return submissions
 
 class PendingStudentTestsManager(models.Manager):
     '''
@@ -128,6 +141,7 @@ class Submission(models.Model):
     pending_student_tests = PendingStudentTestsManager()
     pending_full_tests = PendingFullTestsManager()
     pending_tests = PendingTestsManager()
+    valid_ones = ValidSubmissionsManager()
 
     class Meta:
         app_label = 'opensubmit'
@@ -398,4 +412,53 @@ class Submission(models.Model):
         # TODO: Make this configurable, some course owners got annoyed by this
         # send_mail(subject, message, from_email, recipients, fail_silently=True)
 
+    def info_file(self):
+        '''
+            Prepares a temporary file with information about the submission.
+            Closing it will delete it, which must be considered by the caller.
+        '''
+        info = tempfile.NamedTemporaryFile()
+        info.write("Submission ID:\t%u\n" % self.pk)
+        info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name().encode('utf-8'), self.submitter.pk))
+        info.write("Authors:\n")
+        for auth in self.authors.all():
+            info.write("\t%s (%u)\n" % (auth.get_full_name().encode('utf-8'), auth.pk))
+        info.write("\n")
+        info.write("Creation:\t%s\n" % str(self.created))
+        info.write("Last modification:\t%s\n" % str(self.modified))
+        info.write("Status:\t%s\n" % self.state_for_students())
+        if self.grading:
+            info.write("Grading:\t%s\n" % str(self.grading))
+        if self.notes:
+            notes = smart_text(self.notes).encode('utf8')
+            info.write("Author notes:\n-------------\n%s\n\n" % notes)
+        if self.grading_notes:
+            notes = smart_text(self.grading_notes).encode('utf8')
+            info.write("Grading notes:\n--------------\n%s\n\n" % notes)
+        info.flush()    # no closing here, because it disappears then
+        return info
+
+    def copy_file_upload(self, targetdir):
+        '''
+            Copies the currently valid file upload into the given directory.
+            If possible, the content is un-archived in the target directory.
+        '''
+        assert(self.file_upload)
+        # unpack student data to temporary directory
+        # os.chroot is not working with tarfile support
+        tempdir = tempfile.mkdtemp()
+        try:
+            if zipfile.is_zipfile(self.file_upload.absolute_path()):
+                f = zipfile.ZipFile(self.file_upload.absolute_path(), 'r')
+                f.extractall(targetdir)
+            elif tarfile.is_tarfile(self.file_upload.absolute_path()):
+                tar = tarfile.open(self.file_upload.absolute_path())
+                tar.extractall(targetdir)
+                tar.close()
+            else:
+                # unpacking not possible, just copy it
+                shutil.copyfile(self.file_upload.absolute_path(), targetdir + "/" + self.file_upload.basename())
+        except IOError:
+            logger.error("I/O exception while accessing %s."%(self.file_upload.absolute_path()))
+            pass
 

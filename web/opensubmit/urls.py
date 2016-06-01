@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^assignments/(?P<ass_id>\d+)/new/$', views.new, name='new'),
     url(r'^assignments/(?P<ass_id>\d+)/perftable/$', views.perftable, name='perftable'),
     url(r'^assignments/(?P<ass_id>\d+)/duplicates/$', views.duplicates, name='duplicates'),
+    url(r'^assignments/(?P<ass_id>\d+)/archive/$', views.assarchive, name='assarchive'),
     url(r'^withdraw/(?P<subm_id>\d+)/$', views.withdraw, name='withdraw'),
     url(r'^preview/(?P<subm_id>\d+)/$', views.preview, name='preview'),
     url(r'^update/(?P<subm_id>\d+)/$', views.update, name='update'),

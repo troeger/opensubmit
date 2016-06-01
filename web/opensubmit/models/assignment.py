@@ -30,6 +30,10 @@ class Assignment(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
+    def directory_name(self):
+        ''' The assignment name in a format that is suitable for a directory name.  '''
+        return self.title.replace(" ", "_").replace("\\", "_").replace(",","").lower()
+
     def gradable_submissions(self):
         qs = self.valid_submissions()
         qs = qs.filter(state__in=[Submission.GRADING_IN_PROGRESS, Submission.SUBMITTED_TESTED, Submission.TEST_FULL_FAILED, Submission.SUBMITTED])

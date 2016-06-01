@@ -20,7 +20,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.utils.encoding import smart_text
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.admin.views.decorators import staff_member_required
@@ -342,13 +341,15 @@ def mail2all(request, course_id):
     mailform = MailForm()
     return render(request, 'mail_form.html', {'maillist': maillist, 'course': course, 'mailform': mailform })
 
-
-
 @login_required
 @staff_member_required
 def coursearchive(request, course_id):
+    '''
+        Provides all course submissions and their information as archive download.
+        For archiving purposes, since withdrawn submissions are included.
+    '''
     course = get_object_or_404(Course, pk=course_id)
-    coursename = course.title.replace(" ", "_").lower()
+    coursename = course.directory_name()
 
     # we need to create the result ZIP file in memory to not leave garbage on the server
     output = StringIO.StringIO()
@@ -360,59 +361,70 @@ def coursearchive(request, course_id):
     for ass in assignments:
         assdir = coursedir + '/' + ass.title.replace(" ", "_").lower()
         for sub in ass.submissions.all().order_by('submitter'):
-            submitter = "user" + str(sub.submitter.pk)      
+            submitter = "user" + str(sub.submitter.pk)
             if sub.modified:
                 modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
             else:
                 modified = sub.created.strftime("%Y_%m_%d_%H_%M_%S")
             state = sub.state_for_students().replace(" ", "_").lower()
-            submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)                  
+            submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)
             if sub.file_upload:
-                # unpack student data to temporary directory
-                # os.chroot is not working with tarfile support
+                # Copy student upload
                 tempdir = tempfile.mkdtemp()
-                if zipfile.is_zipfile(sub.file_upload.absolute_path()):
-                    f = zipfile.ZipFile(sub.file_upload.absolute_path(), 'r')
-                    f.extractall(tempdir)
-                elif tarfile.is_tarfile(sub.file_upload.absolute_path()):
-                    tar = tarfile.open(sub.file_upload.absolute_path())
-                    tar.extractall(tempdir)
-                    tar.close()
-                else:
-                    # unpacking not possible, just copy it
-                    shutil.copyfile(sub.file_upload.absolute_path(), tempdir + "/" + sub.file_upload.basename())
-                # Create final ZIP file
-                allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)] 
+                sub.copy_file_upload(tempdir)
+                # Add content to final ZIP file
+                allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)]
                 for subdir, files in allfiles:
                     for f in files:
-                        zip_relative_dir = subdir.replace(tempdir, "")     
+                        zip_relative_dir = subdir.replace(tempdir, "")
                         z.write(subdir + "/" + f, submdir + 'student_files/%s/%s'%(zip_relative_dir, f), zipfile.ZIP_DEFLATED)
-
             # add text file with additional information
-            info = tempfile.NamedTemporaryFile()
-            info.write("Status: %s\n\n" % sub.state_for_students())
-            info.write("Submitter: %s\n\n" % submitter)
-            info.write("Last modification: %s\n\n" % modified)
-            info.write("Authors: ")
-            for auth in sub.authors.all():
-                author = "user" + str(auth.pk)
-                info.write("%s," % author)
-            info.write("\n")
-            if sub.grading:
-                info.write("Grading: %s\n\n" % str(sub.grading))
-            if sub.notes:
-                notes = smart_text(sub.notes).encode('utf8')
-                info.write("Author notes:\n-------------\n%s\n\n" % notes)
-            if sub.grading_notes:
-                notes = smart_text(sub.grading_notes).encode('utf8')
-                info.write("Grading notes:\n--------------\n%s\n\n" % notes)
-            info.flush()    # no closing here, because it disappears then
+            info = sub.info_file()
             z.write(info.name, submdir + "info.txt")
     z.close()
+
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
     response = HttpResponse(output, content_type="application/x-zip-compressed")
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % coursename
+    return response
+
+@login_required
+@staff_member_required
+def assarchive(request, ass_id):
+    '''
+        Provides all non-withdrawn submissions for an assignment as download.
+        Intented for supporting offline correction.
+    '''
+    ass = get_object_or_404(Assignment, pk=ass_id)
+    ass_name = ass.directory_name()
+
+    # we need to create the result ZIP file in memory to not leave garbage on the server
+    output = StringIO.StringIO()
+    z = zipfile.ZipFile(output, 'w')
+
+    # recurse through database and add according submitted files to in-memory archive
+    for sub in Submission.valid_ones.filter(assignment=ass):
+        submdir = "%s/%u/" % (ass_name, sub.pk)
+        if sub.file_upload:
+            # Copy student upload
+            tempdir = tempfile.mkdtemp()
+            sub.copy_file_upload(tempdir)
+            # Add content to final ZIP file
+            allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)]
+            for subdir, files in allfiles:
+                for f in files:
+                    zip_relative_dir = subdir.replace(tempdir, "")
+                    z.write(subdir + "/" + f, submdir + 'student_files/%s/%s'%(zip_relative_dir, f), zipfile.ZIP_DEFLATED)
+
+        # add text file with additional information
+        info = sub.info_file()
+        z.write(info.name, submdir + "info.txt")
+    z.close()
+    # go back to start in ZIP file so that Django can deliver it
+    output.seek(0)
+    response = HttpResponse(output, content_type="application/x-zip-compressed")
+    response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass_name
     return response
 
 
