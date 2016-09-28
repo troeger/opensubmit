@@ -457,28 +457,44 @@ def send_config(config_file):
     output = []
     output.append(["Operating system","%s %s %s (%s)"%(conf[0], conf[2], conf[3], conf[4])])
     try:
-       from cpuinfo import cpuinfo
-       cpu=cpuinfo.get_cpu_info()
-       conf="%s, %s, %s Family %d Model %d Stepping %d #%d" % (cpu["brand"],cpu["vendor_id"],cpu["arch"],cpu['family'],cpu['model'],cpu['stepping'],cpu["count"])
+        from cpuinfo import cpuinfo
+        cpu=cpuinfo.get_cpu_info()
+        conf="%s, %s, %s Family %d Model %d Stepping %d #%d" % (cpu["brand"],cpu["vendor_id"],cpu["arch"],cpu['family'],cpu['model'],cpu['stepping'],cpu["count"])
     except:
-       conf=platform.processor() #may be empty on Linux because of partial implemtation in platform
+        conf=platform.processor() #may be empty on Linux because of partial implemtation in platform
        
     output.append(["CPUID information", conf])
      
-    if platform_sys=="Windows":
-       conf = _infos_cmd("cl.exe|@echo off","") #force returncode 0
-       conf = conf.split("\n")[0] #extract version info
+    if platform_sys == "Windows":
+        conf = _infos_cmd("cl.exe|@echo off","") #force returncode 0
+        conf = conf.split("\n")[0] #extract version info
     else:
-       conf = _infos_cmd("cc -v")
-   
-    output.append(["CC information", conf ])
-    output.append(["JDK information", _infos_cmd("java -version")])
-    output.append(["MPI information", _infos_cmd("mpirun -version")])
-    output.append(["Scala information", _infos_cmd("scala -version")])
-    output.append(["OpenCL headers", _infos_cmd("find /usr/include|grep opencl.h")])
-    output.append(["OpenCL libraries", _infos_cmd("find /usr/lib/ -iname '*opencl*'")])
-    output.append(["NVidia SMI", _infos_cmd("nvidia-smi -q")])
-    output.append(["OpenCL Details", _infos_opencl()])
+        conf = _infos_cmd("cc -v") 
+    try: #read keys and values from JSON file
+        import simplejson
+        with open('environment.json','rb') as f: 
+           environ_vars = simplejson.loads(f.read())
+        output.append(["CC information", conf ])
+        for k,v in environ_vars.iteritems():
+           output.append([k,_infos_cmd(v)])        
+        output.append(["OpenCL Details", _infos_opencl()])
+    except Exception as e:
+        logger.error("ERROR Collecting environment information (%s)" % (str(e)))
+        return False
+        
+    #separate distro and custom environment values for reliability 
+    try:
+        import simplejson
+        custom_vars_file = config.get("Execution","custom_variables")
+        print "Using custom variables from %s" % (custom_vars_file)
+        with open(custom_vars_file,'rb') as f:
+           custom_vars = simplejson.loads(f.read())
+        for k,v in custom_vars.iteritems():
+           output.append([k + " information", _infos_cmd(v)])
+    except Exception as e:
+        logger.error("ERROR loading custom variables  (%s)" % (str(e)))
+        pass
+        
     try:
         logger.debug("Sending config data: "+str(output))
         post_data = [   ("Config",json.dumps(output)),

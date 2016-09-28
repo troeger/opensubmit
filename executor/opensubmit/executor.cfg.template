@@ -42,7 +42,15 @@ message_size=10000
 # Customize the compilation command to be executed
 compile_cmd=make
 
-
+# Load python directory of additional environment information to query from JSON file for
+# testmachine registration. Only one-dimensional directories are supported! For syntax see 
+# simplejson package documentation.
+# { "Make" : "make -v",
+#   "Uname" : "uname -m"
+# }
+# The JSON sample will execute 'make -v' add the result as 'Make information'  and
+# 'uname -m' as 'Uname information'.    
+#custom_variables=/tmp/environment.json
 
 [Logging]
 
