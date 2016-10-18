@@ -377,7 +377,8 @@ def coursearchive(request, course_id):
                 for subdir, files in allfiles:
                     for f in files:
                         zip_relative_dir = subdir.replace(tempdir, "")
-                        z.write(subdir + "/" + f, submdir + 'student_files/%s/%s'%(zip_relative_dir, f), zipfile.ZIP_DEFLATED)
+                        zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
+                        z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
             # add text file with additional information
             info = sub.info_file()
             z.write(info.name, submdir + "info.txt")
@@ -415,7 +416,8 @@ def assarchive(request, ass_id):
             for subdir, files in allfiles:
                 for f in files:
                     zip_relative_dir = subdir.replace(tempdir, "")
-                    z.write(subdir + "/" + f, submdir + 'student_files/%s/%s'%(zip_relative_dir, f), zipfile.ZIP_DEFLATED)
+                    zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
+                    z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
 
         # add text file with additional information
         info = sub.info_file()
