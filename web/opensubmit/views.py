@@ -289,7 +289,7 @@ def gradingtable(request, course_id):
                     if passed:
                         numpassed += 1
                     try:
-                        pointsum += int(str(grade))
+                        pointsum += eval(str(grade))
                     except:
                         pass
                 else:
