@@ -175,6 +175,7 @@ def jobs(request):
         response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
         response['SubmissionFileId'] = str(sub.file_upload.pk)
         response['Timeout'] = sub.assignment.attachment_test_timeout
+        response['Compile'] = sub.assignment.attachment_test_compile
         if sub.state == Submission.TEST_COMPILE_PENDING:
             response['Action'] = 'test_compile'
         elif sub.state == Submission.TEST_VALIDITY_PENDING:

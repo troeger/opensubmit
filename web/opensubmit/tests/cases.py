@@ -347,6 +347,15 @@ class SubmitTestCase(LiveServerTestCase):
         sf.save()
         return sf
 
+    def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
+        from django.core.files import File as DjangoFile
+        fname=relpath[relpath.rfind(os.sep)+1:]
+        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
+        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf.save()
+        return sf
+
+
     def createTestedSubmissionFile(self, test_machine):
         '''
             Create finalized test result in the database.
@@ -382,6 +391,23 @@ class SubmitTestCase(LiveServerTestCase):
             submitter=user.user,
             notes="This is a validatable submission.",
             state=Submission.TEST_COMPILE_PENDING,
+            file_upload=sf
+        )
+        sub.save()
+        return sub
+
+    def createValidatableNoArchiveSubmission(self, user):
+        '''
+            Create a submission that can be validated by executor.
+            It is not an archive and cant be compiled. This tests special
+            executor cases, e.g. PDF report submission.
+        '''
+        sf = self.createNoArchiveSubmissionFile()
+        sub = Submission(
+            assignment=self.validatedAssignment,
+            submitter=user.user,
+            notes="This is a validatable submission with a non-archive.",
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=sf
         )
         sub.save()

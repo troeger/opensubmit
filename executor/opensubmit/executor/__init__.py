@@ -238,6 +238,7 @@ def _fetch_job(config):
             action    - What should be done with this file
             timeout   - What is the timeout for running this job
             validator - URL of the validator script
+            compile_on - Status of the compilation test flag in the assignment configuration
 
     '''
     try:
@@ -249,9 +250,10 @@ def _fetch_job(config):
         if headers["Action"] == "get_config":
             # The server does not know us, so it demands registration before hand.
             logger.info("Machine unknown on server, perform 'opensubmit-exec configure' first.")
-            return [None]*5
+            return [None]*6
         submid = headers["SubmissionFileId"]
         action = headers["Action"]
+        compile_on = (headers["Compile"]=='True')
         timeout = int(headers["Timeout"])
         logger.info("Retrieved submission file %s for '%s' action: %s" % (submid, action, fname))
         if "PostRunValidation" in headers:
@@ -260,21 +262,21 @@ def _fetch_job(config):
             validator = None
         with open(fname,"wb") as target:
             target.write(result.read())
-        logger.debug(str((fname, submid, action, timeout, validator)))
-        return fname, submid, action, timeout, validator
+        logger.debug(str((fname, submid, action, timeout, validator, compile_on)))
+        return fname, submid, action, timeout, validator, compile_on
     except HTTPError as e:
         if e.code == 404:
             logger.debug("Nothing to do.")
-            return [None]*5
+            return [None]*6
         else:
             logger.error("ERROR HTTP return code: " + str(e))
-            return [None]*5
+            return [None]*6
     except URLError as e:
         logger.error("ERROR could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
-        return [None]*5
+        return [None]*6
     except Exception as e:
         logger.error("ERROR unknown: " + str(e))
-        return [None]*5
+        return [None]*6
 
 def _unpack_job(config, fname, submid, action):
     '''
@@ -501,7 +503,7 @@ def run(config_file):
     _kill_deadlocked_jobs(config)
     if _acquire_lock(config):
         # fetch any available job
-        fname, submid, action, timeout, validator_url = _fetch_job(config)
+        fname, submid, action, timeout, validator_url, compile_on = _fetch_job(config)
         if not fname:
             logger.debug("Nothing to do")
             _cleanup_lock(config)
@@ -535,18 +537,19 @@ def run(config_file):
             # prepare the output file for validator performance results
             perfdata_fname = finalpath+"perfresults.csv"
             open(perfdata_fname,"w").close()
-            # run configure script, if available.
-            output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
-            if not success:
-                logger.debug("Configure failed")
-                _cleanup_lock(config)
-                return False
-            # build it
-            output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
-            if not success:
-                logger.debug("Job execution failed")
-                _cleanup_lock(config)
-                return False
+            if compile_on:
+                # run configure script, if available.
+                output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+                if not success:
+                    logger.debug("Configure failed")
+                    _cleanup_lock(config)
+                    return False
+                # build it
+                output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
+                if not success:
+                    logger.debug("Job execution failed")
+                    _cleanup_lock(config)
+                    return False
             # fetch validator into target directory
             if not _fetch_validator(config, validator_url, finalpath):
                 logger.debug("Validator fetching failed, cancelling task")
