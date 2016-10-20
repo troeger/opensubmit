@@ -171,9 +171,14 @@ def new(request, ass_id):
 def update(request, subm_id):
     # Submission should only be editable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
-    # Somebody may bypass the template check by sending direct POST form data
+    # Somebody may bypass the template check by sending direct POST form data.
+    # This check also fails when the student performs a simple reload on the /update page
+    # without form submission after the deadline.
+    # In practice, the latter happens all the time, so we skip the Exception raising here,
+    # which lead to endless mails for the admin user in the past.
     if not submission.can_reupload():
-        raise SuspiciousOperation("Update of submission %s is not allowed at this time." % str(subm_id))
+        return redirect('dashboard')
+        #raise SuspiciousOperation("Update of submission %s is not allowed at this time." % str(subm_id))
     if request.user not in submission.authors.all():
         return redirect('dashboard')
     if request.POST:

@@ -78,12 +78,14 @@ class StudentSubmissionTestCase(SubmitTestCase):
         # pending compilation, update not allowed
         sub = self.createValidatableSubmission(self.current_user)
         response = self.c.post('/update/%u/' % sub.pk)
-        self.assertEquals(response.status_code, 400)
+        # expect dashboard redirect
+        self.assertEquals(response.status_code, 302)
 
         # test successful, update not allowed
         sub = self.createValidatedSubmission(self.current_user)
         response = self.c.post('/update/%u/' % sub.pk)
-        self.assertEquals(response.status_code, 400)
+        # expect dashboard redirect
+        self.assertEquals(response.status_code, 302)
 
     def testCanUpdateInvalidData(self):
         submitter = self.enrolled_students[0]
