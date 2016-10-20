@@ -248,7 +248,7 @@ def _fetch_job(config):
         headers = result.info()
         if headers["Action"] == "get_config":
             # The server does not know us, so it demands registration before hand.
-            logger.info("Machine unknown on server, perform registration first.")
+            logger.info("Machine unknown on server, perform 'opensubmit-exec configure' first.")
             return [None]*5
         submid = headers["SubmissionFileId"]
         action = headers["Action"]
@@ -282,6 +282,9 @@ def _unpack_job(config, fname, submid, action):
         Returns on success, or terminates the executor after notifying the OpenSubmit server
         about the problem.
 
+        If decompression fails, we leave the file as it is. This is intended to support
+        uncompressed file submission, e.g. for reports that are validity-scanned.
+
         Returns None on error, or path were the compressed data now lives
     '''
     basepath = config.get("Execution","directory")
@@ -291,10 +294,10 @@ def _unpack_job(config, fname, submid, action):
     except Exception as e:
         logger.error("ERROR could not create temp dir: " + str(e))
         return None
-        
+
     if not finalpath.endswith(os.sep):
         finalpath += os.sep
-    
+
     if zipfile.is_zipfile(fname):
         logger.debug("Valid ZIP file")
         try:
@@ -312,15 +315,9 @@ def _unpack_job(config, fname, submid, action):
                 tar.extractall(finalpath)
             os.remove(fname)
         except Exception as e:
-            logger.error("ERROR extracting TAR: " + str(e))      
+            logger.error("ERROR extracting TAR: " + str(e))
     else:
-        try:
-            os.remove(fname)
-        except Exception as e:
-            logger.error("ERROR could not remove: " + str(e))
-        _send_result(config, "This is not a valid compressed file.",-1, submid, action)
-        _cleanup_files(config, finalpath)
-        return None
+        return finalpath
     dircontent = os.listdir(finalpath)
     logger.debug("Content after decompression: "+str(dircontent))
     if len(dircontent) == 0:
