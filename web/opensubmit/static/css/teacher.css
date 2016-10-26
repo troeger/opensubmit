@@ -28,3 +28,11 @@ a{
 .grp-pagination ul li a {
 	color: black;
 }
+
+input[name="_addanother"],input[name="_continue"],input[name="_saveasnew"]{
+    display: none;
+}
+
+.grp-object-tools {
+    display: none;
+}
