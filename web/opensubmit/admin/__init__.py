@@ -15,6 +15,10 @@ from submissionfile import SubmissionFileAdmin
 from submission import SubmissionAdmin
 
 def _social_auth_login(self, request, **kwargs):
+    '''
+        View function that redirects to social auth login,
+        in case the user is not logged in.
+    '''
     if request.user.is_authenticated():
         if not request.user.is_active or not request.user.is_staff:
             raise PermissionDenied()
@@ -22,14 +26,13 @@ def _social_auth_login(self, request, **kwargs):
         messages.add_message(request, messages.WARNING, 'Please authenticate first.')
         return redirect_to_login(request.get_full_path())
 
-
 class AdminBackend(AdminSite):
-	site_header = "OpenSubmit"
-	site_url = settings.MAIN_URL
-	index_title = "Administrator Backend"
+    site_header = "OpenSubmit"
+    site_url = settings.MAIN_URL
+    index_title = "Administrator Backend"
 
-	def app_index(self, request, app_label, extra_context=None):
-		return redirect('admin:index')
+    def app_index(self, request, app_label, extra_context=None):
+        return redirect('admin:index')
 
 
 admin_backend = AdminBackend(name="admin")
@@ -39,13 +42,13 @@ admin_backend.register(Group)
 
 
 class TeacherBackend(AdminSite):
-	site_header = "OpenSubmit"
-	site_url = settings.MAIN_URL
-	index_title = "Teacher Backend"
-	login = _social_auth_login
+    site_header = "OpenSubmit"
+    site_url = settings.MAIN_URL
+    index_title = "Teacher Backend"
+    login = _social_auth_login
 
-	def app_index(self, request, app_label, extra_context=None):
-		return redirect('teacher:index')
+    def app_index(self, request, app_label, extra_context=None):
+        return redirect('teacher:index')
 
 teacher_backend = TeacherBackend(name="teacher")
 teacher_backend.register(Grading, GradingAdmin)
