@@ -90,6 +90,12 @@ class TeacherTestCaseSet(TutorTestCaseSet):
             zipped_file.close()
             f.close()
 
+    def testCourseArchiveWithNonZipView(self):
+        # add some student upload to be stored in the archive
+        self.val_sub = self.createValidatableNoArchiveSubmission(self.current_user)
+        response = self.c.get('/course/%u/archive/'%self.course.pk)
+        self.assertEquals(response.status_code, 200)
+
     def testAssignmentArchiveView(self):
         # add some student upload to be stored in the archive
         self.val_sub = self.createValidatedSubmission(self.current_user)
@@ -104,6 +110,12 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         finally:
             zipped_file.close()
             f.close()
+
+    def testAssignmentArchiveWithNonZipView(self):
+        # add some student upload to be stored in the archive
+        self.val_sub = self.createValidatableNoArchiveSubmission(self.current_user)
+        response = self.c.get('/assignments/%u/archive/'%self.openAssignment.pk)
+        self.assertEquals(response.status_code, 200)
 
 
     def testAddCourseTutorSignalHandler(self):

@@ -13,7 +13,7 @@ from .submissiontestresult import SubmissionTestResult
 
 from django.conf import settings
 
-import logging
+import logging, shutil
 logger = logging.getLogger('OpenSubmit')
 
 class ValidSubmissionsManager(models.Manager):
