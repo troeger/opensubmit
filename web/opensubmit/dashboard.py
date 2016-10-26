@@ -8,12 +8,12 @@ from opensubmit.models import TestMachine, Submission
 class TeacherDashboard(Dashboard):
 
     class Media:
-        css = {'all': ('css/admin.css',)}
+        css = {'all': ('css/teacher.css',)}
 
     def init_with_context(self, context):
         # Put database models in  column
         self.children.append(modules.ModelList(
-            title='Database Management',
+            title='General',
             column=2,
             exclude=('django.contrib.*','opensubmit.models.grading.*'),
         ))
@@ -72,7 +72,7 @@ class AdminDashboard(Dashboard):
     def init_with_context(self, context):
         # Put database models in  column
         self.children.append(modules.ModelList(
-            title='Database Management',
+            title='Security Management',
             column=2,
         ))
 

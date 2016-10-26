@@ -19,6 +19,9 @@ class CourseAdmin(django.contrib.admin.ModelAdmin):
     list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors', actions]
     filter_horizontal = ['tutors']
 
+    class Media:
+        css = {'all': ('css/teacher.css',)}
+
     def get_queryset(self, request):
         ''' Restrict the listed courses for the current user.'''
         qs = super(CourseAdmin, self).get_queryset(request)

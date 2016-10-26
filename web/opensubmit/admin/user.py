@@ -45,6 +45,9 @@ class UserAdmin(DjangoUserAdmin):
         }),
     )
 
+    class Media:
+        css = {'all': ('css/teacher.css',)}
+
     inlines = (UserProfileInline, )
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff',  social)
 

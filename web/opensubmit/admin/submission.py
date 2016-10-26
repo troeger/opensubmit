@@ -130,7 +130,7 @@ class SubmissionAdmin(ModelAdmin):
     change_list_template = "admin/change_list_filter_sidebar.html"
 
     class Media:
-        css = {'all': ('css/admin.css',)}
+        css = {'all': ('css/teacher.css',)}
 
 
     fieldsets = (
@@ -240,7 +240,7 @@ class SubmissionAdmin(ModelAdmin):
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        ''' Our custom addition to the view HTML in templates/admin/opensubmit/submission/change_form.HTML
+        ''' Our custom addition to the view
             adds an easy radio button choice for the new state. This is meant to be for tutors.
             We need to peel this choice from the form data and set the state accordingly.
             The radio buttons have no default, so that we can keep the existing state

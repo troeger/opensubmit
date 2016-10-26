@@ -34,8 +34,6 @@ class AdminBackend(AdminSite):
 
 admin_backend = AdminBackend(name="admin")
 admin_backend.register(User, UserAdmin)
-admin_backend.register(Course, CourseAdmin)
-admin_backend.register(TestMachine)
 admin_backend.register(Permission)
 admin_backend.register(Group)
 

@@ -112,7 +112,7 @@ class AssignmentAdmin(ModelAdmin):
     change_list_template = "admin/change_list_filter_sidebar.html"
 
     class Media:
-        css = {'all': ('css/admin.css',)}
+        css = {'all': ('css/teacher.css',)}
 
 
 

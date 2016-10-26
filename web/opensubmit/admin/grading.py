@@ -11,3 +11,6 @@ means_passed.boolean = True
 
 class GradingAdmin(ModelAdmin):
     list_display = ['__unicode__', grading_schemes, means_passed]
+
+    class Media:
+        css = {'all': ('css/teacher.css',)}
