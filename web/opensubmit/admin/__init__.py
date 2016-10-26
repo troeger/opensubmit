@@ -2,6 +2,8 @@ from django.contrib.auth.models import User, Permission, Group
 from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine
 from opensubmit import settings
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.views import redirect_to_login
+from django.contrib import messages
 from django.shortcuts import redirect
 
 from user import UserAdmin
@@ -11,6 +13,15 @@ from gradingscheme import GradingSchemeAdmin
 from assignment import AssignmentAdmin
 from submissionfile import SubmissionFileAdmin
 from submission import SubmissionAdmin
+
+def _social_auth_login(self, request, **kwargs):
+    if request.user.is_authenticated():
+        if not request.user.is_active or not request.user.is_staff:
+            raise PermissionDenied()
+    else:
+        messages.add_message(request, messages.WARNING, 'Please authenticate first.')
+        return redirect_to_login(request.get_full_path())
+
 
 class AdminBackend(AdminSite):
 	site_header = "OpenSubmit"
@@ -33,6 +44,7 @@ class TeacherBackend(AdminSite):
 	site_header = "OpenSubmit"
 	site_url = settings.MAIN_URL
 	index_title = "Teacher Backend"
+	login = _social_auth_login
 
 	def app_index(self, request, app_label, extra_context=None):
 		return redirect('teacher:index')
