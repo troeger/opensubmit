@@ -31,7 +31,7 @@ class UserAdmin(DjangoUserAdmin):
             "classes": ("grp-collapse grp-open",),
             "fields": ("username","password","first_name","last_name", "email")
         }),
-        ("Student Details", {
+        ("Details", {
             "classes": ("placeholder profile-group",),
             "fields": ()
         }),
