@@ -21,10 +21,6 @@ class AdminTestCase(SubmitAdminTestCase, TeacherTestCaseSet):
             'secondary_id':self.enrolled_students[1].user.pk})
         self.assertEquals(response.status_code, 302)
 
-    def testNewCourseView(self):
-        response=self.c.get('/admin/opensubmit/course/add/')
-        self.assertEquals(response.status_code, 200)
-
     def testTestMachineListView(self):
         # one machine given
         self.createTestMachine('127.0.0.1')

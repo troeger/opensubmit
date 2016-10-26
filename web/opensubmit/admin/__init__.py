@@ -39,6 +39,7 @@ admin_backend = AdminBackend(name="admin")
 admin_backend.register(User, UserAdmin)
 admin_backend.register(Permission)
 admin_backend.register(Group)
+admin_backend.register(TestMachine)
 
 
 class TeacherBackend(AdminSite):
@@ -57,4 +58,3 @@ teacher_backend.register(Assignment, AssignmentAdmin)
 teacher_backend.register(SubmissionFile, SubmissionFileAdmin)
 teacher_backend.register(Submission, SubmissionAdmin)
 teacher_backend.register(Course, CourseAdmin)
-teacher_backend.register(TestMachine)
