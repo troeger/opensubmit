@@ -63,8 +63,21 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
 
+    def testCompileWithSupportFilesTest(self):
+        self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        self.assertEquals(True, self._runExecutor())
+        results = SubmissionTestResult.objects.filter(
+            submission_file=self.sub.file_upload,
+            kind=SubmissionTestResult.COMPILE_TEST
+        )
+        self.assertEquals(1, len(results))
+        self.assertNotEquals(0, len(results[0].result))
+
+
     def testParallelExecutorsCompileTest(self):
-        self.sub = self.createValidatableSubmission(self.current_user) 
+        self.sub = self.createValidatableSubmission(self.current_user)
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
 
@@ -149,6 +162,21 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testValidationTest(self):
         # compile
         self.sub = self.createValidatableSubmission(self.current_user)
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        self.assertEquals(True, self._runExecutor())
+        # validate
+        self.assertEquals(True, self._runExecutor())
+        results = SubmissionTestResult.objects.filter(
+            submission_file=self.sub.file_upload,
+            kind=SubmissionTestResult.VALIDITY_TEST
+        )
+        self.assertEquals(1, len(results))
+        self.assertNotEquals(0, len(results[0].result))
+
+    def testValidationWithSupportFilesTest(self):
+        # compile
+        self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
         self.assertEquals(True, self._runExecutor())

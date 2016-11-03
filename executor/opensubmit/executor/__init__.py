@@ -32,13 +32,16 @@ def read_config(config_file):
     config = ConfigParser.RawConfigParser()
     config.readfp(open(config_file))
 
-    # Before doing anything else, configure logging
-    if config.getboolean("Logging", "to_file"):
-        handler = logging.FileHandler(config.get("Logging", "file"))
-    else:
-        handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter(config.get("Logging", "format")))
-    logger.addHandler(handler)
+    if not logger.handlers:
+        # Before doing anything else, configure logging
+        # Handlers might be already registered in repeated test suite runs
+        # In production, this should never happen
+        if config.getboolean("Logging", "to_file"):
+            handler = logging.FileHandler(config.get("Logging", "file"))
+        else:
+            handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(config.get("Logging", "format")))
+        logger.addHandler(handler)
     logger.setLevel(config.get("Logging", "level"))
 
     # set defaults for non-existing options
@@ -175,71 +178,148 @@ def _infos_cmd(cmd, stdhndl=" 2>&1", e_shell=True):
     except Exception as e:
         return ""
 
-def _fetch_validator(config, url, path):
+
+
+def _unpack_if_needed(destination_path, fpath):
+    '''
+        Generic helper to unpack potential archives from the OpenSubmit server.
+        Archives are automatically unpacked, regardless of the type. Single files are left as is
+        and just moved to to the destination path.
+
+        destination_path is a directory.
+        fpath is a full-qualified path to some potential archive file.
+
+        Returns directory content after being done, or None.
+    '''
+
+    # Perform un-archiving, in case
+    if zipfile.is_zipfile(fpath):
+        logger.debug("Detected ZIP file at %s, unpacking it."%(fpath))
+        try:
+            with zipfile.ZipFile(fpath, "r") as zip:
+                zip.extractall(destination_path)
+        except Exception as e:
+            logger.error("ERROR extracting ZIP file: " + str(e))
+            return False
+    elif tarfile.is_tarfile(fpath):
+        logger.debug("Detected TAR file at %s, unpacking it."%(fpath))
+        try:
+            with tarfile.open(fpath) as tar:
+                tar.extractall(destination_path)
+        except Exception as e:
+            logger.error("ERROR extracting TAR file: " + str(e))
+            return False
+    else:
+        logger.debug("File at %s is a single non-archive file, moving it to %s"%(fpath, destination_path))
+        shutil.copy(fpath, destination_path)
+
+    dircontent = os.listdir(destination_path)
+    logger.debug("Content of %s is now: %s"%(destination_path,str(dircontent)))
+    return dircontent
+
+
+def _fetch_and_unpack(url, destination_path, download_filename, check_file=None):
+    '''
+        Generic helper to download files from the OpenSubmit server.
+
+        Archives are automatically unpacked, regardless of the type. Single files are left as is.
+
+        Callers must provided the intended unqualified name for the downloaded file, which is not deleted
+        by this method. The file is stored in the destination_path directory, too.
+
+        Callers can ask to check for the existence of some unqualified file name in the
+        destination_path after download (and potential unarchiving) are done.
+
+        Returns boolean success indicator.
+    '''
+    logger.debug("Fetching from "+url)
+    download_fullqual = destination_path + download_filename
+
+    # Perform download
+    try:
+        download_stream = urlopen(url)
+        if os.path.exists(download_fullqual):
+            os.remove(download_fullqual)
+        with open(download_fullqual,"wb") as target:
+            target.write(download_stream.read())
+    except Exception as e:
+        logger.error("ERROR while fetching from " + url + " " + str(e))
+        return False
+
+    if _unpack_if_needed(destination_path, download_fullqual):
+        # Perform existence check
+        if check_file:
+            abspath_check_file = destination_path + check_file
+            if not os.path.exists(abspath_check_file):
+                logger.error("ERROR: Could not find expected file %s in %s after download / unarchiving.", check_file, destination_path)
+                return False
+        return True
+    else:
+        return False
+
+
+def _fetch_validator(url, path):
         '''
-            Fetch validator script from the given URL and put it under the given target file.
+            Fetch validator script (archive) from the given URL and store it under the given target path.
 
             Returns success indication as boolean value.
         '''
-        logger.debug("Fetching validator script from "+url)
-        download_file = path + "validator.download"
-
-        try:
-            result = urlopen(url)
-            if os.path.exists(download_file):
-                os.remove(download_file)
-            with open(download_file,"wb") as target:
-                target.write(result.read())
-        except Exception as e:
-            logger.error("ERROR while fetching validator from " + url + " " + str(e))
-            return False
-
-        finalname = path + VALIDATOR_FNAME
-
-        if zipfile.is_zipfile(download_file):
-            logger.debug("Validator is a ZIP file, unpacking it.")
-
+        logger.debug("Fetching validator script...")
+        if _fetch_and_unpack(url, path, VALIDATOR_FNAME, VALIDATOR_FNAME):
             try:
-                with zipfile.ZipFile(download_file, "r") as zip:
-                    zip.extractall(path)
-                os.remove(download_file)
+                os.chmod(path+VALIDATOR_FNAME, stat.S_IXUSR|stat.S_IRUSR)
             except Exception as e:
-                logger.error("ERROR extracting ZIP: " + str(e))
-                #TODO: Ugly hack, make error reporting better
-                _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
+                logger.error("ERROR setting file system attributes on %s: %s "%(VALIDATOR_FNAME, str(e)))
                 return False
-            # ZIP file is expected to contain VALIDATOR_FNAME
-            if not os.path.exists(finalname):
-                logger.error("ERROR validator ZIP package does not contain " + VALIDATOR_FNAME)
-                #TODO: Ugly hack, make error reporting better
-                _send_result(config, "Invalid validator for this assignment. Please consult the course administrators.", -1, submid, action, "")
-                return False
-        else:
-            try:
-                logger.debug("Validator is a single file, renaming it to " + finalname)
-                os.rename(download_file, finalname)
-            except Exception as e:
-                logger.error("ERROR renaming validator: " + str(e))
-                return False
-        try:
-            os.chmod(finalname, stat.S_IXUSR|stat.S_IRUSR)
-        except Exception as e:
-            logger.error("ERROR setting attributes to validator: " + str(e))
-            return False
-        return True
+            return True
 
+
+def _fetch_support_files(url, path):
+        '''
+            Fetch support files archive from the given URL and put it under the given target path.
+
+            Returns success indication as boolean value.
+        '''
+        logger.debug("Fetching support files ... ")
+        return _fetch_and_unpack(url, path, 'support.download')
+
+
+def _create_temp_directory(config, submid):
+    '''
+        Create a fresh temporary directory for this submission.
+        Returns the new path or None.
+    '''
+    # Fetch base directory from executor configuration
+    basepath = config.get("Execution","directory")
+    try:
+        #use a new temp dir for each run, to skip problems with file locks on Windows
+        finalpath = tempfile.mkdtemp(prefix=str(submid)+'_', dir=basepath)
+    except Exception as e:
+        logger.error("ERROR could not create temp dir: " + str(e))
+        return None
+
+    if not finalpath.endswith(os.sep):
+        finalpath += os.sep
+
+    logger.debug("New temporary directory %s for this submission.", finalpath)
+
+    return finalpath
 
 def _fetch_job(config):
     '''
         Fetch any available work from the OpenSubmit server.
+
+        Jobs are described by HTTP header entries in the response.
+        The download here contains the student data only.
+
         Returns job information as function result tuple:
             fname     - Fully qualified temporary file name for the job file
             submid    - ID of this file on the OpenSubmit server
             action    - What should be done with this file
             timeout   - What is the timeout for running this job
             validator - URL of the validator script
+            support   - URL of the support files
             compile_on - Status of the compilation test flag in the assignment configuration
-
     '''
     try:
         result = urlopen("%s/jobs/?Secret=%s&UUID=%s"%(  config.get("Server","url"),
@@ -250,7 +330,7 @@ def _fetch_job(config):
         if headers["Action"] == "get_config":
             # The server does not know us, so it demands registration before hand.
             logger.info("Machine unknown on server, perform 'opensubmit-exec configure' first.")
-            return [None]*6
+            return [None]*7
         submid = headers["SubmissionFileId"]
         action = headers["Action"]
         compile_on = (headers["Compile"]=='True')
@@ -260,74 +340,27 @@ def _fetch_job(config):
             validator = headers["PostRunValidation"]
         else:
             validator = None
+        if "SupportFiles" in headers:
+            support = headers["SupportFiles"]
+        else:
+            support = None
         with open(fname,"wb") as target:
             target.write(result.read())
-        logger.debug(str((fname, submid, action, timeout, validator, compile_on)))
-        return fname, submid, action, timeout, validator, compile_on
+        #logger.debug(str((fname, submid, action, timeout, validator, support, compile_on)))
+        return fname, submid, action, timeout, validator, support, compile_on
     except HTTPError as e:
         if e.code == 404:
             logger.debug("Nothing to do.")
-            return [None]*6
+            return [None]*7
         else:
             logger.error("ERROR HTTP return code: " + str(e))
-            return [None]*6
+            return [None]*7
     except URLError as e:
         logger.error("ERROR could not contact OpenSubmit web server at %s (%s)"%(config.get("Server","url"), str(e)))
-        return [None]*6
+        return [None]*7
     except Exception as e:
         logger.error("ERROR unknown: " + str(e))
-        return [None]*6
-
-def _unpack_job(config, fname, submid, action):
-    '''
-        Decompress the downloaded file "fname" into the globally defined "targetdir".
-        Returns on success, or terminates the executor after notifying the OpenSubmit server
-        about the problem.
-
-        If decompression fails, we leave the file as it is. This is intended to support
-        uncompressed file submission, e.g. for reports that are validity-scanned.
-
-        Returns None on error, or path were the compressed data now lives
-    '''
-    basepath = config.get("Execution","directory")
-    try: 
-        #use a new temp dir for each run, to skip problems with file locks on Windows
-        finalpath = tempfile.mkdtemp(prefix=str(submid)+'_', dir=basepath)
-    except Exception as e:
-        logger.error("ERROR could not create temp dir: " + str(e))
-        return None
-
-    if not finalpath.endswith(os.sep):
-        finalpath += os.sep
-
-    if zipfile.is_zipfile(fname):
-        logger.debug("Valid ZIP file")
-        try:
-            with zipfile.ZipFile(fname, "r") as zip:
-                logger.debug("Extracting ZIP file.")
-                zip.extractall(finalpath)
-            os.remove(fname)
-        except Exception as e:
-            logger.error("Error extracting ZIP: " + str(e))
-    elif tarfile.is_tarfile(fname):
-        logger.debug("Valid TAR file")
-        try:
-            with tarfile.open(fname) as tar:
-                logger.debug("Extracting TAR file.")
-                tar.extractall(finalpath)
-            os.remove(fname)
-        except Exception as e:
-            logger.error("ERROR extracting TAR: " + str(e))
-    else:
-        return finalpath
-    dircontent = os.listdir(finalpath)
-    logger.debug("Content after decompression: "+str(dircontent))
-    if len(dircontent) == 0:
-        _send_result(config, "Your compressed upload is empty - no files in there.",-1, submid, action)
-    elif len(dircontent) == 1 and os.path.isdir(finalpath + dircontent[0] + os.sep):
-        logger.warning("The archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..." % (dircontent[0]))
-        finalpath = finalpath + dircontent[0] + os.sep
-    return finalpath
+        return [None]*7
 
 def _handle_alarm(proc):
     '''
@@ -482,8 +515,8 @@ def send_config(config_file):
                     ("UUID",config.get("Server","uuid")),
                     ("Address",_infos_host()),
                     ("Secret",config.get("Server","secret"))
-                ]			
-    		
+                ]           
+            
         post_data = urlencode(post_data)
         post_data = post_data.encode("utf-8",errors="ignore")
     
@@ -501,72 +534,89 @@ def run(config_file):
     config = read_config(config_file)
     compile_cmd = config.get("Execution","compile_cmd")
     _kill_deadlocked_jobs(config)
+
     if _acquire_lock(config):
-        # fetch any available job
-        fname, submid, action, timeout, validator_url, compile_on = _fetch_job(config)
+        # fetch any available job information
+        fname, submid, action, timeout, validator_url, support_url, compile_on = _fetch_job(config)
         if not fname:
             logger.debug("Nothing to do")
             _cleanup_lock(config)
             return False
-        # decompress download, only returns on success
-        finalpath = _unpack_job(config, fname, submid, action)
-        if not finalpath:
-            logger.debug("Nothing to find in download")
+
+        # At this stage, we have a downloaded student archive and several additional job informations
+
+        # Create fresh temporary directory
+        targetdir = _create_temp_directory(config, submid)
+
+        # Unpack student data, some validity checks
+        dircontent = _unpack_if_needed(targetdir, fname)
+        if len(dircontent) == 0:
+            _send_result(config, "Your compressed upload is empty - no files in there.",-1, submid, action) # never returns
+            logger.debug("Student archive is empty, notification about this stored as validation result.")
             _cleanup_lock(config)
             return False
+        elif len(dircontent) == 1 and os.path.isdir(targetdir + dircontent[0] + os.sep):
+            logger.warning("The student archive contains no Makefile on top level and only the directory %s. I assume I should go in there ..." % (dircontent[0]))
+            targetdir = targetdir + dircontent[0] + os.sep
+
+        # Download and decompress support files, if given
+        # We do this after the student files uncompressing, so that they cannot overwrite the tutor files
+        if support_url:
+            _fetch_support_files(support_url, targetdir)
+
         # perform action defined by the server for this download
         if action == "test_compile":
             # run configure script, if available.
-            output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+            output, success = _run_job(config, targetdir,["./configure"],submid, action, timeout, True)
             if not success:
                 logger.debug("Configure failed")
                 _cleanup_lock(config)
                 return False
             # build it, only returns on success
-            output, success = _run_job(config, finalpath, compile_cmd.split(" "), submid, action, timeout)
+            output, success = _run_job(config, targetdir, compile_cmd.split(" "), submid, action, timeout)
             if not success:
                 logger.debug("Compilation failed")
                 _cleanup_lock(config)
                 return False
             _send_result(config, output, 0, submid, action)
-            _cleanup_files(config, finalpath)
+            _cleanup_files(config, targetdir)
             logger.debug("Compilation worked")
             _cleanup_lock(config)
             return True
         elif action == "test_validity" or action == "test_full":
             # prepare the output file for validator performance results
-            perfdata_fname = finalpath+"perfresults.csv"
+            perfdata_fname = targetdir+"perfresults.csv"
             open(perfdata_fname,"w").close()
             if compile_on:
                 # run configure script, if available.
-                output, success = _run_job(config, finalpath,["./configure"],submid, action, timeout, True)
+                output, success = _run_job(config, targetdir,["./configure"],submid, action, timeout, True)
                 if not success:
                     logger.debug("Configure failed")
                     _cleanup_lock(config)
                     return False
                 # build it
-                output, success = _run_job(config, finalpath,compile_cmd.split(" "),submid,action,timeout)
+                output, success = _run_job(config, targetdir,compile_cmd.split(" "),submid,action,timeout)
                 if not success:
                     logger.debug("Job execution failed")
                     _cleanup_lock(config)
                     return False
             # fetch validator into target directory
-            if not _fetch_validator(config, validator_url, finalpath):
+            if not _fetch_validator(validator_url, targetdir):
                 logger.debug("Validator fetching failed, cancelling task")
                 _cleanup_lock(config)
                 return False
             # Allow submission to load their own libraries
-            logger.debug("Setting LD_LIBRARY_PATH to "+finalpath)
-            os.environ["LD_LIBRARY_PATH"]=finalpath
+            logger.debug("Setting LD_LIBRARY_PATH to "+targetdir)
+            os.environ["LD_LIBRARY_PATH"]=targetdir
             # execute validator
-            output, success = _run_job(config, finalpath,[config.get("Execution","script_runner"), finalpath+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
+            output, success = _run_job(config, targetdir,[config.get("Execution","script_runner"), targetdir+VALIDATOR_FNAME, perfdata_fname],submid,action,timeout)
             if not success:
                 logger.debug("Job execution failed")
                 _cleanup_lock(config)
                 return False
             perfdata= open(perfdata_fname,"r").read()
             _send_result(config, output, 0, submid, action, perfdata)
-            _cleanup_files(config, finalpath)
+            _cleanup_files(config, targetdir)
             logger.debug("Validty test worked")
             _cleanup_lock(config)
             return True
