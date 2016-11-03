@@ -10,7 +10,7 @@ tests:
 	export PYTHONPATH=../executor/opensubmit:$PYTHONPATH; pushd web; ./manage.py test; popd
 
 coverage:
-	pushd web; coverage run --source='.'  --omit=setup.py,opensubmit/wsgi.py manage.py test opensubmit.tests; coverage html; popd
+	pushd web; coverage run --source='.','../executor/' --omit='*/setup.py',opensubmit/wsgi.py manage.py test opensubmit.tests; coverage html; popd
 
 clean:
 	rm -rf ./cmdline/dist
@@ -23,6 +23,8 @@ clean:
 	rm -rf ./executor/*.egg-info/
 	rm -f   *.tar.gz
 	rm -f   ./web/.coverage
+	rm -rf  ./htmlcov
+	rm -rf  ./web/htmlcov
 
 pypi_web:
 	# Assumes valid credentials in ~/.pypirc
