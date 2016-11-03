@@ -25,8 +25,6 @@ from opensubmit.models import Course, Assignment, Submission, SubmissionFile, Su
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
 
-logger = logging.getLogger('OpenSubmit')
-
 rootdir=os.getcwd()
 
 class AnonStruct(object):
@@ -81,16 +79,16 @@ class SubmitTestCase(LiveServerTestCase):
 
     def setUp(self):
         super(SubmitTestCase, self).setUp()
+        # How much do you want to see from the OpenSubmit web code
         self.logger = logging.getLogger('OpenSubmit')
-        self.loggerLevelOld = self.logger.level
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.ERROR)
+        # How much do you want to see from the OpenSubmit executor
+        self.logger = logging.getLogger('OpenSubmitExecutor')
+        self.logger.setLevel(logging.ERROR)
         self.setUpUsers()
         self.setUpCourses()
         self.setUpGradings()
         self.setUpAssignments()
-
-    def tearDown(self):
-        self.logger.setLevel(self.loggerLevelOld)
 
     def createUser(self, user_dict):
         args = dict(user_dict)
@@ -287,6 +285,23 @@ class SubmitTestCase(LiveServerTestCase):
         self.allAssignments.append(self.validatedAssignment)
 
 
+        self.validatedWithSupportFilesAssignment = Assignment(
+            title='Validated assignment with support files',
+            course=self.course,
+            download='http://example.org/assignments/1/download',
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=True,
+            validity_script_download=True,
+            attachment_test_validity=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip')),
+            attachment_test_full=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip')),
+            attachment_test_support=DjangoFile(open(rootdir+'/opensubmit/tests/validators/supportfiles.zip'))
+        )
+        self.validatedWithSupportFilesAssignment.save()
+        self.allAssignments.append(self.validatedWithSupportFilesAssignment)
+
         self.softDeadlinePassedAssignment = Assignment(
             title='Soft deadline passed assignment',
             course=self.course,
@@ -390,6 +405,22 @@ class SubmitTestCase(LiveServerTestCase):
             assignment=self.validatedAssignment,
             submitter=user.user,
             notes="This is a validatable submission.",
+            state=Submission.TEST_COMPILE_PENDING,
+            file_upload=sf
+        )
+        sub.save()
+        return sub
+
+    def createValidatableWithSupportFilesSubmission(self, user):
+        '''
+            Create a submission that can be validated by executor,
+            which as support files in the assignment.
+        '''
+        sf = self.createSubmissionFile()
+        sub = Submission(
+            assignment=self.validatedWithSupportFilesAssignment,
+            submitter=user.user,
+            notes="This is a validatable submission for an assignment with support files.",
             state=Submission.TEST_COMPILE_PENDING,
             file_upload=sf
         )
