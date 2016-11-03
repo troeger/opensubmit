@@ -58,11 +58,11 @@ def download(request, obj_id, filetype, secret=None):
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.attachment_test_full
         fname = f.name[f.name.rfind('/') + 1:]
-    elif filetype == "compile_files":
+    elif filetype == "support_files":
         if secret != settings.JOB_EXECUTOR_SECRET:
             raise PermissionDenied
         ass = get_object_or_404(Assignment, pk=obj_id)
-        f = ass.test_compile_files
+        f = ass.attachment_test_support
         fname = f.name[f.name.rfind('/') + 1:]
     else:
         raise Http404
