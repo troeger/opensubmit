@@ -200,7 +200,7 @@ def _unpack_if_needed(destination_path, fpath):
                 zip.extractall(destination_path)
         except Exception as e:
             logger.error("ERROR extracting ZIP file: " + str(e))
-            return False
+            return None
     elif tarfile.is_tarfile(fpath):
         logger.debug("Detected TAR file at %s, unpacking it."%(fpath))
         try:
@@ -208,10 +208,15 @@ def _unpack_if_needed(destination_path, fpath):
                 tar.extractall(destination_path)
         except Exception as e:
             logger.error("ERROR extracting TAR file: " + str(e))
-            return False
+            return None
     else:
-        logger.debug("File at %s is a single non-archive file, moving it to %s"%(fpath, destination_path))
-        shutil.copy(fpath, destination_path)
+        if not fpath.startswith(destination_path):
+            logger.debug("File at %s is a single non-archive file, copying it to %s"%(fpath, destination_path))
+            try:
+                shutil.copy(fpath, destination_path)
+            except Exception as e:
+                logger.error("Could not copy file: "+str(e))
+                return None
 
     dircontent = os.listdir(destination_path)
     logger.debug("Content of %s is now: %s"%(destination_path,str(dircontent)))
