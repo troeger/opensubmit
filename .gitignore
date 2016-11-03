@@ -1,4 +1,5 @@
 syntax: glob
+py2env
 *.pyc
 media
 bin
