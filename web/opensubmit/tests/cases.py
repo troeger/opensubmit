@@ -284,6 +284,21 @@ class SubmitTestCase(LiveServerTestCase):
         self.validatedAssignment.save()
         self.allAssignments.append(self.validatedAssignment)
 
+        self.singleFileValidatorAssignment = Assignment(
+            title='Validated assignment with single file validator',
+            course=self.course,
+            download='http://example.org/assignments/1/download',
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=True,
+            validity_script_download=True,
+            attachment_test_validity=DjangoFile(open(rootdir+'/opensubmit/tests/validators/validator.py')),
+            attachment_test_full=DjangoFile(open(rootdir+'/opensubmit/tests/validators/validator.py'))
+        )
+        self.singleFileValidatorAssignment.save()
+        self.allAssignments.append(self.singleFileValidatorAssignment)
 
         self.validatedWithSupportFilesAssignment = Assignment(
             title='Validated assignment with support files',
@@ -403,6 +418,22 @@ class SubmitTestCase(LiveServerTestCase):
         sf = self.createSubmissionFile()
         sub = Submission(
             assignment=self.validatedAssignment,
+            submitter=user.user,
+            notes="This is a validatable submission.",
+            state=Submission.TEST_COMPILE_PENDING,
+            file_upload=sf
+        )
+        sub.save()
+        return sub
+
+    def createSingleFileValidatorSubmission(self, user):
+        '''
+            Create a submission that can be validated by executor,
+            where the validator is a single file and not an archive.
+        '''
+        sf = self.createSubmissionFile()
+        sub = Submission(
+            assignment=self.singleFileValidatorAssignment,
             submitter=user.user,
             notes="This is a validatable submission.",
             state=Submission.TEST_COMPILE_PENDING,
