@@ -12,6 +12,7 @@ lib
 *.sublime-*
 executor.cfg
 *.orig
+*.tar.gz
 web/database.sqlite
 .coverage
 web/opensubmit/settings_dev.ini
