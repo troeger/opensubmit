@@ -5,6 +5,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.views import redirect_to_login
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.core.exceptions import PermissionDenied
 
 from user import UserAdmin
 from course import CourseAdmin
