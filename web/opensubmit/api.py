@@ -180,6 +180,7 @@ def jobs(request):
         response = HttpResponse(f, content_type='application/binary')
         response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
         response['SubmissionFileId'] = str(sub.file_upload.pk)
+        response['SubmissionId'] = str(sub.pk)
         response['Timeout'] = sub.assignment.attachment_test_timeout
         response['Compile'] = sub.assignment.attachment_test_compile
         if sub.assignment.has_test_support_files():

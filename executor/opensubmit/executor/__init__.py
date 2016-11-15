@@ -336,11 +336,12 @@ def _fetch_job(config):
             # The server does not know us, so it demands registration before hand.
             logger.info("Machine unknown on server, perform 'opensubmit-exec configure' first.")
             return [None]*7
-        submid = headers["SubmissionFileId"]
+        submfileid = headers["SubmissionFileId"]
+        submid = headers["SubmissionId"]
         action = headers["Action"]
         compile_on = (headers["Compile"]=='True')
         timeout = int(headers["Timeout"])
-        logger.info("Retrieved submission file %s for '%s' action: %s" % (submid, action, fname))
+        logger.info("Retrieved submission file %s from submission %s for '%s' action: %s" % (submfileid, submid, action, fname))
         if "PostRunValidation" in headers:
             validator = headers["PostRunValidation"]
         else:
@@ -352,7 +353,7 @@ def _fetch_job(config):
         with open(fname,"wb") as target:
             target.write(result.read())
         #logger.debug(str((fname, submid, action, timeout, validator, support, compile_on)))
-        return fname, submid, action, timeout, validator, support, compile_on
+        return fname, submfileid, action, timeout, validator, support, compile_on
     except HTTPError as e:
         if e.code == 404:
             logger.debug("Nothing to do.")
