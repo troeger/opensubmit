@@ -15,6 +15,8 @@ from django.utils import timezone
 from django.test import TransactionTestCase, LiveServerTestCase
 from django.test.utils import override_settings
 from django.test.client import Client
+from django.core.files import File as DjangoFile
+
 
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
@@ -219,8 +221,6 @@ class SubmitTestCase(LiveServerTestCase):
         self.passFailGrading.save()
 
     def setUpAssignments(self):
-        from django.core.files import File as DjangoFile
-
         today = timezone.now()
         last_week = today - datetime.timedelta(weeks=1)
         yesterday = today - datetime.timedelta(days=1)
@@ -370,7 +370,13 @@ class SubmitTestCase(LiveServerTestCase):
         return self.machine
 
     def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
-        from django.core.files import File as DjangoFile
+        fname=relpath[relpath.rfind(os.sep)+1:]
+        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
+        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf.save()
+        return sf
+
+    def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
         sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
@@ -378,7 +384,6 @@ class SubmitTestCase(LiveServerTestCase):
         return sf
 
     def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
-        from django.core.files import File as DjangoFile
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
         sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
@@ -425,6 +430,24 @@ class SubmitTestCase(LiveServerTestCase):
         )
         sub.save()
         return sub
+
+    def createCompileBrokenSubmission(self, user):
+        '''
+            Create a submission that cannot be compiled.
+        '''
+        sf = self.createCompileBrokenSubmissionFile()
+        sub = Submission(
+            assignment=self.validatedAssignment,
+            submitter=user.user,
+            notes="This is a non-compilable submission.",
+            state=Submission.TEST_COMPILE_PENDING,
+            file_upload=sf
+        )
+        sub.assignment.attachment_test_support=DjangoFile(open(rootdir+'/opensubmit/tests/submfiles/reverse_support_files.zip'))
+        sub.assignment.save()
+        sub.save()
+        return sub
+
 
     def createSingleFileValidatorSubmission(self, user):
         '''

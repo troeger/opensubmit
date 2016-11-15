@@ -63,6 +63,19 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
 
+    def testBrokenCompileTest(self):
+        self.sub = self.createCompileBrokenSubmission(self.current_user) 
+        test_machine = self._registerExecutor()
+        self.sub.assignment.test_machines.add(test_machine)
+        self.assertEquals(False, self._runExecutor())
+        results = SubmissionTestResult.objects.filter(
+            submission_file=self.sub.file_upload,
+            kind=SubmissionTestResult.COMPILE_TEST
+        )
+        self.assertEquals(1, len(results))
+        self.assertNotEquals(0, len(results[0].result))
+        print str(results[0].result)
+
     def testCompileWithSupportFilesTest(self):
         self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
         test_machine = self._registerExecutor()
