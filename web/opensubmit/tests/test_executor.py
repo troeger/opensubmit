@@ -74,7 +74,14 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         )
         self.assertEquals(1, len(results))
         self.assertNotEquals(0, len(results[0].result))
-        print str(results[0].result)
+        self.assertNotEquals(None, self.sub.get_compile_result())
+        # Integrate another test here, which relates to teacher backend submission status rendering
+        # This is bad style - @TODO Refactor tests to make executor runs a helper function for all test classes
+        from opensubmit.admin.submission import SubmissionAdmin
+        sa=SubmissionAdmin(Submission, None)
+        self.assertNotEquals(None, sa.compile_result(self.sub))
+        self.assertEquals("Enabled, no results.", sa.validation_result(self.sub))
+        self.assertEquals("Enabled, no results.", sa.fulltest_result(self.sub))
 
     def testCompileWithSupportFilesTest(self):
         self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
