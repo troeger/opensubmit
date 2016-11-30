@@ -122,8 +122,7 @@ class AssignmentAdmin(ModelAdmin):
 
     class Media:
         css = {'all': ('css/teacher.css',)}
-
-
+        js = ('js/opensubmit.js',)
 
     form = AssignmentAdminForm
 
