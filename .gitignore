@@ -19,3 +19,4 @@ web/opensubmit/settings_dev.ini
 .vagrant
 *.egg-info
 *static-production*
+install/terraform.tfvars
