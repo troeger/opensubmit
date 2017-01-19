@@ -110,8 +110,8 @@ resource "aws_instance" "web" {
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/install.sh",
-      "/tmp/install.sh ${aws_instance.web.public_dns} ${random_id.webapp_key.hex} ${random_id.executor_key.hex}"
+      "sudo chmod +x /tmp/install.sh",
+      "sudo /tmp/install.sh ${aws_instance.web.public_dns} ${random_id.webapp_key.hex} ${random_id.executor_key.hex}"
     ]
   }
 }
