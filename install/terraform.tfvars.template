@@ -1,0 +1,15 @@
+# To install OpenSubmit in AWS with Terraform (https://terraform.io),
+# adjust the configuration settings below and rename this file to
+# 'terraform.tfvars'.
+#
+# After that, execute the following commands:
+#   ssh-add [path_to_SSH_private_key]  (enable SSH login into your AWS machine)
+#   terraform apply                    (perform deployment on AWS)
+#   terraform output ssh               (print SSH connection information)
+#   terraform output url               (print OpenSubmit URL)
+
+ssh_key="~/.ssh/id_rsa.pub"
+aws_access_key="A123456789FOOBARQ"
+aws_secret_key="b987654321FOOBARK471142"
+aws_region="eu-west-1"
+
