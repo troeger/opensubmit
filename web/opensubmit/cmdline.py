@@ -90,9 +90,9 @@ def check_web_config_consistency(config):
         Check the web application config file for consistency.
     '''
     login_conf_deps = {
-        'LOGIN_TWITTER': ['LOGIN_TWITTER_OAUTH_KEY', 'LOGIN_TWITTER_OAUTH_SECRET'],
-        'LOGIN_GOOGLE': ['LOGIN_GOOGLE_OAUTH_KEY', 'LOGIN_GOOGLE_OAUTH_SECRET'],
-        'LOGIN_GITHUB': ['LOGIN_GITHUB_OAUTH_KEY', 'LOGIN_GITHUB_OAUTH_SECRET']
+        'LOGIN_TWITTER': ['LOGIN_TWITTER_OAUTH_KEY','LOGIN_TWITTER_OAUTH_SECRET'],
+        'LOGIN_GOOGLE':  ['LOGIN_GOOGLE_OAUTH_KEY', 'LOGIN_GOOGLE_OAUTH_SECRET'],
+        'LOGIN_GITHUB':  ['LOGIN_GITHUB_OAUTH_KEY', 'LOGIN_GITHUB_OAUTH_SECRET']
     }
 
     print "Checking configuration of the OpenSubmit web application..."
