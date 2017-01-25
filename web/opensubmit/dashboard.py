@@ -57,13 +57,6 @@ class TeacherDashboard(Dashboard):
                 ]
             ))
 
-        # Put recent actions in third column
-        self.children.append(modules.RecentActions(
-            title='Recent teacher activities',
-            column=3,
-        ))
-
-
 class AdminDashboard(Dashboard):
 
     class Media:

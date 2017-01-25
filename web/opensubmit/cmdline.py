@@ -162,7 +162,6 @@ def check_web_db():
 def console_script(fsroot='/'):
     '''
         The main entry point for the production administration script 'opensubmit-web', installed by setuptools.
-
         The argument allows the test suite to override the root of all paths used in here.
     '''
 
