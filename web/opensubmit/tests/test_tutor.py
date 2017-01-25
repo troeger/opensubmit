@@ -28,6 +28,8 @@ class TutorTestCaseSet():
         sub = self.createValidatedSubmission(self.current_user)
         response=self.c.get('/teacher/opensubmit/submission/%u/change/'%sub.pk)
         self.assertEquals(response.status_code, 200)
+        self.assertContains(response, unicode(sub.get_compile_result().result))
+        self.assertContains(response, unicode(sub.get_validation_result().result))
 
     def testGradingTableView(self):
         response=self.c.get('/course/%u/gradingtable/'%self.course.pk)

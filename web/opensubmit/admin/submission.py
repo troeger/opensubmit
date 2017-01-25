@@ -175,7 +175,7 @@ class SubmissionAdmin(ModelAdmin):
             else:
                 return mark_safe(u'Not enabled.')
         else:
-            return format_html("Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
+            return format_html(u"Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
 
     def compile_result(self, instance):
         result_obj = instance.get_compile_result()
