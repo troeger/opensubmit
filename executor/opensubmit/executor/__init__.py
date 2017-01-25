@@ -25,9 +25,11 @@ defaults = {("Execution", "cleanup"): True,
            }
       
 
-def read_config(config_file):
+def read_config(config_file, url=None):
     '''
         Fill config dictionary, already check and interpret some values.
+
+        The URL parameter allows to override the URL setting from the file.
     '''
     config = ConfigParser.RawConfigParser()
     config.readfp(open(config_file))
@@ -55,6 +57,12 @@ def read_config(config_file):
     if platform.system() is not "Windows":
         assert(targetdir.startswith("/")) # need a work around here 
     assert(targetdir.endswith(os.sep))
+
+    # Override URL setting, of given
+    if url:
+        logger.debug("Overriding configured URL %s with %s", config.get("Server","url"), url)
+        config.set("Server","url",url)
+
     return config
 
 def _acquire_lock(config):
@@ -484,11 +492,15 @@ def _kill_deadlocked_jobs(config):
                 except Exception as e:
                     logger.error("ERROR killing process %d." % proc.pid)
 
-def send_config(config_file):
+def send_config(config_file, url=None):
     '''
         Sends the registration of this machine to the OpenSubmit web server.
+
+        The URL parameter is intended to override the OpenSubmit web server URL given in the config file.
+        It is only used by the test suite, which calls this function directly
     '''
-    config = read_config(config_file)
+    config = read_config(config_file, url)
+
     conf = platform.uname()
     output = []
     output.append(["Operating system","%s %s %s (%s)"%(conf[0], conf[2], conf[3], conf[4])])
@@ -530,14 +542,17 @@ def send_config(config_file):
     except Exception as e:
         logger.error("ERROR Could not contact OpenSubmit web server at %s (%s)" % (config.get("Server","url"), str(e)))
 
-def run(config_file):
+def run(config_file, url=None):
     '''
         The primary worker function of the executor, fetches and runs jobs from the OpenSubmit server.
         Expects an existing registration of this machine.
 
+        The URL parameter is intended to override the OpenSubmit web server URL given in the config file.
+        It is only used by the test suite, which calls this function directly
+
         Returns boolean that indicates success.
     '''
-    config = read_config(config_file)
+    config = read_config(config_file, url)
     compile_cmd = config.get("Execution","compile_cmd")
     _kill_deadlocked_jobs(config)
 
