@@ -40,6 +40,13 @@ class StudentDisplayTestCase(SubmitTestCase):
             expected_responses = cases[submission]
             self.assertIn(response.status_code, expected_responses)
 
+    def testValidationResultRendering(self):
+        self.loginUser(self.enrolled_students[0])
+        sub=self.createValidatedSubmission(self.current_user)
+        response = self.c.get('/details/%s/' % sub.pk)
+        self.assertContains(response, unicode(sub.get_compile_result().result))
+        self.assertContains(response, unicode(sub.get_validation_result().result))
+
     def testCanSeeOnlyEnabledCourseAssignments(self):
         self.loginUser(self.enrolled_students[0])
         student=self.current_user.user
