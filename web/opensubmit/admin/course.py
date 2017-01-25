@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 
 def assignments(course):
-    return ",\n".join([str(ass) for ass in course.assignments.all()])
+    return u",\n".join([unicode(ass) for ass in course.assignments.all()])
 
 def actions(course):
     allow_tags=True

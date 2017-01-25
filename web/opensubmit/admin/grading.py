@@ -2,7 +2,7 @@ from django.contrib.admin import ModelAdmin
 
 def grading_schemes(grading):
     ''' The list of grading schemes using this grading.'''
-    return ",\n".join([str(scheme) for scheme in grading.schemes.all()])
+    return u",\n".join([unicode(scheme) for scheme in grading.schemes.all()])
 
 
 def means_passed(grading):

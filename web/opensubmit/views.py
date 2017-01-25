@@ -248,7 +248,9 @@ def perftable(request, ass_id):
     for sub in assignment.submissions.all():
         result = sub.get_fulltest_result()
         if result:
-            writer.writerow([sub.assignment, sub.pk, ", ".join(sub.authors.values_list('username', flat=True).order_by('username')), result.perf_data])
+            row=[unicode(sub.assignment), unicode(sub.pk), ", ".join(sub.authors.values_list('username', flat=True).order_by('username')), result.perf_data]
+            row=[s.encode('utf-8') for s in row]
+            writer.writerow(row)
     return response
 
 @login_required
