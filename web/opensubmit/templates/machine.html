@@ -47,7 +47,7 @@
 
 <h3>Test Machine {{ machine.pk }}</h3>
 <dl class="dl-horizontal">
-{% for title, text in config %}
+{% for title, text in config.items %}
 <dt>{{ title }}</dt>
 <dd>{{ text|linebreaksbr }}</dd>
 {% endfor %}
