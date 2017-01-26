@@ -27,11 +27,11 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         super(ExecutorTestCase, self).setUp()
 
     def _registerExecutor(self):
-        executor.send_config(os.path.dirname(__file__)+"/executor.cfg")
+        executor.send_config(os.path.dirname(__file__)+"/executor.cfg", url=self.live_server_url)
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
-        return executor.run(os.path.dirname(__file__)+"/executor.cfg")
+        return executor.run(os.path.dirname(__file__)+"/executor.cfg", url=self.live_server_url)
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
