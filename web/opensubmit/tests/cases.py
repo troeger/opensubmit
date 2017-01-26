@@ -22,7 +22,6 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
 
-from opensubmit.tests import TEST_HOST
 from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
@@ -38,7 +37,7 @@ class AnonStruct(object):
         self.__dict__.update(entries)
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher',])
-@override_settings(MAIN_URL='http://'+TEST_HOST)
+@override_settings(MEDIA_ROOT='/tmp/')
 class SubmitTestCase(LiveServerTestCase):
     '''
         A test case base class with several resources being prepared:
@@ -84,6 +83,7 @@ class SubmitTestCase(LiveServerTestCase):
     current_user = None
 
     def setUp(self):
+        settings.MAIN_URL=self.live_server_url
         super(SubmitTestCase, self).setUp()
         # How much do you want to see from the OpenSubmit web code
         self.logger = logging.getLogger('OpenSubmit')
@@ -272,6 +272,14 @@ class SubmitTestCase(LiveServerTestCase):
         self.fileAssignment.save()
         self.allAssignments.append(self.fileAssignment)
 
+        # Move test files to current MEDIA_ROOT, otherwise Django security complains
+        working_zip=settings.MEDIA_ROOT+"working.zip"
+        supportfiles_zip=settings.MEDIA_ROOT+"supportfiles.zip"
+        single_file=settings.MEDIA_ROOT+"validator.py"
+        shutil.copyfile(rootdir+'/opensubmit/tests/validators/working.zip', working_zip)
+        shutil.copyfile(rootdir+'/opensubmit/tests/validators/supportfiles.zip', supportfiles_zip)
+        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator.py', single_file)
+
         self.validatedAssignment = Assignment(
             title=uccrap+'Validated assignment',
             course=self.course,
@@ -282,8 +290,8 @@ class SubmitTestCase(LiveServerTestCase):
             hard_deadline=next_week,
             has_attachment=True,
             validity_script_download=True,
-            attachment_test_validity=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip')),
-            attachment_test_full=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip'))
+            attachment_test_validity=DjangoFile(open(working_zip)),
+            attachment_test_full=DjangoFile(open(working_zip))
         )
         self.validatedAssignment.save()
         self.allAssignments.append(self.validatedAssignment)
@@ -298,8 +306,8 @@ class SubmitTestCase(LiveServerTestCase):
             hard_deadline=next_week,
             has_attachment=True,
             validity_script_download=True,
-            attachment_test_validity=DjangoFile(open(rootdir+'/opensubmit/tests/validators/validator.py')),
-            attachment_test_full=DjangoFile(open(rootdir+'/opensubmit/tests/validators/validator.py'))
+            attachment_test_validity=DjangoFile(open(single_file)),
+            attachment_test_full=DjangoFile(open(single_file))
         )
         self.singleFileValidatorAssignment.save()
         self.allAssignments.append(self.singleFileValidatorAssignment)
@@ -314,9 +322,9 @@ class SubmitTestCase(LiveServerTestCase):
             hard_deadline=next_week,
             has_attachment=True,
             validity_script_download=True,
-            attachment_test_validity=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip')),
-            attachment_test_full=DjangoFile(open(rootdir+'/opensubmit/tests/validators/working.zip')),
-            attachment_test_support=DjangoFile(open(rootdir+'/opensubmit/tests/validators/supportfiles.zip'))
+            attachment_test_validity=DjangoFile(open(working_zip)),
+            attachment_test_full=DjangoFile(open(working_zip)),
+            attachment_test_support=DjangoFile(open(supportfiles_zip))
         )
         self.validatedWithSupportFilesAssignment.save()
         self.allAssignments.append(self.validatedWithSupportFilesAssignment)
@@ -383,14 +391,14 @@ class SubmitTestCase(LiveServerTestCase):
     def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), unicode(fname)))
         sf.save()
         return sf
 
     def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), unicode(fname)))
         sf.save()
         return sf
 
@@ -447,7 +455,9 @@ class SubmitTestCase(LiveServerTestCase):
             state=Submission.TEST_COMPILE_PENDING,
             file_upload=sf
         )
-        sub.assignment.attachment_test_support=DjangoFile(open(rootdir+'/opensubmit/tests/submfiles/reverse_support_files.zip'))
+        fname="reverse_support_files.zip"
+        shutil.copyfile(rootdir+'/opensubmit/tests/submfiles/'+fname, settings.MEDIA_ROOT+fname)
+        sub.assignment.attachment_test_support=DjangoFile(open(settings.MEDIA_ROOT+fname))
         sub.assignment.save()
         sub.save()
         return sub
