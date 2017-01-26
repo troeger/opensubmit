@@ -441,9 +441,10 @@ def assarchive(request, ass_id):
 def machine(request, machine_id):
     machine = get_object_or_404(TestMachine, pk=machine_id)
     try:
-        config = filter(lambda x: x[1] != "", json.loads(machine.config))
+        json_data=json.loads(machine.config)
+        config={k: v for k, v in json_data.items() if v}
     except:
-        config = ""
+        config = {}
     queue = Submission.pending_student_tests.all()
     additional = len(Submission.pending_full_tests.all())
     return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
