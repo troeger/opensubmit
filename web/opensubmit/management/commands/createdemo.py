@@ -15,7 +15,6 @@ class Command(BaseCommand):
             user = User.objects.create_user( username=name,
                                              email='demo@example.org',
                                              password=name)
-            UserProfile(user=user).save()
             users[name]=user
 
         # create demo grading
