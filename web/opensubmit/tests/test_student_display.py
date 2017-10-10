@@ -107,7 +107,6 @@ class StudentDisplayTestCase(SubmitTestCase):
         assignments_after = len(student.profile.open_assignments())
         self.assertNotEquals(assignments_before, assignments_after)
 
-
     def testCannotSeeOtherUsers(self):
         self.loginUser(self.enrolled_students[1])
         self.createSubmissions()
@@ -125,6 +124,11 @@ class StudentDisplayTestCase(SubmitTestCase):
 
     def testIndexView(self):
         # User is already logged in, expecting dashboard redirect
+        response=self.c.get('/')
+        self.assertEquals(response.status_code, 302)
+
+    def testIndexViewNoProfile(self):
+        self.loginUser(self.noprofileuser)
         response=self.c.get('/')
         self.assertEquals(response.status_code, 302)
 

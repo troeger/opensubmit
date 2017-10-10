@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User, Group, Permission
 from opensubmit.models import Submission, Course, SubmissionFile
 
+from models.userprofile import db_fixes
+
 STUDENT_TUTORS_GROUP_NAME = "Student Tutors"
 COURSE_OWNERS_GROUP_NAME = "Course Owners"
 
@@ -61,9 +63,12 @@ def post_user_save(sender,instance, signal, created, **kwargs):
         directly after the auth system was installed. We detect this by waiting for the admin
         account creation here, which smells hacky.
         We need that automatism for the test database creation, people not calling the configure tool and similar cases.
+
+        Second task: Every user need a profile, which is not created by the social libraries.        
     """
     if instance.is_staff and created:
         check_permission_system()
+    db_fixes(instance)
 
 @receiver(post_save, sender=SubmissionFile)
 def submissionfile_post_save(sender,instance, signal, created, **kwargs):

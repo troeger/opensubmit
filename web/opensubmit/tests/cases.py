@@ -102,11 +102,10 @@ class SubmitTestCase(LiveServerTestCase):
         user_obj = User(**args)
         user_obj.save()
 
-        user_profile = UserProfile(user=user_obj)
-        user_profile.save()
+        profile, created = UserProfile.objects.get_or_create(user=user_obj)
+        user_dict['profile'] = profile
 
         user_dict['user'] = user_obj
-        user_dict['profile'] = user_profile
         user_struct = AnonStruct(user_dict)
         return user_struct
 
@@ -154,6 +153,16 @@ class SubmitTestCase(LiveServerTestCase):
             'is_superuser': False
         }
         self.tutor = self.createUser(self.tutor_dict)
+
+        self.noprofileuser_dict = {
+            'username': uccrap+'testrunner_noprofileuser',
+            'password': uccrap+'2tVP56vMadkn',
+            'email': uccrap+'testrunner_noprofileuser@django.localhost.local',
+            'is_staff': False,
+            'is_superuser': False
+        }
+        self.noprofileuser = self.createUser(self.noprofileuser_dict)
+        del self.noprofileuser.profile
 
         self.enrolled_students = list()
         for i in range(0, 5):
