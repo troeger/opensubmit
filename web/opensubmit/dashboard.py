@@ -55,7 +55,7 @@ class TeacherDashboard(Dashboard):
 
             # Add course group box to dashboard
             self.children.append(modules.Group(
-                title="Course '{0}'".format(course.title),
+                title=u"Course '{0}'".format(course.title),
                 column=column,
                 children=[
                     modules.LinkList(title="Actions",children=(links)),
