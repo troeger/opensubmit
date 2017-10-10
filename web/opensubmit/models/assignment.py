@@ -15,7 +15,7 @@ class Assignment(models.Model):
     course = models.ForeignKey('Course', related_name='assignments')
     download = models.URLField(max_length=200, verbose_name="Link for assignment description")
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme")
+    gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme", blank=True, null=True)
     publish_at = models.DateTimeField(default=timezone.now)
     soft_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline shown to students. After this point in time, submissions are still possible. Leave empty for only using a hard deadline.")
     hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible.")

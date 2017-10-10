@@ -225,7 +225,10 @@ def jobs(request):
                 else:
                     logger.debug("Compile working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
-                    sub.inform_course_owner(request)
+                    if sub.assignment.gradingScheme:
+                        sub.inform_course_owner(request)
+                    else:
+                        sub.state = Submission.CLOSED
             else:
                 logger.debug("Compile test not working, setting state to failed")
                 sub.state = Submission.TEST_COMPILE_FAILED
@@ -239,7 +242,10 @@ def jobs(request):
                 else:
                     logger.debug("Validity test working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
-                    sub.inform_course_owner(request)
+                    if sub.assignment.gradingScheme:
+                        sub.inform_course_owner(request)
+                    else:
+                        sub.state = Submission.CLOSED
             else:
                 logger.debug("Validity test not working, setting state to failed")
                 sub.state = Submission.TEST_VALIDITY_FAILED
@@ -249,7 +255,10 @@ def jobs(request):
             if error_code == 0:
                 logger.debug("Full test working, setting state to tested")
                 sub.state = Submission.SUBMITTED_TESTED
-                sub.inform_course_owner(request)
+                if sub.assignment.gradingScheme:
+                    sub.inform_course_owner(request)
+                else:
+                    sub.state = Submission.CLOSED
             else:
                 logger.debug("Full test not working, setting state to failed")
                 sub.state = Submission.TEST_FULL_FAILED

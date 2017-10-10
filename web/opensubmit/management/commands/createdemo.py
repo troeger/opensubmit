@@ -39,11 +39,12 @@ class Command(BaseCommand):
         course.tutors.add(users['demo_tutor'])
         course.participants.add(users['demo_student'].profile)
 
-        # create demo assignment
         today = timezone.now()
         last_week = today - datetime.timedelta(weeks=1)
         tomorrow = today + datetime.timedelta(days=1)
         next_week = today + datetime.timedelta(weeks=1)
+
+        # create demo assignment
         ass = Assignment(
             title='Demo Assignment 1',
             course=course,
@@ -55,6 +56,33 @@ class Command(BaseCommand):
             has_attachment=False
         )
         ass.save()
+
+        # create demo assignment without grading
+        ass2 = Assignment(
+            title='Demo Assignment 2',
+            course=course,
+            download='http://example.org/assignments1.pdf',
+            gradingScheme=None,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=False
+        )
+        ass2.save()
+
+        # create demo assignment without deadlines
+        ass3 = Assignment(
+            title='Demo Assignment 3',
+            course=course,
+            download='http://example.org/assignments1.pdf',
+            gradingScheme=passFailGrading,
+            publish_at=last_week,
+            soft_deadline=None,
+            hard_deadline=None,
+            has_attachment=False
+        )
+        ass3.save()
+
 
         # create demo submission
         Submission(

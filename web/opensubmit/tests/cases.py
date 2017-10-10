@@ -65,6 +65,8 @@ class SubmitTestCase(LiveServerTestCase):
         - self.softDeadlinePassedAssignment (in self.course)
         - self.hardDeadlinePassedAssignment (in self.course)
         - self.unpublishedAssignment (in self.course)
+        - self.noHardDeadlineAssignment (in self.course)
+        - self.noGradingAssignment (in self.course)
         - self.allAssignments
 
         Gradings:
@@ -379,6 +381,20 @@ class SubmitTestCase(LiveServerTestCase):
         )
         self.unpublishedAssignment.save()
         self.allAssignments.append(self.unpublishedAssignment)        
+
+        self.noGradingAssignment = Assignment(
+            title=uccrap+'Open assignment without grading',
+            course=self.course,
+            download=u'http://example.org/assignments/1/download'+uccrap,
+            gradingScheme=None,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=False
+        )
+        self.noGradingAssignment.save()
+        self.allAssignments.append(self.noGradingAssignment)
+
 
     def createTestMachine(self, test_host):
         '''

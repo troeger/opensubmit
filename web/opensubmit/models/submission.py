@@ -121,8 +121,8 @@ class Submission(models.Model):
         (SUBMITTED_TESTED, 'Waiting for grading'),
         (GRADING_IN_PROGRESS, 'Waiting for grading'),
         (GRADED, 'Waiting for grading'),
-        (CLOSED, 'Graded'),
-        (CLOSED_TEST_FULL_PENDING, 'Graded')
+        (CLOSED, 'Done'),
+        (CLOSED_TEST_FULL_PENDING, 'Done')
     )
 
     assignment = models.ForeignKey('Assignment', related_name='submissions')
@@ -239,8 +239,13 @@ class Submission(models.Model):
 
         # Modification of closed submissions is prohibited.
         if self.is_closed():
-            self.log('DEBUG', "Submission cannot be modified, is closed")
-            return False
+            if self.assignment.gradingScheme:
+                # There is a grading procedure, so taking it back would invalidate the tutors work
+                self.log('DEBUG', "Submission cannot be modified, it is closed and graded")
+                return False
+            else:
+                self.log('DEBUG', "Closed submission can be modified, since it has no grading scheme.")
+                return True
 
         # Submissions, that are executed right now, cannot be modified
         if self.state in [self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING, ]:
@@ -426,8 +431,8 @@ class Submission(models.Model):
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.CLOSED:
-            subject = 'Grading completed'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" was graded.\n\n Further information can be found at %s.\n\n'
+            subject = 'Completed'
+            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" is completed.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
         else:
             return

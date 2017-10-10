@@ -14,6 +14,8 @@ class AssignmentModelTutorTestCase(SubmitTutorTestCase):
         self.assertIsNone(self.softDeadlinePassedAssignment.validity_test_url())
         self.assertIsNone(self.hardDeadlinePassedAssignment.validity_test_url())
         self.assertIsNone(self.unpublishedAssignment.validity_test_url())
+        self.assertIsNone(self.noHardDeadlineAssignment.validity_test_url())
+        self.assertIsNone(self.noGradingAssignment.validity_test_url())
 
 class AssignmentModelAdminTestCase(SubmitAdminTestCase):
     def setUp(self):
@@ -25,6 +27,8 @@ class AssignmentModelAdminTestCase(SubmitAdminTestCase):
         self.assertIsNone(self.softDeadlinePassedAssignment.validity_test_url())
         self.assertIsNone(self.hardDeadlinePassedAssignment.validity_test_url())
         self.assertIsNone(self.unpublishedAssignment.validity_test_url())
+        self.assertIsNone(self.noHardDeadlineAssignment.validity_test_url())
+        self.assertIsNone(self.noGradingAssignment.validity_test_url())
 
 
 

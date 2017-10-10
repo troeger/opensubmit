@@ -24,7 +24,7 @@
                     <tr>
                         <th>Course</th>
                         <th>Assignment</th>
-                        <th>Start</th>
+                        <th>Graded</th>
                         <th>Deadline</th>
                         <th>Time Left</th>
                         <th>Action</th>
@@ -40,7 +40,7 @@
     				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation script)</a>
     			{% endif %}
     			</td>
-                            <td>{{ assignment.publish_at }}</td>
+                            <td>{% if assignment.gradingScheme %}Yes{% else %}No{% endif %}</td>
                             <td>{% if assignment.soft_deadline %}
                                     {{assignment.soft_deadline}}
                                 {%else %}

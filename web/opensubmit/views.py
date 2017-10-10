@@ -157,7 +157,13 @@ def new(request, ass_id):
             submission.save()
             messages.info(request, "New submission saved.")
             if submission.state == Submission.SUBMITTED:
-                submission.inform_course_owner(request)
+                # Initial state is SUBMITTED, which means that there is no validation
+                if submission.assignment.gradingScheme:
+                    submission.inform_course_owner(request) # Tell tutor to correct it
+                else:
+                    # No validation, no grading. We are done.
+                    submission.state = Submission.CLOSED
+                    submission.save()
             return redirect('dashboard')
         else:
             messages.error(request, "Please correct your submission information.")
