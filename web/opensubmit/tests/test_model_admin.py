@@ -75,7 +75,9 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
 
     def testSubmissionBackend(self):
         submissions = self.submadm.get_queryset(self.request)
-        self.assertSequenceEqual(submissions, self.all_submissions)
+        for sub in submissions:
+            self.assertIn(sub, self.all_submissions)
+        self.assertEqual(len(submissions), len(self.all_submissions))
 
     def testCloseAndNotify(self):
         from django.core import mail
