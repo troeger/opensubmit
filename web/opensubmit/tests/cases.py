@@ -154,16 +154,6 @@ class SubmitTestCase(LiveServerTestCase):
         }
         self.tutor = self.createUser(self.tutor_dict)
 
-        self.noprofileuser_dict = {
-            'username': uccrap+'testrunner_noprofileuser',
-            'password': uccrap+'2tVP56vMadkn',
-            'email': uccrap+'testrunner_noprofileuser@django.localhost.local',
-            'is_staff': False,
-            'is_superuser': False
-        }
-        self.noprofileuser = self.createUser(self.noprofileuser_dict)
-        del self.noprofileuser.profile
-
         self.enrolled_students = list()
         for i in range(0, 5):
             enrolled_student_dict = {
