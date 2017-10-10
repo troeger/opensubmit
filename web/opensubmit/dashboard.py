@@ -11,12 +11,22 @@ class TeacherDashboard(Dashboard):
         css = {'all': ('css/teacher.css',)}
 
     def init_with_context(self, context):
-        # Put database models in  column
-        self.children.append(modules.ModelList(
-            title='General',
-            column=2,
-            exclude=('django.contrib.*','opensubmit.models.grading.*'),
-        ))
+        general=[]
+        if context.request.user.has_perm('opensubmit.change_course'):
+            general.append(['Show all courses', reverse('teacher:opensubmit_course_changelist'), False])
+        if context.request.user.has_perm('opensubmit.change_submissionfile'):
+            general.append(['Show all submission files',reverse('teacher:opensubmit_submissionfile_changelist'), False])
+        if context.request.user.has_perm('opensubmit.change_gradingscheme'):
+            general.append(['Show all grading schemes ',reverse('teacher:opensubmit_gradingscheme_changelist'), False])
+        if context.request.user.has_perm('opensubmit.add_course'):
+            general.append(['Create new course',reverse('teacher:opensubmit_course_add'), False])
+        if context.request.user.has_perm('opensubmit.add_gradingscheme'):
+            general.append(['Create new grading scheme',reverse('teacher:opensubmit_gradingscheme_add'), False])
+        if len(general)>0:
+            self.children.append(modules.Group(
+                column=1,
+                children=[modules.LinkList(title="System",children=(general))]
+            ))
 
         # Put course action boxes in column
         try:
@@ -24,38 +34,45 @@ class TeacherDashboard(Dashboard):
         except:
             courses = []
 
+        column=2
         for course in courses:
             # Prepare course-related links
             links=[]
-            links.append(['Check all submissions',course.grading_url(), False])
+            links.append(['Show submissions',course.grading_url(), False])
             ass_url="%s?course__id__exact=%u"%(
                                 reverse('teacher:opensubmit_assignment_changelist'),
                                 course.pk
                             )
-            links.append(['Check assignments',ass_url, False])
-            links.append(['Show current grading table',reverse('gradingtable', args=[course.pk]), False])
-            links.append(['eMail to students',reverse('mail2all', args=[course.pk]), False])
-            links.append(['Edit course',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
+            if context.request.user.has_perm('opensubmit.change_assignment'):
+                links.append(['Show assignments',ass_url, False])
+            links.append(['Show grading table',reverse('gradingtable', args=[course.pk]), False])
+            if context.request.user.has_perm('opensubmit.add_assignment'):
+                links.append(['Create new assignment','opensubmit/assignment/add/', False])
+            links.append(['Create eMail for students',reverse('mail2all', args=[course.pk]), False])
+            if context.request.user.has_perm('opensubmit.change_course'):
+                links.append(['Edit course details',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
             links.append(['Download course archive',reverse('coursearchive', args=[course.pk]), False])
 
             # Add course group box to dashboard
             self.children.append(modules.Group(
-                title=course.title,
-                column=1,
+                title="Course '{0}'".format(course.title),
+                column=column,
                 children=[
                     modules.LinkList(title="Actions",children=(links)),
                     modules.DashboardModule(title="Info",pre_content=
-                        '<table style="border: 0px; margin-left: 17px">'+
-                        '<tr><td>Course URL for students       :</td><td>%s/?course=%u</td></tr>' % (settings.MAIN_URL, course.pk) +
-                        "<tr><td>Open assignments              :</td><td>%u</td></tr>" % course.open_assignments().count() +
-                        "<tr><td>Submissions to be graded      :</td><td>%u</td></tr>" % course.gradable_submissions().count() +
-                        "<tr><td>Grading finished, not notified:</td><td>%u</td></tr>" % course.graded_submissions().count() +
-                        "<tr><td>Registered students           :</td><td>%u</td></tr>" % course.participants.count() +
-                        "<tr><td>Authoring students            :</td><td>%u</td></tr>" % course.authors().count() +
+                        '<table>'+
+                        '<tr><td>Course URL for students</td><td>%s/?course=%u</td></tr>' % (settings.MAIN_URL, course.pk) +
+                        "<tr><td>Open assignments</td><td>%u</td></tr>" % course.open_assignments().count() +
+                        "<tr><td>Submissions to be graded</td><td>%u</td></tr>" % course.gradable_submissions().count() +
+                        "<tr><td>Grading finished, not notified</td><td>%u</td></tr>" % course.graded_submissions().count() +
+                        "<tr><td>Registered students</td><td>%u</td></tr>" % course.participants.count() +
+                        "<tr><td>Authoring students</td><td>%u</td></tr>" % course.authors().count() +
                         "</table>"
                     )
                 ]
             ))
+            column+=1
+
 
 class AdminDashboard(Dashboard):
 
