@@ -127,11 +127,6 @@ class StudentDisplayTestCase(SubmitTestCase):
         response=self.c.get('/')
         self.assertEquals(response.status_code, 302)
 
-    def testIndexViewNoProfile(self):
-        self.loginUser(self.noprofileuser)
-        response=self.c.get('/')
-        self.assertEquals(response.status_code, 302)
-
     def testIndexWithoutLoginView(self):
         self.c.logout()
         response=self.c.get('/')
