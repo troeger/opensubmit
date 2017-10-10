@@ -25,6 +25,13 @@ class UserProfile(models.Model):
             self.courses.add(course)
         return course.title
 
+    def can_see_future(self):
+        '''
+        Decides if this user is allowed to work with assignments that
+        have their starting date in the future.
+        '''
+        return self.user.is_staff
+
     def tutor_courses(self):
         '''
             Returns the list of courses this user is tutor or owner for.
@@ -47,7 +54,8 @@ class UserProfile(models.Model):
             Returns the list of open assignments from the viewpoint of this user.
         '''
         qs = Assignment.objects.filter(hard_deadline__gt=timezone.now()) | Assignment.objects.filter(hard_deadline__isnull=True)
-        qs = qs.filter(publish_at__lt=timezone.now())
+        if not self.can_see_future():
+            qs = qs.filter(publish_at__lt=timezone.now())
         qs = qs.filter(course__in=self.user_courses())
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
         waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]

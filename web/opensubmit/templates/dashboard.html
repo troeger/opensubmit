@@ -33,13 +33,27 @@
 
                 <tbody>
                     {% for assignment in assignments %}
-                        <tr>
-                            <td><a href="{{ assignment.course.homepage }}">{{ assignment.course }}</a></td>
-                            <td><a href="{{ assignment.download }}">{{ assignment }}</a>
-    			{% if assignment.attachment_test_validity and assignment.validity_script_download %}
-    				<br/><a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation script)</a>
-    			{% endif %}
-    			</td>
+                        {% if  assignment.publish_at > today %}
+                            <tr style="color:gray;font-style: italic;">
+                        {% else %}
+                            <tr>
+                        {% endif %}
+                            <td><a href="{{ assignment.course.homepage }}">
+                                    {{ assignment.course }}
+                                </a>
+                            </td>
+                            <td><a href="{{ assignment.download }}">
+                                    {{ assignment }}
+                                </a>
+                                {% if  assignment.publish_at > today %}
+                                    (will be published on <br/>{{ assignment.publish_at }})
+                                {% endif %}
+                    
+                    			{% if assignment.attachment_test_validity and assignment.validity_script_download %}
+                			 	   <br/>
+                                   <a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation script)</a>
+    		                  	{% endif %}
+    			            </td>
                             <td>{% if assignment.gradingScheme %}Yes{% else %}No{% endif %}</td>
                             <td>{% if assignment.soft_deadline %}
                                     {{assignment.soft_deadline}}
@@ -54,7 +68,7 @@
                             <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                             <td><a href="{% url 'new' assignment.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span> New Submission</a></td>
                         </tr>
-                    {% endfor %}
+                    {% endfor %}                    
                 </tbody>
             </table>
         {% else %}

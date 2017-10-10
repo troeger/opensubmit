@@ -101,14 +101,16 @@ def dashboard(request):
     authored = request.user.authored.all().exclude(state=Submission.WITHDRAWN).order_by('-created')
     archived = request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
     username = request.user.get_full_name() + " <" + request.user.email + ">"
+    assignments = request.user.profile.open_assignments()
     return render(request, 'dashboard.html', {
         'authored': authored,
         'archived': archived,
         'user': request.user,
         'username': username,
         'courses' : request.user.profile.user_courses(),
-        'assignments': request.user.profile.open_assignments(),
-        'machines': TestMachine.objects.all()}
+        'assignments': assignments,
+        'machines': TestMachine.objects.all(),
+        'today': datetime.now()}
     )
 
 

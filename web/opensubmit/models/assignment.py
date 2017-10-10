@@ -155,7 +155,7 @@ class Assignment(models.Model):
             # Hard deadline has been reached.
             return False
 
-        if self.publish_at > timezone.now():
+        if self.publish_at > timezone.now() and not user.profile.can_see_future():
             # The assignment has not yet been published.
             return False
 
