@@ -354,6 +354,19 @@ class SubmitTestCase(LiveServerTestCase):
         self.hardDeadlinePassedAssignment.save()
         self.allAssignments.append(self.hardDeadlinePassedAssignment)        
 
+        self.noHardDeadlineAssignment = Assignment(
+            title=uccrap+'Assignment without hard deadline',
+            course=self.course,
+            download=u'http://example.org/assignments/3/download'+uccrap,
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=yesterday,
+            hard_deadline=None,
+            has_attachment=False,
+        )
+        self.noHardDeadlineAssignment.save()
+        self.allAssignments.append(self.noHardDeadlineAssignment)        
+
         self.unpublishedAssignment = Assignment(
             title=uccrap+'Unpublished assignment',
             course=self.course,
