@@ -18,7 +18,7 @@ class Assignment(models.Model):
     gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme")
     publish_at = models.DateTimeField(default=timezone.now)
     soft_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline shown to students. After this point in time, submissions are still possible. Leave empty for only using a hard deadline.")
-    hard_deadline = models.DateTimeField(help_text="Deadline after which submissions are no longer possible.")
+    hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible.")
     has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only fill the notes field.")
     attachment_test_timeout = models.IntegerField(default=30, verbose_name="Timout for tests", help_text="Timeout (in seconds) after which the compilation / validation test / full test is cancelled. The submission is marked as invalid in this case. Intended for student code with deadlocks.")
     attachment_test_compile = models.BooleanField(default=False, verbose_name="Compile test ?", help_text="If activated, the student upload is uncompressed and 'make' is executed on one of the test machines.")
@@ -151,7 +151,7 @@ class Assignment(models.Model):
                 # User already has a valid submission for this assignment.
                 return False
 
-        if self.hard_deadline < timezone.now():
+        if self.hard_deadline and self.hard_deadline < timezone.now():
             # Hard deadline has been reached.
             return False
 

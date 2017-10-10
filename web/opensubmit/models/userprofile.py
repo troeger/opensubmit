@@ -46,7 +46,7 @@ class UserProfile(models.Model):
         '''
             Returns the list of open assignments from the viewpoint of this user.
         '''
-        qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
+        qs = Assignment.objects.filter(hard_deadline__gt=timezone.now()) | Assignment.objects.filter(hard_deadline__isnull=True)
         qs = qs.filter(publish_at__lt=timezone.now())
         qs = qs.filter(course__in=self.user_courses())
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')

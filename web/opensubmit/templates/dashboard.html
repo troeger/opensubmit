@@ -41,7 +41,16 @@
     			{% endif %}
     			</td>
                             <td>{{ assignment.publish_at }}</td>
-                            <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline }}{%else %}{{ assignment.hard_deadline }}{% endif %}</td>
+                            <td>{% if assignment.soft_deadline %}
+                                    {{assignment.soft_deadline}}
+                                {%else %}
+                                    {% if assignment.hard_deadline %}
+                                        {{assignment.hard_deadline}}
+                                    {%else %}
+                                        No
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                             <td>{% if assignment.soft_deadline %}{{ assignment.soft_deadline|timeuntil }}{%else %}{{ assignment.hard_deadline|timeuntil }}{% endif %}</td>
                             <td><a href="{% url 'new' assignment.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span> New Submission</a></td>
                         </tr>

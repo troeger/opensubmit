@@ -261,7 +261,7 @@ class Submission(models.Model):
 
         # Submissions, that belong to an assignment where the hard deadline has passed,
         # cannot be modified.
-        if timezone.now() > self.assignment.hard_deadline:
+        if self.assignment.hard_deadline and timezone.now() > self.assignment.hard_deadline:
             self.log('DEBUG', "Submission cannot be modified - assignment's hard deadline has passed (hard deadline is: {})", self.assignment.hard_deadline)
             return False
 

@@ -28,7 +28,7 @@ class Course(models.Model):
         return self.title.replace(" ", "_").replace("\\", "_").replace("/", "_").replace(",","").lower()
 
     def open_assignments(self):
-        qs = Assignment.objects.filter(hard_deadline__gt=timezone.now())
+        qs = Assignment.objects.filter(hard_deadline__gt=timezone.now()) | Assignment.objects.filter(hard_deadline__isnull=True)
         qs = qs.filter(publish_at__lt=timezone.now())
         qs = qs.filter(course=self)
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
