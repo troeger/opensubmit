@@ -15,7 +15,6 @@ executor.cfg
 *.tar.gz
 web/database.sqlite
 .coverage
-web/opensubmit/settings_dev.ini
 .vagrant
 *.egg-info
 *static-production*
