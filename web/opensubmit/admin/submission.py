@@ -13,6 +13,8 @@ from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.utils import timesince
 
+import StringIO, zipfile
+
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
     return ",\n".join([author.get_full_name() for author in submission.authors.all()])
@@ -125,7 +127,7 @@ class SubmissionAdmin(ModelAdmin):
     list_display = ['__unicode__', 'created', 'modified', authors, course, 'assignment', 'state', 'grading', grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
     search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
@@ -304,6 +306,27 @@ class SubmissionAdmin(ModelAdmin):
         else:
             self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
     closeAndNotifyAction.short_description = "Close + send student notification"
+
+    def downloadArchiveAction(self, request, queryset):
+        '''
+        Download selected submissions as archive, for targeted correction.
+        '''
+        output = StringIO.StringIO()
+        z = zipfile.ZipFile(output, 'w')
+
+        for sub in queryset:
+            sub.add_to_zipfile(z)
+
+        z.close()
+        # go back to start in ZIP file so that Django can deliver it
+        output.seek(0)
+        response = HttpResponse(output, content_type="application/x-zip-compressed")
+        response['Content-Disposition'] = 'attachment; filename=submissions.zip'
+        return response
+    downloadArchiveAction.short_description = "Download as ZIP archive"
+
+
+
 
     # ToDo: Must be refactored to consider new performance data storage model
     # def getPerformanceResultsAction(self, request, queryset):

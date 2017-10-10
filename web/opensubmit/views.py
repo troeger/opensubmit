@@ -361,47 +361,23 @@ def coursearchive(request, course_id):
         Provides all course submissions and their information as archive download.
         For archiving purposes, since withdrawn submissions are included.
     '''
-    course = get_object_or_404(Course, pk=course_id)
-    coursename = course.directory_name()
-
-    # we need to create the result ZIP file in memory to not leave garbage on the server
     output = StringIO.StringIO()
     z = zipfile.ZipFile(output, 'w')
 
-    # recurse through database and add according submitted files to in-memory archive
-    coursedir = coursename
+    course = get_object_or_404(Course, pk=course_id)
     assignments = course.assignments.order_by('title')
     for ass in assignments:
-        assdir = coursedir + '/' + ass.title.replace(" ", "_").lower()
-        for sub in ass.submissions.all().order_by('submitter'):
-            submitter = "user" + str(sub.submitter.pk)
-            if sub.modified:
-                modified = sub.modified.strftime("%Y_%m_%d_%H_%M_%S")
-            else:
-                modified = sub.created.strftime("%Y_%m_%d_%H_%M_%S")
-            state = sub.state_for_students().replace(" ", "_").lower()
-            submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)
-            if sub.file_upload:
-                # Copy student upload
-                tempdir = tempfile.mkdtemp()
-                sub.copy_file_upload(tempdir)
-                # Add content to final ZIP file
-                allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)]
-                for subdir, files in allfiles:
-                    for f in files:
-                        zip_relative_dir = subdir.replace(tempdir, "")
-                        zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
-                        z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
-            # add text file with additional information
-            info = sub.info_file()
-            z.write(info.name, submdir + "info.txt")
-    z.close()
+        subs=ass.submissions.all().order_by('submitter')
+        for sub in subs:
+            sub.add_to_zipfile(z)
 
+    z.close()
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
     response = HttpResponse(output, content_type="application/x-zip-compressed")
-    response['Content-Disposition'] = 'attachment; filename=%s.zip' % coursename
+    response['Content-Disposition'] = 'attachment; filename=%s.zip' % course.directory_name()
     return response
+
 
 @login_required
 @staff_member_required
@@ -410,38 +386,20 @@ def assarchive(request, ass_id):
         Provides all non-withdrawn submissions for an assignment as download.
         Intented for supporting offline correction.
     '''
-    ass = get_object_or_404(Assignment, pk=ass_id)
-    ass_name = ass.directory_name()
-
-    # we need to create the result ZIP file in memory to not leave garbage on the server
     output = StringIO.StringIO()
     z = zipfile.ZipFile(output, 'w')
 
-    # recurse through database and add according submitted files to in-memory archive
-    for sub in Submission.valid_ones.filter(assignment=ass):
-        submdir = "%s/%u/" % (ass_name, sub.pk)
-        if sub.file_upload:
-            # Copy student upload
-            tempdir = tempfile.mkdtemp()
-            sub.copy_file_upload(tempdir)
-            # Add content to final ZIP file
-            allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)]
-            for subdir, files in allfiles:
-                for f in files:
-                    zip_relative_dir = subdir.replace(tempdir, "")
-                    zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
-                    z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
+    ass = get_object_or_404(Assignment, pk=ass_id)
+    subs = Submission.valid_ones.filter(assignment=ass)
+    for sub in subs:
+        sub.add_to_zipfile(z)
 
-        # add text file with additional information
-        info = sub.info_file()
-        z.write(info.name, submdir + "info.txt")
     z.close()
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
     response = HttpResponse(output, content_type="application/x-zip-compressed")
-    response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass_name
+    response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass.directory_name()
     return response
-
 
 @login_required
 def machine(request, machine_id):

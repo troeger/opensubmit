@@ -13,7 +13,7 @@ from .submissiontestresult import SubmissionTestResult
 
 from django.conf import settings
 
-import logging, shutil
+import logging, shutil, os
 logger = logging.getLogger('OpenSubmit')
 
 class ValidSubmissionsManager(models.Manager):
@@ -518,3 +518,27 @@ class Submission(models.Model):
             logger.error("I/O exception while accessing %s."%(self.file_upload.absolute_path()))
             pass
 
+    def add_to_zipfile(self, z):
+        submitter = "user" + str(self.submitter.pk)
+        coursedir = self.assignment.course.directory_name()
+        assdir = coursedir + '/' + self.assignment.title.replace(" ", "_").lower()
+        if self.modified:
+            modified = self.modified.strftime("%Y_%m_%d_%H_%M_%S")
+        else:
+            modified = self.created.strftime("%Y_%m_%d_%H_%M_%S")
+        state = self.state_for_students().replace(" ", "_").lower()
+        submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)
+        if self.file_upload:
+            # Copy student upload
+            tempdir = tempfile.mkdtemp()
+            self.copy_file_upload(tempdir)
+            # Add content to final ZIP file
+            allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)]
+            for subdir, files in allfiles:
+                for f in files:
+                    zip_relative_dir = subdir.replace(tempdir, "")
+                    zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
+                    z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
+        # add text file with additional information
+        info = self.info_file()
+        z.write(info.name, submdir + "info.txt")
