@@ -229,22 +229,22 @@ class Submission(models.Model):
 
         # The user must be authorized to commit these actions.
         if user and not self.user_can_modify(user):
-            self.log('DEBUG', "Submission cannot be modified, user is not an authorized user ({!r} not in {!r})", user, self.authorized_users)
+            #self.log('DEBUG', "Submission cannot be modified, user is not an authorized user ({!r} not in {!r})", user, self.authorized_users)
             return False
 
         # Modification of submissions, that are withdrawn, graded or currently being graded, is prohibited.
         if self.state in [self.WITHDRAWN, self.GRADED, self.GRADING_IN_PROGRESS, ]:
-            self.log('DEBUG', "Submission cannot be modified, is in state '{}'", self.state)
+            #self.log('DEBUG', "Submission cannot be modified, is in state '{}'", self.state)
             return False
 
         # Modification of closed submissions is prohibited.
         if self.is_closed():
             if self.assignment.gradingScheme:
                 # There is a grading procedure, so taking it back would invalidate the tutors work
-                self.log('DEBUG', "Submission cannot be modified, it is closed and graded")
+                #self.log('DEBUG', "Submission cannot be modified, it is closed and graded")
                 return False
             else:
-                self.log('DEBUG', "Closed submission can be modified, since it has no grading scheme.")
+                #self.log('DEBUG', "Closed submission can be modified, since it has no grading scheme.")
                 return True
 
         # Submissions, that are executed right now, cannot be modified
@@ -267,7 +267,7 @@ class Submission(models.Model):
         # Submissions, that belong to an assignment where the hard deadline has passed,
         # cannot be modified.
         if self.assignment.hard_deadline and timezone.now() > self.assignment.hard_deadline:
-            self.log('DEBUG', "Submission cannot be modified - assignment's hard deadline has passed (hard deadline is: {})", self.assignment.hard_deadline)
+            #self.log('DEBUG', "Submission cannot be modified - assignment's hard deadline has passed (hard deadline is: {})", self.assignment.hard_deadline)
             return False
 
         # The soft deadline has no effect (yet).
