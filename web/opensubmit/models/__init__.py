@@ -7,4 +7,5 @@ from .submissionfile import SubmissionFile
 from .submissiontestresult import SubmissionTestResult
 from .assignment import Assignment
 from .userprofile import UserProfile
+from .studyprogram import StudyProgram
 

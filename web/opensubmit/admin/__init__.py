@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Permission, Group
-from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine
+from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine, StudyProgram
 from opensubmit import settings
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.views import redirect_to_login
@@ -14,6 +14,7 @@ from gradingscheme import GradingSchemeAdmin
 from assignment import AssignmentAdmin
 from submissionfile import SubmissionFileAdmin
 from submission import SubmissionAdmin
+from studyprogram import StudyProgramAdmin
 
 def _social_auth_login(self, request, **kwargs):
     '''
@@ -59,3 +60,4 @@ teacher_backend.register(Assignment, AssignmentAdmin)
 teacher_backend.register(SubmissionFile, SubmissionFileAdmin)
 teacher_backend.register(Submission, SubmissionAdmin)
 teacher_backend.register(Course, CourseAdmin)
+teacher_backend.register(StudyProgram, StudyProgramAdmin)

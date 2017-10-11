@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.forms.models import BaseModelFormSet, modelformset_factory
-from models import Submission, Assignment, SubmissionFile
+from models import Submission, Assignment, SubmissionFile, StudyProgram
 
 class SubmissionWithGroups(forms.ModelForm):
 
@@ -74,6 +74,7 @@ class SettingsForm(forms.ModelForm):
     last_name = forms.CharField(max_length=30, required=True)
     username = forms.CharField(max_length=30, required=True)
     student_id = forms.CharField(max_length=30, required=False, label="Student ID (optional)")
+    study_program = forms.ModelChoiceField(queryset=StudyProgram.objects, required=False)
 
     class Meta:
         model = User
@@ -81,12 +82,14 @@ class SettingsForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.instance.profile.student_id = self.cleaned_data['student_id']
+        self.instance.profile.study_program = self.cleaned_data['study_program']
         self.instance.profile.save()
         return super(SettingsForm, self).save(commit=commit)
 
     def __init__(self, *args, **kwargs):
         super(SettingsForm, self).__init__(*args, **kwargs)
         self.initial['student_id'] = self.instance.profile.student_id
+        self.initial['study_program'] = self.instance.profile.study_program
 
 class MailForm(forms.Form):
     subject = forms.CharField(max_length=50, required=True, initial="[#COURSENAME#]")

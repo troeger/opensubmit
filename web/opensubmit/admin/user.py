@@ -7,22 +7,26 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 
-
-def social(user):
-    '''
-        Returns the social ID of this user.
-    '''
-    try:
-        return str(user.social_auth.get().uid)
-    except:
-        return None
-
 class UserProfileInline(admin.TabularInline):
     model = UserProfile
     verbose_name_plural="Student Details"
     can_delete = False
 #    classes = ('grp-collapse grp-open',)
     inline_classes = ('grp-collapse grp-open',)
+
+def study_program(user):
+    return user.profile.study_program
+
+def student_id(user):
+    return user.profile.student_id
+student_id.short_description = "Student ID"
+
+def social_login_id(user):
+    try:
+        return str(user.social_auth.get().uid)
+    except:
+        return None
+social_login_id.short_description = "Social Login ID"
 
 class UserAdmin(DjangoUserAdmin):
     actions = ['mergeusers',]
@@ -49,7 +53,7 @@ class UserAdmin(DjangoUserAdmin):
         css = {'all': ('css/teacher.css',)}
 
     inlines = (UserProfileInline, )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff',  social)
+    list_display = ('username', 'email', 'first_name', 'last_name', student_id, study_program, 'is_staff',  social_login_id)
 
     def mergeusers(modeladmin, request, queryset):
         if len(queryset) != 2:

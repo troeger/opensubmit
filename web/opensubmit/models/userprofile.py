@@ -6,11 +6,13 @@ from django.shortcuts import get_object_or_404
 from .assignment import Assignment
 from .course import Course
 from .submission import Submission
+from .studyprogram import StudyProgram
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
     student_id = models.CharField(max_length=30, blank=True, null=True)
     courses = models.ManyToManyField(Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
+    study_program = models.ForeignKey(StudyProgram, blank=True, null=True, related_name='students')
 
     class Meta:
         app_label = 'opensubmit'
@@ -60,6 +62,20 @@ class UserProfile(models.Model):
         qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
         waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
+
+    def is_complete(self):
+        '''
+        Check if the user information is complete, or if we need to ask for more.
+        '''
+        if not self.user.first_name:
+            return False
+        if not self.user.last_name:
+            return False
+        if not self.user.email:
+            return False
+        if StudyProgram.objects.count()>1 and not self.study_program:
+            return False
+        return True
 
 def db_fixes(user):
     '''

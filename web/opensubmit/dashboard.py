@@ -17,14 +17,18 @@ class TeacherDashboard(Dashboard):
         general=[]
         if context.request.user.has_perm('opensubmit.change_course'):
             general.append(['Show all courses', reverse('teacher:opensubmit_course_changelist'), False])
-        if context.request.user.has_perm('opensubmit.change_submissionfile'):
-            general.append(['Show all submission files',reverse('teacher:opensubmit_submissionfile_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_gradingscheme'):
             general.append(['Show all grading schemes ',reverse('teacher:opensubmit_gradingscheme_changelist'), False])
+        if context.request.user.has_perm('opensubmit.change_studyprogram'):
+            general.append(['Show all study programs', reverse('teacher:opensubmit_studyprogram_changelist'), False])
+        if context.request.user.has_perm('opensubmit.change_user'):
+            general.append(['Show all users', reverse('admin:auth_user_changelist'), False])
         if context.request.user.has_perm('opensubmit.add_course'):
             general.append(['Create new course',reverse('teacher:opensubmit_course_add'), False])
         if context.request.user.has_perm('opensubmit.add_gradingscheme'):
             general.append(['Create new grading scheme',reverse('teacher:opensubmit_gradingscheme_add'), False])
+        if context.request.user.has_perm('opensubmit.add_studyprogram'):
+            general.append(['Create new study program',reverse('teacher:opensubmit_studyprogram_add'), False])
         if len(general)>0:
             self.children.append(modules.Group(
                 title="System",

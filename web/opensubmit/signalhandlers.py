@@ -30,7 +30,9 @@ def check_permission_system():
                     "add_gradingscheme", "change_gradingscheme", "delete_gradingscheme",
                     "add_submission", "change_submission", "delete_submission",
                     "add_submissionfile", "change_submissionfile", "delete_submissionfile",
-                    "add_course", "change_course", "delete_course")
+                    "add_course", "change_course", "delete_course",
+                    "add_studyprogram", "change_studyprogram", "delete_studyprogram",
+                    "change_user", "delete_user")
 
     # Give all tutor users staff rights and add them to the tutors permission group
     tutors = User.objects.filter(courses_tutoring__isnull=False)
