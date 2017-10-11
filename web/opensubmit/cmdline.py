@@ -159,6 +159,19 @@ def check_web_db():
     django_admin(["fixperms"])            # configure permission system, of needed
     return True
 
+def configure(fsroot='/'):
+    config = check_web_config(fsroot+'etc/opensubmit')
+    if not config:
+        return          # Let them first fix the config file before trying a DB access
+    if not check_web_config_consistency(config):
+        return
+    if not check_web_db():
+        return
+    print("Preparing static files for web server...")
+    django_admin(["collectstatic","--noinput","--clear"])
+    apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
+
+
 def console_script(fsroot='/'):
     '''
         The main entry point for the production administration script 'opensubmit-web', installed by setuptools.
@@ -178,16 +191,7 @@ def console_script(fsroot='/'):
         return 0
 
     if "configure" in sys.argv:
-        config = check_web_config(fsroot+'etc/opensubmit')
-        if not config:
-            return          # Let them first fix the config file before trying a DB access
-        if not check_web_config_consistency(config):
-            return
-        if not check_web_db():
-            return
-        print("Preparing static files for web server...")
-        django_admin(["collectstatic","--noinput","--clear"])
-        apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
+        configure(fsroot)
 
     if "createsuperuser" in sys.argv:
         django_admin(["createsuperuser"])

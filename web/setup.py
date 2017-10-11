@@ -5,13 +5,20 @@ import os, sys, shutil
 
 from setuptools import setup, find_packages
 from distutils.command.clean import clean as _clean
+from distutils.command.install import install
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+    def run(self):
+        from opensubmit import cmdline
+        cmdline.check_web_db()
+
 setup(
     name = 'opensubmit-web',
-    version = open('VERSION').read(),
+    version = open('VERSION').read()[:-1],
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Tröger',
@@ -31,6 +38,9 @@ setup(
         'console_scripts': [
             'opensubmit-web = opensubmit.cmdline:console_script',
         ],
+    },
+    cmdclass={
+        'install': PostInstallCommand
     }
 )
 
