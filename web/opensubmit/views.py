@@ -295,6 +295,10 @@ def gradingtable(request, course_id):
             columns.append(author.profile.student_id)
         else:
             columns.append('')
+        if author.profile.study_program:
+            columns.append(author.profile.study_program)
+        else:
+            columns.append('')
         for assignment in assignments:
             if assignment.pk in gradlist:
                 grade = gradlist[assignment.pk]
