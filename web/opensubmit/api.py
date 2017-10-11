@@ -64,6 +64,12 @@ def download(request, obj_id, filetype, secret=None):
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.attachment_test_support
         fname = f.name[f.name.rfind('/') + 1:]
+    elif filetype == "description":
+        if secret != settings.JOB_EXECUTOR_SECRET:
+            raise PermissionDenied
+        ass = get_object_or_404(Assignment, pk=obj_id)
+        f = ass.description
+        fname = f.name[f.name.rfind('/') + 1:]
     else:
         raise Http404
     response = HttpResponse(f, content_type='application/binary')

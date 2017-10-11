@@ -51,6 +51,15 @@ class AssignmentAdminForm(forms.ModelForm):
                 self.fields['attachment_test_support'].widget.template_with_initial = (
                     '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
                 )
+            if self.instance.description_url():
+                self.fields['description'].widget.template_with_initial = (
+                    '%(initial_text)s: <a href="'+self.instance.description_url()+'">%(initial)s</a> '
+                    '%(clear_template)s<br />%(input_text)s: %(input)s'
+                )
+            else:
+                self.fields['attachment_test_support'].widget.template_with_initial = (
+                    '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
+                )
 
     def clean(self):
         '''
@@ -75,6 +84,10 @@ class AssignmentAdminForm(forms.ModelForm):
             raise ValidationError('You cannot have a validation script without specifying test machines.')
         if d['attachment_test_full'] and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have a full test script without specifying test machines.')
+        if d['download'] and d['description']:
+            raise ValidationError('You can only have a description link OR a description file.')
+        if not d['download'] and not d['description']:
+            raise ValidationError('You need a description link OR a description file.')
         # Having test machines demands compilation or validation scripts
         if 'test_machines' in d and len(d['test_machines'])>0               \
             and not 'attachment_test_validity' in d  \
@@ -128,7 +141,9 @@ class AssignmentAdmin(ModelAdmin):
 
     fieldsets = (
             ('',
-                {'fields': (('title','course'), 'download', 'gradingScheme', 'has_attachment')}),
+                {'fields': (('title','course'), 'gradingScheme', 'has_attachment')}),
+            ('Description',
+                {   'fields': ('download', 'description')}),
             ('Time',
                 {   'fields': ('publish_at', ('soft_deadline', 'hard_deadline'))}),
             ('File Upload Validation',

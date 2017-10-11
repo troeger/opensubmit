@@ -42,7 +42,7 @@
                                     {{ assignment.course }}
                                 </a>
                             </td>
-                            <td><a href="{{ assignment.download }}">
+                            <td><a href="{% if assignment.description %}{{assignment.description_url}}{%else%}{{ assignment.download }}{%endif%}">
                                     {{ assignment }}
                                 </a>
                                 {% if  assignment.publish_at > today %}

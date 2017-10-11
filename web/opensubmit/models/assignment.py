@@ -13,13 +13,14 @@ class Assignment(models.Model):
 
     title = models.CharField(max_length=200)
     course = models.ForeignKey('Course', related_name='assignments')
-    download = models.URLField(max_length=200, verbose_name="Link for assignment description")
+    download = models.URLField(max_length=200, blank=True, null=True, verbose_name="As link", help_text="External link to the assignment description.")
+    description = models.FileField(upload_to="assignment_desc", blank=True, null=True, verbose_name='As file', help_text="Uploaded document with the assignment description.")
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme", blank=True, null=True)
-    publish_at = models.DateTimeField(default=timezone.now)
+    gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme", blank=True, null=True, help_text="Grading scheme for this assignment. Leave empty to have an ungraded assignment.")
+    publish_at = models.DateTimeField(default=timezone.now, help_text="Shown for students after this point in time. Users with backend rights always see it.")
     soft_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline shown to students. After this point in time, submissions are still possible. Leave empty for only using a hard deadline.")
-    hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible.")
-    has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only fill the notes field.")
+    hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible. Can be empty.")
+    has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only provide notes.")
     attachment_test_timeout = models.IntegerField(default=30, verbose_name="Timout for tests", help_text="Timeout (in seconds) after which the compilation / validation test / full test is cancelled. The submission is marked as invalid in this case. Intended for student code with deadlocks.")
     attachment_test_compile = models.BooleanField(default=False, verbose_name="Compile test ?", help_text="If activated, the student upload is uncompressed and 'make' is executed on one of the test machines.")
     attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed, compiled and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
@@ -107,6 +108,16 @@ class Assignment(models.Model):
         else:
             return None
 
+    def description_url(self):
+        '''
+            Return absolute download URL for description file.
+            Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
+        '''
+        if self.pk and self.has_description():
+            return settings.MAIN_URL + "/download/%u/description/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
+        else:
+            return None
+
     def test_support_files_url(self):
         '''
             Return absolute download URL for the support archive.
@@ -125,6 +136,9 @@ class Assignment(models.Model):
 
     def has_full_test(self):
         return str(self.attachment_test_full).strip() != ""
+
+    def has_description(self):
+        return str(self.description).strip() != ""
 
     def attachment_is_tested(self):
         return self.attachment_test_compile is True or self.has_validity_test() or self.has_full_test()
