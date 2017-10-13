@@ -68,14 +68,14 @@ class UserProfile(models.Model):
         Check if the user information is complete, or if we need to ask for more.
         '''
         if not self.user.first_name:
-            return False
+            return False, "Missing first name."
         if not self.user.last_name:
-            return False
+            return False, "Missing last name."
         if not self.user.email:
-            return False
+            return False, "Missing eMail address."
         if StudyProgram.objects.count()>1 and not self.study_program:
-            return False
-        return True
+            return False, "Missing choice of a study program."
+        return True, ""
 
 def db_fixes(user):
     '''

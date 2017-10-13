@@ -94,7 +94,9 @@ def dashboard(request):
                 pass
 
     # if the user settings are not complete (e.f. adter OpenID registration), we MUST fix them first
-    if not request.user.profile.is_complete():
+    is_complete, error_msg = request.user.profile.is_complete()
+    if not is_complete:
+        messages.error(request, "Please complete your user information: "+error_msg)
         return redirect('settings')
 
     # render dashboard
