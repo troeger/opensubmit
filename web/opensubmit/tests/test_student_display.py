@@ -99,9 +99,9 @@ class StudentDisplayTestCase(SubmitTestCase):
         # One default course registration in cases.py
         assignments_before = len(student.profile.open_assignments())
 
-        # Go to root URL with course demand, redirects to settings, since the user is new
+        # Go to root URL with course demand, message for missing details should show up
         response = self.c.get('/?course=%u'%self.anotherCourse.pk, follow=True)
-        self.assertRedirects(response, '/settings/')
+        self.assertContains(response, "incomplete")
 
         # Check if course is enabled now, based on assignment count
         assignments_after = len(student.profile.open_assignments())
@@ -171,7 +171,7 @@ class StudentDisplayTestCase(SubmitTestCase):
         self.current_user.user.first_name=""
         self.current_user.user.save()
         response=self.c.get('/dashboard/')
-        self.assertEquals(response.status_code, 302)
+        self.assertContains(response, "incomplete")
 
     def testDashboardView(self):
         response=self.c.get('/dashboard/')
@@ -208,14 +208,6 @@ class StudentDisplayTestCase(SubmitTestCase):
         # After rights removal
         response = self.c.get('/teacher/opensubmit/course/%u/change/'%(self.course.pk))
         self.assertEquals(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
-
-    def testCannotUseAdminBackendAsCourseOwner(self):
-        # Assign rights
-        self.course.owner = self.current_user.user
-        self.course.save()
-        # Admin access should be still forbidden
-        response = self.c.get('/admin/auth/user/')
-        self.assertEquals(response.status_code, 403)        # 302: can access the model in principle, 403: can never access the app label
 
     def testCannotUseAdminBackendAsTutor(self):
         # Assign rights
