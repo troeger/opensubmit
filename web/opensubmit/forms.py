@@ -67,7 +67,6 @@ def getSubmissionForm(assignment):
         else:
             return SubmissionWithoutGroupsWithoutFileForm
 
-
 class SettingsForm(forms.ModelForm):
     email = forms.CharField(max_length=75, required=True)
     first_name = forms.CharField(max_length=30, required=True)
@@ -90,6 +89,12 @@ class SettingsForm(forms.ModelForm):
         super(SettingsForm, self).__init__(*args, **kwargs)
         self.initial['student_id'] = self.instance.profile.student_id
         self.initial['study_program'] = self.instance.profile.study_program
+
+    def clean_study_program(self):
+        data = self.cleaned_data['study_program']
+        if data is None and self.instance.profile.study_program is None and StudyProgram.objects.count() > 1:
+            raise forms.ValidationError("Please select your study program.")
+        return data
 
 class MailForm(forms.Form):
     subject = forms.CharField(max_length=50, required=True, initial="[#COURSENAME#]")

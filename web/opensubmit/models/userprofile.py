@@ -63,20 +63,6 @@ class UserProfile(models.Model):
         waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
 
-    def is_complete(self):
-        '''
-        Check if the user information is complete, or if we need to ask for more.
-        '''
-        if not self.user.first_name:
-            return False, "Missing first name."
-        if not self.user.last_name:
-            return False, "Missing last name."
-        if not self.user.email:
-            return False, "Missing eMail address."
-        if StudyProgram.objects.count()>1 and not self.study_program:
-            return False, "Missing choice of a study program."
-        return True, ""
-
 def db_fixes(user):
     '''
         Fix users that already exist and never got a user profile attached.

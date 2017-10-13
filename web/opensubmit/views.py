@@ -24,6 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
+from django.forms.models import model_to_dict
 from blti import lti_provider
 
 from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
@@ -93,11 +94,11 @@ def dashboard(request):
                 # This is only a comfort function, so we should not crash the app if that goes wrong
                 pass
 
-    # if the user settings are not complete (e.f. adter OpenID registration), we MUST fix them first
-    is_complete, error_msg = request.user.profile.is_complete()
-    if not is_complete:
-        messages.error(request, "Please complete your user information: "+error_msg)
-        return redirect('settings')
+    # This is the first view than can check if the user information is complete.
+    # If not, then we drop annyoing popups until he gives up.
+    settingsform=SettingsForm(model_to_dict(request.user), instance=request.user)
+    if not settingsform.is_valid():
+        messages.error(request, "Your user settings are incomplete.")
 
     # render dashboard
     authored = request.user.authored.all().exclude(state=Submission.WITHDRAWN).order_by('-created')
