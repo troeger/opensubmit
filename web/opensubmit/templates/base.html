@@ -15,6 +15,7 @@
     <style type="text/css">
     {% block style %}
     @import url("{{ STATIC_URL }}bootstrap/css/bootstrap.css");
+    @import url("{{ STATIC_URL }}bootstrap/css/bootstrap-theme.css");
     @import url("{{ STATIC_URL }}multiselect/css/bootstrap-multiselect.css");
     @import url("{{ STATIC_URL }}css/screen.css");
     {% endblock %}
@@ -60,7 +61,13 @@
 
     <div class="container">
         {% for message in messages %}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                <div class="alert alert-warning alert-dismissible" role="alert">
+            {% else %}
                 <div class="alert alert-success alert-dismissible" role="alert">
+            {% endif %}
                     <button type="button" class="close" data-dismiss="alert">
                         <span aria-hidden="true">&times;</span>
                         <span class="sr-only">Close</span>
