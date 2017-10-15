@@ -28,6 +28,7 @@ class Assignment(models.Model):
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Full test script', help_text='Same as the validation script, but executed AFTER the hard deadline to determine final grading criterias for the submission. Results are not shown to students.')
     test_machines = models.ManyToManyField('TestMachine', blank=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
     attachment_test_support = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Support files', help_text="An archive (!) of files that should always be in the directory, beside the student files, during compilation / validation / full test.")
+    max_authors = models.PositiveSmallIntegerField(default=1, help_text="Maximum number of authors (= group size) for this assignment.")
 
     class Meta:
         app_label = 'opensubmit'

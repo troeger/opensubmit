@@ -33,6 +33,7 @@
 			"validity_script_download" : false,
 			"created" : "2013-11-22T21:47:23.116",
 			"title" : "Test Assignment",
+			"max_authors" : 3,
 			"attachment_test_compile" : false,
 			"gradingScheme" : 1,
 			"course" : 1,
@@ -618,7 +619,6 @@
 		"pk" : 1,
 		"model" : "opensubmit.course",
 		"fields" : {
-			"max_authors" : 3,
 			"created" : "2013-11-22T21:30:30.723",
 			"tutors" : [1],
 			"title" : "Test Course",

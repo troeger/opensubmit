@@ -9,10 +9,13 @@ import shutil
 
 from django import http
 
+from django.apps import apps
 from django.conf import settings
 from django.utils import timezone
 
-from django.test import TransactionTestCase, LiveServerTestCase
+from django.db.migrations.executor import MigrationExecutor
+from django.db import connection
+from django.test import TransactionTestCase, LiveServerTestCase, TestCase
 from django.test.utils import override_settings
 from django.test.client import Client
 from django.core.files import File as DjangoFile
@@ -186,8 +189,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.course = Course(
             title=uccrap+'Active test course',
             active=True,
-            owner=self.teacher.user,
-            max_authors=3,
+            owner=self.teacher.user
         )
         self.course.save()
         self.course.tutors.add(self.tutor.user)
@@ -198,8 +200,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.anotherCourse = Course(
             title=uccrap+'Another active test course',
             active=True,
-            owner=self.another_teacher.user,
-            max_authors=1,
+            owner=self.another_teacher.user
         )
         self.anotherCourse.save()
         self.all_courses.append(self.anotherCourse)
@@ -207,8 +208,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.inactiveCourse = Course(
             title=uccrap+'Inactive test course',
             active=False,
-            owner=self.another_teacher.user,
-            max_authors=1,
+            owner=self.another_teacher.user
         )
         self.inactiveCourse.save()
         self.all_courses.append(self.inactiveCourse)
@@ -243,10 +243,26 @@ class SubmitTestCase(LiveServerTestCase):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False
+            has_attachment=False,
+            max_authors=3
         )
         self.openAssignment.save()
         self.allAssignments.append(self.openAssignment)
+
+        self.openSingleAuthorAssignment = Assignment(
+            title=uccrap+'Open assignment with single author',
+            course=self.course,
+            download=u'http://example.org/assignments/1/download'+uccrap,
+            gradingScheme=self.passFailGrading,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=False,
+            max_authors=1
+        )
+        self.openSingleAuthorAssignment.save()
+        self.allAssignments.append(self.openSingleAuthorAssignment)
+
 
         self.anotherAssignment = Assignment(
             title=uccrap+'Another open assignment',
@@ -256,7 +272,8 @@ class SubmitTestCase(LiveServerTestCase):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False
+            has_attachment=False,
+            max_authors=3            
         )
         self.anotherAssignment.save()
 
@@ -268,7 +285,8 @@ class SubmitTestCase(LiveServerTestCase):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=True
+            has_attachment=True,
+            max_authors=3
         )
         self.fileAssignment.save()
         self.allAssignments.append(self.fileAssignment)
@@ -292,7 +310,8 @@ class SubmitTestCase(LiveServerTestCase):
             has_attachment=True,
             validity_script_download=True,
             attachment_test_validity=DjangoFile(open(working_zip)),
-            attachment_test_full=DjangoFile(open(working_zip))
+            attachment_test_full=DjangoFile(open(working_zip)),
+            max_authors=3            
         )
         self.validatedAssignment.save()
         self.allAssignments.append(self.validatedAssignment)
@@ -308,7 +327,8 @@ class SubmitTestCase(LiveServerTestCase):
             has_attachment=True,
             validity_script_download=True,
             attachment_test_validity=DjangoFile(open(single_file)),
-            attachment_test_full=DjangoFile(open(single_file))
+            attachment_test_full=DjangoFile(open(single_file)),
+            max_authors=3            
         )
         self.singleFileValidatorAssignment.save()
         self.allAssignments.append(self.singleFileValidatorAssignment)
@@ -325,7 +345,8 @@ class SubmitTestCase(LiveServerTestCase):
             validity_script_download=True,
             attachment_test_validity=DjangoFile(open(working_zip)),
             attachment_test_full=DjangoFile(open(working_zip)),
-            attachment_test_support=DjangoFile(open(supportfiles_zip))
+            attachment_test_support=DjangoFile(open(supportfiles_zip)),
+            max_authors=3            
         )
         self.validatedWithSupportFilesAssignment.save()
         self.allAssignments.append(self.validatedWithSupportFilesAssignment)
@@ -339,6 +360,7 @@ class SubmitTestCase(LiveServerTestCase):
             soft_deadline=yesterday,
             hard_deadline=tomorrow,
             has_attachment=False,
+            max_authors=3
         )
         self.softDeadlinePassedAssignment.save()
         self.allAssignments.append(self.softDeadlinePassedAssignment)
@@ -352,6 +374,7 @@ class SubmitTestCase(LiveServerTestCase):
             soft_deadline=yesterday,
             hard_deadline=yesterday,
             has_attachment=False,
+            max_authors=3
         )
         self.hardDeadlinePassedAssignment.save()
         self.allAssignments.append(self.hardDeadlinePassedAssignment)        
@@ -365,6 +388,7 @@ class SubmitTestCase(LiveServerTestCase):
             soft_deadline=yesterday,
             hard_deadline=None,
             has_attachment=False,
+            max_authors=3
         )
         self.noHardDeadlineAssignment.save()
         self.allAssignments.append(self.noHardDeadlineAssignment)        
@@ -378,6 +402,7 @@ class SubmitTestCase(LiveServerTestCase):
             soft_deadline=next_week,
             hard_deadline=next_week,
             has_attachment=False,
+            max_authors=3
         )
         self.unpublishedAssignment.save()
         self.allAssignments.append(self.unpublishedAssignment)        
@@ -390,7 +415,8 @@ class SubmitTestCase(LiveServerTestCase):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False
+            has_attachment=False,
+            max_authors=3
         )
         self.noGradingAssignment.save()
         self.allAssignments.append(self.noGradingAssignment)
@@ -621,4 +647,36 @@ class StudentTestCase(SubmitTestCase):
         super(StudentTestCase, self).setUp()
         self.loginUser(self.enrolled_students[0])
         self.request = MockRequest(self.enrolled_students[0].user)
+
+# Taken from https://www.caktusgroup.com/blog/2016/02/02/writing-unit-tests-django-migrations/
+class TestMigrations(TestCase):
+    @property
+    def app(self):
+        return apps.get_containing_app_config(type(self).__module__).name
+
+    migrate_from = None
+    migrate_to = None
+
+    def setUp(self):
+        assert self.migrate_from and self.migrate_to, \
+            "TestCase '{}' must define migrate_from and migrate_to properties".format(type(self).__name__)
+        self.migrate_from = [(self.app, self.migrate_from)]
+        self.migrate_to = [(self.app, self.migrate_to)]
+        executor = MigrationExecutor(connection)
+        old_apps = executor.loader.project_state(self.migrate_from).apps
+
+        # Reverse to the original migration
+        executor.migrate(self.migrate_from)
+
+        self.setUpBeforeMigration(old_apps)
+
+        # Run the migration to test
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()  # reload.
+        executor.migrate(self.migrate_to)
+
+        self.apps = executor.loader.project_state(self.migrate_to).apps
+
+    def setUpBeforeMigration(self, apps):
+        pass
 

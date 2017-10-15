@@ -16,7 +16,7 @@ def actions(course):
     return result
 
 class CourseAdmin(django.contrib.admin.ModelAdmin):
-    list_display = ['__unicode__', 'active', 'owner', assignments, 'max_authors', actions]
+    list_display = ['__unicode__', 'active', 'owner', assignments, actions]
     filter_horizontal = ['tutors']
 
     class Media:

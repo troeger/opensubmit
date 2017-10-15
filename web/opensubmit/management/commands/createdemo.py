@@ -32,8 +32,7 @@ class Command(BaseCommand):
         course = Course(
             title='Demo Course',
             active=True,
-            owner=users['demo_owner'],
-            max_authors=3,
+            owner=users['demo_owner']
         )
         course.save()
         course.tutors.add(users['demo_tutor'])
@@ -53,7 +52,8 @@ class Command(BaseCommand):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False
+            has_attachment=False,
+            max_authors=3
         )
         ass.save()
 

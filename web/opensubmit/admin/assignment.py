@@ -141,7 +141,7 @@ class AssignmentAdmin(ModelAdmin):
 
     fieldsets = (
             ('',
-                {'fields': (('title','course'), 'gradingScheme', 'has_attachment')}),
+                {'fields': (('title','course'), 'gradingScheme', 'max_authors', 'has_attachment')}),
             ('Description',
                 {   'fields': ('download', 'description')}),
             ('Time',

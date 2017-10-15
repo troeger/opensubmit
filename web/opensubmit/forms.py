@@ -56,7 +56,7 @@ class SubmissionFileUpdateForm(forms.ModelForm):
 
 
 def getSubmissionForm(assignment):
-    if assignment.course.max_authors > 1:
+    if assignment.max_authors > 1:
         if assignment.has_attachment:
             return SubmissionWithGroupsWithFileForm
         else:

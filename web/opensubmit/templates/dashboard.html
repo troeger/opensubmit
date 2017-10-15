@@ -24,6 +24,7 @@
                     <tr>
                         <th>Course</th>
                         <th>Assignment</th>
+                        <th>Group work</th>
                         <th>Graded</th>
                         <th>Deadline</th>
                         <th>Time Left</th>
@@ -54,6 +55,7 @@
                                    <a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation script)</a>
     		                  	{% endif %}
     			            </td>
+                            <td>{% if assignment.max_authors > 1%}Yes ({{assignment.max_authors}}){% else %}No{% endif %}</td>
                             <td>{% if assignment.gradingScheme %}Yes{% else %}No{% endif %}</td>
                             <td>{% if assignment.soft_deadline %}
                                     {{assignment.soft_deadline}}
