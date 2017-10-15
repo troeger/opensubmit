@@ -168,7 +168,7 @@ def configure(fsroot='/'):
     if not check_web_db():
         return
     print("Preparing static files for web server...")
-    django_admin(["collectstatic","--noinput","--clear"])
+    django_admin(["collectstatic","--noinput","--clear","-v 0"])
     apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
 
 
