@@ -29,10 +29,34 @@ a{
 	color: black;
 }
 
+/* Disable alternative save buttons, which make no sense on submission eidting */
 input[name="_addanother"],input[name="_continue"],input[name="_saveasnew"]{
     display: none;
 }
 
+/* Disable black background of buttons in lower right. Otherwise, the disabled buttons look ugly.*/
+.grp-submit-row.grp-fixed-footer > ul > li {
+    background: none;
+}
+
+/* Change color of selection counter in lower right */
+li.grp-changelist-actions .grp-horizontal-list span {
+    background-color: #cee9f2 !important;
+    color: black !important;
+    border: 0px !important;
+}
+
+/* Change color of selection counter in lower right */
+li.grp-changelist-actions .grp-horizontal-list li {
+    border: 0px;
+}
+
+
 .grp-object-tools {
     display: none;
 }
+
+.grp-fixed-footer {
+    background-image: linear-gradient(#cee9f2,#e1f0f5);
+}
+
