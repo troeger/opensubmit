@@ -520,8 +520,7 @@ class Submission(models.Model):
 
     def add_to_zipfile(self, z):
         submitter = "user" + str(self.submitter.pk)
-        coursedir = self.assignment.course.directory_name()
-        assdir = coursedir + '/' + self.assignment.title.replace(" ", "_").lower()
+        assdir = self.assignment.directory_name_with_course()
         if self.modified:
             modified = self.modified.strftime("%Y_%m_%d_%H_%M_%S")
         else:

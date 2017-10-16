@@ -6,6 +6,8 @@ from django.core.urlresolvers import reverse
 from .submission import Submission
 from .submissiontestresult import SubmissionTestResult
 
+import os
+
 class Assignment(models.Model):
     '''
         An assignment for which students can submit their solution.
@@ -36,6 +38,12 @@ class Assignment(models.Model):
     def directory_name(self):
         ''' The assignment name in a format that is suitable for a directory name.  '''
         return self.title.replace(" ", "_").replace("\\", "_").replace(",","").lower()
+
+    def directory_name_with_course(self):
+        ''' The assignment name in a format that is suitable for a directory name.  '''
+        coursename = self.course.directory_name()
+        assignmentname = self.title.replace(" ", "_").replace("\\", "_").replace(",","").lower()
+        return coursename + os.sep + assignmentname
 
     def gradable_submissions(self):
         qs = self.valid_submissions()
@@ -182,3 +190,11 @@ class Assignment(models.Model):
                 return False
 
         return True
+
+    def add_to_zipfile(self, z):
+        if self.description:
+            sourcepath = settings.MEDIA_ROOT + self.description.name
+            targetpath = self.directory_name_with_course()
+            targetname = os.path.basename(self.description.name)
+            z.write(sourcepath, targetpath + os.sep + targetname)
+

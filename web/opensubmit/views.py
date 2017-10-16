@@ -376,6 +376,7 @@ def coursearchive(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     assignments = course.assignments.order_by('title')
     for ass in assignments:
+        ass.add_to_zipfile(z)
         subs=ass.submissions.all().order_by('submitter')
         for sub in subs:
             sub.add_to_zipfile(z)
@@ -399,6 +400,7 @@ def assarchive(request, ass_id):
     z = zipfile.ZipFile(output, 'w')
 
     ass = get_object_or_404(Assignment, pk=ass_id)
+    ass.add_to_zipfile(z)
     subs = Submission.valid_ones.filter(assignment=ass)
     for sub in subs:
         sub.add_to_zipfile(z)
