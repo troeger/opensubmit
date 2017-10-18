@@ -26,12 +26,6 @@ clean:
 	rm -rf  ./htmlcov
 	rm -rf  ./web/htmlcov
 
-pypi_web:
+pypi:
 	# Assumes valid credentials in ~/.pypirc
-	# For the format, this seems to work: https://pythonhosted.org/an_example_pypi_project/setuptools.html#intermezzo-pypirc-file-and-gpg
-	pushd web; python ./setup.py sdist upload -r https://pypi.python.org/pypi; popd
-
-pypi_executor:
-	# Assumes valid credentials in ~/.pypirc
-	# For the format, this seems to work: https://pythonhosted.org/an_example_pypi_project/setuptools.html#intermezzo-pypirc-file-and-gpg
-	pushd executor; python ./setup.py sdist upload -r https://pypi.python.org/pypi; popd
+	twine upload opensubmit-*.tar.gz
