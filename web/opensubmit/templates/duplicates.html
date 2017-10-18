@@ -11,7 +11,11 @@
 
 {% block docready %}
 {{ block.super }}
-var table=$('#duplicates').DataTable( {paging: false});
+var table=$('#duplicates').DataTable( 
+	{
+		paging: false,
+		order: [[ 0, "asc" ], [2, "asc"], [3, "asc"], [5, "asc"]]
+	});
 {% endblock %}
 
 {% block title %}
@@ -31,43 +35,44 @@ var table=$('#duplicates').DataTable( {paging: false});
     <h1>Duplicate Report</h1>
 </div>
 
-We found the following similar file uploads:
+Hint: Use the Shift key for sub-ordering of columns.
+
+<table id="duplicates" class="table table-bordered table-condensed table-hover">
+<thead>
+	<tr>
+		<th>Content hash</th>
+		<th>Submission</th>
+		<th>Course</th>
+		<th>Assignment</th>
+		<th>Authors</th>
+		<th>Last change</th>
+		<th>Grading finished?</th>
+		<th>Grading Notes</th>
+	</tr>
+</thead>
+<tbody>
 {% regroup files by md5 as duplicates %}
 {% for duplicate_set in duplicates %}
 	{% if duplicate_set.list|length > 1 %}
-		<table id="duplicates" class="table table-bordered table-condensed table-hover">
-		<thead>
-			<tr>
-				<th>Course</th>
-				<th>Assignment</th>
-				<th>Submission</th>
-				<th>Authors</th>
-				<th>File upload</th>
-				<th>Last change</th>
-				<th>Grading finished?</th>
-				<th>Grading Notes</th>
-			</tr>
-		</thead>
-		<tbody>
 			{% for submfile in duplicate_set.list %}
 			{% with submission=submfile.submissions.all.0 %}
 				<tr>
+					<td>{{ duplicate_set.grouper }}</td>
+					{% url 'teacher:opensubmit_submission_change' submission as suburl %}
+					<td><a href="{{ suburl }}" target="_new">#{{submission}}</a> (<a href="{{ submfile.get_preview_url }}" target="_new">file preview</a>)</td>
 					<td>{{ submission.assignment.course }}</td>
 					<td>{{ submission.assignment }}</td>
-					{% url 'teacher:opensubmit_submission_change' submission as suburl %}
-					<td><a href="{{ suburl }}" target="_new">#{{submission}}</a></td>
 					<td>{{ submission.authors.all|join:", " }}</td>
-					<td>{{ submission.file_upload }} (<a href="{{ submfile.get_preview_url }}" target="_new">preview</a>)</td>
 					<td>{{ submission.modified }}
 					<td>{% if submission.is_grading_finished %}Yes ({{submission.grading}}){% else %}No{%endif%} </td>
 					<td>{{ submission.grading_notes|default_if_none:""}}</td>
 				</tr>
 			{% endwith %}
 			{% endfor %}
-		</tbody>
-		</table>
 	{% endif %}
 {% endfor %}
+</tbody>
+</table>
 
 {% endblock %}
 
