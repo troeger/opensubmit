@@ -101,8 +101,8 @@ def dashboard(request):
         messages.error(request, "Your user settings are incomplete.")
 
     # render dashboard
-    authored = request.user.authored.all().exclude(state=Submission.WITHDRAWN).order_by('-created')
-    archived = request.user.authored.all().filter(state=Submission.WITHDRAWN).order_by('-created')
+    authored = request.user.authored.all().exclude(assignment__course__active=False).exclude(state=Submission.WITHDRAWN).order_by('-created')
+    archived = request.user.authored.all().exclude(assignment__course__active=False).filter(state=Submission.WITHDRAWN).order_by('-created')
     username = request.user.get_full_name() + " <" + request.user.email + ">"
     assignments = request.user.profile.open_assignments()
     return render(request, 'dashboard.html', {
