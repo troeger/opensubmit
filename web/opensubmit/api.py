@@ -217,57 +217,79 @@ def jobs(request):
         sub = submission_file.submissions.all()[0]
         logger.debug("Storing executor results for submission %u"%(sub.pk))
         error_code = int(request.POST['ErrorCode'])
+        # Job state: Waiting for compilation test
+        # Possible with + without validation
+        # Possible with + without full test
+        # Possible with + without grading
         if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
             sub.save_compile_result(machine, request.POST['Message'])
             if error_code == 0:
                 if sub.assignment.attachment_test_validity:
+                    # We have a validity test
                     logger.debug("Compile working, setting state to pending validity test")
                     sub.state = Submission.TEST_VALIDITY_PENDING
                 elif sub.assignment.attachment_test_full:
+                    # We have a full test
                     logger.debug("Compile working, setting state to pending full test")
                     sub.state = Submission.TEST_FULL_PENDING
                 else:
+                    # We have no validity test and no full test
                     logger.debug("Compile working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
                     if sub.assignment.gradingScheme:
+                        # Assignment is graded. Get the course owner to work, if notification is enabled.
                         sub.inform_course_owner(request)
                     else:
+                        # Assignment is not graded. We are done here.
                         sub.state = Submission.CLOSED
             else:
                 logger.debug("Compile test not working, setting state to failed")
                 sub.state = Submission.TEST_COMPILE_FAILED
             sub.inform_student(sub.state)
+        # Job state: Waiting for validity test
+        # Possible with + without full test
+        # Possible with + without grading
         elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             sub.save_validation_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
+                # We have a full test
                 if sub.assignment.attachment_test_full:
                     logger.debug("Validity test working, setting state to pending full test")
                     sub.state = Submission.TEST_FULL_PENDING
+                # We have no full test
                 else:
                     logger.debug("Validity test working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
                     if sub.assignment.gradingScheme:
+                        # Assignment is graded. Get the course owner to work, if notification is enabled.
                         sub.inform_course_owner(request)
                     else:
+                        # Assignment is not graded. We are done here.
                         sub.state = Submission.CLOSED
             else:
                 logger.debug("Validity test not working, setting state to failed")
                 sub.state = Submission.TEST_VALIDITY_FAILED
             sub.inform_student(sub.state)
+        # Job state: Waiting for full test
+        # Possible with + without grading
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
             sub.save_fulltest_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
                 logger.debug("Full test working, setting state to tested")
                 sub.state = Submission.SUBMITTED_TESTED
                 if sub.assignment.gradingScheme:
+                    # Assignment is graded. Get the course owner to work, if notification is enabled.
                     sub.inform_course_owner(request)
                 else:
+                    # Assignment is not graded. We are done here.
                     sub.state = Submission.CLOSED
             else:
                 logger.debug("Full test not working, setting state to failed")
                 sub.state = Submission.TEST_FULL_FAILED
                 # full tests may be performed several times and are meant to be a silent activity
                 # therefore, we send no mail to the student here
+        # Job state: Waiting for full test of already closed jobs ("re-test")
+        # Grading is already done
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.CLOSED_TEST_FULL_PENDING:
             logger.debug("Closed full test done, setting state to closed again")
             sub.save_fulltest_result(machine, request.POST['Message'], perf_data)

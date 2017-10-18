@@ -42,7 +42,7 @@ class TutorTestCaseSet():
         sub3 = self.createValidatableSubmission(self.enrolled_students[2])
         sub3.state=Submission.WITHDRAWN
         sub3.save()
-        response=self.c.get('/assignments/%u/duplicates/'%self.validatedAssignment.pk)
+        response=self.c.get('/duplicates/')
         self.assertEquals(response.status_code, 200)
         # expect both submissions to be in the report
         self.assertIn('#%u'%sub1.pk, str(response))

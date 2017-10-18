@@ -278,43 +278,48 @@ def gradingtable(request, course_id):
     for assignment in assignments:
         for submission in assignment.submissions.all().filter(state=Submission.CLOSED):
             for author in submission.authors.all():
+                # Gradings is a dict mapping authors to another dict
+                # This second dict maps assignments to gradings
+                # A tuple as dict key does not help here, since we want to iterate over the assignments later
                 if author not in gradings.keys():
                     gradings[author] = {assignment.pk: submission.grading}
                 else:
                     gradings[author][assignment.pk] = submission.grading
-    # prepare gradings per author + assignment for rendering
     resulttable = []
-    for author, gradlist in gradings.iteritems():
+    for author, gradlist in gradings.iteritems(): 
         columns = []
         numpassed = 0
+        numgraded = 0
         pointsum = 0
-        columns.append(author.last_name)
-        columns.append(author.first_name)
-        if author.profile.student_id:
-            columns.append(author.profile.student_id)
-        else:
-            columns.append('')
-        if author.profile.study_program:
-            columns.append(author.profile.study_program)
-        else:
-            columns.append('')
+        columns.append(author.last_name if author.last_name else '')
+        columns.append(author.first_name if author.first_name else '')
+        columns.append(author.profile.student_id if author.profile.student_id else '')
+        columns.append(author.profile.study_program if author.profile.study_program else '')
+        # Process all assignment gradings for this author
         for assignment in assignments:
-            if assignment.pk in gradlist:
-                grade = gradlist[assignment.pk]
-                if grade is not None:
-                    passed = grade.means_passed
-                    columns.append(grade)
-                    if passed:
-                        numpassed += 1
-                    try:
-                        pointsum += eval(str(grade))
-                    except:
-                        pass
-                else:
-                    columns.append('N/A')
+            if not assignment.gradingScheme:
+                columns.append('not graded')
             else:
-                columns.append('')
-        columns.append("%s / %s" % (numpassed, len(assignments)))
+                numgraded += 1
+                if assignment.pk in gradlist:
+                    # Ok, we have a grading for this author in this assignment
+                    grade = gradlist[assignment.pk]
+                    if grade is not None:
+                        passed = grade.means_passed
+                        columns.append(grade)
+                        if passed:
+                            numpassed += 1
+                        try:
+                            pointsum += eval(str(grade))
+                        except:
+                            pass
+                    else:
+                        # Should not happen, just a save guard
+                        columns.append('')
+                else:
+                    # This author got no grade for this assignment
+                    columns.append('missing')
+        columns.append("%s / %s" % (numpassed, numgraded))
         columns.append("%u" % pointsum)
         resulttable.append(columns)
     return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments, 'resulttable': sorted(resulttable)})
