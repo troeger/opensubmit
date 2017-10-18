@@ -1,7 +1,18 @@
-{% extends "admin/base.html" %}
+{% extends "base_admin.html" %}
 
 {% load projecttags %}
 {% load bootstrap %}
+
+{% block scripts %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}DataTables/datatables.min.css"/>
+<script type="text/javascript" src="{{STATIC_URL}}DataTables/datatables.min.js"></script>
+{% endblock %}
+
+{% block docready %}
+{{ block.super }}
+var table=$('#duplicates').DataTable( {paging: false});
+{% endblock %}
 
 {% block title %}
     {{ block.super }} - Duplicate Report
@@ -10,54 +21,53 @@
 {% block breadcrumbs %}
     <ul>
         <li><a href="{% url 'teacher:index' %}">Home</a></li>
-        <li><a href="{% url 'teacher:opensubmit_assignment_changelist' %}">Assignments</a></li>
         <li> Duplicates</li>
     </ul>
 {% endblock %}
 
-{% block extrastyle %}
-<link href="/static/css/admin.css" type="text/css" media="all" rel="stylesheet" />
-{% endblock %}
-
 {% block content %}
+
 <div class="page-header">
     <h1>Duplicate Report</h1>
 </div>
 
-<ul>
-	{% for course in courses %}
-	<li>{{ course }}</li>
-	{% endfor %}
-</ul>
-
-<div id="content-main">
 We found the following similar file uploads:
 {% regroup files by md5 as duplicates %}
 {% for duplicate_set in duplicates %}
 	{% if duplicate_set.list|length > 1 %}
-		<div class="grp-module grp-changelist-result">
-		<table id="result_list" style="width:100%">
-		<tr><th>File content hash</th><th>Course</th><th>Submission</th><th>File upload</th><th>Last change</th><th>Authors</th><th>Grading finished?</th><th>Grading Notes</th></tr>
-		{% for submfile in duplicate_set.list %}
+		<table id="duplicates" class="table table-bordered table-condensed table-hover">
+		<thead>
+			<tr>
+				<th>Course</th>
+				<th>Assignment</th>
+				<th>Submission</th>
+				<th>Authors</th>
+				<th>File upload</th>
+				<th>Last change</th>
+				<th>Grading finished?</th>
+				<th>Grading Notes</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for submfile in duplicate_set.list %}
 			{% with submission=submfile.submissions.all.0 %}
-				<tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">
-					{% if forloop.first %}
-					<td rowspan="{{ duplicate_set.list|length }}">{{ duplicate_set.grouper }}</td>
-					{% endif %}
+				<tr>
 					<td>{{ submission.assignment.course }}</td>
+					<td>{{ submission.assignment }}</td>
 					{% url 'teacher:opensubmit_submission_change' submission as suburl %}
 					<td><a href="{{ suburl }}" target="_new">#{{submission}}</a></td>
+					<td>{{ submission.authors.all|join:", " }}</td>
 					<td>{{ submission.file_upload }} (<a href="{{ submfile.get_preview_url }}" target="_new">preview</a>)</td>
 					<td>{{ submission.modified }}
-					<td>{{ submission.authors.all|join:", " }}</td>
 					<td>{% if submission.is_grading_finished %}Yes ({{submission.grading}}){% else %}No{%endif%} </td>
 					<td>{{ submission.grading_notes|default_if_none:""}}</td>
 				</tr>
 			{% endwith %}
-		{% endfor %}
+			{% endfor %}
+		</tbody>
+		</table>
 	{% endif %}
-	</table>
-</div>
 {% endfor %}
-</div>
+
 {% endblock %}
+
