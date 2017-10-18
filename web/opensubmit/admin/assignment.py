@@ -129,7 +129,6 @@ view_links.short_description = ""
 
 class AssignmentAdmin(ModelAdmin):
     list_display = ['__unicode__', course, 'soft_deadline', 'hard_deadline', 'gradingScheme', num_authors, num_subm, num_finished, num_unfinished, view_links]
-    list_filter = ('course',)
     change_list_template = "admin/change_list_filter_sidebar.html"
 
     class Media:
@@ -160,9 +159,9 @@ class AssignmentAdmin(ModelAdmin):
         if request.user.is_superuser:
             return qs
         else:
-            return qs.filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
+            return qs.filter(course__active=True).filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "course":
-            kwargs["queryset"] = Course.objects.filter(active=True)
+            kwargs["queryset"] = Course.valid_ones
         return super(AssignmentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
