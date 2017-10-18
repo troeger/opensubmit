@@ -6,6 +6,15 @@ from django.core.urlresolvers import reverse
 from .assignment import Assignment
 from .submission import Submission
 
+class ValidCoursesManager(models.Manager):
+    '''
+        A model manager used by the Course model. It returns a sorted list
+        of courses that are not inactive.
+    '''
+
+    def get_queryset(self):
+        return Course.objects.exclude(active=False).order_by('title')
+
 class Course(models.Model):
     title = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
@@ -16,11 +25,17 @@ class Course(models.Model):
     lti_key = models.CharField(max_length=100, null=True, blank=True, help_text="Key to be used by an LTI consumer when accessing this course.")
     lti_secret = models.CharField(max_length=100, null=True, blank=True, help_text="Secret to be used by an LTI consumer when accessing this course.")
 
+    objects = models.Manager()
+    valid_ones = ValidCoursesManager()
+
     class Meta:
         app_label = 'opensubmit'
 
     def __unicode__(self):
-        return unicode(self.title)
+        if self.active:
+            return unicode(self.title)
+        else:
+            return unicode(self.title+' (inactive)')
 
     def directory_name(self):
         ''' The course name in a format that is suitable for a directory name.  '''
