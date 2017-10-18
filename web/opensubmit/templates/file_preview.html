@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block title %}
-    {{ block.super }} - Archive Preview
+    {{ block.super }} - File Preview
 {% endblock %}
 
 {% setting "MAIN_URL" as main_url %}
@@ -16,7 +16,6 @@
 {% block breadcrumbs %}
 <ul>
     <li><a href="{{ main_url }}/teacher/">Home</a></li>
-    <li><a href="{{ main_url }}/teacher/opensubmit/">Backend</a></li>
     <li>
         <a href="{{ main_url }}/teacher/opensubmit/submission/?coursefilter={{ submission.assignment.course.pk }}">Submissions</a>
     </li>
@@ -29,29 +28,35 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Archive Preview</h1>
+    <h1>File Preview</h1>
 </div>
 
 <div id="content-main">
 	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-	{% for file in previews %}
-	    {% if file.preview %}
-	  <div class="panel panel-default">
-	    <div class="panel-heading" role="tab" id="heading{{forloop.counter}}">
-	      <h4 class="panel-title">
-	        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
-	          {{ file.name }}
-	        </a>
-	      </h4>
-	    </div>
-	    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
-	      <div class="panel-body">
-	        	<pre class="prettyprint linenums"><code>{{ file.preview }}</code></pre>
-	      </div>
-	    </div>
-	  </div>
-	     {% endif %}
-	{% endfor %}
+	{% if submission.file_upload.is_archive %}
+		{% for file in submission.file_upload.archive_previews %}
+		    {% if file.preview %}
+			  <div class="panel panel-default">
+			    <div class="panel-heading" role="tab" id="heading{{forloop.counter}}">
+			      <h4 class="panel-title">
+			        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{forloop.counter}}" aria-expanded="false" aria-controls="collapse{{forloop.counter}}">
+			          {{ file.name }}
+			        </a>
+			      </h4>
+			    </div>
+			    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
+			      <div class="panel-body">
+			        	<pre class="prettyprint linenums"><code>{{ file.preview }}</code></pre>
+			      </div>
+			    </div>
+			  </div>
+		     {% endif %}
+		{% endfor %}
+	{% else %}
+		      <div class="panel-body">
+		        	<pre class="prettyprint linenums"><code>{{ submission.file_upload.plaintext_preview.preview }}</code></pre>
+		      </div>
+    {% endif %}
 	</div>
 </div>
 

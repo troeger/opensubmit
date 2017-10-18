@@ -168,6 +168,24 @@ class SubmissionFile(models.Model):
             result = [{'name': fname, 'preview': sanitize(f.read())},]
         return result
 
+    def plaintext_preview(self):
+        '''
+            Return preview on pure text content as plain text.
+            In order to avoid browser and web server trashing by the students, there is a size limit.
+        '''
+        MAX_PREVIEW_SIZE = 1000000
+
+        def sanitize(text):
+            try:
+                return unicode(text, errors='ignore')
+            except:
+                return unicode("(unreadable text data)")
+
+        f=open(self.attachment.path)
+        fname = f.name[f.name.rfind(os.sep)+1:]
+        result = {'name': fname, 'preview': sanitize(f.read())}
+        return result
+
     def test_result_dict(self):
         '''
             Create a compact data structure representation of all result
