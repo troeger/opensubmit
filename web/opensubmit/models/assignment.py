@@ -77,19 +77,6 @@ class Assignment(models.Model):
         qs = self.submissions.exclude(state=Submission.WITHDRAWN)
         return qs
 
-    def uploads(self):
-        '''
-            Return a queryset for all non-replaced file uploads for  this assignment.
-        '''
-        from .submissionfile import SubmissionFile
-        return SubmissionFile.valid_ones.filter(submissions__assignment=self)
-
-    def uploads_by_md5(self):
-        '''
-           Return uploads, but ordered by MD5 sum. Crucial for duplicate view regroup to work properly.
-        '''
-        return self.uploads().order_by('md5')
-
     def has_perf_results(self):
         '''
             Figure out if any submission for this assignment has performance data being available.

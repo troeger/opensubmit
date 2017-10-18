@@ -266,10 +266,9 @@ def perftable(request, ass_id):
 
 @login_required
 @staff_member_required
-def duplicates(request, ass_id):
-    assignment = get_object_or_404(Assignment, pk=ass_id)
+def duplicates(request):
     return render(request, 'duplicates.html', {
-        'assignment': assignment
+        'files': SubmissionFile.valid_ones.order_by('md5')
     })
 
 @login_required

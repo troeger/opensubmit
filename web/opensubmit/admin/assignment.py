@@ -122,9 +122,8 @@ def view_links(obj):
     result=format_html('')
     if obj.has_perf_results():
         result+=format_html('<a href="%s" style="white-space: nowrap">Performance data</a><br/>'%reverse('perftable', args=(obj.pk,)))
-    result+=format_html('<a href="%s" style="white-space: nowrap">Duplicate report</a>'%reverse('duplicates', args=(obj.pk,)))
-    result+=format_html('<br/><a href="%s" style="white-space: nowrap">Check submissions</a>'%obj.grading_url())
-    result+=format_html('<br/><a href="%s" style="white-space: nowrap">Download submissions</a>'%reverse('assarchive', args=(obj.pk,)))
+    result+=format_html('<a href="%s" style="white-space: nowrap">Show submissions</a><br/>'%obj.grading_url())
+    result+=format_html('<a href="%s" style="white-space: nowrap">Download submissions</a>'%reverse('assarchive', args=(obj.pk,)))
     return result
 view_links.short_description = ""
 

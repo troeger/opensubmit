@@ -1,8 +1,19 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from opensubmit.models import Course, Assignment, UserProfile, Grading, GradingScheme, Submission
+from opensubmit.models import Course, Assignment, UserProfile, Grading, GradingScheme, Submission, SubmissionFile
+from opensubmit import settings
 from django.utils import timezone
+from django.core.files import File as DjangoFile
+from tempfile import NamedTemporaryFile
 import datetime
+
+def createSubmissionFile():
+    with NamedTemporaryFile(delete=False, prefix=settings.MEDIA_ROOT) as tmpfile:
+        tmpfile.write("The quick brown fox jumps over the lazy dog.")
+        tmpfile.seek(0)
+        sf = SubmissionFile(attachment=DjangoFile(tmpfile, unicode(tmpfile.name)))
+        sf.save()
+        return sf
 
 class Command(BaseCommand):
     help = 'Creates demo data in the installation'
@@ -10,7 +21,7 @@ class Command(BaseCommand):
 
         # create demo users
         users={}
-        for name in ['demo_student', 'demo_tutor', 'demo_owner']:
+        for name in ['demo_student', 'demo_cheater', 'demo_tutor', 'demo_owner']:
             user=User.objects.filter(username=name).delete()
             user = User.objects.create_user( username=name,
                                              email='demo@example.org',
@@ -30,13 +41,25 @@ class Command(BaseCommand):
 
         # create demo course
         course = Course(
-            title='Demo Course',
+            title='Demo Course 1',
             active=True,
             owner=users['demo_owner']
         )
         course.save()
         course.tutors.add(users['demo_tutor'])
         course.participants.add(users['demo_student'].profile)
+        course.participants.add(users['demo_cheater'].profile)
+
+        course2 = Course(
+            title='Demo Course 2',
+            active=True,
+            owner=users['demo_owner']
+        )
+        course2.save()
+        course2.tutors.add(users['demo_tutor'])
+        course2.participants.add(users['demo_student'].profile)
+        course2.participants.add(users['demo_cheater'].profile)
+
 
         today = timezone.now()
         last_week = today - datetime.timedelta(weeks=1)
@@ -52,7 +75,7 @@ class Command(BaseCommand):
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False,
+            has_attachment=True,
             max_authors=3
         )
         ass.save()
@@ -60,13 +83,13 @@ class Command(BaseCommand):
         # create demo assignment without grading
         ass2 = Assignment(
             title='Demo Assignment 2',
-            course=course,
+            course=course2,
             download='http://example.org/assignments1.pdf',
             gradingScheme=None,
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=False
+            has_attachment=True
         )
         ass2.save()
 
@@ -83,12 +106,30 @@ class Command(BaseCommand):
         )
         ass3.save()
 
-
         # create demo submission
         Submission(
             assignment=ass,
             submitter=users['demo_student'],
             notes="This is a demo submission.",
-            state=Submission.SUBMITTED_TESTED
+            state=Submission.SUBMITTED_TESTED,
+            file_upload=createSubmissionFile()
+        ).save()
+
+        # create cheater submission in course 1
+        Submission(
+            assignment=ass,
+            submitter=users['demo_cheater'],
+            notes="This is a demo cheating attempt.",
+            state=Submission.SUBMITTED_TESTED,
+            file_upload=createSubmissionFile()
+        ).save()
+
+        # create cheater submission in course 2
+        Submission(
+            assignment=ass2,
+            submitter=users['demo_cheater'],
+            notes="This is a demo cheating attempt in another course.",
+            state=Submission.SUBMITTED_TESTED,
+            file_upload=createSubmissionFile()
         ).save()
 

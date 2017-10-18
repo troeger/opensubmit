@@ -25,7 +25,7 @@ class ValidSubmissionFileManager(models.Manager):
     '''
     def get_queryset(self):
         from .submission import Submission
-        return super(ValidSubmissionFileManager, self).get_queryset().filter(replaced_by=None).exclude(submissions__state=Submission.WITHDRAWN)
+        return super(ValidSubmissionFileManager, self).get_queryset().filter(replaced_by=None).exclude(submissions__state=Submission.WITHDRAWN).exclude(submissions=None)
 
 class SubmissionFile(models.Model):
     '''
@@ -110,7 +110,10 @@ class SubmissionFile(models.Model):
         return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
 
     def get_preview_url(self):
-        return reverse('preview', args=(self.submissions.all()[0].pk,))
+        if self.submissions.all():
+            return reverse('preview', args=(self.submissions.all()[0].pk,))
+        else:
+            return None
 
     def absolute_path(self):
         return settings.MEDIA_ROOT + "/" + self.attachment.name

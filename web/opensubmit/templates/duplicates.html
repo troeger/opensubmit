@@ -21,21 +21,34 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Duplicate Report for {{ assignment }}</h1>
+    <h1>Duplicate Report</h1>
 </div>
 
+<ul>
+	{% for course in courses %}
+	<li>{{ course }}</li>
+	{% endfor %}
+</ul>
+
 <div id="content-main">
-We found the following duplicate file uploads for this assignment:
-{% regroup assignment.uploads_by_md5 by md5 as duplicates %}
+We found the following similar file uploads:
+{% regroup files by md5 as duplicates %}
 {% for duplicate_set in duplicates %}
 	{% if duplicate_set.list|length > 1 %}
-		<h3>File checksum {{ duplicate_set.grouper }}</h3>
-		<table class="table">
-		<tr><th>Submission</th><th>Authors</th><th>Grading finished?</th><th>Grading Notes</th></tr>
+		<div class="grp-module grp-changelist-result">
+		<table id="result_list" style="width:100%">
+		<tr><th>File content hash</th><th>Course</th><th>Submission</th><th>File upload</th><th>Last change</th><th>Authors</th><th>Grading finished?</th><th>Grading Notes</th></tr>
 		{% for submfile in duplicate_set.list %}
 			{% with submission=submfile.submissions.all.0 %}
-				<tr>
-					<td><a href="{% url 'teacher:opensubmit_submission_change' submission %}" target="_new">#{{submission}}</a><br/><a href="{{ submfile.get_preview_url }}" target="_new">(Preview)</a></td>
+				<tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">
+					{% if forloop.first %}
+					<td rowspan="{{ duplicate_set.list|length }}">{{ duplicate_set.grouper }}</td>
+					{% endif %}
+					<td>{{ submission.assignment.course }}</td>
+					{% url 'teacher:opensubmit_submission_change' submission as suburl %}
+					<td><a href="{{ suburl }}" target="_new">#{{submission}}</a></td>
+					<td>{{ submission.file_upload }} (<a href="{{ submfile.get_preview_url }}" target="_new">preview</a>)</td>
+					<td>{{ submission.modified }}
 					<td>{{ submission.authors.all|join:", " }}</td>
 					<td>{% if submission.is_grading_finished %}Yes ({{submission.grading}}){% else %}No{%endif%} </td>
 					<td>{{ submission.grading_notes|default_if_none:""}}</td>
@@ -44,6 +57,7 @@ We found the following duplicate file uploads for this assignment:
 		{% endfor %}
 	{% endif %}
 	</table>
+</div>
 {% endfor %}
 </div>
 {% endblock %}
