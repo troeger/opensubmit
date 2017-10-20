@@ -4,10 +4,10 @@
  *
  * To rebuild or modify this file with the latest versions of the included
  * software please visit:
- *   https://datatables.net/download/#bs/jszip-2.5.0,pdfmake-0.1.18,dt-1.10.10,b-1.1.0,b-colvis-1.1.0,b-html5-1.1.0,b-print-1.1.0,cr-1.3.0,fh-3.1.0,r-2.0.0
+ *   https://datatables.net/download/#bs/dt-1.10.16/b-1.4.2/b-colvis-1.4.2/b-html5-1.4.2/jszip-2.5.0/pdfmake-0.1.32/b-print-1.4.2/cr-1.4.1/fh-3.1.3/r-2.2.0/rg-1.0.2
  *
  * Included libraries:
- *   JSZip 2.5.0, pdfmake 0.1.18, DataTables 1.10.10, Buttons 1.1.0, Column visibility 1.1.0, HTML5 export 1.1.0, Print view 1.1.0, ColReorder 1.3.0, FixedHeader 3.1.0, Responsive 2.0.0
+ *   JSZip 2.5.0, pdfmake 0.1.32, DataTables 1.10.16, Buttons 1.4.2, Column visibility 1.4.2, HTML5 export 1.4.2, Print view 1.4.2, ColReorder 1.4.1, FixedHeader 3.1.3, Responsive 2.2.0, RowGroup 1.0.2
  */
 
 table.dataTable {
@@ -15,11 +15,11 @@ table.dataTable {
   margin-top: 6px !important;
   margin-bottom: 6px !important;
   max-width: none !important;
+  border-collapse: separate !important;
 }
 table.dataTable td,
 table.dataTable th {
   -webkit-box-sizing: content-box;
-  -moz-box-sizing: content-box;
   box-sizing: content-box;
 }
 table.dataTable td.dataTables_empty,
@@ -129,22 +129,25 @@ div.dataTables_scrollHead table.dataTable {
   margin-bottom: 0 !important;
 }
 
-div.dataTables_scrollBody table {
+div.dataTables_scrollBody > table {
   border-top: none;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
-div.dataTables_scrollBody table thead .sorting:after,
-div.dataTables_scrollBody table thead .sorting_asc:after,
-div.dataTables_scrollBody table thead .sorting_desc:after {
+div.dataTables_scrollBody > table > thead .sorting:after,
+div.dataTables_scrollBody > table > thead .sorting_asc:after,
+div.dataTables_scrollBody > table > thead .sorting_desc:after {
   display: none;
 }
-div.dataTables_scrollBody table tbody tr:first-child th,
-div.dataTables_scrollBody table tbody tr:first-child td {
+div.dataTables_scrollBody > table > tbody > tr:first-child > th,
+div.dataTables_scrollBody > table > tbody > tr:first-child > td {
   border-top: none;
 }
 
-div.dataTables_scrollFoot table {
+div.dataTables_scrollFoot > .dataTables_scrollFootInner {
+  box-sizing: content-box;
+}
+div.dataTables_scrollFoot > .dataTables_scrollFootInner > table {
   margin-top: 0 !important;
   border-top: none;
 }
@@ -167,9 +170,6 @@ table.dataTable.table-condensed .sorting_desc:after {
   right: 6px;
 }
 
-table.table-bordered.dataTable {
-  border-collapse: separate !important;
-}
 table.table-bordered.dataTable th,
 table.table-bordered.dataTable td {
   border-left-width: 0;
@@ -199,6 +199,35 @@ div.table-responsive > div.dataTables_wrapper > div.row > div[class^="col-"]:las
 }
 
 
+@keyframes dtb-spinner {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes dtb-spinner {
+  100% {
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-ms-keyframes dtb-spinner {
+  100% {
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes dtb-spinner {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-moz-keyframes dtb-spinner {
+  100% {
+    -moz-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
 div.dt-button-info {
   position: fixed;
   top: 50%;
@@ -301,9 +330,37 @@ div.dt-button-background {
     float: none;
   }
 }
+div.dt-buttons button.btn.processing,
+div.dt-buttons div.btn.processing,
+div.dt-buttons a.btn.processing {
+  color: rgba(0, 0, 0, 0.2);
+}
+div.dt-buttons button.btn.processing:after,
+div.dt-buttons div.btn.processing:after,
+div.dt-buttons a.btn.processing:after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  box-sizing: border-box;
+  display: block;
+  content: ' ';
+  border: 2px solid #282828;
+  border-radius: 50%;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  animation: dtb-spinner 1500ms infinite linear;
+  -o-animation: dtb-spinner 1500ms infinite linear;
+  -ms-animation: dtb-spinner 1500ms infinite linear;
+  -webkit-animation: dtb-spinner 1500ms infinite linear;
+  -moz-animation: dtb-spinner 1500ms infinite linear;
+}
 
 
-table.DTCR_clonedTable {
+table.DTCR_clonedTable.dataTable {
+  position: absolute !important;
   background-color: rgba(255, 255, 255, 0.7);
   z-index: 202;
 }
@@ -347,28 +404,29 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.child:before,
 table.dataTable.dtr-inline.collapsed > tbody > tr > td.dataTables_empty:before {
   display: none !important;
 }
-table.dataTable.dtr-inline.collapsed > tbody > tr > td:first-child,
-table.dataTable.dtr-inline.collapsed > tbody > tr > th:first-child {
+table.dataTable.dtr-inline.collapsed > tbody > tr[role="row"] > td:first-child,
+table.dataTable.dtr-inline.collapsed > tbody > tr[role="row"] > th:first-child {
   position: relative;
   padding-left: 30px;
   cursor: pointer;
 }
-table.dataTable.dtr-inline.collapsed > tbody > tr > td:first-child:before,
-table.dataTable.dtr-inline.collapsed > tbody > tr > th:first-child:before {
-  top: 8px;
+table.dataTable.dtr-inline.collapsed > tbody > tr[role="row"] > td:first-child:before,
+table.dataTable.dtr-inline.collapsed > tbody > tr[role="row"] > th:first-child:before {
+  top: 9px;
   left: 4px;
-  height: 16px;
-  width: 16px;
+  height: 14px;
+  width: 14px;
   display: block;
   position: absolute;
   color: white;
   border: 2px solid white;
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 0 3px #444;
   box-sizing: content-box;
+  text-align: center;
+  text-indent: 0 !important;
   font-family: 'Courier New', Courier, monospace;
-  text-indent: 4px;
-  line-height: 16px;
+  line-height: 14px;
   content: '+';
   background-color: #337ab7;
 }
@@ -376,9 +434,6 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td:first-child:before
 table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th:first-child:before {
   content: '-';
   background-color: #d33333;
-}
-table.dataTable.dtr-inline.collapsed > tbody > tr.child td:before {
-  display: none;
 }
 table.dataTable.dtr-inline.collapsed.compact > tbody > tr > td:first-child,
 table.dataTable.dtr-inline.collapsed.compact > tbody > tr > th:first-child {
@@ -411,12 +466,13 @@ table.dataTable.dtr-column > tbody > tr > th.control:before {
   position: absolute;
   color: white;
   border: 2px solid white;
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 0 3px #444;
   box-sizing: content-box;
+  text-align: center;
+  text-indent: 0 !important;
   font-family: 'Courier New', Courier, monospace;
-  text-indent: 4px;
-  line-height: 16px;
+  line-height: 14px;
   content: '+';
   background-color: #337ab7;
 }
@@ -431,20 +487,20 @@ table.dataTable > tbody > tr.child {
 table.dataTable > tbody > tr.child:hover {
   background: transparent !important;
 }
-table.dataTable > tbody > tr.child ul {
+table.dataTable > tbody > tr.child ul.dtr-details {
   display: inline-block;
   list-style-type: none;
   margin: 0;
   padding: 0;
 }
-table.dataTable > tbody > tr.child ul li {
+table.dataTable > tbody > tr.child ul.dtr-details > li {
   border-bottom: 1px solid #efefef;
   padding: 0.5em 0;
 }
-table.dataTable > tbody > tr.child ul li:first-child {
+table.dataTable > tbody > tr.child ul.dtr-details > li:first-child {
   padding-top: 0;
 }
-table.dataTable > tbody > tr.child ul li:last-child {
+table.dataTable > tbody > tr.child ul.dtr-details > li:last-child {
   border-bottom: none;
 }
 table.dataTable > tbody > tr.child span.dtr-title {
@@ -514,6 +570,15 @@ div.dtr-modal div.dtr-modal-background {
   div.dtr-modal div.dtr-modal-display {
     width: 95%;
   }
+}
+div.dtr-bs-modal table.table tr:first-child td {
+  border-top: none;
+}
+
+
+table.dataTable tr.group td {
+  font-weight: bold;
+  background-color: #e0e0e0;
 }
 
 
