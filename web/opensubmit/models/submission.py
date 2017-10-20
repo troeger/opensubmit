@@ -203,6 +203,15 @@ class Submission(models.Model):
         else:
             return unicode("New Submission instance")
 
+    def grading_status_text(self):
+            if self.assignment.gradingScheme:
+                if self.is_grading_finished():
+                    return unicode('Yes ({0})'.format(self.grading))
+                else:
+                    return unicode('No')
+            else:
+                return unicode('Not graded')
+
     def log(self, level, format_string, *args, **kwargs):
         level_mapping = {
             'CRITICAL': logging.CRITICAL,

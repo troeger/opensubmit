@@ -21,3 +21,4 @@ web/database.sqlite
 *terraform.tfvars*
 *terraform.tfstate*
 web/venv/pip-selfcheck.json
+web/venv/man/man1/tqdm.1

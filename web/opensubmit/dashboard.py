@@ -15,7 +15,6 @@ class TeacherDashboard(Dashboard):
 
     def init_with_context(self, context):
         general=[]
-        general.append(['Show duplicate report', reverse('duplicates'), False])
         if context.request.user.has_perm('opensubmit.change_course'):
             general.append(['Show all courses', reverse('teacher:opensubmit_course_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_gradingscheme'):

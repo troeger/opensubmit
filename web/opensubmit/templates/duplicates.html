@@ -14,62 +14,71 @@
 var table=$('#duplicates').DataTable( 
 	{
 		paging: false,
-		order: [[ 0, "asc" ], [2, "asc"], [3, "asc"], [5, "asc"]]
+		order: [[ 0, "asc" ], [1, "desc"], [4, "asc"]],
+		rowGroup: {dataSrc: 0},
+		columnDefs: [
+            {
+                "targets": [ 0 ],
+                "visible": false
+            }
+        ]
 	});
 {% endblock %}
 
 {% block title %}
-    {{ block.super }} - Duplicate Report
+    {{ block.super }} - Duplicate Report for {{ assignment }}
 {% endblock %}
 
 {% block breadcrumbs %}
-    <ul>
-        <li><a href="{% url 'teacher:index' %}">Home</a></li>
-        <li> Duplicates</li>
-    </ul>
+<ul>
+    <li><a href="{{ main_url }}/teacher/">Home</a></li>
+    <li>
+        <a href="{{ main_url }}/teacher/opensubmit/assignment/">Assignments</a>
+    </li>
+    <li>Duplicates</li>
+</ul>
+
+
 {% endblock %}
 
 {% block content %}
 
 <div class="page-header">
-    <h1>Duplicate Report</h1>
+    <h1>Duplicate Report for {{ assignment }}</h1>
 </div>
 
-Hint: Use the Shift key for sub-ordering of columns.
+<p>Hint: Use the Shift key for working with sub-ordered columns.</p>
 
 <table id="duplicates" class="table table-bordered table-condensed table-hover">
 <thead>
 	<tr>
-		<th>Content hash</th>
-		<th>Submission</th>
-		<th>Course</th>
-		<th>Assignment</th>
-		<th>Authors</th>
+		<th>Content Hash</th>
 		<th>Last change</th>
+		<th>Submission</th>
+		<th>Assignment</th>
+		<th>Course</th>
+		<th>Authors</th>
 		<th>Grading finished?</th>
 		<th>Grading Notes</th>
 	</tr>
 </thead>
 <tbody>
-{% regroup files by md5 as duplicates %}
-{% for duplicate_set in duplicates %}
-	{% if duplicate_set.list|length > 1 %}
-			{% for submfile in duplicate_set.list %}
-			{% with submission=submfile.submissions.all.0 %}
-				<tr>
-					<td>{{ duplicate_set.grouper }}</td>
-					{% url 'teacher:opensubmit_submission_change' submission as suburl %}
-					<td><a href="{{ suburl }}" target="_new">#{{submission}}</a> (<a href="{{ submfile.get_preview_url }}" target="_new">file preview</a>)</td>
-					<td>{{ submission.assignment.course }}</td>
-					<td>{{ submission.assignment }}</td>
-					<td>{{ submission.authors.all|join:", " }}</td>
-					<td>{{ submission.modified }}
-					<td>{% if submission.is_grading_finished %}Yes ({{submission.grading}}){% else %}No{%endif%} </td>
-					<td>{{ submission.grading_notes|default_if_none:""}}</td>
-				</tr>
-			{% endwith %}
-			{% endfor %}
-	{% endif %}
+{% for key, file_list in duplicates %}
+	{% for dupfile in file_list %}
+		{% with dupfile.submissions.all.0 as submission %}
+		<tr {% if submission.assignment.pk != assignment.pk %} style="font-style: italic"{%endif%}>
+			<td>Case {{ forloop.parentloop.counter }}</td>
+			<td>{{ submission.modified }}
+			{% url 'teacher:opensubmit_submission_change' submission as suburl %}
+			<td><a href="{{ suburl }}" target="_new">#{{submission}}</a> (<a href="{{ dupfile.get_preview_url }}" target="_new">file preview</a>)</td>
+			<td>{{ submission.assignment }}</td>
+			<td>{{ submission.assignment.course }}</td>
+			<td>{{ submission.authors.all|join:", " }}</td>
+			<td>{{ submission.grading_status_text }}</td>
+			<td>{{ submission.grading_notes|default_if_none:""}}</td>
+		</tr>
+		{% endwith %}
+	{% endfor %}
 {% endfor %}
 </tbody>
 </table>

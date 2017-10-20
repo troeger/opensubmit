@@ -4,9 +4,11 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from .submission import Submission
+from .submissionfile import SubmissionFile
 from .submissiontestresult import SubmissionTestResult
 
 import os
+from itertools import groupby
 
 class Assignment(models.Model):
     '''
@@ -184,4 +186,24 @@ class Assignment(models.Model):
             targetpath = self.directory_name_with_course()
             targetname = os.path.basename(self.description.name)
             z.write(sourcepath, targetpath + os.sep + targetname)
+
+    def duplicate_files(self):
+        '''
+        Search for duplicates of submission file uploads for this assignment.
+        This includes the search in other course, whether inactive or not.
+        Returns a list of lists, where each latter is a set of duplicate submissions
+        with at least on of them for this assignment
+        '''
+        result=list()
+        files = SubmissionFile.valid_ones.order_by('md5')
+
+        for key, dup_group in groupby(files, lambda f: f.md5):
+            file_list=[entry for entry in dup_group]
+            if len(file_list)>0:
+                for entry in file_list:
+                    if entry.submissions.filter(assignment=self).count()>0:
+                        result.append([key, file_list])
+                        break
+        return result
+
 
