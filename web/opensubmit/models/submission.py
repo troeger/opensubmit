@@ -204,13 +204,46 @@ class Submission(models.Model):
             return unicode("New Submission instance")
 
     def grading_status_text(self):
-            if self.assignment.gradingScheme:
-                if self.is_grading_finished():
-                    return unicode('Yes ({0})'.format(self.grading))
-                else:
-                    return unicode('No')
+        '''
+        A rendering of the grading that is an answer on the question
+        "Is it graded?".
+        '''
+        if self.assignment.gradingScheme:
+            if self.is_grading_finished():
+                return unicode('Yes ({0})'.format(self.grading))
             else:
-                return unicode('Not graded')
+                return unicode('No')
+        else:
+            return unicode('Not graded')
+
+    def grading_value_text(self):
+        '''
+        A rendering of the grading that is an answer to the question
+        "What is the grade?".
+        '''
+        if self.assignment.gradingScheme:
+            if self.is_grading_finished():
+                return unicode(self.grading)
+            else:
+                return unicode('pending')
+        else:
+            if self.is_grading_finished():
+                return unicode('done')
+            else:
+                return unicode('not done')
+
+    def grading_means_passed(self):
+        '''
+        Information if the given grading means passed.
+        Non-graded assignments are always passed.
+        '''
+        if self.assignment.gradingScheme:
+            if self.grading and self.grading.means_passed:
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def log(self, level, format_string, *args, **kwargs):
         level_mapping = {

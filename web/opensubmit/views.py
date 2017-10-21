@@ -273,22 +273,22 @@ def duplicates(request, ass_id):
 @login_required
 @staff_member_required
 def gradingtable(request, course_id):
-    gradings = {}
+    author_submissions = {}
     course = get_object_or_404(Course, pk=course_id)
     assignments = course.assignments.all().order_by('title')
     # find all gradings per author and assignment
     for assignment in assignments:
         for submission in assignment.submissions.all().filter(state=Submission.CLOSED):
             for author in submission.authors.all():
-                # Gradings is a dict mapping authors to another dict
-                # This second dict maps assignments to gradings
+                # author_submissions is a dict mapping authors to another dict
+                # This second dict maps assignments to submissions (for this author)
                 # A tuple as dict key does not help here, since we want to iterate over the assignments later
-                if author not in gradings.keys():
-                    gradings[author] = {assignment.pk: submission.grading}
+                if author not in author_submissions.keys():
+                    author_submissions[author] = {assignment.pk: submission}
                 else:
-                    gradings[author][assignment.pk] = submission.grading
+                    author_submissions[author][assignment.pk] = submission
     resulttable = []
-    for author, gradlist in gradings.iteritems(): 
+    for author, ass2sub in author_submissions.iteritems(): 
         columns = []
         numpassed = 0
         numgraded = 0
@@ -297,30 +297,26 @@ def gradingtable(request, course_id):
         columns.append(author.first_name if author.first_name else '')
         columns.append(author.profile.student_id if author.profile.student_id else '')
         columns.append(author.profile.study_program if author.profile.study_program else '')
-        # Process all assignment gradings for this author
+        # Process all assignments in the table order, once per author (loop above)
         for assignment in assignments:
-            if not assignment.gradingScheme:
-                columns.append('not graded')
-            else:
-                numgraded += 1
-                if assignment.pk in gradlist:
-                    # Ok, we have a grading for this author in this assignment
-                    grade = gradlist[assignment.pk]
-                    if grade is not None:
-                        passed = grade.means_passed
-                        columns.append(grade)
-                        if passed:
-                            numpassed += 1
+            if assignment.pk in ass2sub:
+                # Ok, we have a submission for this author in this assignment
+                submission = ass2sub[assignment.pk]
+                if assignment.gradingScheme:
+                    # is graded, make part of statistics
+                    numgraded += 1
+                    if submission.grading_means_passed():
+                        numpassed += 1
                         try:
-                            pointsum += eval(str(grade))
+                            pointsum += int(str(submission.grading))
                         except:
                             pass
-                    else:
-                        # Should not happen, just a save guard
-                        columns.append('')
-                else:
-                    # This author got no grade for this assignment
-                    columns.append('missing')
+                # considers both graded and ungraded assignments
+                columns.append(submission.grading_value_text())
+            else:
+                # No submission for this author in this assignment
+                # This may or may not be bad, so we keep it neutral here
+                columns.append('-')
         columns.append("%s / %s" % (numpassed, numgraded))
         columns.append("%u" % pointsum)
         resulttable.append(columns)
