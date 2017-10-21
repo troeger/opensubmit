@@ -199,7 +199,7 @@ class Assignment(models.Model):
 
         for key, dup_group in groupby(files, lambda f: f.md5):
             file_list=[entry for entry in dup_group]
-            if len(file_list)>0:
+            if len(file_list)>1:
                 for entry in file_list:
                     if entry.submissions.filter(assignment=self).count()>0:
                         result.append([key, file_list])
