@@ -132,9 +132,9 @@ class SubmissionFile(models.Model):
             pass
         return False
 
-    def archive_previews(self):
+    def previews(self):
         '''
-            Return preview on archive file content as dictionary.
+            Return preview on archive file / single file content as dictionary.
             In order to avoid browser and web server trashing by the students, there is a size limit for the single files shown.
         '''
         MAX_PREVIEW_SIZE = 1000000
@@ -145,45 +145,34 @@ class SubmissionFile(models.Model):
             except:
                 return unicode("(unreadable text data)")
 
+        def is_code(fname):
+            code_endings=['.c','.cpp','Makefile','.java','.py','.rb','.js']
+            for ending in code_endings:
+                if fname.endswith(ending):
+                    return True
+            return False
+
         result = []
         if zipfile.is_zipfile(self.attachment.path):
             zf = zipfile.ZipFile(self.attachment.path, 'r')
             for zipinfo in zf.infolist():
                 if zipinfo.file_size < MAX_PREVIEW_SIZE:
-                    result.append({'name': zipinfo.filename, 'preview': sanitize(zf.read(zipinfo))})
+                    result.append({'name': zipinfo.filename, 'is_code': is_code(zipinfo.filename), 'preview': sanitize(zf.read(zipinfo))})
                 else:
-                    result.append({'name': zipinfo.filename, 'preview': '(maximum size exceeded)'})
+                    result.append({'name': zipinfo.filename, 'is_code': False, 'preview': '(maximum size exceeded)'})
         elif tarfile.is_tarfile(self.attachment.path):
             tf = tarfile.open(self.attachment.path,'r')
             for tarinfo in tf.getmembers():
                 if tarinfo.isfile():
                     if tarinfo.size < MAX_PREVIEW_SIZE:
-                        result.append({'name': tarinfo.name, 'preview': sanitize(tf.extractfile(tarinfo).read())})
+                        result.append({'name': tarinfo.name, 'is_code': is_code(tarinfo.filename), 'preview': sanitize(tf.extractfile(tarinfo).read())})
                     else:
-                        result.append({'name': tarinfo.name, 'preview': '(maximum size exceeded)'})
+                        result.append({'name': tarinfo.name, 'is_code': False, 'preview': '(maximum size exceeded)'})
         else:
             # single file
             f=open(self.attachment.path)
             fname = f.name[f.name.rfind(os.sep)+1:]
-            result = [{'name': fname, 'preview': sanitize(f.read())},]
-        return result
-
-    def plaintext_preview(self):
-        '''
-            Return preview on pure text content as plain text.
-            In order to avoid browser and web server trashing by the students, there is a size limit.
-        '''
-        MAX_PREVIEW_SIZE = 1000000
-
-        def sanitize(text):
-            try:
-                return unicode(text, errors='ignore')
-            except:
-                return unicode("(unreadable text data)")
-
-        f=open(self.attachment.path)
-        fname = f.name[f.name.rfind(os.sep)+1:]
-        result = {'name': fname, 'preview': sanitize(f.read())}
+            result = [{'name': fname, 'is_code': is_code(fname), 'preview': sanitize(f.read())},]
         return result
 
     def test_result_dict(self):

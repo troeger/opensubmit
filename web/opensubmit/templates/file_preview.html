@@ -33,9 +33,7 @@
 
 <div id="content-main">
 	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-	{% if submission.file_upload.is_archive %}
-		{% for file in submission.file_upload.archive_previews %}
-		    {% if file.preview %}
+		{% for file in submission.file_upload.previews %}
 			  <div class="panel panel-default">
 			    <div class="panel-heading" role="tab" id="heading{{forloop.counter}}">
 			      <h4 class="panel-title">
@@ -44,19 +42,13 @@
 			        </a>
 			      </h4>
 			    </div>
-			    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
+			    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
 			      <div class="panel-body">
-			        	<pre class="prettyprint linenums"><code>{{ file.preview }}</code></pre>
+			        	<pre class="{% if not file.is_code %}nocode{% endif%} prettyprint linenums"><code>{{ file.preview }}</code></pre>
 			      </div>
 			    </div>
 			  </div>
-		     {% endif %}
 		{% endfor %}
-	{% else %}
-		      <div class="panel-body">
-		        	<pre class="prettyprint linenums"><code>{{ submission.file_upload.plaintext_preview.preview }}</code></pre>
-		      </div>
-    {% endif %}
 	</div>
 </div>
 

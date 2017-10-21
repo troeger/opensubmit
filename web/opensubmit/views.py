@@ -239,7 +239,7 @@ def mergeusers(request):
 @staff_member_required
 def preview(request, subm_id):
     '''
-        Renders a preview of the uploaded student archive.
+        Renders a preview of the uploaded student file.
         This is only intended for the grading procedure, so staff status is needed.
     '''
     submission = get_object_or_404(Submission, pk=subm_id)
