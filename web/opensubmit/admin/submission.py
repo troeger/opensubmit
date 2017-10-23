@@ -32,9 +32,11 @@ def grading_notes(submission):
     else:
         return False
 grading_notes.boolean = True            # show nice little icon
+grading_notes.short_description = "Grading notes?"
 
 def grading_text(submission):
     return submission.grading_status_text()
+grading_text.short_description = "Grading finished?"
 
 def grading_file(submission):
     ''' Determines if the submission has a grading file,
