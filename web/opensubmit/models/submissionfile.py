@@ -15,7 +15,7 @@ def upload_path(instance, filename):
     '''
 
     filename = filename.replace(" ", "_")
-    filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').lower()
+    filename = unicodedata.normalize('NFKD', filename).lower()
     return os.path.join(str(timezone.now().date().isoformat()), filename)
 
 class ValidSubmissionFileManager(models.Manager):
@@ -97,7 +97,7 @@ class SubmissionFile(models.Model):
         except Exception as e:
             logger.warning("Exception on archive MD5 computation, using file checksum: "+str(e))
 
-        result=hashlib.md5(str(sorted(md5_set))).hexdigest()
+        result=hashlib.md5(''.join(sorted(md5_set)).encode('utf-8')).hexdigest()
         return result
 
     def basename(self):
