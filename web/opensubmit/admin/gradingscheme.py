@@ -12,17 +12,17 @@ def gradings(gradingScheme):
     result = []
     for grading in gradingScheme.gradings.all():
         if grading.means_passed:
-            result.append(unicode(grading) + u" (pass)")
+            result.append(str(grading) + " (pass)")
         else:
-            result.append(unicode(grading) + u" (fail)")
-    return u'  -  '.join(result)
+            result.append(str(grading) + " (fail)")
+    return '  -  '.join(result)
 
 
 def courses(gradingScheme):
     # determine the courses that use this grading scheme in one of their assignments
     course_ids = gradingScheme.assignments.all().values_list('course', flat=True)
     courses = Course.objects.filter(pk__in=course_ids)
-    return u",\n".join([unicode(course) for course in courses])
+    return ",\n".join([str(course) for course in courses])
 
 
 class GradingSchemeAdmin(ModelAdmin):

@@ -7,14 +7,14 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.core.exceptions import PermissionDenied
 
-from user import UserAdmin
-from course import CourseAdmin
-from grading import GradingAdmin
-from gradingscheme import GradingSchemeAdmin
-from assignment import AssignmentAdmin
-from submissionfile import SubmissionFileAdmin
-from submission import SubmissionAdmin
-from studyprogram import StudyProgramAdmin
+from .user import UserAdmin
+from .course import CourseAdmin
+from .grading import GradingAdmin
+from .gradingscheme import GradingSchemeAdmin
+from .assignment import AssignmentAdmin
+from .submissionfile import SubmissionFileAdmin
+from .submission import SubmissionAdmin
+from .studyprogram import StudyProgramAdmin
 
 def _social_auth_login(self, request, **kwargs):
     '''
