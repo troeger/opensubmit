@@ -25,11 +25,11 @@ def apache_config(config, outputfile):
     '''
     if os.path.exists(outputfile):
         os.rename(outputfile, outputfile+".old")
-        print("Renamed existing Apache config file to "+outputfile+".old")
+        print(("Renamed existing Apache config file to "+outputfile+".old"))
 
     from opensubmit import settings
     f = open(outputfile,'w')
-    print("Generating Apache configuration in "+outputfile)
+    print(("Generating Apache configuration in "+outputfile))
     subdir = (len(settings.HOST_DIR)>0)
     text = """
     # OpenSubmit Configuration for Apache 2.4
@@ -74,16 +74,16 @@ def check_file(filepath):
     '''
     check_path(os.path.dirname(filepath))
     if not os.path.exists(filepath):
-        print("WARNING: File does not exist. Creating it: %s"%filepath)
+        print(("WARNING: File does not exist. Creating it: %s"%filepath))
         open(filepath, 'a').close()
     try:
-        print("Setting access rights for %s for www-data user"%(filepath))
+        print(("Setting access rights for %s for www-data user"%(filepath)))
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
         os.chmod(filepath, 0o660) # rw-rw---
     except:
-        print("WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it."%filepath)
+        print(("WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it."%filepath))
 
 def check_web_config_consistency(config):
     '''
@@ -103,19 +103,19 @@ def check_web_config_consistency(config):
         urllib.request.urlopen(config.get("server", "HOST"))
     except Exception as e:
         # This may be ok, when the admin is still setting up to server
-        print("The configured HOST seems to be invalid at the moment: "+str(e))
+        print(("The configured HOST seems to be invalid at the moment: "+str(e)))
     # Check configuration dependencies
-    for k, v in login_conf_deps.items():
+    for k, v in list(login_conf_deps.items()):
         if config.getboolean('login', k):
             for needed in v:
                 if len(config.get('login', needed)) < 1:
-                    print("ERROR: You have enabled %s in settings.ini, but %s is not set."%(k, needed))
+                    print(("ERROR: You have enabled %s in settings.ini, but %s is not set."%(k, needed)))
                     return False
     # Check media path
     check_path(config.get('server', 'MEDIA_ROOT'))
     # Prepare empty log file, in case the web server has no creation rights
     log_file = config.get('server', 'LOG_FILE')
-    print("Preparing log file at "+log_file)
+    print(("Preparing log file at "+log_file))
     check_file(log_file)
     # If SQLite database, adjust file system permissions for the web server
     if config.get('database','DATABASE_ENGINE') == 'sqlite3':
@@ -138,7 +138,7 @@ def check_web_config(config_path):
     config = RawConfigParser()
     try:
         config.readfp(open(WEB_CONFIG_FILE))
-        print("Config file found at "+WEB_CONFIG_FILE)
+        print(("Config file found at "+WEB_CONFIG_FILE))
         return config
     except IOError:
         print("ERROR: Seems like the config file does not exist.")

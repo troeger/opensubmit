@@ -288,7 +288,7 @@ def gradingtable(request, course_id):
                 else:
                     author_submissions[author][assignment.pk] = submission
     resulttable = []
-    for author, ass2sub in author_submissions.items(): 
+    for author, ass2sub in list(author_submissions.items()): 
         columns = []
         numpassed = 0
         numgraded = 0
