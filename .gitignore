@@ -22,3 +22,4 @@ web/database.sqlite
 *terraform.tfstate*
 web/venv/pip-selfcheck.json
 web/venv/man/man1/tqdm.1
+*.bak
