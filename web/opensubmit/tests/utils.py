@@ -10,6 +10,6 @@ def run_parallel(num, func):
 
     for i in range(num):
         threads.append(Thread(None, wrapper))
-    map(lambda x: x.start(),threads)   
-    map(lambda x: x.join(),threads)  
+    list(map(lambda x: x.start(),threads))   
+    list(map(lambda x: x.join(),threads))  
     return results 

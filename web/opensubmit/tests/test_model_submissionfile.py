@@ -38,29 +38,29 @@ class ModelSubmissionFileTestCase(SubmitTestCase):
         self.loginUser(self.enrolled_students[0])
         sub1=self.createValidatedSubmission(self.current_user)
         sub2=self.createValidatedSubmission(self.current_user)
-        self.assertEquals(sub1.file_upload.md5, sub2.file_upload.md5)
+        self.assertEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
     def testMD5EqualNonArchiveFile(self):
         self.loginUser(self.enrolled_students[0])
         sub1,sub2 = self.prepareSubmission("/opensubmit/static/social-buttons/auth-icons.png",
                                            "/opensubmit/static/social-buttons/auth-icons.png")
-        self.assertEquals(sub1.file_upload.md5, sub2.file_upload.md5)
+        self.assertEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
     def testMD5UequalNonArchiveFile(self):
         self.loginUser(self.enrolled_students[0])
         sub1,sub2 = self.prepareSubmission("/opensubmit/static/social-buttons/auth-icons.png",
                                            "/opensubmit/static/social-buttons/auth-buttons.css")
-        self.assertNotEquals(sub1.file_upload.md5, sub2.file_upload.md5)
+        self.assertNotEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
 
     def testMD5SimilarArchiveFile(self):
         self.loginUser(self.enrolled_students[0])
         sub1,sub2 = self.prepareSubmission("/opensubmit/tests/submfiles/working_withcode.zip",
                                            "/opensubmit/tests/submfiles/working_withcode_otherwhitespace.zip")
-        self.assertEquals(sub1.file_upload.md5, sub2.file_upload.md5)
+        self.assertEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
     def testMD5NonsimilarArchiveFile(self):
         self.loginUser(self.enrolled_students[0])
         sub1,sub2 = self.prepareSubmission("/opensubmit/tests/submfiles/working_withcode.zip",
                                            "/opensubmit/tests/submfiles/working_withsubdir.zip")
-        self.assertNotEquals(sub1.file_upload.md5, sub2.file_upload.md5)
+        self.assertNotEqual(sub1.file_upload.md5, sub2.file_upload.md5)

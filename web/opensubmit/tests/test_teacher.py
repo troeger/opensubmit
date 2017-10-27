@@ -2,7 +2,7 @@
     Test cases for teacher 'GET' views and actions. They include all cases for tutors by inheritance.
 '''
 
-import StringIO, zipfile
+import io, zipfile
 
 from opensubmit.models import Submission
 from opensubmit.tests.cases import SubmitTeacherTestCase
@@ -12,28 +12,28 @@ from django.contrib.auth.models import User
 class TeacherTestCaseSet(TutorTestCaseSet):
     def testNewAssignmentView(self):
         response=self.c.get('/teacher/opensubmit/assignment/add/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testEditAssignmentView(self):
         for ass in self.allAssignments:
             response=self.c.get('/teacher/opensubmit/assignment/%u/change/'%ass.pk)
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
 
     def testGradingSchemeListView(self):
         response=self.c.get('/teacher/opensubmit/gradingscheme/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testGradingListView(self):
         response=self.c.get('/teacher/opensubmit/grading/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testAssignmentListView(self):
         response=self.c.get('/teacher/opensubmit/assignment/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testCourseListView(self):
         response=self.c.get('/teacher/opensubmit/course/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testGradingTableView(self):
         sub = self.createValidatedSubmission(self.current_user)
@@ -41,41 +41,41 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         sub.state = Submission.CLOSED
         sub.save()
         response = self.c.get('/course/%u/gradingtable/'%self.course.pk)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testSubmissionFileListView(self):
         response=self.c.get('/teacher/opensubmit/submissionfile/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testMailView(self):
         response=self.c.get('/course/%u/mail2all/'%self.course.pk)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testMailSending(self):
         # POST with parameters leads to preview, which stores relevant information in session
         response=self.c.post('/course/%u/mail2all/'%self.course.pk, {'subject': 'Foo', 'message': 'bar'})
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         # POST without parameters leads to sending of data stored in session
         # Expect redirect to overview
         response=self.c.post('/course/%u/mail2all/'%self.course.pk)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
     def testPerfDataView(self):
         sub1 = self.createValidatedSubmission(self.current_user)
         sub2 = self.createValidatedSubmission(self.current_user)
-        response=self.c.get(u'/assignments/%u/perftable/'%sub1.assignment.pk)
+        response=self.c.get('/assignments/%u/perftable/'%sub1.assignment.pk)
         # Resulting CSV should have header line + 2 result lines + empty final line
-        self.assertEquals(len(response.content.split('\n')), 3+1)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(len(response.content.split('\n')), 3+1)
+        self.assertEqual(response.status_code, 200)
         self.assertIn('text/', str(response))        # content type
 
     def testCourseArchiveView(self):
         # add some student upload to be stored in the archive
         self.val_sub = self.createValidatedSubmission(self.current_user)
         response = self.c.get('/course/%u/archive/'%self.course.pk)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         # Test if the download is really a ZIP file
-        f = StringIO.StringIO(response.content)
+        f = io.StringIO(response.content)
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity
@@ -94,15 +94,15 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         # add some student upload to be stored in the archive
         self.val_sub = self.createValidatableNoArchiveSubmission(self.current_user)
         response = self.c.get('/course/%u/archive/'%self.course.pk)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testAssignmentArchiveView(self):
         # add some student upload to be stored in the archive
         self.val_sub = self.createValidatedSubmission(self.current_user)
         response = self.c.get('/assignments/%u/archive/'%self.openAssignment.pk)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         # Test if the download is really a ZIP file
-        f = StringIO.StringIO(response.content)
+        f = io.StringIO(response.content)
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity
@@ -115,7 +115,7 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         # add some student upload to be stored in the archive
         self.val_sub = self.createValidatableNoArchiveSubmission(self.current_user)
         response = self.c.get('/assignments/%u/archive/'%self.openAssignment.pk)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
 
     def testAddCourseTutorSignalHandler(self):
@@ -161,4 +161,4 @@ class TeacherTestCase(SubmitTeacherTestCase, TeacherTestCaseSet):
     
     def testNewSubmissionView(self):
         response=self.c.get('/teacher/opensubmit/submission/add/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)

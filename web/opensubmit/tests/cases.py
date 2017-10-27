@@ -33,7 +33,7 @@ rootdir=os.getcwd()
 
 # Unicode crap, to be added to all test suite string input
 # Ensures proper handling of unicode content everywhere, as reaction to #154
-uccrap = u'\u1234\u2345\u3456'
+uccrap = '\u1234\u2345\u3456'
 
 class AnonStruct(object):
     def __init__(self, entries):
@@ -238,7 +238,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.openAssignment = Assignment(
             title=uccrap+'Open assignment',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -252,7 +252,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.openSingleAuthorAssignment = Assignment(
             title=uccrap+'Open assignment with single author',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -267,7 +267,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.anotherAssignment = Assignment(
             title=uccrap+'Another open assignment',
             course=self.anotherCourse,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -280,7 +280,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.fileAssignment = Assignment(
             title=uccrap+'File assignment',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -302,7 +302,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.validatedAssignment = Assignment(
             title=uccrap+'Validated assignment',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -319,7 +319,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.singleFileValidatorAssignment = Assignment(
             title=uccrap+'Validated assignment with single file validator',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -336,7 +336,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.validatedWithSupportFilesAssignment = Assignment(
             title=uccrap+'Validated assignment with support files',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -354,7 +354,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.softDeadlinePassedAssignment = Assignment(
             title=uccrap+'Soft deadline passed assignment',
             course=self.course,
-            download=u'http://example.org/assignments/2/download'+uccrap,
+            download='http://example.org/assignments/2/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -368,7 +368,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.hardDeadlinePassedAssignment = Assignment(
             title=uccrap+'Hard deadline passed assignment',
             course=self.course,
-            download=u'http://example.org/assignments/3/download'+uccrap,
+            download='http://example.org/assignments/3/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -382,7 +382,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.noHardDeadlineAssignment = Assignment(
             title=uccrap+'Assignment without hard deadline',
             course=self.course,
-            download=u'http://example.org/assignments/3/download'+uccrap,
+            download='http://example.org/assignments/3/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -396,7 +396,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.unpublishedAssignment = Assignment(
             title=uccrap+'Unpublished assignment',
             course=self.course,
-            download=u'http://example.org/assignments/4/download'+uccrap,
+            download='http://example.org/assignments/4/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=tomorrow,
             soft_deadline=next_week,
@@ -410,7 +410,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.noGradingAssignment = Assignment(
             title=uccrap+'Open assignment without grading',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=None,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -438,21 +438,21 @@ class SubmitTestCase(LiveServerTestCase):
     def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
+        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), str(fname)))
         sf.save()
         return sf
 
     def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), unicode(fname)))
+        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), str(fname)))
         sf.save()
         return sf
 
     def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), unicode(fname)))
+        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), str(fname)))
         sf.save()
         return sf
 

@@ -36,64 +36,64 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
         assert(self._registerExecutor().pk)
-        self.assertEquals(machine_count+1, TestMachine.objects.all().count())
+        self.assertEqual(machine_count+1, TestMachine.objects.all().count())
 
     def testRunRequestFromUnknownMachine(self):
         # This is expected to trigger a register action request from the server
-        self.assertNotEquals(True, self._runExecutor())
+        self.assertNotEqual(True, self._runExecutor())
 
     @override_settings(JOB_EXECUTOR_SECRET='foo')
     def testInvalidSecret(self):
-        self.assertNotEquals(True, self._runExecutor())
+        self.assertNotEqual(True, self._runExecutor())
 
     def testEverythingAlreadyTested(self):
         self.createValidatedSubmission(self.current_user)
         assert(self._registerExecutor().pk)
-        self.assertEquals(False, self._runExecutor())
+        self.assertEqual(False, self._runExecutor())
 
     def testCompileTest(self):
         self.sub = self.createValidatableSubmission(self.current_user) 
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.COMPILE_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
     def testBrokenCompileTest(self):
         self.sub = self.createCompileBrokenSubmission(self.current_user) 
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(False, self._runExecutor())
+        self.assertEqual(False, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.COMPILE_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
-        self.assertNotEquals(None, self.sub.get_compile_result())
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
+        self.assertNotEqual(None, self.sub.get_compile_result())
         # Integrate another test here, which relates to teacher backend submission status rendering
         # This is bad style - @TODO Refactor tests to make executor runs a helper function for all test classes
         from opensubmit.admin.submission import SubmissionAdmin
         sa=SubmissionAdmin(Submission, None)
-        self.assertNotEquals(None, sa.compile_result(self.sub))
-        self.assertEquals("Enabled, no results.", sa.validation_result(self.sub))
-        self.assertEquals("Enabled, no results.", sa.fulltest_result(self.sub))
+        self.assertNotEqual(None, sa.compile_result(self.sub))
+        self.assertEqual("Enabled, no results.", sa.validation_result(self.sub))
+        self.assertEqual("Enabled, no results.", sa.fulltest_result(self.sub))
 
     def testCompileWithSupportFilesTest(self):
         self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.COMPILE_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
 
     def testParallelExecutorsCompileTest(self):
@@ -114,8 +114,8 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.COMPILE_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
 
     def testTooLongCompile(self):
@@ -130,10 +130,10 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # Fire up the executor, should mark the submission as timed out
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(False, self._runExecutor())       # No job is available
+        self.assertEqual(False, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         self.sub.refresh_from_db()
-        self.assertEquals(self.sub.state, Submission.TEST_COMPILE_FAILED)
+        self.assertEqual(self.sub.state, Submission.TEST_COMPILE_FAILED)
         assert("timeout" in self.sub.get_compile_result().result)
 
     def testTooLongValidation(self):
@@ -141,7 +141,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
         # perform compilation step
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # set very short timeout
         self.sub.assignment.attachment_test_timeout=1
         self.sub.assignment.save()
@@ -150,10 +150,10 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEquals(False, self._runExecutor())       # No job is available
+        self.assertEqual(False, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         self.sub.refresh_from_db()
-        self.assertEquals(self.sub.state, Submission.TEST_VALIDITY_FAILED)
+        self.assertEqual(self.sub.state, Submission.TEST_VALIDITY_FAILED)
         assert("timeout" in self.sub.get_validation_result().result)
 
     def testTooLongFullTest(self):
@@ -161,9 +161,9 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
         # perform compilation step
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # perform validation step
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # set very short timeout
         self.sub.assignment.attachment_test_timeout=1
         self.sub.assignment.save()
@@ -172,10 +172,10 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEquals(False, self._runExecutor())       # No job is available
+        self.assertEqual(False, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         self.sub.refresh_from_db()
-        self.assertEquals(self.sub.state, Submission.TEST_FULL_FAILED)
+        self.assertEqual(self.sub.state, Submission.TEST_FULL_FAILED)
         assert("timeout" in self.sub.get_fulltest_result().result)
 
 
@@ -184,45 +184,45 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.sub = self.createValidatableSubmission(self.current_user)
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # validate
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
     def testSingleFileValidatorTest(self):
         # compile
         self.sub = self.createSingleFileValidatorSubmission(self.current_user)
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # validate
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
     def testValidationWithSupportFilesTest(self):
         # compile
         self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # validate
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
     def testValidationTestWithoutCompilation(self):
         # compile
@@ -231,27 +231,27 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.sub.assignment.save()
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         # validate
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
 
     def testFullTest(self):
         # We need a fully working validation run beforehand
         self.testValidationTest()
-        self.assertEquals(True, self._runExecutor())
+        self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.FULL_TEST
         )
-        self.assertEquals(1, len(results))
-        self.assertNotEquals(0, len(results[0].result))
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
 
     def testInconsistentStateEMail(self):
         '''
@@ -293,8 +293,8 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         sub1.save()
         # Run real_machine executor, should not react on this submission
         old_sub1_state = sub1.state
-        self.assertEquals(False, self._runExecutor())
+        self.assertEqual(False, self._runExecutor())
         # Make sure that submission object was not touched, whatever the executor says
         sub1 = Submission.objects.get(pk=sub1.pk)
-        self.assertEquals(old_sub1_state, sub1.state)
+        self.assertEqual(old_sub1_state, sub1.state)
 

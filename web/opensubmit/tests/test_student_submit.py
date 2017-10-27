@@ -27,13 +27,13 @@ class StudentSubmissionTestCase(SubmitTestCase):
                 'authors': str(submitter.user.pk)
             })
             expect_success, expected_response = cases[assignment]
-            self.assertEquals(response.status_code, expected_response)
+            self.assertEqual(response.status_code, expected_response)
 
             submission_exists = Submission.objects.filter(
                 assignment__exact=assignment,
                 submitter__exact=submitter.user,
             ).exists()
-            self.assertEquals(submission_exists, expect_success)
+            self.assertEqual(submission_exists, expect_success)
 
     def testCanSubmitWithFile(self):
         submitter = self.enrolled_students[0]
@@ -45,7 +45,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
                 'attachment': f
             })
         # expect dashboard redirect
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
         sub = Submission.objects.get(
             assignment__exact=self.validatedAssignment,
@@ -69,7 +69,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
                     submitter__exact=submitter.user)
         md5_1 = submit(self.enrolled_students[0], 'django.pdf').file_upload.md5
         md5_2 = submit(self.enrolled_students[1], 'python.pdf').file_upload.md5
-        self.assertNotEquals(md5_1, md5_2)
+        self.assertNotEqual(md5_1, md5_2)
 
     def testCannotUpdate(self):
         submitter = self.enrolled_students[0]
@@ -79,13 +79,13 @@ class StudentSubmissionTestCase(SubmitTestCase):
         sub = self.createValidatableSubmission(self.current_user)
         response = self.c.post('/update/%u/' % sub.pk)
         # expect dashboard redirect
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
         # test successful, update not allowed
         sub = self.createValidatedSubmission(self.current_user)
         response = self.c.post('/update/%u/' % sub.pk)
         # expect dashboard redirect
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
     def testCanUpdateInvalidData(self):
         submitter = self.enrolled_students[0]
@@ -98,7 +98,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
 
         # Try to update file with invalid form data
         response = self.c.post('/update/%u/' % sub.pk, {'attachment':'bar'})   # invalid form data
-        self.assertEquals(response.status_code, 200)    # render update view, again
+        self.assertEqual(response.status_code, 200)    # render update view, again
 
     def testCanUpdateValidData(self):
         submitter = self.enrolled_students[0]
@@ -112,7 +112,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
         # Try to update file with correct POST data
         with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip") as f:
             response = self.c.post('/update/%u/' % sub.pk, {'notes': '', 'attachment': f})
-            self.assertEquals(response.status_code, 302)    # redirect to dashboard after upload
+            self.assertEqual(response.status_code, 302)    # redirect to dashboard after upload
 
     def testNonEnrolledCannotSubmit(self):
         submitter = self.not_enrolled_students[0]
@@ -123,13 +123,13 @@ class StudentSubmissionTestCase(SubmitTestCase):
                         assignment belongs to""",
             'authors': str(submitter.user.pk)
         })
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
         submission_count = Submission.objects.filter(
             submitter__exact=submitter.user,
             assignment__exact=self.openAssignment,
         ).count()
-        self.assertEquals(submission_count, 0)
+        self.assertEqual(submission_count, 0)
 
     def testCanSubmitAsTeam(self):
         self.loginUser(self.enrolled_students[0])
@@ -155,13 +155,13 @@ class StudentSubmissionTestCase(SubmitTestCase):
                         assignment.""",
             'authors': str(self.not_enrolled_students[0].user.pk),
         })
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
         submission_count = Submission.objects.filter(
             submitter__exact=self.enrolled_students[0].user,
             assignment__exact=self.openAssignment,
         ).count()
-        self.assertEquals(submission_count, 0)
+        self.assertEqual(submission_count, 0)
 
     def testCannotDoubleSubmitThroughTeam(self):
         submitter = self.enrolled_students[1]
@@ -185,7 +185,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
                         assignment.""",
             'authors': str(self.enrolled_students[1].user.pk),
         })
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
         submission_exists = Submission.objects.filter(
             submitter__exact=self.enrolled_students[0].user,

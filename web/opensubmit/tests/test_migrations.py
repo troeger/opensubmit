@@ -2,7 +2,7 @@
 	Test cases for data migrations.
 '''
 
-from cases import TestMigrations
+from .cases import TestMigrations
 
 class TagsTestCase(TestMigrations):
 

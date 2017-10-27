@@ -4,7 +4,7 @@
 
 from django.test import TestCase
 from opensubmit import cmdline, settings
-import sys, tempfile, os.path, ConfigParser, shutil
+import sys, tempfile, os.path, configparser, shutil
 
 class CmdLineConfigureTestCase(TestCase):
     '''
@@ -36,9 +36,9 @@ class CmdLineConfigureTestCase(TestCase):
         '''
         cmdline.console_script(fsroot=self.tmpdir)
         conf_name = self.tmpdir+'etc/opensubmit/settings.ini'
-        self.assertEquals(True, os.path.isfile(conf_name))
+        self.assertEqual(True, os.path.isfile(conf_name))
         # Got a working settings file from the template, now configure it
-        cfg=ConfigParser.ConfigParser()
+        cfg=configparser.ConfigParser()
         with open(conf_name) as cfg_file:
             cfg.readfp(cfg_file)
         cfg.set('server',  'HOST','http://www.troeger.eu')
@@ -51,6 +51,6 @@ class CmdLineConfigureTestCase(TestCase):
         # but only by the 'configure' code itself.
         with self.settings(STATIC_ROOT=self.tmpdir+'static'):
             cmdline.console_script(fsroot=self.tmpdir)
-            self.assertEquals(True, os.path.isfile(self.tmpdir+'etc/opensubmit/apache24.conf'))
-            self.assertEquals(True, os.path.isdir(self.tmpdir+'static/css'))
+            self.assertEqual(True, os.path.isfile(self.tmpdir+'etc/opensubmit/apache24.conf'))
+            self.assertEqual(True, os.path.isdir(self.tmpdir+'static/css'))
 
