@@ -2,11 +2,12 @@
     Everything that is about to be executed on a test machine.
 '''
 
-from urllib import urlencode
-from urllib2 import urlopen, HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 import logging, json
 import zipfile, tarfile
-import tempfile, os, platform, shutil, subprocess, signal, stat, sys, pickle, ConfigParser
+import tempfile, os, platform, shutil, subprocess, signal, stat, sys, pickle, configparser
 import time
 from threading import Timer
 from datetime import datetime, timedelta
@@ -31,7 +32,7 @@ def read_config(config_file, url=None):
 
         The URL parameter allows to override the URL setting from the file.
     '''
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.readfp(open(config_file))
 
     if not logger.handlers:
@@ -47,7 +48,7 @@ def read_config(config_file, url=None):
     logger.setLevel(config.get("Logging", "level"))
 
     # set defaults for non-existing options
-    for key, value in defaults.iteritems():
+    for key, value in defaults.items():
         if not config.has_option(key[0], key[1]):
             logger.debug("%s option not in INI file, assuming %s"%(str(key), str(value)))
             config.set(key[0], key[1], value)
@@ -654,4 +655,4 @@ if __name__ == "__main__":
         run(sys.argv[2])
     else:
         print("python -m opensubmit.executor [register|run] executor.ini")
-    print "Exit"
+    print("Exit")
