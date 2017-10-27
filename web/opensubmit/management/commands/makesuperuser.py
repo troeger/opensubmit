@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             u=User.objects.get(email=options['email'][0])
-            print("Found %s %s (%s), setting superuser status."%(u.first_name, u.last_name, u.email))
+            print(("Found %s %s (%s), setting superuser status."%(u.first_name, u.last_name, u.email)))
             u.is_superuser=True
             u.is_staff=True
             u.save()

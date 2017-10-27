@@ -7,10 +7,10 @@ class Command(BaseCommand):
         print("Scanning existing file uploads ...")
     	files = SubmissionFile.valid_ones.all()
     	for f in files:
-    		print("Updating checksum for %s ..."%(str(f)))
+    		print(("Updating checksum for %s ..."%(str(f))))
     		try:
 	    		f.md5 = f.attachment_md5()
 	    		f.save()
 	    	except IOError as e:
-	    		print("Failed: "+str(e))
+	    		print(("Failed: "+str(e)))
 
