@@ -6,7 +6,7 @@ requests>=2.5.1
 pycrypto
 pyjwkest
 python-social-auth<=0.2.21
-python-openid
+python3-openid
 python-oauth2
 oauthlib>=0.6.2
 blti
