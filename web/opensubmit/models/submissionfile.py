@@ -46,7 +46,7 @@ class SubmissionFile(models.Model):
         app_label = 'opensubmit'
 
     def __unicode__(self):
-        return unicode(self.attachment.name)
+        return str(self.attachment.name)
 
     def attachment_md5(self):
         '''
@@ -64,7 +64,7 @@ class SubmissionFile(models.Model):
 
         def md5_add_text(text):
             try:
-                text=unicode(text, errors='ignore')
+                text=str(text, errors='ignore')
                 text=text.replace(' ','').replace('\n','').replace('\t','')
                 md5_set.append(hashlib.md5(text).hexdigest())
             except:
@@ -141,9 +141,9 @@ class SubmissionFile(models.Model):
 
         def sanitize(text):
             try:
-                return unicode(text, errors='ignore')
+                return str(text, errors='ignore')
             except:
-                return unicode("(unreadable text data)")
+                return str("(unreadable text data)")
 
         def is_code(fname):
             code_endings=['.c','.cpp','Makefile','.java','.py','.rb','.js']
@@ -183,7 +183,7 @@ class SubmissionFile(models.Model):
             Returns a dictionary where the keys are the result types, and
             the values are dicts of all the other result information.
         '''
-        list_of_dicts=self.test_results.all().values()
+        list_of_dicts=list(self.test_results.all().values())
         return {entry['kind']: {'result':entry['result']} for entry in list_of_dicts}
 
     objects = models.Manager()

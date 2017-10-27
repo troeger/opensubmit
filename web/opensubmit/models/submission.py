@@ -199,9 +199,9 @@ class Submission(models.Model):
 
     def __unicode__(self):
         if self.pk:
-            return unicode("%u" % (self.pk))
+            return str("%u" % (self.pk))
         else:
-            return unicode("New Submission instance")
+            return str("New Submission instance")
 
     def grading_status_text(self):
         '''
@@ -210,11 +210,11 @@ class Submission(models.Model):
         '''
         if self.assignment.gradingScheme:
             if self.is_grading_finished():
-                return unicode('Yes ({0})'.format(self.grading))
+                return str('Yes ({0})'.format(self.grading))
             else:
-                return unicode('No')
+                return str('No')
         else:
-            return unicode('Not graded')
+            return str('Not graded')
 
     def grading_value_text(self):
         '''
@@ -223,14 +223,14 @@ class Submission(models.Model):
         '''
         if self.assignment.gradingScheme:
             if self.is_grading_finished():
-                return unicode(self.grading)
+                return str(self.grading)
             else:
-                return unicode('pending')
+                return str('pending')
         else:
             if self.is_grading_finished():
-                return unicode('done')
+                return str('done')
             else:
-                return unicode('not done')
+                return str('not done')
 
     def grading_means_passed(self):
         '''
@@ -464,17 +464,17 @@ class Submission(models.Model):
         # we cannot send eMail on SUBMITTED_TESTED, since this may have been triggered by test repitition in the backend
         if state == Submission.TEST_COMPILE_FAILED:
             subject = 'Warning: Your submission did not pass the compilation test'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
+            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.TEST_VALIDITY_FAILED:
             subject = 'Warning: Your submission did not pass the validation test'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
+            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.CLOSED:
             subject = 'Completed'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" is completed.\n\n Further information can be found at %s.\n\n'
+            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" is completed.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
         else:
             return

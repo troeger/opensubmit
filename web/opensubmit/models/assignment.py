@@ -142,7 +142,7 @@ class Assignment(models.Model):
         return self.attachment_test_compile is True or self.has_validity_test() or self.has_full_test()
 
     def __unicode__(self):
-        return unicode(self.title)
+        return str(self.title)
 
     def can_create_submission(self, user=None):
         '''

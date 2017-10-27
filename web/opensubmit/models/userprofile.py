@@ -81,13 +81,13 @@ def user_unicode(self):
 '''
     if self.email:
         shortened = self.email.split('@')[0]
-        return u'%s %s (%s@...)' % (self.first_name, self.last_name, shortened)
+        return '%s %s (%s@...)' % (self.first_name, self.last_name, shortened)
     elif self.first_name or self.last_name:
-        return u'%s %s' % (self.first_name, self.last_name)
+        return '%s %s' % (self.first_name, self.last_name)
     elif self.username:
-        return u'%s' % (self.username)
+        return '%s' % (self.username)
     else:
-        return u'User %u' % (self.pk)
+        return 'User %u' % (self.pk)
 User.__unicode__ = user_unicode
 
 @transaction.atomic

@@ -10,5 +10,5 @@ class StudyProgram(models.Model):
         app_label = 'opensubmit'
 
     def __unicode__(self):
-        return unicode(self.title)
+        return str(self.title)
 

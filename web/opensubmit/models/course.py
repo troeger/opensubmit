@@ -33,9 +33,9 @@ class Course(models.Model):
 
     def __unicode__(self):
         if self.active:
-            return unicode(self.title)
+            return str(self.title)
         else:
-            return unicode(self.title+' (inactive)')
+            return str(self.title+' (inactive)')
 
     def directory_name(self):
         ''' The course name in a format that is suitable for a directory name.  '''

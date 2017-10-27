@@ -12,7 +12,7 @@ class TestMachine(models.Model):
 
     def __unicode__(self):
         if self.address:
-            return unicode(self.address)
+            return str(self.address)
         else:
             return "Test Machine %u"%self.pk
 
