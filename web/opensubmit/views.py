@@ -1,11 +1,11 @@
 import os
 
 import json
-import StringIO
+import io
 import shutil
 import tarfile
 import tempfile
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import zipfile
 import csv
 
@@ -27,12 +27,12 @@ from django.forms.models import modelform_factory
 from django.forms.models import model_to_dict
 from blti import lti_provider
 
-from forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
-from models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
-from models.userprofile import db_fixes, move_user_data
-from models.course import lti_secret
-from settings import JOB_EXECUTOR_SECRET, MAIN_URL
-from social import passthrough
+from .forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
+from .models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
+from .models.userprofile import db_fixes, move_user_data
+from .models.course import lti_secret
+from .settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from .social import passthrough
 
 
 def index(request):
@@ -141,7 +141,7 @@ def new(request, ass_id):
     # Analyze submission data
     if request.POST:
         if 'authors' in request.POST:
-            authors = map(lambda s: User.objects.get(pk=int(s)), request.POST['authors'].split(','))
+            authors = [User.objects.get(pk=int(s)) for s in request.POST['authors'].split(',')]
             if not ass.authors_valid(authors):
                 raise PermissionDenied("The given list of co-authors is invalid!")
 
@@ -256,7 +256,7 @@ def perftable(request, ass_id):
     for sub in assignment.submissions.all():
         result = sub.get_fulltest_result()
         if result:
-            row=[unicode(sub.assignment), unicode(sub.pk), ", ".join(sub.authors.values_list('username', flat=True).order_by('username')), result.perf_data]
+            row=[str(sub.assignment), str(sub.pk), ", ".join(sub.authors.values_list('username', flat=True).order_by('username')), result.perf_data]
             row=[s.encode('utf-8') for s in row]
             writer.writerow(row)
     return response
@@ -283,12 +283,12 @@ def gradingtable(request, course_id):
                 # author_submissions is a dict mapping authors to another dict
                 # This second dict maps assignments to submissions (for this author)
                 # A tuple as dict key does not help here, since we want to iterate over the assignments later
-                if author not in author_submissions.keys():
+                if author not in list(author_submissions.keys()):
                     author_submissions[author] = {assignment.pk: submission}
                 else:
                     author_submissions[author][assignment.pk] = submission
     resulttable = []
-    for author, ass2sub in author_submissions.iteritems(): 
+    for author, ass2sub in author_submissions.items(): 
         columns = []
         numpassed = 0
         numgraded = 0
@@ -369,7 +369,7 @@ def coursearchive(request, course_id):
         Provides all course submissions and their information as archive download.
         For archiving purposes, since withdrawn submissions are included.
     '''
-    output = StringIO.StringIO()
+    output = io.StringIO()
     z = zipfile.ZipFile(output, 'w')
 
     course = get_object_or_404(Course, pk=course_id)
@@ -395,7 +395,7 @@ def assarchive(request, ass_id):
         Provides all non-withdrawn submissions for an assignment as download.
         Intented for supporting offline correction.
     '''
-    output = StringIO.StringIO()
+    output = io.StringIO()
     z = zipfile.ZipFile(output, 'w')
 
     ass = get_object_or_404(Assignment, pk=ass_id)
@@ -416,7 +416,7 @@ def machine(request, machine_id):
     machine = get_object_or_404(TestMachine, pk=machine_id)
     try:
         json_data=json.loads(machine.config)
-        config={k: v for k, v in json_data.items() if v}
+        config={k: v for k, v in list(json_data.items()) if v}
     except:
         config = {}
     queue = Submission.pending_student_tests.all()

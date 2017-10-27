@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.forms.models import BaseModelFormSet, modelformset_factory
-from models import Submission, Assignment, SubmissionFile, StudyProgram
+from .models import Submission, Assignment, SubmissionFile, StudyProgram
 
 class SubmissionWithGroups(forms.ModelForm):
 
