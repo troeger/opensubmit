@@ -9,7 +9,7 @@ def move_max_authors(apps, schema_editor):
         max_authors=course.max_authors
         for assignment in course.assignments.all():
             assignment.max_authors=max_authors
-            print(("Setting max authors for assignment '{0}' in course '{1}'...".format(assignment.title, course.title)))
+            print("Setting max authors for assignment '{0}' in course '{1}'...".format(assignment.title, course.title))
             assignment.save()
 
 def reverse(apps, schema_editor):

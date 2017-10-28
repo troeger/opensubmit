@@ -83,7 +83,7 @@ def ensure_slash_from_config(config, leading, trailing, configvar):
 
 # Find configuration file and open it.
 config_file_path, is_production = find_config_info()
-print(("Using "+config_file_path))
+print("Using "+config_file_path)
 config_fp = open(config_file_path, 'r')
 config = SafeConfigParser()
 config.readfp(config_fp)
