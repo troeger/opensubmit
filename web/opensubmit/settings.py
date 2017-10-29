@@ -4,8 +4,7 @@ from configparser import SafeConfigParser
 
 from django.core.exceptions import ImproperlyConfigured
 
-import pkg_resources
-VERSION = pkg_resources.require("opensubmit-web")[0].version
+VERSION = open('VERSION').read()
 
 NOT_CONFIGURED_VALUE = '***not configured***'
 
