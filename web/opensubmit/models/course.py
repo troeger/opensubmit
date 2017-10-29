@@ -31,11 +31,11 @@ class Course(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
-    def __unicode__(self):
+    def __str__(self):
         if self.active:
-            return str(self.title)
+            return self.title
         else:
-            return str(self.title+' (inactive)')
+            return self.title+' (inactive)'
 
     def directory_name(self):
         ''' The course name in a format that is suitable for a directory name.  '''

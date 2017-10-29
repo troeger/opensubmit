@@ -88,7 +88,7 @@ def user_unicode(self):
         return '%s' % (self.username)
     else:
         return 'User %u' % (self.pk)
-User.__unicode__ = user_unicode
+User.__str__ = user_unicode
 
 @transaction.atomic
 def move_user_data(primary, secondary):

@@ -7,5 +7,5 @@ class GradingScheme(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
-    def __unicode__(self):
-        return str(self.title)
+    def __str__(self):
+        return self.title

@@ -37,6 +37,9 @@ class Assignment(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
+    def __str__(self):
+        return self.title
+
     def directory_name(self):
         ''' The assignment name in a format that is suitable for a directory name.  '''
         return self.title.replace(" ", "_").replace("\\", "_").replace(",","").lower()
@@ -140,9 +143,6 @@ class Assignment(models.Model):
 
     def attachment_is_tested(self):
         return self.attachment_test_compile is True or self.has_validity_test() or self.has_full_test()
-
-    def __unicode__(self):
-        return str(self.title)
 
     def can_create_submission(self, user=None):
         '''

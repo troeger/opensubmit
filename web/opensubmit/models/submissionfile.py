@@ -45,8 +45,8 @@ class SubmissionFile(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
-    def __unicode__(self):
-        return str(self.attachment.name)
+    def __str__(self):
+        return self.attachment.name
 
     def attachment_md5(self):
         '''
@@ -165,7 +165,7 @@ class SubmissionFile(models.Model):
             for tarinfo in tf.getmembers():
                 if tarinfo.isfile():
                     if tarinfo.size < MAX_PREVIEW_SIZE:
-                        result.append({'name': tarinfo.name, 'is_code': is_code(tarinfo.filename), 'preview': sanitize(tf.extractfile(tarinfo).read())})
+                        result.append({'name': tarinfo.name, 'is_code': is_code(tarinfo.name), 'preview': sanitize(tf.extractfile(tarinfo).read())})
                     else:
                         result.append({'name': tarinfo.name, 'is_code': False, 'preview': '(maximum size exceeded)'})
         else:

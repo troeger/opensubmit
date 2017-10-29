@@ -26,7 +26,7 @@ def courses(gradingScheme):
 
 
 class GradingSchemeAdmin(ModelAdmin):
-    list_display = ['__unicode__', gradings, courses]
+    list_display = ['__str__', gradings, courses]
 
     class Media:
         css = {'all': ('css/teacher.css',)}

@@ -75,7 +75,7 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         response = self.c.get('/course/%u/archive/'%self.course.pk)
         self.assertEqual(response.status_code, 200)
         # Test if the download is really a ZIP file
-        f = io.StringIO(response.content)
+        f = io.BytesIO(response.content)
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity
@@ -102,7 +102,7 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         response = self.c.get('/assignments/%u/archive/'%self.openAssignment.pk)
         self.assertEqual(response.status_code, 200)
         # Test if the download is really a ZIP file
-        f = io.StringIO(response.content)
+        f = io.BytesIO(response.content)
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity

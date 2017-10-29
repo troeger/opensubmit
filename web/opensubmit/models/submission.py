@@ -197,11 +197,11 @@ class Submission(models.Model):
         '''
         return qs.exclude(state__in=[Submission.WITHDRAWN, Submission.RECEIVED])
 
-    def __unicode__(self):
+    def __str__(self):
         if self.pk:
-            return str("%u" % (self.pk))
+            return str(self.pk)
         else:
-            return str("New Submission instance")
+            return "New Submission instance"
 
     def grading_status_text(self):
         '''
@@ -515,7 +515,7 @@ class Submission(models.Model):
             Prepares a temporary file with information about the submission.
             Closing it will delete it, which must be considered by the caller.
         '''
-        info = tempfile.NamedTemporaryFile()
+        info = tempfile.NamedTemporaryFile(mode='wt')
         info.write("Submission ID:\t%u\n" % self.pk)
         info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name().encode('utf-8'), self.submitter.pk))
         info.write("Authors:\n")
@@ -578,7 +578,7 @@ class Submission(models.Model):
             for subdir, files in allfiles:
                 for f in files:
                     zip_relative_dir = subdir.replace(tempdir, "")
-                    zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
+                    zip_relative_file = '%s/%s'%(zip_relative_dir, f)
                     z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
         # add text file with additional information
         info = self.info_file()

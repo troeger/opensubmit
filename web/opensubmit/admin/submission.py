@@ -129,7 +129,7 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'created', 'modified', authors, course, 'assignment', 'state', grading_text, grading_notes]
+    list_display = ['__str__', 'created', 'modified', authors, course, 'assignment', 'state', grading_text, grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
@@ -314,7 +314,7 @@ class SubmissionAdmin(ModelAdmin):
         '''
         Download selected submissions as archive, for targeted correction.
         '''
-        output = io.StringIO()
+        output = io.BytesIO()
         z = zipfile.ZipFile(output, 'w')
 
         for sub in queryset:

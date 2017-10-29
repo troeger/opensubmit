@@ -369,7 +369,7 @@ def coursearchive(request, course_id):
         Provides all course submissions and their information as archive download.
         For archiving purposes, since withdrawn submissions are included.
     '''
-    output = io.StringIO()
+    output = io.BytesIO()
     z = zipfile.ZipFile(output, 'w')
 
     course = get_object_or_404(Course, pk=course_id)
@@ -395,7 +395,7 @@ def assarchive(request, ass_id):
         Provides all non-withdrawn submissions for an assignment as download.
         Intented for supporting offline correction.
     '''
-    output = io.StringIO()
+    output = io.BytesIO()
     z = zipfile.ZipFile(output, 'w')
 
     ass = get_object_or_404(Assignment, pk=ass_id)
