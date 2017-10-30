@@ -1,3 +1,2 @@
 psutil
-lockfile
-twine
+twisted
