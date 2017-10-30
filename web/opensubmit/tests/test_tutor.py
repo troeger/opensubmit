@@ -45,8 +45,8 @@ class TutorTestCaseSet():
         response=self.c.get('/assignments/%u/duplicates/'%self.validatedAssignment.pk)
         self.assertEqual(response.status_code, 200)
         # expect both submissions to be in the report
-        self.assertIn('#%u'%sub1.pk, str(response))
-        self.assertIn('#%u'%sub2.pk, str(response))
+        self.assertIn('submission/%u/change'%sub1.pk, str(response.content))
+        self.assertIn('submission/%u/change'%sub2.pk, str(response.content))
         # expect withdrawn submissions to be left out
         self.assertNotIn('#%u'%sub3.pk, str(response))
 
