@@ -38,7 +38,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
     def testCanSubmitWithFile(self):
         submitter = self.enrolled_students[0]
         self.loginUser(submitter)
-        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip") as f:
+        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip",'rb') as f:
             response = self.c.post('/assignments/%s/new/' % self.validatedAssignment.pk, {
                 'notes': 'This is a test submission.',
                 'authors': str(submitter.user.pk),
@@ -58,7 +58,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
     def testMD5OnSubmitGeneration(self):
         def submit(submitter, filename):
             self.loginUser(submitter)
-            with open(rootdir+"/opensubmit/tests/submfiles/"+filename) as f:
+            with open(rootdir+"/opensubmit/tests/submfiles/"+filename,'rb') as f:
                 response = self.c.post('/assignments/%s/new/' % self.fileAssignment.pk, {
                     'notes': 'This is a test submission.',
                     'authors': str(submitter.user.pk),
@@ -110,7 +110,7 @@ class StudentSubmissionTestCase(SubmitTestCase):
         sub.save()
 
         # Try to update file with correct POST data
-        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip") as f:
+        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip",'rb') as f:
             response = self.c.post('/update/%u/' % sub.pk, {'notes': '', 'attachment': f})
             self.assertEqual(response.status_code, 302)    # redirect to dashboard after upload
 

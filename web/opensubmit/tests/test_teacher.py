@@ -65,9 +65,10 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         sub2 = self.createValidatedSubmission(self.current_user)
         response=self.c.get('/assignments/%u/perftable/'%sub1.assignment.pk)
         # Resulting CSV should have header line + 2 result lines + empty final line
-        self.assertEqual(len(response.content.split('\n')), 3+1)
+        csv=response.content.decode(response.charset)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('text/', str(response))        # content type
+        self.assertIn('text/csv', response['Content-Type'])        # content type
+        self.assertEqual(len(csv.split('\n')), 3+1)
 
     def testCourseArchiveView(self):
         # add some student upload to be stored in the archive
