@@ -15,7 +15,7 @@ def upload_path(instance, filename):
     '''
 
     filename = filename.replace(" ", "_")
-    filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').lower()
+    filename = unicodedata.normalize('NFKD', filename).lower()
     return os.path.join(str(timezone.now().date().isoformat()), filename)
 
 class ValidSubmissionFileManager(models.Manager):
@@ -45,8 +45,8 @@ class SubmissionFile(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
-    def __unicode__(self):
-        return unicode(self.attachment.name)
+    def __str__(self):
+        return self.attachment.name
 
     def attachment_md5(self):
         '''
@@ -64,10 +64,11 @@ class SubmissionFile(models.Model):
 
         def md5_add_text(text):
             try:
-                text=unicode(text, errors='ignore')
+                text=str(text, errors='ignore')
                 text=text.replace(' ','').replace('\n','').replace('\t','')
-                md5_set.append(hashlib.md5(text).hexdigest())
-            except:
+                hexvalues=hashlib.md5(text.encode('utf-8')).hexdigest()
+                md5_set.append(hexvalues)
+            except Exception as e:
                 # not unicode decodable
                 pass
 
@@ -97,7 +98,7 @@ class SubmissionFile(models.Model):
         except Exception as e:
             logger.warning("Exception on archive MD5 computation, using file checksum: "+str(e))
 
-        result=hashlib.md5(str(sorted(md5_set))).hexdigest()
+        result=hashlib.md5(''.join(sorted(md5_set)).encode('utf-8')).hexdigest()
         return result
 
     def basename(self):
@@ -141,9 +142,9 @@ class SubmissionFile(models.Model):
 
         def sanitize(text):
             try:
-                return unicode(text, errors='ignore')
+                return str(text, errors='ignore')
             except:
-                return unicode("(unreadable text data)")
+                return str("(unreadable text data)")
 
         def is_code(fname):
             code_endings=['.c','.cpp','Makefile','.java','.py','.rb','.js']
@@ -165,7 +166,7 @@ class SubmissionFile(models.Model):
             for tarinfo in tf.getmembers():
                 if tarinfo.isfile():
                     if tarinfo.size < MAX_PREVIEW_SIZE:
-                        result.append({'name': tarinfo.name, 'is_code': is_code(tarinfo.filename), 'preview': sanitize(tf.extractfile(tarinfo).read())})
+                        result.append({'name': tarinfo.name, 'is_code': is_code(tarinfo.name), 'preview': sanitize(tf.extractfile(tarinfo).read())})
                     else:
                         result.append({'name': tarinfo.name, 'is_code': False, 'preview': '(maximum size exceeded)'})
         else:
@@ -183,7 +184,7 @@ class SubmissionFile(models.Model):
             Returns a dictionary where the keys are the result types, and
             the values are dicts of all the other result information.
         '''
-        list_of_dicts=self.test_results.all().values()
+        list_of_dicts=list(self.test_results.all().values())
         return {entry['kind']: {'result':entry['result']} for entry in list_of_dicts}
 
     objects = models.Manager()

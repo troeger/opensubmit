@@ -2,7 +2,7 @@ from django.contrib.admin import ModelAdmin
 
 def grading_schemes(grading):
     ''' The list of grading schemes using this grading.'''
-    return u",\n".join([unicode(scheme) for scheme in grading.schemes.all()])
+    return ",\n".join([str(scheme) for scheme in grading.schemes.all()])
 
 
 def means_passed(grading):
@@ -10,7 +10,7 @@ def means_passed(grading):
 means_passed.boolean = True
 
 class GradingAdmin(ModelAdmin):
-    list_display = ['__unicode__', grading_schemes, means_passed]
+    list_display = ['__str__', grading_schemes, means_passed]
 
     class Media:
         css = {'all': ('css/teacher.css',)}

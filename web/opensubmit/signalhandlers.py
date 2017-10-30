@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User, Group, Permission
 from opensubmit.models import Submission, Course, SubmissionFile
 
-from models.userprofile import db_fixes
+from .models.userprofile import db_fixes
 
 STUDENT_TUTORS_GROUP_NAME = "Student Tutors"
 COURSE_OWNERS_GROUP_NAME = "Course Owners"

@@ -29,13 +29,13 @@ class CourseModelStudentTestCase(StudentTestCase):
 
         # Course without submissions should not have gradable submissions
         qs = self.course.gradable_submissions()
-        self.assertEquals(qs.count(), 0)
+        self.assertEqual(qs.count(), 0)
 
         for count, state in expected:
             sub = self.createSubmission(self.current_user, self.openAssignment)
             sub.state = state
             sub.save()
-            self.assertEquals(qs.count(), count, "Submission count for state %s is incorrect."%state)
+            self.assertEqual(qs.count(), count, "Submission count for state %s is incorrect."%state)
 
     def testGradedSubmissionsList(self):
         # Expected number of results when the submission has that state
@@ -57,19 +57,19 @@ class CourseModelStudentTestCase(StudentTestCase):
 
         # Course without submissions should not have gradable submissions
         qs = self.course.graded_submissions()
-        self.assertEquals(qs.count(), 0)
+        self.assertEqual(qs.count(), 0)
 
         for count, state in expected:
             sub = self.createSubmission(self.current_user, self.openAssignment)
             sub.state = state
             sub.save()
-            self.assertEquals(qs.count(), count, "Submission count for state %s is incorrect."%state)
+            self.assertEqual(qs.count(), count, "Submission count for state %s is incorrect."%state)
 
     def testCourseAuthors(self):
         # Course without submissions should have no authors
         qs = self.course.authors()
-        self.assertEquals(qs.count(), 0)
+        self.assertEqual(qs.count(), 0)
 
         sub = self.createSubmission(self.current_user, self.openAssignment)
-        self.assertEquals(qs.count(), len(sub.authors.all()))
+        self.assertEqual(qs.count(), len(sub.authors.all()))
 

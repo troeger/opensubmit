@@ -6,4 +6,4 @@ class OpenSubmitConfig(AppConfig):
     verbose_name = "Backend"
 
     def ready(self):
-    	import signalhandlers
+    	from . import signalhandlers

@@ -14,7 +14,7 @@ def not_withdrawn(submfile):
 not_withdrawn.boolean = True
 
 class SubmissionFileAdmin(ModelAdmin):
-    list_display = ['__unicode__', 'fetched', submissions, not_withdrawn]
+    list_display = ['__str__', 'fetched', submissions, not_withdrawn]
 
     class Media:
         css = {'all': ('css/teacher.css',)}

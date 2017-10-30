@@ -37,7 +37,7 @@ class StudentWithdrawTestCase(SubmitTestCase):
 
             submission = Submission.objects.get(pk__exact=submission.pk)
             if expect_submission_withdrawn:
-                self.assertEquals(submission.state, Submission.WITHDRAWN, submission)
+                self.assertEqual(submission.state, Submission.WITHDRAWN, submission)
             else:
                 self.assertNotEqual(submission.state, Submission.WITHDRAWN, submission)
 
@@ -56,7 +56,7 @@ class StudentWithdrawTestCase(SubmitTestCase):
         }
         for submission in cases:
             response = self.c.post('/withdraw/%s/' % submission.pk, {'confirm': '1', })
-            self.assertEquals(response.status_code, cases[submission])
+            self.assertEqual(response.status_code, cases[submission])
             submission = Submission.objects.get(pk__exact=submission.pk)
             self.assertNotEqual(submission.state, Submission.WITHDRAWN)
 
@@ -77,13 +77,13 @@ class StudentWithdrawTestCase(SubmitTestCase):
         self.loginUser(self.enrolled_students[0])
 
         self.createSubmissions()
-        self.assertEquals(self.openAssignmentSub.can_withdraw(self.current_user.user), True)
-        self.assertEquals(self.softDeadlinePassedAssignmentSub.can_withdraw(self.current_user.user), True)
+        self.assertEqual(self.openAssignmentSub.can_withdraw(self.current_user.user), True)
+        self.assertEqual(self.softDeadlinePassedAssignmentSub.can_withdraw(self.current_user.user), True)
 
     def testCannotWithdrawSubmissionAfterDeadline(self):
         self.loginUser(self.enrolled_students[0])
 
         self.createSubmissions()
-        self.assertEquals(self.hardDeadlinePassedAssignmentSub.can_withdraw(self.current_user.user), False)
+        self.assertEqual(self.hardDeadlinePassedAssignmentSub.can_withdraw(self.current_user.user), False)
 
 

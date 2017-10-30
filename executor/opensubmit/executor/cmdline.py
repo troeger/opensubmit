@@ -1,7 +1,7 @@
 # Administration script functionality on the production system
 
-import os, urllib, sys, shutil, uuid
-from ConfigParser import RawConfigParser
+import os, urllib.request, urllib.parse, urllib.error, sys, shutil, uuid
+from configparser import RawConfigParser
 from pkg_resources import Requirement, resource_filename
 
 #TODO: DRY is missing here, the same paths are stored in settings.py
@@ -15,16 +15,16 @@ def check_exec_config_consistency(config):
     '''
         Check the executor config file for consistency.
     '''
-    print "Checking configuration of the OpenSubmit executor..."
+    print("Checking configuration of the OpenSubmit executor...")
     # Check configured host
     try:
-        urllib.urlopen(config.get("Server", "url"))
+        urllib.request.urlopen(config.get("Server", "url"))
     except Exception as e:
-        print "ERROR: The configured OpenSubmit server URL seems to be invalid: "+str(e)
+        print("ERROR: The configured OpenSubmit server URL seems to be invalid: "+str(e))
         return False
     # Check UUID to be set
     if config.get("Server", "uuid") == UUID_PLACEHOLDER:
-        print "ERROR: The machine UUID is not set, please re-create the config file with opensubmit-exec."
+        print("ERROR: The machine UUID is not set, please re-create the config file with opensubmit-exec.")
         return False
     return True
 
@@ -32,16 +32,16 @@ def check_executor_config():
     '''
         Everything related to the executor configuration file.
     '''
-    print "Looking for config files..."
+    print("Looking for config files...")
     config = RawConfigParser()
     try:
         config.readfp(open(EXECUTOR_CONFIG_FILE))
-        print "Config file found at "+EXECUTOR_CONFIG_FILE
+        print("Config file found at "+EXECUTOR_CONFIG_FILE)
         return config
     except IOError:
-        print "ERROR: Seems like the config file %s does not exist."%EXECUTOR_CONFIG_FILE
-        print "       I am creating a new one, don't forget to edit it !"
-        print "       Re-run this script again afterwards."
+        print("ERROR: Seems like the config file %s does not exist."%EXECUTOR_CONFIG_FILE)
+        print("       I am creating a new one, don't forget to edit it !")
+        print("       Re-run this script again afterwards.")
         try:
             os.makedirs(CONFIG_PATH)
         except:
@@ -65,14 +65,14 @@ def console_script():
         The main entry point for the production administration script 'opensubmit-exec', installed by setuptools.
     '''
     if len(sys.argv) == 1:
-        print "opensubmit-exec [configure|run|help]"
+        print("opensubmit-exec [configure|run|help]")
         exit(0)
 
     if "help" in sys.argv:
-        print "configure: Check config files and registration of a OpenSubmit test machine."
-        print "run:       Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab."
-        print "unlock:    Break the script lock, because of crashed script."    
-        print "help:      Print this help"
+        print("configure: Check config files and registration of a OpenSubmit test machine.")
+        print("run:       Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab.")
+        print("unlock:    Break the script lock, because of crashed script.")    
+        print("help:      Print this help")
         exit(0)
 
     if "configure" in sys.argv:
@@ -81,7 +81,7 @@ def console_script():
             return
         if not check_exec_config_consistency(config):
             return
-        print "Registering OpenSubmit executor..."
+        print("Registering OpenSubmit executor...")
         from . import send_config
         send_config(EXECUTOR_CONFIG_FILE)
         exit(0)
@@ -91,9 +91,9 @@ def console_script():
         try:
             from lockfile import FileLock
             FileLock(config.get("Execution","pidfile")).break_lock()
-            print "Lock removed."
+            print("Lock removed.")
         except Exception as e:
-            print "ERROR breaking lock: " + str(e)
+            print("ERROR breaking lock: " + str(e))
         
         
     if "run" in sys.argv:

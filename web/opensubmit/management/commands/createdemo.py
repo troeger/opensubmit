@@ -11,7 +11,7 @@ def createSubmissionFile():
     with NamedTemporaryFile(delete=False, prefix=settings.MEDIA_ROOT) as tmpfile:
         tmpfile.write("The quick brown fox jumps over the lazy dog.")
         tmpfile.seek(0)
-        sf = SubmissionFile(attachment=DjangoFile(tmpfile, unicode(tmpfile.name)))
+        sf = SubmissionFile(attachment=DjangoFile(tmpfile, str(tmpfile.name)))
         sf.save()
         return sf
 

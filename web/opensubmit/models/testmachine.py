@@ -10,9 +10,9 @@ class TestMachine(models.Model):
     class Meta:
         app_label = 'opensubmit'
 
-    def __unicode__(self):
+    def __str__(self):
         if self.address:
-            return unicode(self.address)
+            return self.address
         else:
-            return "Test Machine %u"%self.pk
+            return "Test Machine {0}".format(self.pk)
 

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from opensubmit import settings
 from opensubmit.models import Submission, TestMachine
 
-import settings
+from . import settings
 
 class TeacherDashboard(Dashboard):
 
@@ -75,7 +75,7 @@ class TeacherDashboard(Dashboard):
 
             # Add course group box to dashboard
             self.children.append(modules.Group(
-                title=u"Course '{0}'".format(course.title),
+                title="Course '{0}'".format(course.title),
                 column=column,
                 children=[
                     modules.LinkList(title="Actions",children=(links)),

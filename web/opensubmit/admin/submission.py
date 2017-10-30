@@ -13,7 +13,7 @@ from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.utils import timesince
 
-import StringIO, zipfile
+import io, zipfile
 
 def authors(submission):
     ''' The list of authors als text, for submission list overview.'''
@@ -129,7 +129,7 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__unicode__', 'created', 'modified', authors, course, 'assignment', 'state', grading_text, grading_notes]
+    list_display = ['__str__', 'created', 'modified', authors, course, 'assignment', 'state', grading_text, grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
@@ -168,19 +168,19 @@ class SubmissionAdmin(ModelAdmin):
         '''
         sfile = instance.file_upload
         if not sfile:
-            return mark_safe(u'No file submitted by student.')
+            return mark_safe('No file submitted by student.')
         else:
-            return mark_safe(u'<a href="%s">%s</a><br/>(<a href="%s" target="_new">Preview</a>)' % (sfile.get_absolute_url(), sfile.basename(), sfile.get_preview_url()))
+            return mark_safe('<a href="%s">%s</a><br/>(<a href="%s" target="_new">Preview</a>)' % (sfile.get_absolute_url(), sfile.basename(), sfile.get_preview_url()))
     file_link.short_description = "Stored upload"
 
     def _render_test_result(self, result_obj, enabled):
         if not result_obj:
             if enabled:
-                return mark_safe(u'Enabled, no results.')
+                return mark_safe('Enabled, no results.')
             else:
-                return mark_safe(u'Not enabled.')
+                return mark_safe('Not enabled.')
         else:
-            return format_html(u"Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
+            return format_html("Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
 
     def compile_result(self, instance):
         result_obj = instance.get_compile_result()
@@ -314,7 +314,7 @@ class SubmissionAdmin(ModelAdmin):
         '''
         Download selected submissions as archive, for targeted correction.
         '''
-        output = StringIO.StringIO()
+        output = io.BytesIO()
         z = zipfile.ZipFile(output, 'w')
 
         for sub in queryset:

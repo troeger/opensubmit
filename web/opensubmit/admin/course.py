@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 
 def assignments(course):
-    return u",\n".join([unicode(ass) for ass in course.assignments.all()])
+    return ",\n".join([str(ass) for ass in course.assignments.all()])
 
 def actions(course):
     allow_tags=True
@@ -16,7 +16,7 @@ def actions(course):
     return result
 
 class CourseAdmin(django.contrib.admin.ModelAdmin):
-    list_display = ['__unicode__', 'active', 'owner', assignments, actions]
+    list_display = ['__str__', 'active', 'owner', assignments, actions]
     filter_horizontal = ['tutors']
 
     class Media:

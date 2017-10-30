@@ -6,7 +6,6 @@ from django.core.urlresolvers import reverse
 
 from datetime import datetime
 import tempfile, zipfile, tarfile
-from django.utils.encoding import smart_text
 
 from .submissionfile import upload_path, SubmissionFile
 from .submissiontestresult import SubmissionTestResult
@@ -197,11 +196,11 @@ class Submission(models.Model):
         '''
         return qs.exclude(state__in=[Submission.WITHDRAWN, Submission.RECEIVED])
 
-    def __unicode__(self):
+    def __str__(self):
         if self.pk:
-            return unicode("%u" % (self.pk))
+            return str(self.pk)
         else:
-            return unicode("New Submission instance")
+            return "New Submission instance"
 
     def grading_status_text(self):
         '''
@@ -210,11 +209,11 @@ class Submission(models.Model):
         '''
         if self.assignment.gradingScheme:
             if self.is_grading_finished():
-                return unicode('Yes ({0})'.format(self.grading))
+                return str('Yes ({0})'.format(self.grading))
             else:
-                return unicode('No')
+                return str('No')
         else:
-            return unicode('Not graded')
+            return str('Not graded')
 
     def grading_value_text(self):
         '''
@@ -223,14 +222,14 @@ class Submission(models.Model):
         '''
         if self.assignment.gradingScheme:
             if self.is_grading_finished():
-                return unicode(self.grading)
+                return str(self.grading)
             else:
-                return unicode('pending')
+                return str('pending')
         else:
             if self.is_grading_finished():
-                return unicode('done')
+                return str('done')
             else:
-                return unicode('not done')
+                return str('not done')
 
     def grading_means_passed(self):
         '''
@@ -464,17 +463,17 @@ class Submission(models.Model):
         # we cannot send eMail on SUBMITTED_TESTED, since this may have been triggered by test repitition in the backend
         if state == Submission.TEST_COMPILE_FAILED:
             subject = 'Warning: Your submission did not pass the compilation test'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
+            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.TEST_VALIDITY_FAILED:
             subject = 'Warning: Your submission did not pass the validation test'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
+            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
 
         elif state == Submission.CLOSED:
             subject = 'Completed'
-            message = u'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" is completed.\n\n Further information can be found at %s.\n\n'
+            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" is completed.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
         else:
             return
@@ -510,17 +509,18 @@ class Submission(models.Model):
         # TODO: Make this configurable, some course owners got annoyed by this
         # send_mail(subject, message, from_email, recipients, fail_silently=True)
 
-    def info_file(self):
+    def info_file(self, delete=True):
         '''
-            Prepares a temporary file with information about the submission.
+            Prepares an open temporary file with information about the submission.
             Closing it will delete it, which must be considered by the caller.
+            This file is not readable, since the tempfile library wants either readable or writable files.
         '''
-        info = tempfile.NamedTemporaryFile()
+        info = tempfile.NamedTemporaryFile(mode='wt', delete=delete)
         info.write("Submission ID:\t%u\n" % self.pk)
-        info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name().encode('utf-8'), self.submitter.pk))
+        info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name(), self.submitter.pk))
         info.write("Authors:\n")
         for auth in self.authors.all():
-            info.write("\t%s (%u)\n" % (auth.get_full_name().encode('utf-8'), auth.pk))
+            info.write("\t%s (%u)\n" % (auth.get_full_name(), auth.pk))
         info.write("\n")
         info.write("Creation:\t%s\n" % str(self.created))
         info.write("Last modification:\t%s\n" % str(self.modified))
@@ -528,10 +528,10 @@ class Submission(models.Model):
         if self.grading:
             info.write("Grading:\t%s\n" % str(self.grading))
         if self.notes:
-            notes = smart_text(self.notes).encode('utf8')
+            notes = self.notes
             info.write("Author notes:\n-------------\n%s\n\n" % notes)
         if self.grading_notes:
-            notes = smart_text(self.grading_notes).encode('utf8')
+            notes = self.grading_notes
             info.write("Grading notes:\n--------------\n%s\n\n" % notes)
         info.flush()    # no closing here, because it disappears then
         return info
@@ -578,7 +578,7 @@ class Submission(models.Model):
             for subdir, files in allfiles:
                 for f in files:
                     zip_relative_dir = subdir.replace(tempdir, "")
-                    zip_relative_file = '%s/%s'%(zip_relative_dir.decode('utf-8', 'replace'), f.decode('utf-8', 'replace'))
+                    zip_relative_file = '%s/%s'%(zip_relative_dir, f)
                     z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
         # add text file with additional information
         info = self.info_file()

@@ -33,7 +33,7 @@ rootdir=os.getcwd()
 
 # Unicode crap, to be added to all test suite string input
 # Ensures proper handling of unicode content everywhere, as reaction to #154
-uccrap = u'\u1234\u2345\u3456'
+uccrap = "öäüßé"
 
 class AnonStruct(object):
     def __init__(self, entries):
@@ -238,7 +238,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.openAssignment = Assignment(
             title=uccrap+'Open assignment',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -252,7 +252,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.openSingleAuthorAssignment = Assignment(
             title=uccrap+'Open assignment with single author',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -267,7 +267,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.anotherAssignment = Assignment(
             title=uccrap+'Another open assignment',
             course=self.anotherCourse,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -280,7 +280,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.fileAssignment = Assignment(
             title=uccrap+'File assignment',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -299,62 +299,65 @@ class SubmitTestCase(LiveServerTestCase):
         shutil.copyfile(rootdir+'/opensubmit/tests/validators/supportfiles.zip', supportfiles_zip)
         shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator.py', single_file)
 
-        self.validatedAssignment = Assignment(
-            title=uccrap+'Validated assignment',
-            course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
-            gradingScheme=self.passFailGrading,
-            publish_at=last_week,
-            soft_deadline=tomorrow,
-            hard_deadline=next_week,
-            has_attachment=True,
-            validity_script_download=True,
-            attachment_test_validity=DjangoFile(open(working_zip)),
-            attachment_test_full=DjangoFile(open(working_zip)),
-            max_authors=3            
-        )
-        self.validatedAssignment.save()
-        self.allAssignments.append(self.validatedAssignment)
+        with open(working_zip, 'rb') as validator_script:
+            self.validatedAssignment = Assignment(
+                title=uccrap+'Validated assignment',
+                course=self.course,
+                download='http://example.org/assignments/1/download'+uccrap,
+                gradingScheme=self.passFailGrading,
+                publish_at=last_week,
+                soft_deadline=tomorrow,
+                hard_deadline=next_week,
+                has_attachment=True,
+                validity_script_download=True,
+                attachment_test_validity=DjangoFile(validator_script),
+                attachment_test_full=DjangoFile(validator_script),
+                max_authors=3            
+            )
+            self.validatedAssignment.save()
+            self.allAssignments.append(self.validatedAssignment)
 
-        self.singleFileValidatorAssignment = Assignment(
-            title=uccrap+'Validated assignment with single file validator',
-            course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
-            gradingScheme=self.passFailGrading,
-            publish_at=last_week,
-            soft_deadline=tomorrow,
-            hard_deadline=next_week,
-            has_attachment=True,
-            validity_script_download=True,
-            attachment_test_validity=DjangoFile(open(single_file)),
-            attachment_test_full=DjangoFile(open(single_file)),
-            max_authors=3            
-        )
-        self.singleFileValidatorAssignment.save()
-        self.allAssignments.append(self.singleFileValidatorAssignment)
+            with open(supportfiles_zip, 'rb') as support_files:
+                self.validatedWithSupportFilesAssignment = Assignment(
+                    title=uccrap+'Validated assignment with support files',
+                    course=self.course,
+                    download='http://example.org/assignments/1/download'+uccrap,
+                    gradingScheme=self.passFailGrading,
+                    publish_at=last_week,
+                    soft_deadline=tomorrow,
+                    hard_deadline=next_week,
+                    has_attachment=True,
+                    validity_script_download=True,
+                    attachment_test_validity=DjangoFile(validator_script),
+                    attachment_test_full=DjangoFile(validator_script),
+                    attachment_test_support=DjangoFile(support_files),
+                    max_authors=3            
+                )
+                self.validatedWithSupportFilesAssignment.save()
+                self.allAssignments.append(self.validatedWithSupportFilesAssignment)
 
-        self.validatedWithSupportFilesAssignment = Assignment(
-            title=uccrap+'Validated assignment with support files',
-            course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
-            gradingScheme=self.passFailGrading,
-            publish_at=last_week,
-            soft_deadline=tomorrow,
-            hard_deadline=next_week,
-            has_attachment=True,
-            validity_script_download=True,
-            attachment_test_validity=DjangoFile(open(working_zip)),
-            attachment_test_full=DjangoFile(open(working_zip)),
-            attachment_test_support=DjangoFile(open(supportfiles_zip)),
-            max_authors=3            
-        )
-        self.validatedWithSupportFilesAssignment.save()
-        self.allAssignments.append(self.validatedWithSupportFilesAssignment)
+        with open(single_file, 'rb') as validator_script:
+            self.singleFileValidatorAssignment = Assignment(
+                title=uccrap+'Validated assignment with single file validator',
+                course=self.course,
+                download='http://example.org/assignments/1/download'+uccrap,
+                gradingScheme=self.passFailGrading,
+                publish_at=last_week,
+                soft_deadline=tomorrow,
+                hard_deadline=next_week,
+                has_attachment=True,
+                validity_script_download=True,
+                attachment_test_validity=DjangoFile(validator_script),
+                attachment_test_full=DjangoFile(validator_script),
+                max_authors=3            
+            )
+            self.singleFileValidatorAssignment.save()
+            self.allAssignments.append(self.singleFileValidatorAssignment)
 
         self.softDeadlinePassedAssignment = Assignment(
             title=uccrap+'Soft deadline passed assignment',
             course=self.course,
-            download=u'http://example.org/assignments/2/download'+uccrap,
+            download='http://example.org/assignments/2/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -368,7 +371,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.hardDeadlinePassedAssignment = Assignment(
             title=uccrap+'Hard deadline passed assignment',
             course=self.course,
-            download=u'http://example.org/assignments/3/download'+uccrap,
+            download='http://example.org/assignments/3/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -382,7 +385,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.noHardDeadlineAssignment = Assignment(
             title=uccrap+'Assignment without hard deadline',
             course=self.course,
-            download=u'http://example.org/assignments/3/download'+uccrap,
+            download='http://example.org/assignments/3/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -396,7 +399,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.unpublishedAssignment = Assignment(
             title=uccrap+'Unpublished assignment',
             course=self.course,
-            download=u'http://example.org/assignments/4/download'+uccrap,
+            download='http://example.org/assignments/4/download'+uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=tomorrow,
             soft_deadline=next_week,
@@ -410,7 +413,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.noGradingAssignment = Assignment(
             title=uccrap+'Open assignment without grading',
             course=self.course,
-            download=u'http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download'+uccrap,
             gradingScheme=None,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -438,22 +441,25 @@ class SubmitTestCase(LiveServerTestCase):
     def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(rootdir+relpath), unicode(fname)))
-        sf.save()
+        with open(rootdir+relpath,'rb') as subfile:
+            sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
+            sf.save()
         return sf
 
     def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), unicode(fname)))
-        sf.save()
+        with open(settings.MEDIA_ROOT+fname,'rb') as subfile:
+            sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
+            sf.save()
         return sf
 
     def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        sf = SubmissionFile(attachment=DjangoFile(open(settings.MEDIA_ROOT+fname), unicode(fname)))
-        sf.save()
+        with open(settings.MEDIA_ROOT+fname,'rb') as subfile:
+            sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
+            sf.save()
         return sf
 
 
@@ -511,9 +517,10 @@ class SubmitTestCase(LiveServerTestCase):
         )
         fname="reverse_support_files.zip"
         shutil.copyfile(rootdir+'/opensubmit/tests/submfiles/'+fname, settings.MEDIA_ROOT+fname)
-        sub.assignment.attachment_test_support=DjangoFile(open(settings.MEDIA_ROOT+fname))
-        sub.assignment.save()
-        sub.save()
+        with open(settings.MEDIA_ROOT+fname, 'r') as subfile:
+            sub.assignment.attachment_test_support=DjangoFile(subfile)
+            sub.assignment.save()
+            sub.save()
         return sub
 
 
