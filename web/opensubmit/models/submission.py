@@ -6,7 +6,6 @@ from django.core.urlresolvers import reverse
 
 from datetime import datetime
 import tempfile, zipfile, tarfile
-from django.utils.encoding import smart_text
 
 from .submissionfile import upload_path, SubmissionFile
 from .submissiontestresult import SubmissionTestResult
@@ -518,10 +517,10 @@ class Submission(models.Model):
         '''
         info = tempfile.NamedTemporaryFile(mode='wt', delete=delete)
         info.write("Submission ID:\t%u\n" % self.pk)
-        info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name().encode('utf-8'), self.submitter.pk))
+        info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name(), self.submitter.pk))
         info.write("Authors:\n")
         for auth in self.authors.all():
-            info.write("\t%s (%u)\n" % (auth.get_full_name().encode('utf-8'), auth.pk))
+            info.write("\t%s (%u)\n" % (auth.get_full_name(), auth.pk))
         info.write("\n")
         info.write("Creation:\t%s\n" % str(self.created))
         info.write("Last modification:\t%s\n" % str(self.modified))
@@ -529,10 +528,10 @@ class Submission(models.Model):
         if self.grading:
             info.write("Grading:\t%s\n" % str(self.grading))
         if self.notes:
-            notes = smart_text(self.notes).encode('utf8')
+            notes = self.notes
             info.write("Author notes:\n-------------\n%s\n\n" % notes)
         if self.grading_notes:
-            notes = smart_text(self.grading_notes).encode('utf8')
+            notes = self.grading_notes
             info.write("Grading notes:\n--------------\n%s\n\n" % notes)
         info.flush()    # no closing here, because it disappears then
         return info
