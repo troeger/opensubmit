@@ -9,6 +9,26 @@ from .locking import ScriptLock, break_lock
 from .result import FailResult
 from .config import read_config, has_config, create_config, check_config
 
+import logging
+logger = logging.getLogger('opensubmit.executor')
+
+def fetch_and_run(config):
+    '''
+    Main operation of the daemon mode. Also used by the test suite with its
+    own configuration.
+
+    Returns boolean failure indication about preparation step.
+    '''
+    sub = fetch_job(config) 
+    if sub:
+        prep_result=sub.prepare()
+        if type(prep_result) is FailResult:
+            sub.send_result(prep_result)
+            return False
+        else:
+            validation_result=run(sub)
+            sub.send_result(validation_result)
+            return True
 
 def console_script():
     '''
@@ -60,14 +80,7 @@ def console_script():
         config=read_config(config_fname)
         kill_longrunning(config)
         with ScriptLock(config):
-            sub = fetch_job(config) 
-            if sub:
-                prep_result=sub.prepare()
-                if prep_result is FailResult:
-                    sub.send_result(prep_result)
-                else:
-                    validation_result=run(sub)
-                    sub.send_result(validation_result)
+            fetch_and_run(config)
         exit(0)
 
 console_script()
