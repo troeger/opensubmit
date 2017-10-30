@@ -510,12 +510,13 @@ class Submission(models.Model):
         # TODO: Make this configurable, some course owners got annoyed by this
         # send_mail(subject, message, from_email, recipients, fail_silently=True)
 
-    def info_file(self):
+    def info_file(self, delete=True):
         '''
-            Prepares a temporary file with information about the submission.
+            Prepares an open temporary file with information about the submission.
             Closing it will delete it, which must be considered by the caller.
+            This file is not readable, since the tempfile library wants either readable or writable files.
         '''
-        info = tempfile.NamedTemporaryFile(mode='wt')
+        info = tempfile.NamedTemporaryFile(mode='wt', delete=delete)
         info.write("Submission ID:\t%u\n" % self.pk)
         info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name().encode('utf-8'), self.submitter.pk))
         info.write("Authors:\n")

@@ -8,6 +8,8 @@ from opensubmit.models import Course, Assignment, Submission
 from opensubmit.models import Grading, GradingScheme
 from opensubmit.models import UserProfile
 
+import os
+
 class ModelSubmissionTestCase(SubmitTestCase):
 
     def createSubmissions(self):
@@ -24,6 +26,17 @@ class ModelSubmissionTestCase(SubmitTestCase):
             self.noHardDeadlineAssignmentSub,
             self.noGradingAssignmentSub
         )
+
+    def testInfoFileCreation(self):
+        self.loginUser(self.enrolled_students[0])
+        sub = self.createSubmission(self.current_user, self.hardDeadlinePassedAssignment)
+        # Info file is opened in write-only mode, so we need the explicit re-opening and deletion here
+        info_file=sub.info_file(delete=False)
+        info_file.close()
+        with open(info_file.name, 'rt') as tmpfile:
+            content=tmpfile.read()
+        os.remove(info_file.name)
+        self.assertIn(sub.submitter.get_full_name(), content)
 
     def testCanCreateSubmission(self):
         self.loginUser(self.enrolled_students[0])
