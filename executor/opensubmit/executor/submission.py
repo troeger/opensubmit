@@ -13,6 +13,7 @@ class Submission():
     working_dir:str = None              # The working directory with the submission files.
     submission_id:str = None            # The OpenSubmit submission ID
     submission_file_id:str=None         # The OpenSubmit submission file ID
+    timeout:int=None                    # The timeout for execution, as reported by the server
 
     def __init__(self):
         self._config=read_config()

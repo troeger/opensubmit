@@ -517,7 +517,7 @@ class SubmitTestCase(LiveServerTestCase):
         )
         fname="reverse_support_files.zip"
         shutil.copyfile(rootdir+'/opensubmit/tests/submfiles/'+fname, settings.MEDIA_ROOT+fname)
-        with open(settings.MEDIA_ROOT+fname, 'r') as subfile:
+        with open(settings.MEDIA_ROOT+fname, 'rb') as subfile:
             sub.assignment.attachment_test_support=DjangoFile(subfile)
             sub.assignment.save()
             sub.save()

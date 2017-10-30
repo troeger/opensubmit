@@ -33,20 +33,6 @@ def kill_longrunning(config):
                 except Exception as e:
                     logger.error("ERROR killing process %d." % proc.pid)
 
-
-def _handle_alarm(proc):
-    '''
-        Signal handler for timeout implementation
-    '''
-    logger.info("Got alarm signal, killing %d due to timeout." % proc.pid)
-    try:
-        if platform.system() == "Windows":
-            proc.terminate()
-        else:
-            os.killpg(proc.pid, signal.SIGTERM)
-    except Exception as e:
-        logger.error("Error while killing process %d" % proc.pid)
-
 def run(sub: Submission):
     '''
         Perform some execution activity with timeout support.
@@ -60,50 +46,52 @@ def run(sub: Submission):
 
     logger.info("Spawning process for validator: " + str(cmdline))
     
+    timeout = False
+
     try:
         if platform.system() == "Windows":
-            proc = subprocess.Popen(cmdline, cwd=sub.working_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            proc = subprocess.Popen(cmdline, 
+                                    cwd=sub.working_dir,
+                                    stdout=subprocess.PIPE, 
+                                    stderr=subprocess.STDOUT, 
+                                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                                    universal_newlines=True)
         else:
-            proc = subprocess.Popen(cmdline, cwd=sub.working_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-        logger.debug("Starting termination timer with %u seconds" % sub.timeout)
-        timer = Timer(sub.timeout, _handle_alarm, args = [proc])
-        timer.start()
+            proc = subprocess.Popen(cmdline, 
+                                    cwd=sub.working_dir, 
+                                    stdout=subprocess.PIPE, 
+                                    stderr=subprocess.STDOUT, 
+                                    preexec_fn=os.setsid,
+                                    universal_newlines=True)
         output = None
         stderr = None
-        
+
         try:
-            output, stderr = proc.communicate()
-            logger.debug("Process regularly terminated")
-        except Exception as e:
-            logger.debug("Process potentially killed by timeout: " + str(e))
+            output, stderr = proc.communicate(timeout=sub.timeout)
+            logger.debug("Process terminated")
+        except subprocess.TimeoutExpired as e:
+            timeout = True
+            logger.debug("Process killed by timeout: " + str(e))
         
         if output == None:
             output = ""
-        else:
-            output = output.decode("utf-8",errors="ignore")
             
         if stderr == None:
             stderr = ""
-        else:
-            stderr = stderr.decode("utf-8",errors="ignore")
-        
-        try:
-            logger.debug("Stopping termination timer")
-            timer.cancel()
-        except Exception as e:
-            logger.error("Error while stopping termination timer:" + str(e))
-            return FailResult("Internal error with termination timer stopping.")
+       
     except Exception:
         details = str(sys.exc_info())
         logger.info("Exception on process execution: " + details)
         return FailResult("Error on execution: "+details)
 
-    logger.info("Executed with error code {0} \n\n".format(proc.returncode))
+    logger.info("Executed with error code {0}.".format(proc.returncode))
+    if proc.returncode!=0:
+        logger.debug("Output of the failed execution:\n"+output)
     dircontent = os.listdir(sub.working_dir)
     logger.debug("Working directory after finishing: " + str(dircontent))
 
-    if (proc.returncode == 0-signal.SIGTERM) or (proc.returncode == None):
-        res=FailResult("Validation was terminated because it took too long (%u seconds). Output so far:\n\n%s"%(timeout,output))
+    if timeout:
+        res=FailResult("Validation was terminated because it took too long (%u seconds). Output so far:\n\n%s"%(sub.timeout,output))
     else:
         res = Result()
         res.error_code=proc.returncode

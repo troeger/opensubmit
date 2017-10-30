@@ -104,7 +104,8 @@ def fetch_job(config):
         sub.submission_id=headers["SubmissionId"]
         sub.action=headers["Action"]
         sub.compile_on=(headers["Compile"]=='True')
-        sub.timeout=int(headers["Timeout"])
+        if "Timeout" in headers:
+            sub.timeout=int(headers["Timeout"])
         if "PostRunValidation" in headers:
             sub.validator = headers["PostRunValidation"]
         else:
