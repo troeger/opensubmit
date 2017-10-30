@@ -99,7 +99,7 @@ to_file={to_file}
 level={level}
 '''
 
-def read_config(config_file=CONFIG_FILE_DEFAULT):
+def read_config(config_file=CONFIG_FILE_DEFAULT, override_url=None):
     ''' Read configuration file, perform sanity check and return configuration
         dictionary used by other functions.'''
     config = ConfigParser()
@@ -122,6 +122,9 @@ def read_config(config_file=CONFIG_FILE_DEFAULT):
         handler.setFormatter(logging.Formatter(config.get("Logging", "format")))
         logger.addHandler(handler)
     logger.setLevel(config.get("Logging", "level"))
+
+    if override_url:
+        config['Server']['url'] = override_url
 
     return config
 
