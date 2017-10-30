@@ -66,8 +66,9 @@ class SubmissionFile(models.Model):
             try:
                 text=str(text, errors='ignore')
                 text=text.replace(' ','').replace('\n','').replace('\t','')
-                md5_set.append(hashlib.md5(text).hexdigest())
-            except:
+                hexvalues=hashlib.md5(text.encode('utf-8')).hexdigest()
+                md5_set.append(hexvalues)
+            except Exception as e:
                 # not unicode decodable
                 pass
 
