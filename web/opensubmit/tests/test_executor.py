@@ -4,7 +4,9 @@
     Note the neccessary python search path manipulation below.
 '''
 
-import os, time
+import os
+import time
+import os.path, sys
 
 from django.core import mail
 from django.test import LiveServerTestCase
@@ -17,21 +19,23 @@ from opensubmit.models import TestMachine, SubmissionTestResult, Submission
 from opensubmit.tests import utils
 from opensubmit import settings
 
-import os.path, sys
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../executor/opensubmit' ))
-import executor
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../executor/opensubmit'))
+from executor.config import read_config
+from executor.server import send_hostinfo
+from executor.cmdline import fetch_and_run
 
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
     def setUp(self):
         super(ExecutorTestCase, self).setUp()
+        self.config = read_config(os.path.dirname(__file__)+"/executor.cfg", override_url=self.live_server_url)
 
     def _registerExecutor(self):
-        executor.send_config(os.path.dirname(__file__)+"/executor.cfg", url=self.live_server_url)
+        send_hostinfo(self.config)
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
-        return executor.run(os.path.dirname(__file__)+"/executor.cfg", url=self.live_server_url)
+        return fetch_and_run(self.config) is not None
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
