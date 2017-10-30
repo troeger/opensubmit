@@ -16,7 +16,7 @@ setup(
     author_email = 'peter@troeger.eu',
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
     ],
 
     install_requires=required,

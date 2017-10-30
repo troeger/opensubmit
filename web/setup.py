@@ -21,7 +21,7 @@ setup(
         #   4 - Beta
         #   5 - Production/Stable
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3.6'
     ],
     install_requires=required,
     packages = find_packages(exclude=['opensubmit.tests']),     # Just add Python packages
