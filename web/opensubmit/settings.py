@@ -148,7 +148,7 @@ else:
     # Relative URL for static files
     STATIC_URL = ensure_slash(True, True,'/static/')
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    ALLOWED_HOSTS = ['localhost']
+    ALLOWED_HOSTS = ['localhost','127.0.0.1']
 
 ADMINS = (
     (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),
