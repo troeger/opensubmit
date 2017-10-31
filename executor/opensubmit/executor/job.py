@@ -74,7 +74,7 @@ class Job():
                 # The download is already the script
                 shutil.move(self.validator_files, self.validator_script)
             try:
-                os.chmod(self.validator_files, stat.S_IXUSR|stat.S_IRUSR)
+                os.chmod(self.validator_script, stat.S_IXUSR|stat.S_IRUSR)
             except Exception as e:
                 logger.error("Could not adjust file system attributes on %s: %s "%(self.validator_files, str(e)))
                 return False
@@ -196,8 +196,9 @@ def fetch_job(config):
         headers = result.info()
         if headers["Action"] == "get_config":
             # The server does not know us, so it demands registration before hand.
-            logger.info("Machine unknown on server, sending registration first ...")
+            logger.info("Machine unknown on server, sending registration ...")
             send_hostinfo(config)
+            return None
         job.submission.file_id=headers["SubmissionFileId"]
         job.submission.sub_id=headers["SubmissionId"]
         job.action=headers["Action"]

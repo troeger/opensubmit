@@ -16,6 +16,10 @@ def fetch_and_run(config):
     '''
     Main operation of the daemon mode. Also used by the test suite with its
     own configuration.
+
+    Returns True when a job was fetched and successfully executed.
+    Returns False when a job was fetched and executed failed.
+    Returns None when no job was available.
     '''
     job = fetch_job(config) 
     if job:
@@ -30,6 +34,8 @@ def fetch_and_run(config):
                 return False
             else:
                 return True
+    else:
+        return None
 
 def console_script():
     '''

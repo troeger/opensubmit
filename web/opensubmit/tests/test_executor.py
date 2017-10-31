@@ -35,7 +35,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _runExecutor(self):
-        return fetch_and_run(self.config) is not None
+        return fetch_and_run(self.config)
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
@@ -49,7 +49,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
     def testEverythingAlreadyTested(self):
         self.createValidatedSubmission(self.current_user)
         assert(self._registerExecutor().pk)
-        self.assertEqual(False, self._runExecutor())
+        self.assertEqual(None, self._runExecutor())
 
     def testCompileTest(self):
         self.sub = self.createValidatableSubmission(self.current_user) 
@@ -130,7 +130,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # Fire up the executor, should mark the submission as timed out
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(False, self._runExecutor())       # No job is available
+        self.assertEqual(None, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         self.sub.refresh_from_db()
         self.assertEqual(self.sub.state, Submission.TEST_COMPILE_FAILED)
@@ -150,7 +150,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(False, self._runExecutor())       # No job is available
+        self.assertEqual(None, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         self.sub.refresh_from_db()
         self.assertEqual(self.sub.state, Submission.TEST_VALIDITY_FAILED)
@@ -172,7 +172,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(False, self._runExecutor())       # No job is available
+        self.assertEqual(None, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         self.sub.refresh_from_db()
         self.assertEqual(self.sub.state, Submission.TEST_FULL_FAILED)
@@ -231,7 +231,6 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.sub.assignment.save()
         test_machine = self._registerExecutor()
         self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(True, self._runExecutor())
         # validate
         self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
@@ -293,7 +292,7 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         sub1.save()
         # Run real_machine executor, should not react on this submission
         old_sub1_state = sub1.state
-        self.assertEqual(False, self._runExecutor())
+        self.assertEqual(None, self._runExecutor())
         # Make sure that submission object was not touched, whatever the executor says
         sub1 = Submission.objects.get(pk=sub1.pk)
         self.assertEqual(old_sub1_state, sub1.state)
