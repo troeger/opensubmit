@@ -20,6 +20,7 @@ web/database.sqlite
 *static-production*
 *terraform.tfvars*
 *terraform.tfstate*
-web/venv/pip-selfcheck.json
-web/venv/man/man1/tqdm.1
-*.bak
+*pip-selfcheck.json*
+*venv*
+*.bak*
+
