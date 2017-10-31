@@ -21,7 +21,7 @@ from opensubmit import settings
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../executor/opensubmit'))
 from executor.config import read_config
-from executor.server import send_hostinfo
+from executor.job import send_hostinfo
 from executor.cmdline import fetch_and_run
 
 class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
@@ -41,10 +41,6 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         machine_count = TestMachine.objects.all().count()
         assert(self._registerExecutor().pk)
         self.assertEqual(machine_count+1, TestMachine.objects.all().count())
-
-    def testRunRequestFromUnknownMachine(self):
-        # This is expected to trigger a register action request from the server
-        self.assertNotEqual(True, self._runExecutor())
 
     @override_settings(JOB_EXECUTOR_SECRET='foo')
     def testInvalidSecret(self):

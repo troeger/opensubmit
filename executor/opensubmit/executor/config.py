@@ -17,7 +17,7 @@ DEFAULT_SETTINGS = {
         'cleanup': 'True',                       # Override for disabling file cleanup
         'message_size': '10000',                 # Override for result text limit
         'timeout': '3600',                       # Override for execution timeout
-        'compile_cmd': 'gcc -o {0} {1}',         # Command to compile something on this machine
+        'compile_cmd': 'make',                   # Command to compile something on this machine
         'directory': '/tmp/',                    # Base directory for temporary directories
         'pidfile': '/tmp/executor.lock',         # Lock file for script lock
         'script_runner': '/usr/bin/env python3'  # Execution environment for validation scripts

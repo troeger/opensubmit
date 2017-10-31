@@ -3,7 +3,8 @@
 '''
 
 from .submission import Submission
-from .result import FailResult, Result
+from .result import Result, PassResult, FailResult
+
 
 import logging
 logger = logging.getLogger('opensubmit.executor')
@@ -33,52 +34,42 @@ def kill_longrunning(config):
                 except Exception as e:
                     logger.error("ERROR killing process %d." % proc.pid)
 
-def run(sub: Submission):
+
+def shell_execution(cmdline, working_dir, timeout=999999):
     '''
-        Perform some execution activity with timeout support.
-        Returns Result object.
+    Run given shell command in the given working directory with the given timeout.
+    Return according result object.
     '''
-    cmdline_text=sub._config.get("Execution","script_runner")+' '+sub.validator
-    cmdline=cmdline_text.split(' ')    # Support cmd-arguments in config setting
-
-    dircontent = os.listdir(sub.working_dir)
-    logger.debug("Working directory before start: " + str(dircontent))
-
-    logger.info("Spawning process for validator: " + str(cmdline))
-    
-    timeout = False
-
+    got_timeout = False
+    # Allow code to load its own libraries
+    os.environ["LD_LIBRARY_PATH"]=working_dir
     try:
         if platform.system() == "Windows":
             proc = subprocess.Popen(cmdline, 
-                                    cwd=sub.working_dir,
+                                    cwd=working_dir,
                                     stdout=subprocess.PIPE, 
                                     stderr=subprocess.STDOUT, 
                                     creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
                                     universal_newlines=True)
         else:
             proc = subprocess.Popen(cmdline, 
-                                    cwd=sub.working_dir, 
+                                    cwd=working_dir, 
                                     stdout=subprocess.PIPE, 
                                     stderr=subprocess.STDOUT, 
                                     preexec_fn=os.setsid,
                                     universal_newlines=True)
         output = None
-        stderr = None
 
         try:
-            output, stderr = proc.communicate(timeout=sub.timeout)
-            logger.debug("Process terminated")
+            output, stderr = proc.communicate(timeout=timeout)
+            logger.debug("Process regulary finished.")
         except subprocess.TimeoutExpired as e:
-            timeout = True
+            got_timeout = True
             logger.debug("Process killed by timeout: " + str(e))
         
         if output == None:
             output = ""
             
-        if stderr == None:
-            stderr = ""
-       
     except Exception:
         details = str(sys.exc_info())
         logger.info("Exception on process execution: " + details)
@@ -87,18 +78,17 @@ def run(sub: Submission):
     logger.info("Executed with error code {0}.".format(proc.returncode))
     if proc.returncode!=0:
         logger.debug("Output of the failed execution:\n"+output)
-    dircontent = os.listdir(sub.working_dir)
-    logger.debug("Working directory after finishing: " + str(dircontent))
+    dircontent = os.listdir(working_dir)
+    logger.debug("Working directory after execution: " + str(dircontent))
 
-    if timeout:
-        res=FailResult("Validation was terminated because it took too long (%u seconds). Output so far:\n\n%s"%(sub.timeout,output))
+    if got_timeout:
+        res=FailResult("Execution was terminated because it took too long (%u seconds). Output so far:\n\n%s"%(timeout,output))
     else:
-        res = Result()
+        if proc.returncode == 0:
+            res = PassResult()
+        else:
+            res = FailResult()
         res.error_code=proc.returncode
         res.stdout=output+"\n\nDirectory content as I see it:\n\n" + str(dircontent)
-        res.stderr=stderr
 
     return res
-
-
-

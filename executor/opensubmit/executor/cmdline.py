@@ -3,8 +3,8 @@
 import sys
 
 from . import CONFIG_FILE_DEFAULT
-from .server import fetch_job, send_hostinfo
-from .execution import kill_longrunning, run
+from .job import fetch_job, send_hostinfo
+from .execution import kill_longrunning
 from .locking import ScriptLock, break_lock
 from .result import FailResult
 from .config import read_config, has_config, create_config, check_config
@@ -16,19 +16,20 @@ def fetch_and_run(config):
     '''
     Main operation of the daemon mode. Also used by the test suite with its
     own configuration.
-
-    Returns boolean failure indication about preparation step.
     '''
-    sub = fetch_job(config) 
-    if sub:
-        prep_result=sub.prepare()
-        if type(prep_result) is FailResult:
-            sub.send_result(prep_result)
+    job = fetch_job(config) 
+    if job:
+        prep_result=job.prepare()
+        if not prep_result.is_ok():
+            job.send_result(prep_result)
             return False
         else:
-            validation_result=run(sub)
-            sub.send_result(validation_result)
-            return True
+            validation_result=job.run()
+            job.send_result(validation_result)
+            if not validation_result.is_ok():
+                return False
+            else:
+                return True
 
 def console_script():
     '''

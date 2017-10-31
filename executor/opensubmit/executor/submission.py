@@ -9,11 +9,8 @@ class Submission():
     '''
     _config = None
 
-    download_file:str = None            # Submission file as provided by the student
-    working_dir:str = None              # The working directory with the submission files.
-    submission_id:str = None            # The OpenSubmit submission ID
-    submission_file_id:str=None         # The OpenSubmit submission file ID
-    timeout:int=None                    # The timeout for execution, as reported by the server
+    sub_id:str = None                   # The OpenSubmit submission ID
+    file_id:str = None                  # The OpenSubmit submission file ID
 
     def __init__(self):
         self._config=read_config()
@@ -83,30 +80,4 @@ class Submission():
         '''
         Check if the student submission has any files.
         '''
-        dircontent = os.listdir(self.working_dir)
-        return len(dircontent) > 0
-
-    def prepare(self) -> Result:
-        '''
-        Take the downloaded student submission file and prepare it for validation.     
-        Return FailResult (to be returned to server) or PassResult object. 
-        '''
-        # Unpack archive
-        numfiles = unpack_if_needed(self.working_dir, self.download_file)
-        # Check number and kind of files in archive
-        if numfiles is 0:
-            logger.debug("Student archive is empty, notification about this stored as validation result.")
-            return FailResult("Your compressed upload is empty - no files in there.")
-        elif numfiles == 1 and os.path.isdir(self.working_dir + dircontent[0] + os.sep):
-            logger.warning("The student archive contains only the directory %s. I assume I should go in there ..." % (dircontent[0]))
-            self.working_dir = self.working_dir + dircontent[0] + os.sep
-        # We are now definitely inside the right directory
-        self.validator='validator.py'            #TODO: Should come with the request
-        return PassResult(None)
-
-    def send_result(self, result: Result) -> None:
-        '''
-        Send result to OpenSubmit server.
-        '''
-        from .server import send_result
-        send_result(self, result)
+        pass

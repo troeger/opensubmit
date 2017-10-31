@@ -15,6 +15,9 @@ def unpack_if_needed(destination_path: str, fpath: str) -> int:
         Returns the content of the directory.
     '''
 
+    dircontent = os.listdir(destination_path)
+    logger.debug("Content of %s before unarchiving: %s"%(destination_path,str(dircontent)))
+
     # Perform un-archiving, in case
     if zipfile.is_zipfile(fpath):
         logger.debug("Detected ZIP file at %s, unpacking it."%(fpath))
@@ -30,7 +33,7 @@ def unpack_if_needed(destination_path: str, fpath: str) -> int:
             shutil.copy(fpath, destination_path)
 
     dircontent = os.listdir(destination_path)
-    logger.debug("Content of %s is now: %s"%(destination_path,str(dircontent)))
+    logger.debug("Content of %s after unarchiving: %s"%(destination_path,str(dircontent)))
     return dircontent
 
 def create_working_dir(config, prefix):
@@ -51,4 +54,5 @@ def create_working_dir(config, prefix):
 
     return finalpath
 
-
+def has_file(dir, fname):
+    return os.path.exists(dir+os.sep+fname)

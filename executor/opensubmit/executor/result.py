@@ -21,6 +21,9 @@ class Result():
         if subprocess_result:
             self.convert(subprocess_result, max_length);
 
+    def is_ok(self):
+        return self.error_code==0
+
     def convert(self, subprocess_result, max_length):
         # There are cases where the program was not finished, but we still deliver a result
         # Transmitting "None" is a bad idea, so we use a special code instead
@@ -42,7 +45,7 @@ class PassResult(Result):
     '''
         A validation result indication success.
     '''
-    def __init__(self, info_student):
+    def __init__(self, info_student=''):
         super().__init__()
         self.error_code=0
         self.info_student=info_student
@@ -54,10 +57,11 @@ class FailResult(Result):
     '''
         A validation result indication failure.
     '''
-    def __init__(self, info_student):
+    def __init__(self, info_student=''):
         super().__init__()
         self.error_code=UNSPECIFIC_ERROR
         self.info_student=info_student
 
     def __str__(self):
         return self.info_student
+
