@@ -1,4 +1,3 @@
-include opensubmit/executor.cfg.template
 include requirements.txt
 include VERSION
 include README.rst
