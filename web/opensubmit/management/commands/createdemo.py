@@ -5,14 +5,15 @@ from opensubmit import settings
 from django.utils import timezone
 from django.core.files import File as DjangoFile
 from tempfile import NamedTemporaryFile
-import datetime
+import datetime, os
 
 def createSubmissionFile():
-    with NamedTemporaryFile(delete=False, prefix=settings.MEDIA_ROOT) as tmpfile:
+    with NamedTemporaryFile(mode="wt", delete=False, prefix=settings.MEDIA_ROOT) as tmpfile:
         tmpfile.write("The quick brown fox jumps over the lazy dog.")
-        tmpfile.seek(0)
-        sf = SubmissionFile(attachment=DjangoFile(tmpfile, str(tmpfile.name)))
+        tmpfile.close()
+        sf = SubmissionFile(attachment=DjangoFile(tmpfile.name))
         sf.save()
+        os.remove(tmpfile.name)
         return sf
 
 class Command(BaseCommand):
