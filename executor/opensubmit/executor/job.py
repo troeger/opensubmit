@@ -128,17 +128,11 @@ class Job():
             return self.compile()
         elif self.action == "test_validity" or self.action == "test_full":
             logger.debug('This is a validation job')
-            logger.debug("Running compilation before validation")
-            compile_result = self.compile()
-            if compile_result.is_ok():
-                cmdline=[   self.submission._config.get("Execution","script_runner"),
-                            self.validator_script,
-                            self.perfdata_file]
-                logger.debug("Running validator: "+str(cmdline))
-                return shell_execution(cmdline, self.working_dir, self.timeout)
-            else:
-                logger.debug('Compilation failed, not running validation.')
-                return compile_result
+            cmdline=[   self.submission._config.get("Execution","script_runner"),
+                        self.validator_script,
+                        self.perfdata_file]
+            logger.debug("Running validator: "+str(cmdline))
+            return shell_execution(cmdline, self.working_dir, self.timeout)
 
     def send_result(self, result:Result):
         '''
