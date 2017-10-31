@@ -5,7 +5,7 @@ django-grappelli>=2.8.1
 requests>=2.5.1
 pycrypto
 pyjwkest
-python-social-auth<=0.2.21
+social-auth-app-django
 python3-openid
 python-oauth2
 oauthlib>=0.6.2

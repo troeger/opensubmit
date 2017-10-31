@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^courses/$', views.courses, name='courses'),
     url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
 
-    url('', include('social.apps.django_app.urls', namespace='social')),
+    url('', include('social_django.urls', namespace='social')),
     url(r'^lti/$', views.lti, name='lti'),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
     url(r'^admin/', include(admin.admin_backend.urls)),

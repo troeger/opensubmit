@@ -180,8 +180,8 @@ TEMPLATES = [
                                              "django.contrib.messages.context_processors.messages",
                                              "opensubmit.contextprocessors.footer",
                                              "django.template.context_processors.request",
-                                             "social.apps.django_app.context_processors.backends",
-                                             "social.apps.django_app.context_processors.login_redirect"
+                                             "social_django.context_processors.backends",
+                                             "social_django.context_processors.login_redirect"
                                             )
                     },
         'APP_DIRS': True,
@@ -197,7 +197,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'social.apps.django_app.middleware.SocialAuthExceptionMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
     'opensubmit.middleware.CourseRegister'
 )
 ROOT_URLCONF = 'opensubmit.urls'
@@ -208,7 +208,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'social.apps.django_app.default',
+    'social_django',
     'bootstrapform',
     'grappelli.dashboard',
     'grappelli',
@@ -286,17 +286,17 @@ AUTHENTICATION_BACKENDS = (
 )
 
 if LOGIN_GOOGLE:
-    AUTHENTICATION_BACKENDS += ('social.backends.google.GoogleOAuth2',)
+    AUTHENTICATION_BACKENDS += ('social_core.backends.google.GoogleOAuth2',)
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY =    config.get("login", "LOGIN_GOOGLE_OAUTH_KEY")
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config.get("login", "LOGIN_GOOGLE_OAUTH_SECRET")
 
 if LOGIN_TWITTER:
-    AUTHENTICATION_BACKENDS += ('social.backends.twitter.TwitterOAuth',)
+    AUTHENTICATION_BACKENDS += ('social_core.backends.twitter.TwitterOAuth',)
     SOCIAL_AUTH_TWITTER_KEY =          config.get("login", "LOGIN_TWITTER_OAUTH_KEY")
     SOCIAL_AUTH_TWITTER_SECRET =       config.get("login", "LOGIN_TWITTER_OAUTH_SECRET")
 
 if LOGIN_GITHUB:
-    AUTHENTICATION_BACKENDS += ('social.backends.github.GithubOAuth2',)
+    AUTHENTICATION_BACKENDS += ('social_core.backends.github.GithubOAuth2',)
     SOCIAL_AUTH_GITHUB_KEY =           config.get("login", "LOGIN_GITHUB_OAUTH_KEY")
     SOCIAL_AUTH_GITHUB_SECRET =        config.get("login", "LOGIN_GITHUB_OAUTH_SECRET")
 
@@ -314,16 +314,16 @@ AUTHENTICATION_BACKENDS += ('opensubmit.social.lti.LtiAuth',)
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next',]
 SOCIAL_AUTH_PIPELINE = (
-    'social.pipeline.social_auth.social_details',
-    'social.pipeline.social_auth.social_uid',
-    'social.pipeline.social_auth.auth_allowed',
-    'social.pipeline.social_auth.social_user',
-    'social.pipeline.user.get_username',
-    'social.pipeline.social_auth.associate_by_email',  # Transition for existing users
-    'social.pipeline.user.create_user',
-    'social.pipeline.social_auth.associate_user',
-    'social.pipeline.social_auth.load_extra_data',
-    'social.pipeline.user.user_details'
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.social_auth.associate_by_email',  # Transition for existing users
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details'
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")

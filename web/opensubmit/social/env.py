@@ -15,8 +15,8 @@ It also expects auth_url to be implemented by the derived class.
 Note: If you are using Apache + mod_wsgi, make sure to set 'WSGIPassAuthorization On'.
 """
 
-from social.backends.base import BaseAuth
-from social.exceptions import AuthMissingParameter
+from social_core.backends.base import BaseAuth
+from social_core.exceptions import AuthMissingParameter
 import os, logging
 
 logger = logging.getLogger('OpenSubmit')

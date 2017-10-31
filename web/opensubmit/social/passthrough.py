@@ -11,7 +11,7 @@
     After the redirect, everything works as usual in Python Social, with the only exception that the auth_url redirect is no longer needed.
 '''
 
-from social.backends.base import BaseAuth
+from social_core.backends.base import BaseAuth
 
 SESSION_VAR='passthroughauth'
 

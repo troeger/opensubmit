@@ -4,7 +4,7 @@ It does nothing more than adding the provider URL configured in our settings fil
 """
 
 from opensubmit import settings
-from social.backends.open_id import OpenIdAuth as OpenIdAuthBase
+from social_core.backends.open_id import OpenIdAuth as OpenIdAuthBase
 
 class OpenIdAuth(OpenIdAuthBase):
 	URL = settings.OPENID_PROVIDER
