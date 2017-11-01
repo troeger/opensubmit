@@ -186,12 +186,7 @@ class StudentDisplayTestCase(SubmitTestCase):
         response = self.c.get('/teacher/opensubmit/submission/')
         self.assertEqual(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
 
-    def testCannotUseAdminBackend(self):
-        response = self.c.get('/admin/auth/user/')
-        #TODO: Still unclear why this is not raising 403 (see below)
-        self.assertEqual(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
-
-    def testStudentBecomesCourseOwner(self):
+    def testStudentBecomesCourseOwnerBySignal(self):
         # Before rights assignment        
         response = self.c.get('/teacher/opensubmit/course/%u/change/'%(self.course.pk))
         self.assertEqual(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
@@ -208,14 +203,6 @@ class StudentDisplayTestCase(SubmitTestCase):
         # After rights removal
         response = self.c.get('/teacher/opensubmit/course/%u/change/'%(self.course.pk))
         self.assertEqual(response.status_code, 302)        # 302: can access the model in principle, 403: can never access the app label
-
-    def testCannotUseAdminBackendAsTutor(self):
-        # Assign rights
-        self.course.tutors.add(self.current_user.user)
-        self.course.save()
-        # Admin access should be still forbidden
-        response = self.c.get('/admin/auth/user/')
-        self.assertEqual(response.status_code, 403)        # 302: can access the model in principle, 403: can never access the app label
 
     def testStudentBecomesTutor(self):
         # Before rights assignment

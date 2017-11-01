@@ -7,7 +7,7 @@ from opensubmit.models import SubmissionFile, Assignment, Submission
 from django.contrib.admin.sites import AdminSite
 from django.core.files import File
 
-class TutorTestCaseSet():
+class TutorTestCase(SubmitTutorTestCase):
     def testTeacherDashboardView(self):
         response=self.c.get('/teacher/')
         self.assertEqual(response.status_code, 200)
@@ -67,13 +67,3 @@ class TutorTestCaseSet():
             response=self.c.get('/preview/%u/'%sub1.pk)
             self.assertEqual(response.status_code, 200)
 
-class TutorTestCase(SubmitTutorTestCase, TutorTestCaseSet):
-    '''
-        Run the tests from the tutor case set as student tutor.
-    '''
-    def testCannotUseAdminBackend(self):
-        '''
-            Not in the test set above that is inherited for teacher and admin tests.
-        '''
-        response = self.c.get('/admin/auth/user/')
-        self.assertEqual(response.status_code, 403)        # 302: can access the model in principle, 403: can never access the app label

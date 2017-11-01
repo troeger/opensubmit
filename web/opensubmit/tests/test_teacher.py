@@ -5,11 +5,11 @@
 import io, zipfile
 
 from opensubmit.models import Submission
-from opensubmit.tests.cases import SubmitTeacherTestCase
-from opensubmit.tests.test_tutor import TutorTestCaseSet
+from .cases import SubmitTeacherTestCase
+from .test_tutor import TutorTestCase
 from django.contrib.auth.models import User
 
-class TeacherTestCaseSet(TutorTestCaseSet):
+class TeacherTestCase(SubmitTeacherTestCase, TutorTestCase):
     def testNewAssignmentView(self):
         response=self.c.get('/teacher/opensubmit/assignment/add/')
         self.assertEqual(response.status_code, 200)
@@ -155,11 +155,3 @@ class TeacherTestCaseSet(TutorTestCaseSet):
         assert(new_owner.is_staff)
 
 
-class TeacherTestCase(SubmitTeacherTestCase, TeacherTestCaseSet):
-    '''
-        Run the tests from TeacherTestCaseSet as teacher / course owner.
-    '''
-    
-    def testNewSubmissionView(self):
-        response=self.c.get('/teacher/opensubmit/submission/add/')
-        self.assertEqual(response.status_code, 200)
