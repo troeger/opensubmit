@@ -1,8 +1,12 @@
 build:
-	pushd web;      ./setup.py build sdist; popd
-	pushd executor; ./setup.py build sdist; popd
+	pip install -r requirements.txt
+	pushd web;      ./setup.py bdist_wheel; popd
+	pushd executor; ./setup.py bdist_wheel; popd
 	mv executor/dist/* .
 	mv web/dist/* .
+
+venv:
+	python3.6 -m venv venv
 
 tests:
 	pushd executor; pip install -r requirements.txt; popd
@@ -21,10 +25,11 @@ clean:
 	rm -rf ./executor/dist
 	rm -rf ./executor/build
 	rm -rf ./executor/*.egg-info/
-	rm -f   *.tar.gz
-	rm -f   ./web/.coverage
-	rm -rf  ./htmlcov
-	rm -rf  ./web/htmlcov
+	rm -f  ./*.tar.gz
+	rm -f  ./*.whl
+	rm -f  ./web/.coverage
+	rm -rf ./htmlcov
+	rm -rf ./web/htmlcov
 
 pypi:
 	# Assumes valid credentials in ~/.pypirc
