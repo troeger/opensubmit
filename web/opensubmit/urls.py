@@ -33,7 +33,6 @@ urlpatterns = [
     url('', include('social_django.urls', namespace='social')),
     url(r'^lti/$', views.lti, name='lti'),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
-    url(r'^admin/', include(admin.admin_backend.urls)),
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
 ]
 
@@ -42,7 +41,7 @@ urlpatterns = [
 urlpatterns += staticfiles_urlpatterns()
 
 from . import urls
-def show_urls(urllist, depth=0):
+def show_urls(urllist, depth=0): # pragma: no cover
     for entry in urllist:
         print("  " * depth, entry.regex.pattern)
         if hasattr(entry, 'url_patterns'):
