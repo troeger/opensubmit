@@ -39,7 +39,7 @@ class ServerEnvAuth(BaseAuth):
             # Looks like the Django strategy. In this case, it might by mod_wsgi, which stores
             # authentication environment variables in request.META
             response = self.strategy.request.META
-	else:
+        else:
             raise AuthMissingParameter(self, "%s, found only: %s"%(self.ENV_USERNAME, str(os.environ)))
         kwargs.update({'response': response, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
