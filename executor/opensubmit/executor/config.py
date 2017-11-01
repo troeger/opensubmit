@@ -165,10 +165,7 @@ def create_config(config_fname, override_url=None):
     Create the config file from the defaults under the given name.
     '''
     config_path=os.path.dirname(config_fname)
-    try:
-        os.makedirs(config_path)
-    except:
-        pass    # if directory already exists
+    os.makedirs(config_path, exist_ok=True)
 
     # Consider override URL. Only used by test suite runs
     settings=DEFAULT_SETTINGS_FLAT
@@ -176,6 +173,6 @@ def create_config(config_fname, override_url=None):
         settings['url']=override_url
 
     # Create fresh config file, including new UUID
-    with open(config_fname,'w') as config:
+    with open(config_fname,'x') as config:
         config.write(DEFAULT_FILE_CONTENT.format(**settings))
     return True
