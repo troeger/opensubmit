@@ -3,20 +3,14 @@
 '''
 
 import platform
+from subprocess import getoutput
 
-def from_cmd(cmd, stdhndl=" 2>&1", e_shell=True):
+#def from_cmd(cmd, stdhndl=" 2>&1", e_shell=True):
+def from_cmd(cmd):
     '''
         Determine some system information based on a shell command.
     '''
-    try:  
-        p = subprocess.Popen(cmd + stdhndl, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=e_shell)
-        p.wait()
-        out = "".join([p.stdout.read(),p.stderr.read()]).decode("utf-8",errors="ignore")
-        if p.returncode!=0:
-            out=""
-        return out
-    except Exception as e:
-        return ""
+    return getoutput(cmd)
 
 def ipaddress():
     ''' 
