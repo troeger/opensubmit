@@ -8,6 +8,9 @@ build:
 venv:
 	python3.6 -m venv venv
 
+install: build
+	pip install --upgrade *.whl
+
 tests:
 	pushd executor; pip install -r requirements.txt; popd
 	pushd web; pip install -r requirements.txt; popd
