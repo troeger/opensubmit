@@ -51,11 +51,6 @@ li.grp-changelist-actions .grp-horizontal-list li {
     border: 0px;
 }
 
-
-.grp-object-tools {
-    display: none;
-}
-
 .grp-fixed-footer {
     background-image: linear-gradient(#cee9f2,#e1f0f5);
 }
