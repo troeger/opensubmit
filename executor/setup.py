@@ -20,7 +20,7 @@ setup(
     ],
 
     install_requires=required,
-    packages = find_packages(),
+    packages = ['opensubmit.executor'],
     include_package_data = True,
     entry_points={
         'console_scripts': [

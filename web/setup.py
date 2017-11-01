@@ -24,7 +24,7 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     install_requires=required,
-    packages = find_packages(exclude=['opensubmit.tests']),     # Just add Python packages
+    packages = ['opensubmit'],     # Just add Python packages
     include_package_data = True,                                # Consider MANIFEST.in
     entry_points={
         'console_scripts': [
