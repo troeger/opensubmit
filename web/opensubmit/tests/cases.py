@@ -425,6 +425,21 @@ class SubmitTestCase(LiveServerTestCase):
         self.noGradingAssignment.save()
         self.allAssignments.append(self.noGradingAssignment)
 
+        self.uploadedDescriptionAssignment = Assignment(
+            title=uccrap+'Open assignment with uploaded description file',
+            course=self.course,
+            download=None,
+            description=self.createDescriptionFile(),
+            gradingScheme=None,
+            publish_at=last_week,
+            soft_deadline=tomorrow,
+            hard_deadline=next_week,
+            has_attachment=False,
+            max_authors=3
+        )
+        self.uploadedDescriptionAssignment.save()
+        self.allAssignments.append(self.uploadedDescriptionAssignment)
+
 
     def createTestMachine(self, test_host):
         '''
@@ -435,7 +450,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.machine = TestMachine(
             last_contact=datetime.datetime.now(),
             host = test_host,
-            config=json.dumps({'Operating system':uccrap+'Plan 9'}))
+            config=json.dumps([['Operating system',uccrap+'Plan 9'],]))
         self.machine.save()
         return self.machine
 
@@ -444,6 +459,9 @@ class SubmitTestCase(LiveServerTestCase):
             sf = SubmissionFile(attachment=DjangoFile(subfile, str(datetime.datetime.now())))
             sf.save()
         return sf
+
+    def createDescriptionFile(self, relpath="/opensubmit/tests/submfiles/python.pdf"):
+        return DjangoFile(open(rootdir+relpath,'rb'), str(datetime.datetime.now()))
 
     def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
         fname=relpath[relpath.rfind(os.sep)+1:]

@@ -51,9 +51,9 @@ class AssignmentAdminForm(forms.ModelForm):
                 self.fields['attachment_test_support'].widget.template_with_initial = (
                     '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
                 )
-            if self.instance.description_url():
+            if self.instance.url():
                 self.fields['description'].widget.template_with_initial = (
-                    '%(initial_text)s: <a href="'+self.instance.description_url()+'">%(initial)s</a> '
+                    '%(initial_text)s: <a href="'+self.instance.url()+'">%(initial)s</a> '
                     '%(clear_template)s<br />%(input_text)s: %(input)s'
                 )
             else:

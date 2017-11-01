@@ -19,12 +19,26 @@ class StudentDisplayTestCase(SubmitTestCase):
         self.openAssignmentSub = self.createSubmission(self.current_user, self.openAssignment)
         self.softDeadlinePassedAssignmentSub = self.createSubmission(self.current_user, self.softDeadlinePassedAssignment)
         self.hardDeadlinePassedAssignmentSub = self.createSubmission(self.current_user, self.hardDeadlinePassedAssignment)
+        self.openAssignmentWithDescriptionSub = self.createSubmission(self.current_user, self.uploadedDescriptionAssignment)
 
         self.submissions = (
             self.openAssignmentSub,
             self.softDeadlinePassedAssignmentSub,
             self.hardDeadlinePassedAssignmentSub,
+            self.openAssignmentWithDescriptionSub
         )
+
+    def testAssignmentDescriptionUrlOnDashboard(self):
+        self.loginUser(self.enrolled_students[0])
+        self.createSubmissions()
+        response=self.c.get('/dashboard/')
+        # Check for assignment description links of open assignments
+        for assignment in self.allAssignments:
+            if assignment.can_create_submission(self.current_user.user):
+                self.assertContains(response, assignment.url())
+        # Check for assignment description links of active submissions
+        for sub in self.submissions:
+            self.assertContains(response, sub.assignment.url())
 
     def testCanSeeSubmissions(self):
         self.loginUser(self.enrolled_students[0])

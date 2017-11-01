@@ -11,7 +11,6 @@ class AssignmentModelTutorTestCase(SubmitTutorTestCase):
     def testScriptUrl(self):
         for ass in [self.openAssignment, self.softDeadlinePassedAssignment,self.hardDeadlinePassedAssignment,self.unpublishedAssignment,self.noHardDeadlineAssignment,self.noGradingAssignment]:
             self.assertIsNone(ass.validity_test_url())
-            self.assertIsNone(ass.description_url())
         self.assertIsNotNone(self.validatedAssignment.validity_test_url())
 
 class AssignmentModelAdminTestCase(SubmitAdminTestCase):
@@ -21,7 +20,6 @@ class AssignmentModelAdminTestCase(SubmitAdminTestCase):
     def testScriptUrl(self):
         for ass in [self.openAssignment, self.softDeadlinePassedAssignment,self.hardDeadlinePassedAssignment,self.unpublishedAssignment,self.noHardDeadlineAssignment,self.noGradingAssignment]:
             self.assertIsNone(ass.validity_test_url())
-            self.assertIsNone(ass.description_url())
         self.assertIsNotNone(self.validatedAssignment.validity_test_url())
 
 

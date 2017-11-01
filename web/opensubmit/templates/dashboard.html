@@ -43,7 +43,7 @@
                                     {{ assignment.course }}
                                 </a>
                             </td>
-                            <td><a href="{% if assignment.description %}{{assignment.description_url}}{%else%}{{ assignment.download }}{%endif%}">
+                            <td><a href="{{ assignment.url }}">
                                     {{ assignment }}
                                 </a>
                                 {% if  assignment.publish_at > today %}
@@ -99,7 +99,7 @@
                 <tr {% if submission.passed or submission.failed %}style="font-style: italic"{%endif%}>
                     <td>{{ submission.pk }}</td>
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
-                    <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
+                    <td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.submitter.get_full_name }}</td>
                     <td>{{ submission.authors.all|join:"<br/>" }}</td>
                     <td>
@@ -144,7 +144,7 @@
                 <tr>
                     <td>{{ submission.pk }}</td>
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
-                    <td><a href="{{ submission.assignment.download }}">{{ submission.assignment }}</a></td>
+                    <td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.created }}</td>
                     <td>{{ submission.authors.all|join:"<br/>" }}</td>
                     <td>{{ submission.state_for_students }}</td>

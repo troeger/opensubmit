@@ -109,13 +109,16 @@ class Assignment(models.Model):
         else:
             return None
 
-    def description_url(self):
+    def url(self):
         '''
-            Return absolute download URL for description file.
+            Return absolute URL for assignment description.
             Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
         '''
-        if self.pk and self.has_description():
-            return settings.MAIN_URL + "/download/%u/description" % (self.pk)
+        if self.pk:
+            if self.has_description():
+                return settings.MAIN_URL + "/download/%u/description" % (self.pk)
+            else:
+                return self.download
         else:
             return None
 
