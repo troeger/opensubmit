@@ -14,6 +14,7 @@ executor.cfg
 *.orig
 *.tar.gz
 web/database.sqlite
+web/htmlcov
 .coverage
 .vagrant
 *.egg-info
@@ -23,5 +24,4 @@ web/database.sqlite
 *pip-selfcheck.json*
 *venv*
 *.bak*
-
 *.whl
