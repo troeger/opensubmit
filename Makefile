@@ -47,6 +47,7 @@ clean:
 	rm -f  ./web/.coverage
 	rm -rf ./htmlcov
 	rm -rf ./web/htmlcov
+	find . -name "*.bak" -delete
 
 pypi: build
 	# Upload built packages to PyPI.
