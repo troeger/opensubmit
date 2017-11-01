@@ -97,25 +97,23 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
 
     def testParallelExecutorsCompileTest(self):
-        self.sub = self.createValidatableSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-
+        self.validatedAssignment.test_machines.add(self._registerExecutor())
+        num_students=len(self.enrolled_students)
+        subs=[self.createValidatableSubmission(stud) for stud in self.enrolled_students]
         # Span a number of threads, each triggering the executor
         # This only creates a real test case if executor serialization is off (see tests/executor.cfg)
-        NUM_THREADS = 70
-        return_codes = utils.run_parallel(NUM_THREADS, self._runExecutor)
+        return_codes = utils.run_parallel(num_students, self._runExecutor)
         # Compile + validation + full test makes 3 expected successful runs
-        #self.assertEquals(len(filter((lambda x: x is True),  return_codes)), 3)
-        #self.assertEquals(len(filter((lambda x: x is False), return_codes)), NUM_THREADS-3)
+        self.assertEqual(len(list(filter((lambda x: x is True),  return_codes))), num_students)
 
         # Make sure that compilation result is given
-        results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
-            kind=SubmissionTestResult.COMPILE_TEST
-        )
-        self.assertEqual(1, len(results))
-        self.assertNotEqual(0, len(results[0].result))
+        for sub in subs:
+            results = SubmissionTestResult.objects.filter(
+                submission_file=sub.file_upload,
+                kind=SubmissionTestResult.COMPILE_TEST
+            )
+            self.assertEqual(1, len(results))
+            self.assertNotEqual(0, len(results[0].result))
 
 
     def testTooLongCompile(self):
