@@ -18,16 +18,33 @@ def check_permission_system():
 
         This method is idempotent and does not touch manually assigned permissions.
     '''
-    tutor_perms = ( "change_submission", "delete_submission",
-                    "change_submissionfile", "delete_submissionfile" )
-    owner_perms = ( "add_assignment", "change_assignment", "delete_assignment",
-                    "add_grading", "change_grading",  "delete_grading",
-                    "add_gradingscheme", "change_gradingscheme", "delete_gradingscheme",
-                    "add_submission", "change_submission", "delete_submission",
-                    "add_submissionfile", "change_submissionfile", "delete_submissionfile",
-                    "add_course", "change_course", "delete_course",
-                    "add_studyprogram", "change_studyprogram", "delete_studyprogram",
-                    "change_user", "delete_user")
+    tutor_perms = (  "change_submission", 
+                     "delete_submission",
+                     "add_submissionfile", 
+                     "change_submissionfile", 
+                     "delete_submissionfile" )
+    owner_perms = (  "add_assignment", 
+                     "change_assignment", 
+                     "delete_assignment",
+                     "add_course", 
+                     "change_course", 
+                     "delete_course",
+                     "add_grading", 
+                     "change_grading",  
+                     "delete_grading",
+                     "add_gradingscheme", 
+                     "change_gradingscheme", 
+                     "delete_gradingscheme",
+                     "add_studyprogram", 
+                     "change_studyprogram", 
+                     "delete_studyprogram",
+                     "change_submission", 
+                     "delete_submission",
+                     "add_submissionfile", 
+                     "change_submissionfile", 
+                     "delete_submissionfile",
+                     "change_user", 
+                     "delete_user")
 
     # Give all tutor users staff rights and add them to the tutors permission group
     tutors = User.objects.filter(courses_tutoring__isnull=False)
@@ -90,7 +107,7 @@ def make_tutor(user):
 
 def make_owner(user):
     '''
-    Makes the given user a owner.
+    Makes the given user a owner and tutor.
     '''
     tutor_group, owner_group = _get_user_groups()
     user.is_staff=True
