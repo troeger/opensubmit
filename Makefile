@@ -36,4 +36,4 @@ clean:
 
 pypi:
 	# Assumes valid credentials in ~/.pypirc
-	twine upload opensubmit-*.tar.gz
+	twine upload opensubmit_*.whl
