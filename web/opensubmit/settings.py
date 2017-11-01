@@ -214,7 +214,7 @@ INSTALLED_APPS = (
     'grappelli',
     'django.contrib.admin',
 #    'django.contrib.admin.apps.SimpleAdminConfig',
-    'opensubmit',
+    'opensubmit.app.OpenSubmitConfig',
 )
 
 LOG_FILE = config.get('server', 'LOG_FILE')
