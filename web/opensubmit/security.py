@@ -42,9 +42,7 @@ def check_permission_system():
                      "delete_submission",
                      "add_submissionfile", 
                      "change_submissionfile", 
-                     "delete_submissionfile",
-                     "change_user", 
-                     "delete_user")
+                     "delete_submissionfile")
 
     # Give all tutor users staff rights and add them to the tutors permission group
     tutors = User.objects.filter(courses_tutoring__isnull=False)
