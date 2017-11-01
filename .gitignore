@@ -24,3 +24,4 @@ web/database.sqlite
 *venv*
 *.bak*
 
+*.whl
