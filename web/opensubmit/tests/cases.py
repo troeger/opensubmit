@@ -310,6 +310,7 @@ class SubmitTestCase(LiveServerTestCase):
                 hard_deadline=next_week,
                 has_attachment=True,
                 validity_script_download=True,
+                attachment_test_compile=True,
                 attachment_test_validity=DjangoFile(validator_script),
                 attachment_test_full=DjangoFile(validator_script),
                 max_authors=3            
@@ -439,10 +440,8 @@ class SubmitTestCase(LiveServerTestCase):
         return self.machine
 
     def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
-        fname=relpath[relpath.rfind(os.sep)+1:]
-        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
         with open(rootdir+relpath,'rb') as subfile:
-            sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
+            sf = SubmissionFile(attachment=DjangoFile(subfile, str(datetime.datetime.now())))
             sf.save()
         return sf
 
