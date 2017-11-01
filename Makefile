@@ -6,7 +6,7 @@ build:
 	mv executor/dist/* .
 	rmdir executor/dist
 	mv web/dist/* .
-	rmdir executor/dist
+	rmdir web/dist
 
 venv:
 	# Create a virtualenv.
@@ -18,6 +18,10 @@ install: build
 	# This is intended for staging tests in a virtualenv.
 	# On production systems, install a release directly from PyPI.
 	pip install --upgrade *.whl
+
+uninstall:
+	pip uninstall opensubmit-web
+	pip uninstall opensubmit-exec
 
 tests:
 	# Run all tests.
