@@ -11,8 +11,9 @@ def break_lock(config):
     fname=config.get("Execution", "pidfile")
     try:
         os.remove(fname)
+        logger.info("Lock file at {0} removed.".format(fname))
     except FileNotFoundError:
-        pass
+        logger.info("No lock file found at {0}.".format(fname))
 
 class ScriptLock():
     config = None
