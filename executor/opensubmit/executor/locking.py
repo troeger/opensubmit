@@ -9,7 +9,10 @@ from twisted.python.lockfile import FilesystemLock
 
 def break_lock(config):
     fname=config.get("Execution", "pidfile")
-    os.remove(fname)
+    try:
+        os.remove(fname)
+    except FileNotFoundError:
+        pass
 
 class ScriptLock():
     config = None
