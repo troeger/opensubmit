@@ -109,7 +109,7 @@ class SubmissionAdmin(ModelAdmin):
     list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', 'grading_status_text', 'has_grading_notes']
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
+    actions = ['downloadArchiveAction', 'setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
     search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
