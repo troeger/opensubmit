@@ -141,10 +141,7 @@ class SubmissionFile(models.Model):
         MAX_PREVIEW_SIZE = 1000000
 
         def sanitize(text):
-            try:
-                return str(text, errors='ignore')
-            except:
-                return str("(unreadable text data)")
+            return text
 
         def is_code(fname):
             code_endings=['.c','.cpp','Makefile','.java','.py','.rb','.js']
