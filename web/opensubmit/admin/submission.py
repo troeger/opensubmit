@@ -15,10 +15,6 @@ from django.utils import timesince
 
 import io, zipfile
 
-def authors(submission):
-    ''' The list of authors als text, for submission list overview.'''
-    return ",\n".join([author.get_full_name() for author in submission.authors.all()])
-
 def course(obj):
     ''' The course name as string.'''
     return obj.assignment.course
@@ -128,7 +124,7 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__str__', 'created', 'modified', authors, course, 'assignment', 'state', grading_text, grading_notes]
+    list_display = ['__str__', 'created', 'modified', 'author_list', course, 'assignment', 'state', grading_text, grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']

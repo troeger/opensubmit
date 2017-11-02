@@ -202,6 +202,13 @@ class Submission(models.Model):
         else:
             return "New Submission instance"
 
+    def author_list(self):
+        ''' The list of authors als text, for admin submission list overview.'''
+        author_list=[self.submitter] + [author for author in self.authors.all().exclude(pk=self.submitter.pk)]
+        return ",\n".join([author.get_full_name() for author in author_list])
+    author_list.admin_order_field = 'submitter'
+
+
     def grading_status_text(self):
         '''
         A rendering of the grading that is an answer on the question
