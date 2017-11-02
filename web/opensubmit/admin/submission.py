@@ -27,11 +27,10 @@ def grading_notes(submission):
     ''' Determines if the submission has grading notes,
         leads to nice little icon in the submission overview.
     '''
-    if submission.grading_notes is not None:
-        return len(submission.grading_notes) > 0
+    if submission.grading_notes is not None and len(submission.grading_notes) > 0:
+        return "Yes"
     else:
-        return False
-grading_notes.boolean = True            # show nice little icon
+        return "No"
 grading_notes.short_description = "Grading notes?"
 
 def grading_text(submission):
@@ -132,7 +131,7 @@ class SubmissionAdmin(ModelAdmin):
     list_display = ['__str__', 'created', 'modified', authors, course, 'assignment', 'state', grading_text, grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
+    actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
     search_fields = ['=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
@@ -263,7 +262,7 @@ class SubmissionAdmin(ModelAdmin):
         for subm in queryset:
             subm.state = subm.get_initial_state()
             subm.save()
-    setInitialStateAction.short_description = "Re-run all tests (student visible)"
+    setInitialStateAction.short_description = "Re-run validation test for selection submissions (student visible)"
 
     def setGradingNotFinishedStateAction(self, request, queryset):
         '''
@@ -273,7 +272,17 @@ class SubmissionAdmin(ModelAdmin):
         for subm in queryset:
             subm.state = Submission.GRADING_IN_PROGRESS
             subm.save()
-    setGradingNotFinishedStateAction.short_description = "Set grading status to unfinished"
+    setGradingNotFinishedStateAction.short_description = "Mark selected submissions as 'Grading not finished'"
+
+    def setGradingFinishedStateAction(self, request, queryset):
+        '''
+            Set all marked submissions to "grading finished".
+            This is intended to support grading corrections on a larger scale.
+        '''
+        for subm in queryset:
+            subm.state = Submission.GRADED
+            subm.save()
+    setGradingFinishedStateAction.short_description = "Mark selected submissions as 'Grading finished'"
 
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions, or for solutions in the middle of grading
@@ -291,7 +300,7 @@ class SubmissionAdmin(ModelAdmin):
             self.message_user(request, "Nothing changed, no testable submission found.")
         else:
             self.message_user(request, "Changed status of %u submissions." % numchanged)
-    setFullPendingStateAction.short_description = "Re-run full test (student invisible)"
+    setFullPendingStateAction.short_description = "Re-run full test for selected submissions (student invisible)"
 
     def closeAndNotifyAction(self, request, queryset):
         ''' Close all submissions were the tutor sayed that the grading is finished,
@@ -308,7 +317,7 @@ class SubmissionAdmin(ModelAdmin):
             self.message_user(request, "Nothing closed, no mails sent.")
         else:
             self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
-    closeAndNotifyAction.short_description = "Close + send student notification"
+    closeAndNotifyAction.short_description = "Close + send student notification for selected submissions"
 
     def downloadArchiveAction(self, request, queryset):
         '''
@@ -326,7 +335,7 @@ class SubmissionAdmin(ModelAdmin):
         response = HttpResponse(output, content_type="application/x-zip-compressed")
         response['Content-Disposition'] = 'attachment; filename=submissions.zip'
         return response
-    downloadArchiveAction.short_description = "Download as ZIP archive"
+    downloadArchiveAction.short_description = "Download selected submissions as ZIP archive"
 
 
 
