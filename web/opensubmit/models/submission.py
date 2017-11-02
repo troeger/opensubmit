@@ -208,7 +208,11 @@ class Submission(models.Model):
         return ",\n".join([author.get_full_name() for author in author_list])
     author_list.admin_order_field = 'submitter'
 
-
+    def course(self):
+        ''' The course of this submission as text, for admin submission list overview.'''
+        return self.assignment.course
+    course.admin_order_field = 'assignment__course'
+ 
     def grading_status_text(self):
         '''
         A rendering of the grading that is an answer on the question
