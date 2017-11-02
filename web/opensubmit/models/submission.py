@@ -217,6 +217,7 @@ class Submission(models.Model):
         '''
         A rendering of the grading that is an answer on the question
         "Is it graded?".
+        Used in duplicate view and submission list on the teacher backend.
         '''
         if self.assignment.gradingScheme:
             if self.is_grading_finished():
@@ -225,6 +226,8 @@ class Submission(models.Model):
                 return str('No')
         else:
             return str('Not graded')
+    grading_status_text.admin_order_field = 'grading__title'
+    grading_status_text.short_description = "Grading finished?"
 
     def grading_value_text(self):
         '''

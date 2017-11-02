@@ -25,10 +25,6 @@ def grading_notes(submission):
         return "No"
 grading_notes.short_description = "Grading notes?"
 
-def grading_text(submission):
-    return submission.grading_status_text()
-grading_text.short_description = "Grading finished?"
-
 def grading_file(submission):
     ''' Determines if the submission has a grading file,
         leads to nice little icon in the submission overview.
@@ -120,7 +116,7 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', grading_text, grading_notes]
+    list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', 'grading_status_text', grading_notes]
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
