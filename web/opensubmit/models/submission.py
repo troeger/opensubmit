@@ -229,6 +229,19 @@ class Submission(models.Model):
     grading_status_text.admin_order_field = 'grading__title'
     grading_status_text.short_description = "Grading finished?"
 
+    def has_grading_notes(self):
+        ''' Determines if the submission has grading notes.
+            Used for submission list overview in teacher backend.
+        '''
+        if self.grading_notes is not None and len(self.grading_notes) > 0:
+            return True
+        else:
+            return False
+    has_grading_notes.short_description = "Grading notes?"
+    has_grading_notes.admin_order_field = 'grading_notes'
+    has_grading_notes.boolean = True            # show nice little icon
+
+
     def grading_value_text(self):
         '''
         A rendering of the grading that is an answer to the question

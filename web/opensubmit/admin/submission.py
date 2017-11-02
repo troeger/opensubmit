@@ -15,16 +15,6 @@ from django.utils import timesince
 
 import io, zipfile
 
-def grading_notes(submission):
-    ''' Determines if the submission has grading notes,
-        leads to nice little icon in the submission overview.
-    '''
-    if submission.grading_notes is not None and len(submission.grading_notes) > 0:
-        return "Yes"
-    else:
-        return "No"
-grading_notes.short_description = "Grading notes?"
-
 def grading_file(submission):
     ''' Determines if the submission has a grading file,
         leads to nice little icon in the submission overview.
@@ -116,7 +106,7 @@ class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', 'grading_status_text', grading_notes]
+    list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', 'grading_status_text', 'has_grading_notes']
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
     actions = ['setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction','downloadArchiveAction']
