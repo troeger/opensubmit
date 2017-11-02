@@ -69,10 +69,6 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
         self.all_submissions = [self.sub1, self.sub2, self.val_sub]
         self.submadm = SubmissionAdmin(Submission, AdminSite())
 
-    def testAuthorsFromSubmission(self):
-        from opensubmit.admin.submission import authors
-        assert(self.current_user.user.first_name in authors(self.sub1))
-
     def testSubmissionBackend(self):
         submissions = self.submadm.get_queryset(self.request)
         for sub in submissions:
@@ -105,13 +101,6 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
     def testSetInitialState(self):
         self.submadm.setInitialStateAction(self.request, Submission.objects.all())
         self.assertEqual(2, Submission.objects.filter(state=Submission.SUBMITTED).count())
-
-    def testGradingNoteIndicator(self):
-        from opensubmit.admin.submission import grading_notes
-        self.assertEqual(False, grading_notes(self.sub1))
-        self.sub1.grading_notes = 'Your are a bad student.'
-        self.sub1.save()
-        self.assertEqual(True, grading_notes(self.sub1))
 
     def testGradingFileIndicator(self):
         from django.core.files import File as DjangoFile
