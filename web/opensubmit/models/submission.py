@@ -595,7 +595,7 @@ class Submission(models.Model):
         else:
             modified = self.created.strftime("%Y_%m_%d_%H_%M_%S")
         state = self.state_for_students().replace(" ", "_").lower()
-        submdir = "%s/%s/%s_%s/" % (assdir, submitter, modified, state)
+        submdir = "%s/%u_%s/" % (assdir, self.pk, state)
         if self.file_upload:
             # Copy student upload
             tempdir = tempfile.mkdtemp()

@@ -399,7 +399,7 @@ def assarchive(request, ass_id):
 
     ass = get_object_or_404(Assignment, pk=ass_id)
     ass.add_to_zipfile(z)
-    subs = Submission.valid_ones.filter(assignment=ass)
+    subs = Submission.valid_ones.filter(assignment=ass).order_by('submitter')
     for sub in subs:
         sub.add_to_zipfile(z)
 
