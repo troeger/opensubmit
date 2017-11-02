@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
+from django.views.generic import TemplateView
 
 from opensubmit import views, admin, api
 
@@ -34,6 +35,10 @@ urlpatterns = [
     url(r'^lti/$', views.lti, name='lti'),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
+
+    url(r'^403/$', TemplateView.as_view(template_name='403.html')),
+    url(r'^404/$', TemplateView.as_view(template_name='404.html')),
+    url(r'^500/$', TemplateView.as_view(template_name='500.html')),
 ]
 
 # only working when DEBUG==FALSE
