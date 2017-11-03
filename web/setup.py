@@ -9,6 +9,22 @@ from distutils.command.clean import clean as _clean
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
+def package_files(directory):
+    paths = []
+    excluded=['.pyc','README.md']
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            for pattern in excluded:
+                if pattern in filename:
+                    continue
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+static = package_files('opensubmit/static')
+templates = package_files('opensubmit/templates')
+templatetags = package_files('opensubmit/templatetags')
+data_files = ['VERSION',]+static+templates+templatetags
+
 setup(
     name = 'opensubmit-web',
     version = open('opensubmit/VERSION').read(),
@@ -21,11 +37,11 @@ setup(
         #   4 - Beta
         #   5 - Production/Stable
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3.4'
     ],
     install_requires=required,
-    packages = ['opensubmit'],     # Just add Python packages
-    package_data = {'opensubmit': ['VERSION','static/', 'templates/', 'templatetags/']},
+    packages = ['opensubmit', 'opensubmit.admin', 'opensubmit.management.commands', 'opensubmit.migrations', 'opensubmit.models', 'opensubmit.social'],     # Just add Python packages
+    package_data = {'opensubmit': data_files},
     entry_points={
         'console_scripts': [
             'opensubmit-web = opensubmit.cmdline:console_script',
