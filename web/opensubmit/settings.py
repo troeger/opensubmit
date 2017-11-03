@@ -82,11 +82,15 @@ def ensure_slash_from_config(config, leading, trailing, configvar):
         raise ImproperlyConfigured("The value of configuration variable %s did not pass the sanity check. %s"%(str(configvar),e.message))
 
 # Find configuration file and open it.
-config_file_path, is_production = find_config_info()
+try:
+    config_file_path, is_production = find_config_info()
+except:
+    print("Configuration file not found. Please run 'opensubmit-web configure' first.")
+    exit(0)
+
 print("Using "+config_file_path)
-config_fp = open(config_file_path, 'r')
 config = SafeConfigParser()
-config.readfp(config_fp)
+config.read([config_file_path], encoding='utf-8')
 
 # Global settings
 DATABASES = {
@@ -333,8 +337,7 @@ assert(JOB_EXECUTOR_SECRET is not "")
 GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
 GRAPPELLI_SWITCH_USER = True
 GRAPPELLI_INDEX_DASHBOARD = {
-    'opensubmit.admin.teacher_backend': 'opensubmit.dashboard.TeacherDashboard',
-    'opensubmit.admin.admin_backend': 'opensubmit.dashboard.AdminDashboard',
+    'opensubmit.admin.teacher_backend': 'opensubmit.dashboard.TeacherDashboard'
 }
 
 assert(not config.has_section('overrides'))     # factored out
