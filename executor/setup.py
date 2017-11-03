@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setup(
     name = 'opensubmit-exec',
-    version = open('VERSION').read(),
+    version = open('opensubmit/executor/VERSION').read(),
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Tröger',
@@ -22,7 +22,7 @@ setup(
     install_requires=required,
     extras_require={'report-opencl': ["pyopencl"]},
     packages = ['opensubmit.executor'],
-    include_package_data = True,
+    package_data = {'opensubmit.executor': ['VERSION']},
     entry_points={
         'console_scripts': [
             'opensubmit-exec = opensubmit.executor.cmdline:console_script',

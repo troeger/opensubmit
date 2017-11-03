@@ -11,7 +11,7 @@ with open('requirements.txt') as f:
 
 setup(
     name = 'opensubmit-web',
-    version = open('VERSION').read(),
+    version = open('opensubmit/VERSION').read(),
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Tröger',
@@ -25,7 +25,7 @@ setup(
     ],
     install_requires=required,
     packages = ['opensubmit'],     # Just add Python packages
-    include_package_data = True,                                # Consider MANIFEST.in
+    package_data = {'opensubmit': ['VERSION','static/', 'templates/', 'templatetags/']},
     entry_points={
         'console_scripts': [
             'opensubmit-web = opensubmit.cmdline:console_script',
