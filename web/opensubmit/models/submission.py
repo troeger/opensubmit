@@ -542,7 +542,7 @@ class Submission(models.Model):
             Closing it will delete it, which must be considered by the caller.
             This file is not readable, since the tempfile library wants either readable or writable files.
         '''
-        info = tempfile.NamedTemporaryFile(mode='wt', delete=delete)
+        info = tempfile.NamedTemporaryFile(mode='wt', encoding='utf-8', delete=delete)
         info.write("Submission ID:\t%u\n" % self.pk)
         info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name(), self.submitter.pk))
         info.write("Authors:\n")
