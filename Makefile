@@ -1,27 +1,37 @@
 build:
 	# Build the install packages.
 	pip install -r requirements.txt
+
 	pushd web;      ./setup.py bdist_wheel; popd
-	pushd executor; ./setup.py bdist_wheel; popd
-	mv executor/dist/* .
-	rmdir executor/dist
-	mv web/dist/* .
+	mv web/dist/* dist/
 	rmdir web/dist
+	rm -rf ./web/build
+	rm -rf ./web/*.egg-info/
+
+	pushd executor; ./setup.py bdist_wheel; popd
+	mv executor/dist/* dist/
+	rmdir executor/dist
+	rm -rf ./executor/build
+	rm -rf ./executor/*.egg-info/
 
 venv:
 	# Create a virtualenv.
 	# Activate it afterwards with "source venv/bin/activate"
 	python3.6 -m venv venv
 
-install: build
+uninstall:
+	pip uninstall -y opensubmit-web
+	pip uninstall -y opensubmit-exec
+
+re-install: build uninstall
 	# Installs built packages locally.
 	# This is intended for staging tests in a virtualenv.
 	# On production systems, install a release directly from PyPI.
-	pip install *.whl
+	pip install dist/*.whl
 
-uninstall:
-	pip uninstall opensubmit-web
-	pip uninstall opensubmit-exec
+docker: build
+	# Create Docker image, based on fresh build
+	pushd dist; docker build .; popd
 
 tests:
 	# Run all tests.
@@ -34,16 +44,7 @@ coverage:
 	pushd web; coverage run --source='.','../executor/' --omit='*/setup.py',opensubmit/wsgi.py manage.py test opensubmit.tests; coverage html; popd
 
 clean:
-	rm -rf ./cmdline/dist
-	rm -rf ./cmdline/build
-	rm -rf ./web/dist
-	rm -rf ./web/build
-	rm -rf ./web/*.egg-info/
-	rm -rf ./executor/dist
-	rm -rf ./executor/build
-	rm -rf ./executor/*.egg-info/
-	rm -f  ./*.tar.gz
-	rm -f  ./*.whl
+	rm -f  ./dist/*.whl
 	rm -f  ./web/.coverage
 	rm -rf ./htmlcov
 	rm -rf ./web/htmlcov
@@ -52,4 +53,4 @@ clean:
 pypi: build
 	# Upload built packages to PyPI.
 	# Assumes valid credentials in ~/.pypirc
-	twine upload opensubmit_*.whl
+	twine upload dist/opensubmit_*.whl
