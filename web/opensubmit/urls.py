@@ -45,7 +45,6 @@ urlpatterns = [
 # on production systems, static files are served directly by Apache
 urlpatterns += staticfiles_urlpatterns()
 
-from . import urls
 def show_urls(urllist, depth=0): # pragma: no cover
     for entry in urllist:
         print("  " * depth, entry.regex.pattern)
