@@ -176,9 +176,12 @@ def check_path(directory):
     '''
         Checks if the directories for this path exist, and creates them in case.
     '''
-    if directory != '':
-        if not os.path.exists(directory):
-            os.makedirs(directory, 0o775)   # rwxrwxr-x
+    try:
+        if directory != '':
+            if not os.path.exists(directory):
+                os.makedirs(directory, 0o775)   # rwxrwxr-x
+    except:
+        print("ERROR: Could not create {0}. Please use sudo or become root.".format(directory))
 
 def check_file(filepath):
     '''
@@ -249,22 +252,25 @@ def check_web_config(config_path):
         If this does not work, than settings file does not exist.
     '''
     WEB_CONFIG_FILE = config_path+'/settings.ini'
-    WEB_TEMPLATE = "opensubmit/settings.ini.template"                   # relative to package path
-    print("Looking for config files ...")
+    print("Looking for config file at {0} ...".format(WEB_CONFIG_FILE))
     config = RawConfigParser()
     try:
         config.readfp(open(WEB_CONFIG_FILE))
-        print("Config file found at "+WEB_CONFIG_FILE)
         return config
     except IOError:
         print("ERROR: Seems like the config file does not exist.")
         print("       I am creating a new one. Please edit it and re-run this command.")
+    # Create fresh config file
+    try:
         check_path(config_path)
-        f=open(WEB_CONFIG_FILE,'w')
+        f=open(WEB_CONFIG_FILE,'wt')
         f.write(DEFAULT_CONFIG)
         f.close()
         check_file(WEB_CONFIG_FILE)
         return None    # Manual editing is needed before further proceeding with the fresh file
+    except FileNotFoundError:
+        print("ERROR: Could not create config file at {0}. Please use sudo or become root.".format(WEB_CONFIG_FILE))
+        return None
 
 def check_web_db():
     '''
@@ -277,6 +283,7 @@ def check_web_db():
     return True
 
 def configure(fsroot='/'):
+    print("Inspecting OpenSubmit configuration ...")
     config = check_web_config(fsroot+'etc/opensubmit')
     if not config:
         return          # Let them first fix the config file before trying a DB access
@@ -289,29 +296,32 @@ def configure(fsroot='/'):
     apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
 
 
+def print_help():
+    print("configure:           Check config files and database for correct installation of the OpenSubmit web server.")
+    print("fixperms:            Check and fix student and tutor permissions")
+    print("fixchecksums:        Re-create all student file checksums (for duplicate detection)")
+    print("makeadmin   <email>: Make this user an admin with backend rights.")
+    print("makeowner   <email>: Make this user a course owner with backend rights.")
+    print("maketutor   <email>: Make this user a course tutor with backend rights.")
+    print("makestudent <email>: Make this user a student without backend rights.")
+
 def console_script(fsroot='/'):
     '''
         The main entry point for the production administration script 'opensubmit-web', installed by setuptools.
         The argument allows the test suite to override the root of all paths used in here.
     '''
 
-    if len(sys.argv) == 1 or "help" in sys.argv:
-        print("configure:           Check config files and database for correct installation of the OpenSubmit web server.")
-        print("fixperms:            Check and fix student and tutor permissions")
-        print("fixchecksums:        Re-create all student file checksums (for duplicate detection)")
-        print("makeadmin   <email>: Make this user an admin with backend rights.")
-        print("makeowner   <email>: Make this user a course owner with backend rights.")
-        print("maketutor   <email>: Make this user a course tutor with backend rights.")
-        print("makestudent <email>: Make this user a student without backend rights.")
-        print("help:                Print this help")
-        return 0
-
-    if sys.argv[1] is "configure":
+    if len(sys.argv) == 2 and "configure" in sys.argv[1]:
         configure(fsroot)
 
-    if sys.argv[1] in ['fixperms', 'fixchecksums']:
+    elif len(sys.argv) == 2 and sys.argv[1] in ['fixperms', 'fixchecksums']:
         django_admin([sys.argv[1]])
 
-    if sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
+    elif len(sys.argv) == 3 and  sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
         django_admin([sys.argv[1], sys.argv[2]])
 
+    else:
+        print_help()
+
+if __name__ == "__main__":
+    console_script()
