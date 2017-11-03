@@ -140,8 +140,8 @@ class SubmissionFile(models.Model):
         '''
         MAX_PREVIEW_SIZE = 1000000
 
-        def sanitize(text):
-            return str(text)
+        def sanitize(bytes):
+            return bytes.decode('utf-8','ignore')
 
         def is_code(fname):
             code_endings=['.c','.cpp','Makefile','.java','.py','.rb','.js']
@@ -168,7 +168,7 @@ class SubmissionFile(models.Model):
                         result.append({'name': tarinfo.name, 'is_code': False, 'preview': '(maximum size exceeded)'})
         else:
             # single file
-            f=open(self.attachment.path)
+            f=open(self.attachment.path,'rb')
             fname = f.name[f.name.rfind(os.sep)+1:]
             result = [{'name': fname, 'is_code': is_code(fname), 'preview': sanitize(f.read())},]
         return result
