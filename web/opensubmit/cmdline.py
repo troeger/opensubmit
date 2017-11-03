@@ -295,26 +295,23 @@ def console_script(fsroot='/'):
         The argument allows the test suite to override the root of all paths used in here.
     '''
 
-    if len(sys.argv) == 1:
-        print("opensubmit-web [configure|createsuperuser|fixperms|fixchecksums|help]")
-        exit(0)
-
-    if "help" in sys.argv:
-        print("configure:        Check config files and database for correct installation of the OpenSubmit web server.")
-        print("createsuperuser:  (Re-)Creates the superuser account for the OpenSubmit installation.")
-        print("fixperms:         Check and fix student and tutor permissions")
-        print("fixchecksums:     Re-create all student file checksums (for duplicate detection)")
-        print("help:             Print this help")
+    if len(sys.argv) == 1 or "help" in sys.argv:
+        print("configure:           Check config files and database for correct installation of the OpenSubmit web server.")
+        print("fixperms:            Check and fix student and tutor permissions")
+        print("fixchecksums:        Re-create all student file checksums (for duplicate detection)")
+        print("makeadmin   <email>: Make this user an admin with backend rights.")
+        print("makeowner   <email>: Make this user a course owner with backend rights.")
+        print("maketutor   <email>: Make this user a course tutor with backend rights.")
+        print("makestudent <email>: Make this user a student without backend rights.")
+        print("help:                Print this help")
         return 0
 
-    if "configure" in sys.argv:
+    if sys.argv[1] is "configure":
         configure(fsroot)
 
-    if "createsuperuser" in sys.argv:
-        django_admin(["createsuperuser"])
+    if sys.argv[1] in ['fixperms', 'fixchecksums']:
+        django_admin([sys.argv[1]])
 
-    if "fixperms" in sys.argv:
-        django_admin(["fixperms"])
+    if sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
+        django_admin([sys.argv[1], sys.argv[2]])
 
-    if "fixchecksums" in sys.argv:
-        django_admin(["fixchecksums"])
