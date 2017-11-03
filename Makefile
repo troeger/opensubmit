@@ -17,7 +17,7 @@ install: build
 	# Installs built packages locally.
 	# This is intended for staging tests in a virtualenv.
 	# On production systems, install a release directly from PyPI.
-	pip install --upgrade *.whl
+	pip install *.whl
 
 uninstall:
 	pip uninstall opensubmit-web
