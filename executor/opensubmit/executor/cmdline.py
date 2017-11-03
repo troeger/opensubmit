@@ -90,4 +90,5 @@ def console_script():
             fetch_and_run(config)
         exit(0)
 
-console_script()
+if __name__ == "__main__":
+    console_script()
