@@ -4,7 +4,6 @@ py2env
 media
 bin
 build
-dist
 include
 lib
 .Python
