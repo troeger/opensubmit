@@ -6,7 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = OpenSubmit
 SOURCEDIR     = .
-BUILDDIR      = build
+BUILDDIR      = formats
 
 # Put it first so that "make" without argument is like "make help".
 help:
