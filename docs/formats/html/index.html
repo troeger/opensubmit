@@ -1,0 +1,162 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome! &#8212; OpenSubmit 0.6.12 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.12',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome">
+<h1>Welcome!<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>This is OpenSubmit, a small web application for managing student
+assignment solutions in a university environment.</p>
+<p>Other tools, such as Moodle, are more powerful and support not only
+assignments, but also the management of learning material, course
+progress and access rights. If you want the all-inclusive solution, this
+is the wrong project.</p>
+<p>OpenSubmit offers a trivial web page were <em>students can login and submit
+their assignment solutions</em>. Teachers and their personal use the backend
+interface to manage assignments, deadlines, and the gradings. Students
+are informed about the progress of their correction and their final
+grade via eMail and the frontend page.</p>
+<p>The unique capability of OpenSubmit is the <em>support for coding
+assignments</em>, were students upload their programming exercise solution
+as source code archive. OpenSubmit offers an executor daemon that runs
+on another machine and downloads submitted solutions from the
+web server. These archives are unpacked and compiled, so
+that non-compiling assignment solutions are rejected by the system
+before the deadline. You can also run an assignment-specific validation
+script that figures out if the student code behaves nicely, before accepting
+it as solution. This makes the life of the corrector less
+miserable, because after the deadline, all gradable solutions are
+‘valid’. Students also seem to like the idea of having a
+validated solution, so that they do not fail due to technical
+difficulties at the correctors side.</p>
+<p>When the deadline is over, the system can run another invisible test with the
+student code the determine grading-relevant information.</p>
+<p>Since OpenSubmit is only for assignment submission, it has no elaborated management
+of course participants. Everybody who can perform a successful login can
+submit solutions. Therefore, we expect you to have an institute-specific
+authentication provider. OpenSubmit currently supports OpenID and Shibboleth
+out of the box for such cases. You can also offer GitHub, Twitter or Google login
+for determining the student identity. A third option is to integrate OpenSubmit
+via LTI in an existing learning management system (LMS).</p>
+<p>The preliminary <a class="reference external" href="https://github.com/troeger/opensubmit/wiki/User-Manual">end-user documentation</a> is available in the GitHub Wiki.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>If you just want to install your own copy of OpenSubmit, please read the <a class="reference external" href="https://github.com/troeger/opensubmit/wiki/Installation-Instructions">installation guide</a> in the GitHub Wiki.</p>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>OpenSubmit is licensed under the AGPL Version 3. This means you are
+allowed to:</p>
+<ul class="simple">
+<li>Install and run the unmodified OpenSubmit code at your site.</li>
+<li>Re-package and distribute the unmodified version of OpenSubmit from
+this repository.</li>
+<li>Modify and re-publish (fork) the sources, as long as your modified
+versions are accessible for everybody.</li>
+</ul>
+<p>In short, AGPL forbids you to distribute / run your own modified version
+of OpenSubmit without publishing your code.</p>
+</div>
+<div class="section" id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">¶</a></h2>
+<p>People who contributed to this project so far:</p>
+<ul class="simple">
+<li>Jafar Akhundov (testing)</li>
+<li>Kai Fabian (frontend, code evaluation)</li>
+<li>Frank Feinbube (code evaluation backend, testing)</li>
+<li>Jens Pönisch (testing)</li>
+<li>Bernhard Rabe (testing)</li>
+<li>Peter Tröger (project owner)</li>
+<li>Matthias Werner (testing)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Peter Tröger.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
