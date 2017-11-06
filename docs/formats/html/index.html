@@ -23,6 +23,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="License" href="license.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -40,28 +41,22 @@
             
   <div class="section" id="welcome">
 <h1>Welcome!<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
 <p>This is OpenSubmit, a small web application for managing student
 assignment solutions in a university environment.</p>
 <p>Other tools, such as Moodle, are more powerful and support not only
 assignments, but also the management of learning material, course
 progress and access rights. If you want the all-inclusive solution, this
 is the wrong project.</p>
-<p>OpenSubmit offers a trivial web page were <em>students can login and submit
-their assignment solutions</em>. Teachers and their personal use the backend
+<div class="section" id="the-idea">
+<h2>The Idea<a class="headerlink" href="#the-idea" title="Permalink to this headline">¶</a></h2>
+<p>OpenSubmit offers a trivial web page were <strong>students can login and submit
+their assignment solutions</strong>. Teachers and their helping tutors use the backend
 interface to manage assignments, deadlines, and the gradings. Students
 are informed about the progress of their correction and their final
-grade via eMail and the frontend page.</p>
-<p>The unique capability of OpenSubmit is the <em>support for coding
-assignments</em>, were students upload their programming exercise solution
-as source code archive. OpenSubmit offers an executor daemon that runs
-on another machine and downloads submitted solutions from the
-web server. These archives are unpacked and compiled, so
-that non-compiling assignment solutions are rejected by the system
-before the deadline. You can also run an assignment-specific validation
-script that figures out if the student code behaves nicely, before accepting
-it as solution. This makes the life of the corrector less
+grade through email and the frontend page.</p>
+<p>The unique capability of OpenSubmit is the <strong>support for automatically validated
+assignments</strong>. The most common use case are programming assignments were students hand-in their source code archive. These archives are downloaded by an executor daemon and checked with a validation script that is written by the teachers.</p>
+<p>The testing can happen before and after the deadline. Test results before the deadline are shown to the students. This makes the life of the corrector less
 miserable, because after the deadline, all gradable solutions are
 ‘valid’. Students also seem to like the idea of having a
 validated solution, so that they do not fail due to technical
@@ -70,51 +65,22 @@ difficulties at the correctors side.</p>
 student code the determine grading-relevant information.</p>
 <p>Since OpenSubmit is only for assignment submission, it has no elaborated management
 of course participants. Everybody who can perform a successful login can
-submit solutions. Therefore, we expect you to have an institute-specific
-authentication provider. OpenSubmit currently supports OpenID and Shibboleth
-out of the box for such cases. You can also offer GitHub, Twitter or Google login
-for determining the student identity. A third option is to integrate OpenSubmit
-via LTI in an existing learning management system (LMS).</p>
-<p>The preliminary <a class="reference external" href="https://github.com/troeger/opensubmit/wiki/User-Manual">end-user documentation</a> is available in the GitHub Wiki.</p>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>If you just want to install your own copy of OpenSubmit, please read the <a class="reference external" href="https://github.com/troeger/opensubmit/wiki/Installation-Instructions">installation guide</a> in the GitHub Wiki.</p>
+submit solutions. We support several <span class="xref std std-ref">authentication methods</span> and <span class="xref std std-ref">LTI integration</span>.</p>
 </div>
-<div class="section" id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>OpenSubmit is licensed under the AGPL Version 3. This means you are
-allowed to:</p>
-<ul class="simple">
-<li>Install and run the unmodified OpenSubmit code at your site.</li>
-<li>Re-package and distribute the unmodified version of OpenSubmit from
-this repository.</li>
-<li>Modify and re-publish (fork) the sources, as long as your modified
-versions are accessible for everybody.</li>
+<div class="section" id="futher-information">
+<h2>Futher information<a class="headerlink" href="#futher-information" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome!</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-idea">The Idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#futher-information">Futher information</a></li>
 </ul>
-<p>In short, AGPL forbids you to distribute / run your own modified version
-of OpenSubmit without publishing your code.</p>
-</div>
-<div class="section" id="acknowledgements">
-<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">¶</a></h2>
-<p>People who contributed to this project so far:</p>
-<ul class="simple">
-<li>Jafar Akhundov (testing)</li>
-<li>Kai Fabian (frontend, code evaluation)</li>
-<li>Frank Feinbube (code evaluation backend, testing)</li>
-<li>Jens Pönisch (testing)</li>
-<li>Bernhard Rabe (testing)</li>
-<li>Peter Tröger (project owner)</li>
-<li>Matthias Werner (testing)</li>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgements</a></li>
 </ul>
 </div>
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
-</ul>
 </div>
 
 
@@ -122,10 +88,39 @@ of OpenSubmit without publishing your code.</p>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">OpenSubmit</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=troeger&repo=opensubmit&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome!</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-idea">The Idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#futher-information">Futher information</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgements</a></li>
+</ul>
+
+<div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="license.html" title="next chapter">License</a></li>
   </ul></li>
 </ul>
 </div>

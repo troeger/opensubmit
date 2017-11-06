@@ -1,3 +1,5 @@
+.PHONY: build docs
+
 build:
 	# Build the install packages.
 	pip install -r requirements.txt
@@ -13,6 +15,9 @@ build:
 	rmdir executor/dist
 	rm -rf ./executor/build
 	rm -rf ./executor/*.egg-info/
+
+docs:
+	pushd docs; make html; popd
 
 venv:
 	# Create a virtualenv.
