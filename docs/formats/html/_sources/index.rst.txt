@@ -34,13 +34,11 @@ Since OpenSubmit is only for assignment submission, it has no elaborated managem
 of course participants. Everybody who can perform a successful login can
 submit solutions. We support several :ref:`authentication methods` and :ref:`LTI integration`.
 
-Futher information
-------------------
-
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
    index
+   installation
    license
    acknowledgments
-

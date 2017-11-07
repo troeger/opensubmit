@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installation &#8212; OpenSubmit 0.6.12 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.12',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="License" href="license.html" />
+    <link rel="prev" title="Welcome!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>OpenSubmit runs with Python 3.4 or newer versions.</p>
+<div class="section" id="developers">
+<h2>Developers<a class="headerlink" href="#developers" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Install Python 3.4 or newer</li>
+<li>Install a virtualenv with <code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">venv</span></code></li>
+<li>Enter the virtualenv with <code class="docutils literal"><span class="pre">source</span> <span class="pre">venv/bin/active</span></code></li>
+<li>Clone the repository</li>
+<li>Install the build dependencies with <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></li>
+<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to install all runtime dependencies and run all tests.</li>
+<li>In the <em>web</em> folder:<ul>
+<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create the database.</li>
+<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> to run a development web server.</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="production-web-server-opensubmit-web">
+<h2>Production web server (opensubmit-web)<a class="headerlink" href="#production-web-server-opensubmit-web" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Prepare a Python 3 web hosting environment.<ul>
+<li>Debian / Ubuntu: <code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libapache2-mod-wsgi-py3</span> <span class="pre">apache2</span> <span class="pre">sqlite</span> <span class="pre">python3</span></code>.</li>
+</ul>
+</li>
+<li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-web</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-web</span></code>. PIP should come as part of your Python installation.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configure</span></code> to create an OpenSubmit configuration file template. Edit the generated file (<code class="docutils literal"><span class="pre">/etc/opensubmit/settings.ini</span></code>):<ul>
+<li>The default database is SQLite. You can use an empty MySQL, PostgreSQL or Oracle database instead.</li>
+<li>OpenSubmit does not support password-based logins. You need to choose one of the supported <span class="xref std std-ref">authentication methods</span>.</li>
+<li>Configure a MEDIA_ROOT folder that stores all the student uploads.</li>
+</ul>
+</li>
+<li>Re-run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configure</span></code> to check your configuration. If everything looks good, then a default Apache 2.4 configuration for mod_wsgi is generated in <code class="docutils literal"><span class="pre">/etc/opensubmit/apache24.config</span></code>.  You can <a class="reference external" href="http://httpd.apache.org/docs/2.4/en/mod/core.html#include">include</a> this file in some <a class="reference external" href="http://httpd.apache.org/docs/2.4/vhosts/examples.html">virtual host configuration</a>.</li>
+<li>Restart your web server.</li>
+<li>Got to the OpenSubmit start page and use your configured authentication method.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">makeadmin</span> <span class="pre">&lt;email&gt;</span></code> to make the created user an administrator in the system.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="production-test-machines-opensubmit-exec">
+<h2>Production test machines (opensubmit-exec)<a class="headerlink" href="#production-test-machines-opensubmit-exec" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Choose a dedicated machine beside the web server. This will compile (and run) the student submissions.</li>
+<li>Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.</li>
+<li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-exec</span></code>.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> and follow the instructions. Make sure that you adjust <code class="docutils literal"><span class="pre">/etc/opensubmit/executor.ini</span></code> accordingly. You can run the script multiple times to check your configuration.</li>
+<li>Add a call to <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">run</span></code> to cron, so that it regulary asks the web server for fresh work. We have good experiences with a 30s interval. You can also do it manually for testing purposes.</li>
+</ul>
+</div></blockquote>
+<p>Smart students may try to connect to their own machines from their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">OpenSubmit</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=troeger&repo=opensubmit&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Welcome!</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#the-idea">The Idea</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#developers">Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#production-web-server-opensubmit-web">Production web server (opensubmit-web)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#production-test-machines-opensubmit-exec">Production test machines (opensubmit-exec)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgements</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome!</a></li>
+      <li>Next: <a href="license.html" title="next chapter">License</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Peter Tröger.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
