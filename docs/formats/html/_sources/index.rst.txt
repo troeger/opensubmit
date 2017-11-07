@@ -37,4 +37,3 @@ student code the determine grading-relevant information.
    backend_use
    admin_use
    developer_use
-   about

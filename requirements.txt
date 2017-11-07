@@ -2,3 +2,4 @@ twine
 wheel
 coverage
 sphinx
+sphinx_bootstrap_theme

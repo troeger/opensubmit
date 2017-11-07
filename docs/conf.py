@@ -21,7 +21,6 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -85,16 +84,20 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+#html_theme = 'alabaster'
+import sphinx_bootstrap_theme
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 html_theme_options = {
-    "github_user"   : "troeger",
-    "github_repo"   : "opensubmit",
-    "github_button" : True
+    'navbar_sidebarrel': False,
+    'navbar_site_name': "Manuals",
+    'navbar_pagenav_name': "Jump to...",
+    'source_link_position': "",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -108,13 +111,6 @@ html_static_path = ['static']
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',
-        'searchbox.html',
-        'donate.html',
-    ]
 }
 
 
