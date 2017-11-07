@@ -1,0 +1,239 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Teacher manual &#8212; OpenSubmit 0.6.12 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.12',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Student manual" href="frontend_use.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="teacher-manual">
+<h1>Teacher manual<a class="headerlink" href="#teacher-manual" title="Permalink to this headline">¶</a></h1>
+<p>The unique capability of OpenSubmit is the support for submission validation.</p>
+<p>Students upload their programming exercise solution as archive, which typically contains a set of source code files.   Any attachment to an assignment solution is unpacked and tested by scripts provided by the course tutors or the course owner.</p>
+<p>Validation makes the life of the corrector less miserable, because after the deadline, all gradable solutions are ‘valid’ (e.g. compile). Students also seem to like the idea of having a validated solution, so that they do not fail due to technical difficulties at the correctors side.</p>
+<p>Since OpenSubmit is only for assignment submissions, it has no management of course participants.
+Everybody who can perform a successful login can submit solutions.</p>
+<div class="section" id="submission-states">
+<h2>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h2>
+<p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend.</p>
+<p>The internal states are represented in different ways to frontend and backend users:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
+    <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span> 
+
+        <span class="c1"># The submission is currently uploaded,</span>
+        <span class="c1"># some internal processing still takes place.</span>
+        <span class="p">(</span><span class="n">RECEIVED</span><span class="p">,</span> <span class="s1">&#39;Received&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission was withdrawn by the student</span>
+        <span class="c1"># before the deadline. No further automated action</span>
+        <span class="c1"># will take place with this submission.</span>
+        <span class="p">(</span><span class="n">WITHDRAWN</span><span class="p">,</span> <span class="s1">&#39;Withdrawn&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission is completely uploaded. </span>
+        <span class="c1"># If code validation is configured, the state will </span>
+        <span class="c1"># directly change to TEST_COMPILE_PENDING or </span>
+        <span class="c1"># TEST_VALIDITY_PENDING.</span>
+        <span class="p">(</span><span class="n">SUBMITTED</span><span class="p">,</span> <span class="s1">&#39;Submitted&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission is waiting to be test-compiled on one</span>
+        <span class="c1"># of the test machines. The submission remains in this</span>
+        <span class="c1"># state until some test compilation result was</span>
+        <span class="c1"># sent from the test machines.</span>
+        <span class="p">(</span><span class="n">TEST_COMPILE_PENDING</span><span class="p">,</span> <span class="s1">&#39;Compilation test pending&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The compilation of the student sources on the</span>
+        <span class="c1"># test machine failed. No further automated action will</span>
+        <span class="c1"># take place with this submission. </span>
+        <span class="c1"># The students get informed by email.</span>
+        <span class="p">(</span><span class="n">TEST_COMPILE_FAILED</span><span class="p">,</span> <span class="s1">&#39;Compilation test failed&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission is waiting to be validated with the</span>
+        <span class="c1"># validation script on one of the test machines. </span>
+        <span class="c1"># The submission remains in this state until some</span>
+        <span class="c1"># validation result was sent from the test machines.</span>
+        <span class="p">(</span><span class="n">TEST_VALIDITY_PENDING</span><span class="p">,</span> <span class="s1">&#39;Validity test pending&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The validation of the student sources on the </span>
+        <span class="c1"># test machine failed. No further automated action will</span>
+        <span class="c1"># take place with this submission.</span>
+        <span class="c1"># The students get informed by email.</span>
+        <span class="p">(</span><span class="n">TEST_VALIDITY_FAILED</span><span class="p">,</span> <span class="s1">&#39;Validity test failed&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission is waiting to be checked with the</span>
+        <span class="c1"># full test script on one of the test machines.</span>
+        <span class="c1"># The submission remains in this state until </span>
+        <span class="c1"># some result was sent from the test machines.</span>
+        <span class="p">(</span><span class="n">TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Full test pending&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The (compilation and) validation of the student</span>
+        <span class="c1"># sources on the test machine worked, only the full test</span>
+        <span class="c1"># failed. No further automated action will take place with</span>
+        <span class="c1"># this submission.</span>
+        <span class="p">(</span><span class="n">TEST_FULL_FAILED</span><span class="p">,</span> <span class="s1">&#39;All but full test passed, grading pending&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The compilation (if configured) and the validation and</span>
+        <span class="c1">#  the full test (if configured) of the submission were</span>
+        <span class="c1"># successful. No further automated action will take</span>
+        <span class="c1"># place with this submission.</span>
+        <span class="p">(</span><span class="n">SUBMITTED_TESTED</span><span class="p">,</span> <span class="s1">&#39;All tests passed, grading pending&#39;</span><span class="p">),</span>
+
+        <span class="c1"># Some grading took place in the teacher backend, </span>
+        <span class="c1"># and the submission was explicitly marked with </span>
+        <span class="c1"># &#39;grading not finished&#39;. This allows correctors to have</span>
+        <span class="c1"># multiple runs over the submissions and see which </span>
+        <span class="c1"># of the submissions were already investigated.</span>
+        <span class="p">(</span><span class="n">GRADING_IN_PROGRESS</span><span class="p">,</span> <span class="s1">&#39;Grading not finished&#39;</span><span class="p">),</span>
+
+        <span class="c1"># Some grading took place in the teacher backend, </span>
+        <span class="c1"># and the submission was explicitly marked with </span>
+        <span class="c1"># &#39;grading not finished&#39;. This allows correctors </span>
+        <span class="c1"># to have multiple runs over the submissions and</span>
+        <span class="c1">#  see which of the submissions were already investigated.</span>
+        <span class="p">(</span><span class="n">GRADED</span><span class="p">,</span> <span class="s1">&#39;Grading finished&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission is closed, meaning that in the </span>
+        <span class="c1"># teacher backend, the submission was marked</span>
+        <span class="c1"># as closed to trigger the student notification </span>
+        <span class="c1"># for their final assignment grades.</span>
+        <span class="c1"># Students are notified by email.</span>
+        <span class="p">(</span><span class="n">CLOSED</span><span class="p">,</span> <span class="s1">&#39;Closed, student notified&#39;</span><span class="p">),</span>
+
+        <span class="c1"># The submission is closed, but marked for </span>
+        <span class="c1"># another full test run.</span>
+        <span class="c1"># This is typically used to have some post-assignment </span>
+        <span class="c1"># analysis of student submissions</span>
+        <span class="c1"># by the help of full test scripts. </span>
+        <span class="c1"># Students never get any notification about this state.</span>
+        <span class="p">(</span><span class="n">CLOSED_TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Closed, full test pending&#39;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># State description in student dashboard</span>
+    <span class="n">STUDENT_STATES</span> <span class="o">=</span> <span class="p">(</span> 
+        <span class="p">(</span><span class="n">RECEIVED</span><span class="p">,</span> <span class="s1">&#39;Received&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">WITHDRAWN</span><span class="p">,</span> <span class="s1">&#39;Withdrawn&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SUBMITTED</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">TEST_COMPILE_PENDING</span><span class="p">,</span> <span class="s1">&#39;Waiting for compilation test&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">TEST_COMPILE_FAILED</span><span class="p">,</span> <span class="s1">&#39;Compilation failed&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">TEST_VALIDITY_PENDING</span><span class="p">,</span> <span class="s1">&#39;Waiting for validation test&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">TEST_VALIDITY_FAILED</span><span class="p">,</span> <span class="s1">&#39;Validation failed&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">TEST_FULL_FAILED</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">SUBMITTED_TESTED</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">GRADING_IN_PROGRESS</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">GRADED</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">CLOSED</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">CLOSED_TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">)</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">OpenSubmit</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=troeger&repo=opensubmit&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student manual</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Teacher manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submission-states">Submission states</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="frontend_use.html" title="previous chapter">Student manual</a></li>
+      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Peter Tröger.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/backend_use.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

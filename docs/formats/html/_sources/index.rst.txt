@@ -9,9 +9,6 @@ assignments, but also the management of learning material, course
 progress and access rights. If you want the all-inclusive solution, this
 is the wrong project.
 
-The Idea
----------
-
 OpenSubmit offers a trivial web page were **students can login and submit
 their assignment solutions**. 
 
@@ -51,7 +48,7 @@ Authentication is expected to be done with your university identity provider. Fo
    :maxdepth: 2
    :hidden:
 
-   index
+   frontend_use
+   backend_use
    installation
-   license
-   acknowledgments
+   about

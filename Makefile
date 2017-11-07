@@ -54,6 +54,7 @@ clean:
 	rm -rf ./htmlcov
 	rm -rf ./web/htmlcov
 	find . -name "*.bak" -delete
+	rm -rf docs/formats
 
 pypi: build
 	# Upload built packages to PyPI.

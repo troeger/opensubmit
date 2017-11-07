@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = -d /tmp/
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = OpenSubmit
 SOURCEDIR     = .

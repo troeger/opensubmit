@@ -1,5 +1,8 @@
+About
+=====
+
 License
-=======
+-------
 
 OpenSubmit is licensed under the AGPL Version 3. This means you are
 allowed to:
@@ -12,3 +15,17 @@ allowed to:
 
 In short, AGPL forbids you to distribute / run your own modified version
 of OpenSubmit without publishing your code.
+
+Acknowledgements
+----------------
+
+People who contributed to this project so far:
+
+-  Jafar Akhundov (testing)
+-  Kai Fabian (frontend, code evaluation)
+-  Frank Feinbube (code evaluation backend, testing)
+-  Jens Pönisch (testing)
+-  Bernhard Rabe (testing)
+-  Peter Tröger (project owner)
+-  Matthias Werner (testing)
+

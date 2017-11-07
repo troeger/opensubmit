@@ -91,23 +91,99 @@ class Submission(models.Model):
     GRADED = 'G'                     # Graded, student notification not done
     CLOSED = 'C'                     # Graded, student notification done
     CLOSED_TEST_FULL_PENDING = 'CT'  # Keep grading status, full test planned
-    STATES = (                       # States from the backend point of view
+
+    # State description in teacher backend
+    STATES = ( 
+
+        # The submission is currently uploaded,
+        # some internal processing still takes place.
         (RECEIVED, 'Received'),
+
+        # The submission was withdrawn by the student
+        # before the deadline. No further automated action
+        # will take place with this submission.
         (WITHDRAWN, 'Withdrawn'),
+
+        # The submission is completely uploaded. 
+        # If code validation is configured, the state will 
+        # directly change to TEST_COMPILE_PENDING or 
+        # TEST_VALIDITY_PENDING.
         (SUBMITTED, 'Submitted'),
+
+        # The submission is waiting to be test-compiled on one
+        # of the test machines. The submission remains in this
+        # state until some test compilation result was
+        # sent from the test machines.
         (TEST_COMPILE_PENDING, 'Compilation test pending'),
+
+        # The compilation of the student sources on the
+        # test machine failed. No further automated action will
+        # take place with this submission. 
+        # The students get informed by email.
         (TEST_COMPILE_FAILED, 'Compilation test failed'),
+
+        # The submission is waiting to be validated with the
+        # validation script on one of the test machines. 
+        # The submission remains in this state until some
+        # validation result was sent from the test machines.
         (TEST_VALIDITY_PENDING, 'Validity test pending'),
+
+        # The validation of the student sources on the 
+        # test machine failed. No further automated action will
+        # take place with this submission.
+        # The students get informed by email.
         (TEST_VALIDITY_FAILED, 'Validity test failed'),
+
+        # The submission is waiting to be checked with the
+        # full test script on one of the test machines.
+        # The submission remains in this state until 
+        # some result was sent from the test machines.
         (TEST_FULL_PENDING, 'Full test pending'),
+
+        # The (compilation and) validation of the student
+        # sources on the test machine worked, only the full test
+        # failed. No further automated action will take place with
+        # this submission.
         (TEST_FULL_FAILED, 'All but full test passed, grading pending'),
+
+        # The compilation (if configured) and the validation and
+        #  the full test (if configured) of the submission were
+        # successful. No further automated action will take
+        # place with this submission.
         (SUBMITTED_TESTED, 'All tests passed, grading pending'),
+
+        # Some grading took place in the teacher backend, 
+        # and the submission was explicitly marked with 
+        # 'grading not finished'. This allows correctors to have
+        # multiple runs over the submissions and see which 
+        # of the submissions were already investigated.
         (GRADING_IN_PROGRESS, 'Grading not finished'),
+
+        # Some grading took place in the teacher backend, 
+        # and the submission was explicitly marked with 
+        # 'grading not finished'. This allows correctors 
+        # to have multiple runs over the submissions and
+        #  see which of the submissions were already investigated.
         (GRADED, 'Grading finished'),
+
+        # The submission is closed, meaning that in the 
+        # teacher backend, the submission was marked
+        # as closed to trigger the student notification 
+        # for their final assignment grades.
+        # Students are notified by email.
         (CLOSED, 'Closed, student notified'),
+
+        # The submission is closed, but marked for 
+        # another full test run.
+        # This is typically used to have some post-assignment 
+        # analysis of student submissions
+        # by the help of full test scripts. 
+        # Students never get any notification about this state.
         (CLOSED_TEST_FULL_PENDING, 'Closed, full test pending')
     )
-    STUDENT_STATES = (              # States from the student point of view
+
+    # State description in student dashboard
+    STUDENT_STATES = ( 
         (RECEIVED, 'Received'),
         (WITHDRAWN, 'Withdrawn'),
         (SUBMITTED, 'Waiting for grading'),
