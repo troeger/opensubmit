@@ -295,9 +295,9 @@ class SubmitTestCase(LiveServerTestCase):
         working_zip=settings.MEDIA_ROOT+"working.zip"
         supportfiles_zip=settings.MEDIA_ROOT+"supportfiles.zip"
         single_file=settings.MEDIA_ROOT+"validator.py"
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/working.zip', working_zip)
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/supportfiles.zip', supportfiles_zip)
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator.py', single_file)
+        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_working.zip', working_zip)
+        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_supportfiles.zip', supportfiles_zip)
+        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_working.py', single_file)
 
         with open(working_zip, 'rb') as validator_script:
             self.validatedAssignment = Assignment(
