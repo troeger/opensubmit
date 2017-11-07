@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Installation &#8212; OpenSubmit 0.6.12 documentation</title>
+    <title>Admin manual &#8212; OpenSubmit 0.6.12 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -24,7 +24,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="About" href="about.html" />
+    <link rel="next" title="Developer manual" href="developer_use.html" />
     <link rel="prev" title="Teacher manual" href="backend_use.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -41,29 +41,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="admin-manual">
+<h1>Admin manual<a class="headerlink" href="#admin-manual" title="Permalink to this headline">¶</a></h1>
 <p>OpenSubmit runs with Python 3.4 or newer versions.</p>
-<div class="section" id="developers">
-<h2>Developers<a class="headerlink" href="#developers" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><ul class="simple">
-<li>Install Python 3.4 or newer</li>
-<li>Install a virtualenv with <code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">venv</span></code></li>
-<li>Enter the virtualenv with <code class="docutils literal"><span class="pre">source</span> <span class="pre">venv/bin/active</span></code></li>
-<li>Clone the repository</li>
-<li>Install the build dependencies with <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></li>
-<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to install all runtime dependencies and run all tests.</li>
-<li>In the <em>web</em> folder:<ul>
-<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create the database.</li>
-<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> to run a development web server.</li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-</div>
-<div class="section" id="production-web-server-opensubmit-web">
-<h2>Production web server (opensubmit-web)<a class="headerlink" href="#production-web-server-opensubmit-web" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installing-the-web-application">
+<h2>Installing the web application<a class="headerlink" href="#installing-the-web-application" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Prepare a Python 3 web hosting environment.<ul>
@@ -84,8 +66,8 @@
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="production-test-machines-opensubmit-exec">
-<h2>Production test machines (opensubmit-exec)<a class="headerlink" href="#production-test-machines-opensubmit-exec" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installing-test-machines">
+<h2>Installing test machines<a class="headerlink" href="#installing-test-machines" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Choose a dedicated machine beside the web server. This will compile (and run) the student submissions.</li>
@@ -96,6 +78,12 @@
 </ul>
 </div></blockquote>
 <p>Smart students may try to connect to their own machines from their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only.</p>
+</div>
+<div class="section" id="updating-your-installation">
+<h2>Updating your installation<a class="headerlink" href="#updating-your-installation" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="user-management">
+<h2>User management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -125,12 +113,14 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher manual</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#developers">Developers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#production-web-server-opensubmit-web">Production web server (opensubmit-web)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#production-test-machines-opensubmit-exec">Production test machines (opensubmit-exec)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Admin manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installing-the-web-application">Installing the web application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-test-machines">Installing test machines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updating-your-installation">Updating your installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-management">User management</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 </ul>
 
@@ -139,7 +129,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="backend_use.html" title="previous chapter">Teacher manual</a></li>
-      <li>Next: <a href="about.html" title="next chapter">About</a></li>
+      <li>Next: <a href="developer_use.html" title="next chapter">Developer manual</a></li>
   </ul></li>
 </ul>
 </div>
@@ -165,7 +155,7 @@
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
-      <a href="_sources/installation.rst.txt"
+      <a href="_sources/admin_use.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

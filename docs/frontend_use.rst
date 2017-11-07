@@ -1,15 +1,15 @@
 Student manual
 ==============
 
-OpenSubmit is a small web application for managing course assignments in a teaching environment. It separates between the **student frontend**, the **teacher backend** and the **test machines**. This manual only deals with the **student frontend**.
+OpenSubmit distinguishes between the **student frontend**, the **teacher backend** and the **test machines**. This manual only deals with the **student frontend**.
 
-After log-in with one of the offered authentication methods, you are seeing the *dashboard*. It is  expected to be self-explanatory and allows to:
+After log-in with one of the offered authentication methods, you are redirected to the *dashboard*. It allows to ...
 
 * ... choose courses to participate in.
 * ... see the list of open assignments for these courses.
-* ... submit solutions for these assignments, either as single person or as group of students.
-* ... see the grading / code validation status for these solutions.
-* ... see the characteristics of code evaluation machines.
+* ... submit solutions for these assignments, either alone or as group of students.
+* ... see the grading / code validation status for your solutions.
+* ... see the characteristics of the machines being used for automated validation.
 
 Setting your user details
 -------------------------

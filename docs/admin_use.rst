@@ -1,25 +1,10 @@
-Installation
+Admin manual
 ============
 
 OpenSubmit runs with Python 3.4 or newer versions. 
 
-Developers
-----------
-
-  * Install Python 3.4 or newer
-  * Install a virtualenv with ``python3 -m venv venv``
-  * Enter the virtualenv with ``source venv/bin/active``
-  * Clone the repository
-  * Install the build dependencies with ``pip install -r requirements.txt``
-  * Run ``make tests`` to install all runtime dependencies and run all tests.
-  * In the *web* folder:
-
-    * Run ``manage.py migrate`` to create the database.
-    * Run ``manage.py runserver`` to run a development web server.
-
-
-Production web server (opensubmit-web)
---------------------------------------
+Installing the web application
+------------------------------
   
   * Prepare a Python 3 web hosting environment. 
 
@@ -36,8 +21,8 @@ Production web server (opensubmit-web)
   * Got to the OpenSubmit start page and use your configured authentication method.
   * Run ``opensubmit-web makeadmin <email>`` to make the created user an administrator in the system.
 
-Production test machines (opensubmit-exec)
-------------------------------------------
+Installing test machines
+------------------------
 
   * Choose a dedicated machine beside the web server. This will compile (and run) the student submissions.
   * Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.
@@ -46,4 +31,11 @@ Production test machines (opensubmit-exec)
   * Add a call to ``opensubmit-exec run`` to cron, so that it regulary asks the web server for fresh work. We have good experiences with a 30s interval. You can also do it manually for testing purposes.
 
 Smart students may try to connect to their own machines from their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only. 
+
+Updating your installation
+--------------------------
+
+User management
+---------------
+
 

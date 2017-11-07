@@ -24,7 +24,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="next" title="Admin manual" href="admin_use.html" />
     <link rel="prev" title="Student manual" href="frontend_use.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -43,13 +43,21 @@
             
   <div class="section" id="teacher-manual">
 <h1>Teacher manual<a class="headerlink" href="#teacher-manual" title="Permalink to this headline">¶</a></h1>
-<p>The unique capability of OpenSubmit is the support for submission validation.</p>
-<p>Students upload their programming exercise solution as archive, which typically contains a set of source code files.   Any attachment to an assignment solution is unpacked and tested by scripts provided by the course tutors or the course owner.</p>
-<p>Validation makes the life of the corrector less miserable, because after the deadline, all gradable solutions are ‘valid’ (e.g. compile). Students also seem to like the idea of having a validated solution, so that they do not fail due to technical difficulties at the correctors side.</p>
-<p>Since OpenSubmit is only for assignment submissions, it has no management of course participants.
-Everybody who can perform a successful login can submit solutions.</p>
-<div class="section" id="submission-states">
-<h2>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h2>
+<p>OpenSubmit distinguishes between the <strong>student frontend</strong>, the <strong>teacher backend</strong> and the <strong>test machines</strong>. This manual only deals with the <strong>teacher backend</strong>.</p>
+<div class="section" id="managing-study-programs">
+<h2>Managing study programs<a class="headerlink" href="#managing-study-programs" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="managing-courses">
+<h2>Managing courses<a class="headerlink" href="#managing-courses" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="managing-grading-schemes">
+<h2>Managing grading schemes<a class="headerlink" href="#managing-grading-schemes" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="managing-assignments">
+<h2>Managing assignments<a class="headerlink" href="#managing-assignments" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="managing-submissions">
+<h2>Managing submissions<a class="headerlink" href="#managing-submissions" title="Permalink to this headline">¶</a></h2>
 <p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend.</p>
 <p>The internal states are represented in different ways to frontend and backend users:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
@@ -190,10 +198,15 @@ Everybody who can perform a successful login can submit solutions.</p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student manual</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Teacher manual</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submission-states">Submission states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#managing-study-programs">Managing study programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#managing-courses">Managing courses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#managing-grading-schemes">Managing grading schemes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#managing-assignments">Managing assignments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#managing-submissions">Managing submissions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Admin manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 </ul>
 
@@ -202,7 +215,7 @@ Everybody who can perform a successful login can submit solutions.</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="frontend_use.html" title="previous chapter">Student manual</a></li>
-      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
+      <li>Next: <a href="admin_use.html" title="next chapter">Admin manual</a></li>
   </ul></li>
 </ul>
 </div>

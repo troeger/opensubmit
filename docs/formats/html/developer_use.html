@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Search &#8212; OpenSubmit 0.6.12 documentation</title>
+    <title>Developer manual &#8212; OpenSubmit 0.6.12 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -21,22 +21,16 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/searchtools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" />
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
-  
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="About" href="about.html" />
+    <link rel="prev" title="Admin manual" href="admin_use.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
 
   </head>
   <body>
@@ -47,29 +41,27 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1 id="search-documentation">Search</h1>
-  <div id="fallback" class="admonition warning">
-  <script type="text/javascript">$('#fallback').hide();</script>
-  <p>
-    Please activate JavaScript to enable the search
-    functionality.
-  </p>
-  </div>
-  <p>
-    From here you can search these documents. Enter your search
-    words into the box below and click "search". Note that the search
-    function will automatically search for all of the words. Pages
-    containing fewer words won't appear in the result list.
-  </p>
-  <form action="" method="get">
-    <input type="text" name="q" value="" />
-    <input type="submit" value="search" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>
-  
-  <div id="search-results">
-  
-  </div>
+  <div class="section" id="developer-manual">
+<h1>Developer manual<a class="headerlink" href="#developer-manual" title="Permalink to this headline">¶</a></h1>
+<p>OpenSubmit runs with Python 3.4 or newer versions.</p>
+<p>For an OpenSubmit development enviroment, please do the following steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Install Python &gt;= 3.4</li>
+<li>Install a virtualenv with <code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">venv</span></code></li>
+<li>Enter the virtualenv with <code class="docutils literal"><span class="pre">source</span> <span class="pre">venv/bin/active</span></code></li>
+<li>Clone the repository</li>
+<li>Install the build dependencies with <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></li>
+<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to install all runtime dependencies and run all tests.</li>
+<li>In the <em>web</em> folder:<ul>
+<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create the database.</li>
+<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> to run a development web server.</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</div>
+
 
           </div>
         </div>
@@ -93,11 +85,11 @@
 
 
 <h3>Navigation</h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="admin_use.html">Admin manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer manual</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 </ul>
 
@@ -105,9 +97,21 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="admin_use.html" title="previous chapter">Admin manual</a></li>
+      <li>Next: <a href="about.html" title="next chapter">About</a></li>
   </ul></li>
 </ul>
 </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -119,6 +123,9 @@
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
+      |
+      <a href="_sources/developer_use.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
 
     
