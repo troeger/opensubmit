@@ -49,7 +49,7 @@ Installation
 
 If you just want to install your own copy of OpenSubmit, please read the `installation guide`_ in the GitHub Wiki.
 
-.. _installation guide: https://github.com/troeger/opensubmit/wiki/Installation-Instructions
+.. _installation guide: http://open-submit.org
 
 License
 -------
