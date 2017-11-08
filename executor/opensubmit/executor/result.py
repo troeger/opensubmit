@@ -6,15 +6,15 @@ class Result():
     '''
         A validation result that can be sent to the OpenSubmit Server.
     '''
-    error_code:int=None             # Error code from execution
-    info_student=''                 # Information text for the student
-    info_tutor=''                   # Information text for the tutor
-    perf_data=''                    # Performance data for the tutor
-    stdout=''                       # Original stdout from the validation run
-    stderr=''                       # Original stderr from the validation run
-    action=''                       # Demanded action (legacy)
+    error_code = None             # Error code from execution
+    info_student = ''                 # Information text for the student
+    info_tutor = ''                   # Information text for the tutor
+    perf_data = ''                    # Performance data for the tutor
+    stdout = ''                       # Original stdout from the validation run
+    stderr = ''                       # Original stderr from the validation run
+    action = ''                       # Demanded action (legacy)
 
-    def __init__(self, subprocess_result:CompletedProcess=None, max_length=10000):
+    def __init__(self, subprocess_result=None, max_length=10000):
         '''
             Creates a new OpenSubmit result object from a compile / test run result.
         '''

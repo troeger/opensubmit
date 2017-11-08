@@ -13,17 +13,20 @@ from .execution import shell_execution
 from .result import Result, PassResult, FailResult
 
 class Job():
-    submission:Submission=None      # The submission object describing the meta-data
+    '''
+    A piece of work offered by the OpenSubmit server.
+    '''
+    submission = None      # The submission object describing the meta-data
 
-    submission_url:str=None         # Download source for the student file / archive
-    support_url:str=None            # Download source for the support files archive
-    validator_url:str=None          # Download source for the validator script (archive)
+    submission_url = None         # Download source for the student file / archive
+    support_url = None            # Download source for the support files archive
+    validator_url = None          # Download source for the validator script (archive)
 
-    working_dir:str = None          # The working directory for this job
+    working_dir = None          # The working directory for this job
 
-    timeout:int=None                # The timeout for execution, as reported by the server
-    action:str=None                 # Activity to be performed (legacy)
-    compile_on:bool=None            # Flag defining if this is a compilation job
+    timeout = None                # The timeout for execution, as reported by the server
+    action = None                 # Activity to be performed (legacy)
+    compile_on = None            # Flag defining if this is a compilation job
 
     def __str__(self):
         return str(vars(self))
@@ -81,7 +84,7 @@ class Job():
         return True
     
 
-    def prepare(self) -> Result:
+    def prepare(self):
         '''
         Prepare working directory for job execution.     
         Return FailResult (to be returned to server) or PassResult to indicate the possiblity
@@ -115,7 +118,7 @@ class Job():
         logger.info("Running compilation with "+compile_cmd)
         return shell_execution(compile_cmd, self.working_dir, self.timeout)
 
-    def run(self) -> Result:
+    def run(self):
         '''
         Perform some execution activity with timeout support.
         Returns Result object.
@@ -134,7 +137,7 @@ class Job():
             logger.debug("Running validator: "+str(cmdline))
             return shell_execution(cmdline, self.working_dir, self.timeout)
 
-    def send_result(self, result:Result):
+    def send_result(self, result):
         '''
         Send validation result for Submission to OpenSubmit server.
         '''
