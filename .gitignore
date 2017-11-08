@@ -24,3 +24,4 @@ web/htmlcov
 *venv*
 *.bak*
 *.whl
+docs/formats/html/.buildinfo
