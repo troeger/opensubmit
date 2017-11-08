@@ -50,6 +50,10 @@ Teachers and tutors use a powerful backend interface to manage assignments, dead
 
 The unique capability of OpenSubmit is the **testing of submissions**. The most common use case is a programming assignment:
 
+.. image:: files/architecture.png 
+   :align: left
+   :width: 15%
+
 A student hands in a ZIP file with source code, as solution for a particular assignment. OpenSubmit takes this upload and extracts it on a separate test machine, together with a test script provided by the teacher.
 
 The testing can happen before (*validation test*) and after (*full test*) the assignment deadline. Results of a test before the deadline are shown to the students. This makes the life of the corrector less miserable, because all gradable solutions are ‘valid’. Students also seem to like the idea of having a tested solution, so that they do not get a bad grade due to technical difficulties on the correctors side.

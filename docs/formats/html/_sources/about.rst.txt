@@ -1,7 +1,7 @@
 About
 =====
 
-If you are interested in the why's and how's of OpenSubmit, check our :download:`presentation <files/clt16-presentation.pdf>` from LinuxTage 2016.
+If you are interested in the why's and how's of OpenSubmit, check our (slightly outdated) :download:`presentation <files/clt16-presentation.pdf>` from LinuxTage 2016.
 
 The development is coordinated on `GitHub <https://github.com/troeger/opensubmit>`_.
 
