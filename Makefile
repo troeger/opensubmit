@@ -22,7 +22,11 @@ docs:
 venv:
 	# Create a virtualenv.
 	# Activate it afterwards with "source venv/bin/activate"
-	python3.6 -m venv venv
+	(python3.5 -m venv venv; \
+	 source venv/bin/activate; \
+	 pip install -r requirements.txt; \
+	 pushd executor; pip install -r requirements.txt; popd; \
+	 pushd web; pip install -r requirements.txt; popd;)
 
 uninstall:
 	pip uninstall -y opensubmit-web
@@ -40,13 +44,11 @@ docker: build
 
 tests:
 	# Run all tests.
-	pushd executor; pip install -r requirements.txt; popd
-	pushd web; pip install -r requirements.txt; popd
 	export PYTHONPATH=../executor/opensubmit:$PYTHONPATH; pushd web; ./manage.py test; popd
 
 coverage:
 	# Run all tests and obtain coverage information.
-	pushd web; coverage run --source='.','../executor/' --omit='*/setup.py',opensubmit/wsgi.py manage.py test opensubmit.tests; coverage html; popd
+	pushd web; coverage run --branch --source='.','../executor/' --omit='*/setup.py',opensubmit/wsgi.py manage.py test opensubmit.tests; coverage html; popd
 
 clean:
 	rm -f  ./dist/*.whl
