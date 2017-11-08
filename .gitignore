@@ -25,3 +25,6 @@ web/htmlcov
 *.bak*
 *.whl
 docs/formats/html/.buildinfo
+docs/formats/html/.buildinfo
+docs/formats/html/.buildinfo
+docs/formats/html/.buildinfo

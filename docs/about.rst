@@ -1,6 +1,10 @@
 About
 =====
 
+If you are interested in the why's and how's of OpenSubmit, check our :download:`presentation <files/clt16-presentation.pdf>` from LinuxTage 2016.
+
+The development is coordinated on `GitHub <https://github.com/troeger/opensubmit>`_.
+
 License
 -------
 
@@ -28,4 +32,5 @@ People who contributed to this project so far:
 -  Bernhard Rabe (testing)
 -  Peter Tröger (project owner)
 -  Matthias Werner (testing)
+
 

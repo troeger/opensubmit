@@ -1,7 +1,7 @@
 Admin manual
 ============
 
-OpenSubmit runs with Python 3.4 or newer versions. 
+OpenSubmit runs with Python 3.5 or newer versions. 
 
 Installing the web application
 ------------------------------

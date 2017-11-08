@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Developer manual &#8212; OpenSubmit 0.6.12 documentation</title>
+    <title>Developer manual &#8212; OpenSubmit  documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.6.12',
+        VERSION:     '',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -46,11 +46,13 @@
         </button>
         <a class="navbar-brand" href="index.html">
           OpenSubmit</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
           <ul class="nav navbar-nav">
+            
+                <li><a href="about.html">About</a></li>
             
             
               <li class="dropdown globaltoc-container">
@@ -111,23 +113,20 @@
       
   <div class="section" id="developer-manual">
 <h1>Developer manual<a class="headerlink" href="#developer-manual" title="Permalink to this headline">¶</a></h1>
-<p>OpenSubmit runs with Python 3.4 or newer versions.</p>
+<p>OpenSubmit runs with Python 3.5 or newer versions.</p>
 <p>For an OpenSubmit development enviroment, please do the following steps:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Install Python &gt;= 3.4</li>
-<li>Install a virtualenv with <code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">venv</span></code></li>
-<li>Enter the virtualenv with <code class="docutils literal"><span class="pre">source</span> <span class="pre">venv/bin/active</span></code></li>
-<li>Clone the repository</li>
-<li>Install the build dependencies with <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></li>
-<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to install all runtime dependencies and run all tests.</li>
+<ul class="simple">
+<li>Install Python &gt;= 3.5.</li>
+<li>Clone the repository with <code class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/troeger/opensubmit.git</span></code>.</li>
+<li>Prepare a virtualenv with all neccessary python packages by calling <code class="docutils literal"><span class="pre">make</span> <span class="pre">venv</span></code>. It is stored in the <code class="docutils literal"><span class="pre">venv</span></code> folder.</li>
+<li><a class="reference external" href="https://virtualenv.pypa.io/en/stable/userguide/#activate-script">Activate</a> the virtualenv.</li>
+<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to run all tests.</li>
 <li>In the <em>web</em> folder:<ul>
 <li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create the database.</li>
 <li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> to run a development web server.</li>
 </ul>
 </li>
 </ul>
-</div></blockquote>
 </div>
 
 

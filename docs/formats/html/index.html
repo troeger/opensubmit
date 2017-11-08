@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome! &#8212; OpenSubmit 0.6.12 documentation</title>
+    <title>Welcome! &#8212; OpenSubmit  documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.6.12',
+        VERSION:     '',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -46,11 +46,13 @@
         </button>
         <a class="navbar-brand" href="#">
           OpenSubmit</a>
-        <span class="navbar-text navbar-version pull-left"><b>0.6</b></span>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
           <ul class="nav navbar-nav">
+            
+                <li><a href="about.html">About</a></li>
             
             
               <li class="dropdown globaltoc-container">
@@ -111,21 +113,43 @@
       
   <div class="section" id="welcome">
 <h1>Welcome!<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
-<p>This is OpenSubmit, a small web application for managing assignment solutions in a university environment. It offers a trivial web page were <strong>students can submit their assignment solutions</strong>.</p>
-<img alt="_images/ui_student.png" class="align-center" src="_images/ui_student.png" />
-<p>Teachers and tutors use the backend interface to manage assignments, deadlines, and the gradings. Students are informed about the progress of their correction and their final
-grade through email and the frontend page.</p>
-<img alt="_images/ui_teacher.png" class="align-center" src="_images/ui_teacher.png" />
+<p>OpenSubmit is a small web application for managing assignment solutions in a university environment.</p>
+<p><a class="reference internal" href="_images/ui_student.png"><img alt="stud" src="_images/ui_student.png" style="width: 481.95px; height: 338.79999999999995px;" /></a></p>
+<p>Students use a trivial web page to <strong>submit their assignment solution</strong>. They are informed about their grading status by email or on the page.</p>
+<p>Teachers and tutors use a powerful backend interface to manage assignments, deadlines, and the gradings:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_images/ui_backend_dashboard.png"><img alt="dashboard" src="_images/ui_backend_dashboard.png" style="width: 137.9px; height: 81.10000000000001px;" /></a></td>
+<td><a class="reference internal" href="_images/ui_backend_duplicate.png"><img alt="duplicate" src="_images/ui_backend_duplicate.png" style="width: 137.70000000000002px; height: 98.9px;" /></a></td>
+<td><a class="reference internal" href="_images/ui_backend_submissions.png"><img alt="submissions" src="_images/ui_backend_submissions.png" style="width: 138.0px; height: 99.7px;" /></a></td>
+</tr>
+<tr class="row-even"><td>OpenSubmit can deal with multiple courses and allows to assign teachers and tutors to them.</td>
+<td>Submissions can be checked for plagiarism across all courses.</td>
+<td>Submissions can be filtered, downloaded for offline correction or reset in their status.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_images/ui_backend_preview.png"><img alt="preview" src="_images/ui_backend_preview.png" style="width: 137.6px; height: 99.2px;" /></a></td>
+<td><a class="reference internal" href="_images/ui_backend_submission.png"><img alt="submission" src="_images/ui_backend_submission.png" style="width: 137.6px; height: 99.2px;" /></a></td>
+<td><a class="reference internal" href="_images/ui_backend_grading.png"><img alt="grading" src="_images/ui_backend_grading.png" style="width: 138.0px; height: 98.10000000000001px;" /></a></td>
+</tr>
+<tr class="row-even"><td>Student submission archives (ZIP / TGZ) can be previewed on the web page.</td>
+<td>Grading is done based on custom grading schemes per course. Gradings can be delayed and commented.</td>
+<td>The grading table gives a summary of all students and their gradings. It can be download for further processing with Excel or other tools.</td>
+</tr>
+</tbody>
+</table>
+<p>The unique capability of OpenSubmit is the <strong>testing of submissions</strong>. The most common use case is a programming assignment:</p>
+<p>A student hands in a ZIP file with source code, as solution for a particular assignment. OpenSubmit takes this upload and extracts it on a separate test machine, together with a test script provided by the teacher.</p>
+<p>The testing can happen before (<em>validation test</em>) and after (<em>full test</em>) the assignment deadline. Results of a test before the deadline are shown to the students. This makes the life of the corrector less miserable, because all gradable solutions are ‘valid’. Students also seem to like the idea of having a tested solution, so that they do not get a bad grade due to technical difficulties on the correctors side.</p>
+<p>When the deadline is over, the system can run another invisible full test with the
+student submission the determine grading-relevant information.</p>
 <p>Other tools, such as <a class="reference external" href="https://docs.moodle.org/33/en/About_Moodle">Moodle</a>, support not only
 assignments, but also the management of learning material, the sophisticated tracking of course
 progress and a fine-grained management of course access rights. If you want the all-inclusive solution, this is the wrong project.</p>
-<p>The unique capability of OpenSubmit is the <strong>validation of submissions</strong>. The most common use case is a coding assignment:</p>
-<p>A student hands in a ZIP file with source code. OpenSubmit takes this upload and extracts it on a separate machine, together with a validation script provided by the teacher.</p>
-<img alt="_images/architecture.png" class="align-center" src="_images/architecture.png" />
-<p>The testing can happen before and after the assignment deadline. Results of a validation before the deadline are shown to the students. This makes the life of the corrector less miserable, because after the deadline, all gradable solutions are ‘valid’. Students also seem to like the idea of having a
-validated solutions, so that they do not get a bad grade due to technical difficulties at the correctors side.</p>
-<p>When the deadline is over, the system can run another invisible full test with the
-student code the determine grading-relevant information.</p>
 <div class="toctree-wrapper compound">
 </div>
 </div>
