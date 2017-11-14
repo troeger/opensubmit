@@ -31,7 +31,6 @@ class Assignment(models.Model):
     validity_script_download = models.BooleanField(default=False, verbose_name='Download of validation script ?', help_text='If activated, the students can download the validation script for offline analysis.')
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Full test script', help_text='Same as the validation script, but executed AFTER the hard deadline to determine final grading criterias for the submission. Results are not shown to students.')
     test_machines = models.ManyToManyField('TestMachine', blank=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
-    attachment_test_support = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Support files', help_text="An archive (!) of files that should always be in the directory, beside the student files, during compilation / validation / full test.")
     max_authors = models.PositiveSmallIntegerField(default=1, help_text="Maximum number of authors (= group size) for this assignment.")
 
     class Meta:
@@ -121,19 +120,6 @@ class Assignment(models.Model):
                 return self.download
         else:
             return None
-
-    def test_support_files_url(self):
-        '''
-            Return absolute download URL for the support archive.
-            Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
-        '''
-        if self.pk and self.has_test_support_files():
-            return settings.MAIN_URL + "/download/%u/support_files/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
-        else:
-            return None
-
-    def has_test_support_files(self):
-        return str(self.attachment_test_support).strip() != ""
 
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""

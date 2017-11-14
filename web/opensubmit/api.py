@@ -58,12 +58,6 @@ def download(request, obj_id, filetype, secret=None):
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.attachment_test_full
         fname = f.name[f.name.rfind('/') + 1:]
-    elif filetype == "support_files":
-        if secret != settings.JOB_EXECUTOR_SECRET:
-            raise PermissionDenied
-        ass = get_object_or_404(Assignment, pk=obj_id)
-        f = ass.attachment_test_support
-        fname = f.name[f.name.rfind('/') + 1:]
     elif filetype == "description":
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.description
@@ -187,8 +181,6 @@ def jobs(request):
         response['SubmissionId'] = str(sub.pk)
         response['Timeout'] = sub.assignment.attachment_test_timeout
         response['Compile'] = sub.assignment.attachment_test_compile
-        if sub.assignment.has_test_support_files():
-            response['SupportFiles'] = sub.assignment.test_support_files_url()
         if sub.state == Submission.TEST_COMPILE_PENDING:
             response['Action'] = 'test_compile'
         elif sub.state == Submission.TEST_VALIDITY_PENDING:

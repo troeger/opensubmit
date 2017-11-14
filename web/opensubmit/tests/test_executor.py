@@ -110,19 +110,6 @@ class Executor(StudentTestCase, LiveServerTestCase):
         self.assertEqual("Enabled, no results.", sa.validation_result(self.sub))
         self.assertEqual("Enabled, no results.", sa.fulltest_result(self.sub))
 
-    def testCompileWithSupportFilesTest(self):
-        self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(True, self._runExecutor())
-        results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
-            kind=SubmissionTestResult.COMPILE_TEST
-        )
-        self.assertEqual(1, len(results))
-        self.assertNotEqual(0, len(results[0].result))
-
-
     def testParallelExecutorsCompileTest(self):
         self.validatedAssignment.test_machines.add(self._registerExecutor())
         num_students=len(self.enrolled_students)
@@ -203,21 +190,6 @@ class Executor(StudentTestCase, LiveServerTestCase):
         self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=sub.file_upload,
-            kind=SubmissionTestResult.VALIDITY_TEST
-        )
-        self.assertEqual(1, len(results))
-        self.assertNotEqual(0, len(results[0].result))
-
-    def testValidationWithSupportFilesTest(self):
-        # compile
-        self.sub = self.createValidatableWithSupportFilesSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(True, self._runExecutor())
-        # validate
-        self.assertEqual(True, self._runExecutor())
-        results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
         self.assertEqual(1, len(results))

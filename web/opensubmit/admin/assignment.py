@@ -42,22 +42,13 @@ class AssignmentAdminForm(forms.ModelForm):
                 self.fields['attachment_test_full'].widget.template_with_initial = (
                     '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
                 )
-            if self.instance.test_support_files_url():
-                self.fields['attachment_test_support'].widget.template_with_initial = (
-                    '%(initial_text)s: <a href="'+self.instance.test_support_files_url()+'">%(initial)s</a> '
-                    '%(clear_template)s<br />%(input_text)s: %(input)s'
-                )
-            else:
-                self.fields['attachment_test_support'].widget.template_with_initial = (
-                    '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
-                )
             if self.instance.url():
                 self.fields['description'].widget.template_with_initial = (
                     '%(initial_text)s: <a href="'+self.instance.url()+'">%(initial)s</a> '
                     '%(clear_template)s<br />%(input_text)s: %(input)s'
                 )
             else:
-                self.fields['attachment_test_support'].widget.template_with_initial = (
+                self.fields['description'].widget.template_with_initial = (
                     '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
                 )
 
@@ -149,7 +140,6 @@ class AssignmentAdmin(ModelAdmin):
                 {   'fields': ('attachment_test_compile',  \
                                ('attachment_test_validity', 'validity_script_download'), \
                                'attachment_test_full', \
-                               'attachment_test_support', \
                                ('test_machines', 'attachment_test_timeout') )},
             )
     )

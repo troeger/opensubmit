@@ -293,10 +293,8 @@ class SubmitTestCase(LiveServerTestCase):
 
         # Move test files to current MEDIA_ROOT, otherwise Django security complains
         working_zip=settings.MEDIA_ROOT+"working.zip"
-        supportfiles_zip=settings.MEDIA_ROOT+"supportfiles.zip"
         single_file=settings.MEDIA_ROOT+"validator.py"
         shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_working.zip', working_zip)
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_supportfiles.zip', supportfiles_zip)
         shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_working.py', single_file)
 
         with open(working_zip, 'rb') as validator_script:
@@ -317,25 +315,6 @@ class SubmitTestCase(LiveServerTestCase):
             )
             self.validatedAssignment.save()
             self.allAssignments.append(self.validatedAssignment)
-
-            with open(supportfiles_zip, 'rb') as support_files:
-                self.validatedWithSupportFilesAssignment = Assignment(
-                    title=uccrap+'Validated assignment with support files',
-                    course=self.course,
-                    download='http://example.org/assignments/1/download'+uccrap,
-                    gradingScheme=self.passFailGrading,
-                    publish_at=last_week,
-                    soft_deadline=tomorrow,
-                    hard_deadline=next_week,
-                    has_attachment=True,
-                    validity_script_download=True,
-                    attachment_test_validity=DjangoFile(validator_script),
-                    attachment_test_full=DjangoFile(validator_script),
-                    attachment_test_support=DjangoFile(support_files),
-                    max_authors=3            
-                )
-                self.validatedWithSupportFilesAssignment.save()
-                self.allAssignments.append(self.validatedWithSupportFilesAssignment)
 
         with open(single_file, 'rb') as validator_script:
             self.singleFileValidatorAssignment = Assignment(
@@ -532,12 +511,6 @@ class SubmitTestCase(LiveServerTestCase):
             state=Submission.TEST_COMPILE_PENDING,
             file_upload=sf
         )
-        fname="reverse_support_files.zip"
-        shutil.copyfile(rootdir+'/opensubmit/tests/submfiles/'+fname, settings.MEDIA_ROOT+fname)
-        with open(settings.MEDIA_ROOT+fname, 'rb') as subfile:
-            sub.assignment.attachment_test_support=DjangoFile(subfile)
-            sub.assignment.save()
-            sub.save()
         return sub
 
 
@@ -551,22 +524,6 @@ class SubmitTestCase(LiveServerTestCase):
             assignment=self.singleFileValidatorAssignment,
             submitter=user.user,
             notes=uccrap+"This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
-            file_upload=sf
-        )
-        sub.save()
-        return sub
-
-    def createValidatableWithSupportFilesSubmission(self, user):
-        '''
-            Create a submission that can be validated by executor,
-            which as support files in the assignment.
-        '''
-        sf = self.createSubmissionFile()
-        sub = Submission(
-            assignment=self.validatedWithSupportFilesAssignment,
-            submitter=user.user,
-            notes=uccrap+"This is a validatable submission for an assignment with support files.",
             state=Submission.TEST_COMPILE_PENDING,
             file_upload=sf
         )
