@@ -83,10 +83,20 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Admin manual</a><ul>
-<li><a class="reference internal" href="#installing-the-web-application">Installing the web application</a></li>
-<li><a class="reference internal" href="#installing-test-machines">Installing test machines</a></li>
+<li><a class="reference internal" href="#web-application">Web application</a><ul>
 <li><a class="reference internal" href="#updating-your-installation">Updating your installation</a></li>
-<li><a class="reference internal" href="#user-management">User management</a></li>
+<li><a class="reference internal" href="#authentication-methods">Authentication methods</a></li>
+<li><a class="reference internal" href="#user-management">User management</a><ul>
+<li><a class="reference internal" href="#user-permissions">User permissions</a></li>
+<li><a class="reference internal" href="#merging-accounts">Merging accounts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#test-machines">Test machines</a><ul>
+<li><a class="reference internal" href="#id1">Updating your installation</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -120,11 +130,14 @@
       
   <div class="section" id="admin-manual">
 <h1>Admin manual<a class="headerlink" href="#admin-manual" title="Permalink to this headline">¶</a></h1>
-<p>OpenSubmit runs with Python 3.5 or newer versions.</p>
-<div class="section" id="installing-the-web-application">
-<h2>Installing the web application<a class="headerlink" href="#installing-the-web-application" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><ul class="simple">
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This manual is work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
+</div>
+<div class="section" id="web-application">
+<h2>Web application<a class="headerlink" href="#web-application" title="Permalink to this headline">¶</a></h2>
+<p>OpenSubmit runs with Python 3.5 or newer versions. For an installation, you need to follow these steps:</p>
+<ul class="simple">
 <li>Prepare a Python 3 web hosting environment.<ul>
 <li>Debian / Ubuntu: <code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libapache2-mod-wsgi-py3</span> <span class="pre">apache2</span> <span class="pre">sqlite</span> <span class="pre">python3</span></code>.</li>
 </ul>
@@ -132,7 +145,7 @@
 <li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-web</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-web</span></code>. PIP should come as part of your Python installation.</li>
 <li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configure</span></code> to create an OpenSubmit configuration file template. Edit the generated file (<code class="docutils literal"><span class="pre">/etc/opensubmit/settings.ini</span></code>):<ul>
 <li>The default database is SQLite. You can use an empty MySQL, PostgreSQL or Oracle database instead.</li>
-<li>OpenSubmit does not support password-based logins. You need to choose one of the supported <span class="xref std std-ref">authentication methods</span>.</li>
+<li>OpenSubmit does not support password-based logins. You need to choose one of the supported <a class="reference internal" href="#auth"><span class="std std-ref">authentication methods</span></a>.</li>
 <li>Configure a MEDIA_ROOT folder that stores all the student uploads.</li>
 </ul>
 </li>
@@ -141,26 +154,35 @@
 <li>Got to the OpenSubmit start page and use your configured authentication method.</li>
 <li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">makeadmin</span> <span class="pre">&lt;email&gt;</span></code> to make the created user an administrator in the system.</li>
 </ul>
-</div></blockquote>
+<div class="section" id="updating-your-installation">
+<h3>Updating your installation<a class="headerlink" href="#updating-your-installation" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="installing-test-machines">
-<h2>Installing test machines<a class="headerlink" href="#installing-test-machines" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><ul class="simple">
+<div class="section" id="authentication-methods">
+<h3>Authentication methods<a class="headerlink" href="#authentication-methods" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="user-management">
+<span id="auth"></span><h3>User management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="user-permissions">
+<h4>User permissions<a class="headerlink" href="#user-permissions" title="Permalink to this headline">¶</a></h4>
+</div>
+<div class="section" id="merging-accounts">
+<span id="permissions"></span><h4>Merging accounts<a class="headerlink" href="#merging-accounts" title="Permalink to this headline">¶</a></h4>
+</div>
+</div>
+</div>
+<div class="section" id="test-machines">
+<span id="merge-users"></span><h2>Test machines<a class="headerlink" href="#test-machines" title="Permalink to this headline">¶</a></h2>
+<ul class="simple" id="executors">
 <li>Choose a dedicated machine beside the web server. This will compile (and run) the student submissions.</li>
 <li>Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.</li>
 <li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-exec</span></code>.</li>
 <li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> and follow the instructions. Make sure that you adjust <code class="docutils literal"><span class="pre">/etc/opensubmit/executor.ini</span></code> accordingly. You can run the script multiple times to check your configuration.</li>
 <li>Add a call to <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">run</span></code> to cron, so that it regulary asks the web server for fresh work. We have good experiences with a 30s interval. You can also do it manually for testing purposes.</li>
 </ul>
-</div></blockquote>
 <p>Smart students may try to connect to their own machines from their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only.</p>
+<div class="section" id="id1">
+<h3>Updating your installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="updating-your-installation">
-<h2>Updating your installation<a class="headerlink" href="#updating-your-installation" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="user-management">
-<h2>User management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

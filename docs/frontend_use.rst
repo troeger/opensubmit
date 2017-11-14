@@ -1,7 +1,9 @@
 Student manual
-==============
+##############
 
-OpenSubmit distinguishes between the **student frontend**, the **teacher backend** and the **test machines**. This manual only deals with the **student frontend**.
+.. warning::
+
+   This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
 
 After log-in with one of the offered authentication methods, you are redirected to the *dashboard*. It allows to ...
 
@@ -12,16 +14,15 @@ After log-in with one of the offered authentication methods, you are redirected 
 * ... see the characteristics of the machines being used for automated validation.
 
 Setting your user details
--------------------------
+*************************
 
 Open assignments
-----------------
+****************
 
 Active submissions
-------------------
+******************
 
 You are informed about the progress of the correction and the final grade via email and the frontend page.
 
-
 Archive
--------
+*******

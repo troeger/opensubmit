@@ -1,30 +1,120 @@
 Teacher manual
-==============
+##############
 
-OpenSubmit distinguishes between the **student frontend**, the **teacher backend** and the **test machines**. This manual only deals with the **teacher backend**.
+.. warning::
+
+   This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
 
 Managing study programs
------------------------
+***********************
 
 Managing courses
-----------------
+****************
 
-Managing grading schemes
-------------------------
+Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage courses``
 
-Managing assignments
---------------------
+Courses and grading schemes can be created, configured and deleted by users with :ref:`administrator <permissions>` or :ref:`course owner <permissions>` permissions. 
+
+Course creation 
+===============
+
+Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage courses`` - ``Add course``
+
+The following settings must be configured for a new course:
+
+.. _active:
+
+Title
+    The title of the course.
+Course owner 
+    A user how automatically gets :ref:`course owner <permissions>` permissions for this course. His email address is used as sender in student notifications. 
+Tutors
+    A set of users that get :ref:`student tutor <permissions>` permissions for this course. 
+Course description link
+    A URL for the course home page. Used in the student dashboard.
+Active
+   The flag decides if any assignments from this course are shown to the students, regardless of their deadlines. This allows to put courses in an 'archive' mode after the term is over. 
+LTI key / LTI passphrase
+   OpenSubmit supports the LTI protocol, so that you can integrate it into other learning management systems (LMSs) such as Moodle. 
+
+   The LMS needs a key and a passphrase that you configure separately for each OpenSubmit course. This makes sure that the system knows automatically the course in which the external LMS user is interested in. Such users don't need to perform any authentication, OpenSubmit blindly believes in the identify information forwarded by the LMS. If a user already exists with the same email address, the LMS identity is added to his social login credentials. 
+
+   Using LTI authentication can lead to duplicate accounts. You can :ref:`merge users <merge users>` to fix that.
+
+Providing a link to the course assignments 
+==========================================
+
+Location: ``Teacher backend`` - ``Course`` - ``Info``
+
+After using an :ref:`authentication provider <auth>`, students get automatically an account and end up on the student dashboard, where none of the OpenSubmit courses is activated for them. This leads to the fact that they can't see any course assignments by default.
+
+If you want to make sure that students automatically see the assignments for your course, you need to tell OpenSubmit the course ID when entering the system. This can be done by linking to a course-specific OpenSubmit URL. It is shown in the course details on the teacher backend landing page.
+
+Grading scheme creation
+=======================
+
+Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage grading schemes``
+
+Before you can create assignments for students, you must think about the grading scheme. A grading scheme is an arbitrary collection of gradings, were each grading either means 'pass' or 'fail'. 
+
+.. image:: files/ui_backend_gradingscheme.png    
+   :scale: 50%
+
+Grading schemes can later be used in the creation of assignments.
+
+Assignment creation
+===================
+
+Location: ``Teacher backend`` - ``Course`` - ``Actions`` - ``Manage assignments`` - ``Add assignment``
+
+With an existing course and an appropriate grading scheme, you can now create a new assignment:
+
+Title (mandatory)
+    The title of the assignment.
+Course (mandatory)
+    The course this assignment belongs to. 
+Grading scheme (optional)
+    The grading scheme for this assignment. If you don't chose a grading scheme, than this assignment is defined as ungraded, which is also indicated on the student dashboard. Ungraded assignments are still validated.
+Max authors (mandatory)
+    For single user submissions, set this to one. When you choose larger values, the students get a possiblity to define their co-authors when submitting a solution.
+Student file upload (mandatory)
+    If students should upload a single file as solution, enable this flag. Otherwise, they can only enter submission notes. Students typically submit archives (ZIP / TGZ) or PDF files, but the system puts no restrictions on this.
+Description (mandatory)
+    The assignment description is linked on the student dashboard. It can either bei configured as link, f.e. when you host it by yourself, or can be uploaded to OpenSubmit.
+Publish at (mandatory)
+    The point in time where the assignment becomes visible for students. Users with teacher backend access rights always see the assignment in their student dashboard, so that they can test the validation before the official start.
+Soft deadline (optional)
+    The deadline shown to the students. After this point in time, submission is still possible, although the remaining time counter on the student dashboard shows zero.
+
+    If you leave that value empty, then the hard deadline becomes the soft deadline, too.
+
+    The separation between hard and soft deadline is intended for the typical late-comers, which try to submit their solution shortly after the deadline. Broken internet, time zone difficulties, dogs eating the homework ... we all know the excuses.
+Hard deadline (optional)
+    The deadline after which submissions for this assignment are no longer possible.
+
+    If you leave that value empty, then submissions are possible as long as the course is :ref:`active <active>`.
+Validation script (optional)
+    The uploaded :ref:`validation script <testing>` is executed automatically for each student submission and can lead to different subsequent :ref:`states <states>` for the submission. Students are informed about this state change by email. The test is executed before the hard deadline. It is intended to help the students to write a valid solution.
+Download of validation script (optional)
+    The flag defines if the students should get a link to the :ref:`validation script <testing>`. This makes programming for the students much more easy, since the can locally if their uploaded code would pass the validation checks.
+Full test script (optional)
+    The uploaded :ref:`full test script <testing>` is executed automatically for each student submission and can lead to different subsequent :ref:`states <states>` for the submission. Students are *not informed* about this test. The test is executed after the hard deadline. It is intended to support the teachers in their grading with additional information.  
+Support files (optiona)
+    A set of files that you want to have in the same directory when the:ref:`validation script <testing>` or the :ref:`full test script <testing>` is running.
+Test machines (mandatory in some cases)
+    When you configure a :ref:`validation script <testing>` or :ref:`full test script <testing>`, you need to specify the ::ref:`test machines <executors>` that runs the tests.
 
 Managing submissions
---------------------
+********************
+A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend: 
 
-A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend. 
-
-The internal states are represented in different ways to frontend and backend users:
-
+.. _states:
 .. literalinclude:: ../web/opensubmit/models/submission.py
    :language: python
    :lines: 95-201
 
+Automated testing of submissions
+********************************
+.. _testing:
 
 

@@ -84,10 +84,15 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Teacher manual</a><ul>
 <li><a class="reference internal" href="#managing-study-programs">Managing study programs</a></li>
-<li><a class="reference internal" href="#managing-courses">Managing courses</a></li>
-<li><a class="reference internal" href="#managing-grading-schemes">Managing grading schemes</a></li>
-<li><a class="reference internal" href="#managing-assignments">Managing assignments</a></li>
+<li><a class="reference internal" href="#managing-courses">Managing courses</a><ul>
+<li><a class="reference internal" href="#course-creation">Course creation</a></li>
+<li><a class="reference internal" href="#providing-a-link-to-the-course-assignments">Providing a link to the course assignments</a></li>
+<li><a class="reference internal" href="#grading-scheme-creation">Grading scheme creation</a></li>
+<li><a class="reference internal" href="#assignment-creation">Assignment creation</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#managing-submissions">Managing submissions</a></li>
+<li><a class="reference internal" href="#automated-testing-of-submissions">Automated testing of submissions</a></li>
 </ul>
 </li>
 </ul>
@@ -121,24 +126,97 @@
       
   <div class="section" id="teacher-manual">
 <h1>Teacher manual<a class="headerlink" href="#teacher-manual" title="Permalink to this headline">¶</a></h1>
-<p>OpenSubmit distinguishes between the <strong>student frontend</strong>, the <strong>teacher backend</strong> and the <strong>test machines</strong>. This manual only deals with the <strong>teacher backend</strong>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This manual is work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
+</div>
 <div class="section" id="managing-study-programs">
 <h2>Managing study programs<a class="headerlink" href="#managing-study-programs" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="managing-courses">
 <h2>Managing courses<a class="headerlink" href="#managing-courses" title="Permalink to this headline">¶</a></h2>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">courses</span></code></p>
+<p>Courses and grading schemes can be created, configured and deleted by users with <a class="reference internal" href="admin_use.html#permissions"><span class="std std-ref">administrator</span></a> or <a class="reference internal" href="admin_use.html#permissions"><span class="std std-ref">course owner</span></a> permissions.</p>
+<div class="section" id="course-creation">
+<h3>Course creation<a class="headerlink" href="#course-creation" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">courses</span></code> - <code class="docutils literal"><span class="pre">Add</span> <span class="pre">course</span></code></p>
+<p>The following settings must be configured for a new course:</p>
+<dl class="docutils" id="active">
+<dt>Title</dt>
+<dd>The title of the course.</dd>
+<dt>Course owner</dt>
+<dd>A user how automatically gets <a class="reference internal" href="admin_use.html#permissions"><span class="std std-ref">course owner</span></a> permissions for this course. His email address is used as sender in student notifications.</dd>
+<dt>Tutors</dt>
+<dd>A set of users that get <a class="reference internal" href="admin_use.html#permissions"><span class="std std-ref">student tutor</span></a> permissions for this course.</dd>
+<dt>Course description link</dt>
+<dd>A URL for the course home page. Used in the student dashboard.</dd>
+<dt>Active</dt>
+<dd>The flag decides if any assignments from this course are shown to the students, regardless of their deadlines. This allows to put courses in an ‘archive’ mode after the term is over.</dd>
+<dt>LTI key / LTI passphrase</dt>
+<dd><p class="first">OpenSubmit supports the LTI protocol, so that you can integrate it into other learning management systems (LMSs) such as Moodle.</p>
+<p>The LMS needs a key and a passphrase that you configure separately for each OpenSubmit course. This makes sure that the system knows automatically the course in which the external LMS user is interested in. Such users don’t need to perform any authentication, OpenSubmit blindly believes in the identify information forwarded by the LMS. If a user already exists with the same email address, the LMS identity is added to his social login credentials.</p>
+<p class="last">Using LTI authentication can lead to duplicate accounts. You can <a class="reference internal" href="admin_use.html#merge-users"><span class="std std-ref">merge users</span></a> to fix that.</p>
+</dd>
+</dl>
 </div>
-<div class="section" id="managing-grading-schemes">
-<h2>Managing grading schemes<a class="headerlink" href="#managing-grading-schemes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="providing-a-link-to-the-course-assignments">
+<h3>Providing a link to the course assignments<a class="headerlink" href="#providing-a-link-to-the-course-assignments" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Info</span></code></p>
+<p>After using an <a class="reference internal" href="admin_use.html#auth"><span class="std std-ref">authentication provider</span></a>, students get automatically an account and end up on the student dashboard, where none of the OpenSubmit courses is activated for them. This leads to the fact that they can’t see any course assignments by default.</p>
+<p>If you want to make sure that students automatically see the assignments for your course, you need to tell OpenSubmit the course ID when entering the system. This can be done by linking to a course-specific OpenSubmit URL. It is shown in the course details on the teacher backend landing page.</p>
 </div>
-<div class="section" id="managing-assignments">
-<h2>Managing assignments<a class="headerlink" href="#managing-assignments" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="grading-scheme-creation">
+<h3>Grading scheme creation<a class="headerlink" href="#grading-scheme-creation" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">grading</span> <span class="pre">schemes</span></code></p>
+<p>Before you can create assignments for students, you must think about the grading scheme. A grading scheme is an arbitrary collection of gradings, were each grading either means ‘pass’ or ‘fail’.</p>
+<a class="reference internal image-reference" href="files/ui_backend_gradingscheme.png"><img alt="files/ui_backend_gradingscheme.png" src="files/ui_backend_gradingscheme.png" /></a>
+<p>Grading schemes can later be used in the creation of assignments.</p>
+</div>
+<div class="section" id="assignment-creation">
+<h3>Assignment creation<a class="headerlink" href="#assignment-creation" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">assignments</span></code> - <code class="docutils literal"><span class="pre">Add</span> <span class="pre">assignment</span></code></p>
+<p>With an existing course and an appropriate grading scheme, you can now create a new assignment:</p>
+<dl class="docutils">
+<dt>Title (mandatory)</dt>
+<dd>The title of the assignment.</dd>
+<dt>Course (mandatory)</dt>
+<dd>The course this assignment belongs to.</dd>
+<dt>Grading scheme (optional)</dt>
+<dd>The grading scheme for this assignment. If you don’t chose a grading scheme, than this assignment is defined as ungraded, which is also indicated on the student dashboard. Ungraded assignments are still validated.</dd>
+<dt>Max authors (mandatory)</dt>
+<dd>For single user submissions, set this to one. When you choose larger values, the students get a possiblity to define their co-authors when submitting a solution.</dd>
+<dt>Student file upload (mandatory)</dt>
+<dd>If students should upload a single file as solution, enable this flag. Otherwise, they can only enter submission notes. Students typically submit archives (ZIP / TGZ) or PDF files, but the system puts no restrictions on this.</dd>
+<dt>Description (mandatory)</dt>
+<dd>The assignment description is linked on the student dashboard. It can either bei configured as link, f.e. when you host it by yourself, or can be uploaded to OpenSubmit.</dd>
+<dt>Publish at (mandatory)</dt>
+<dd>The point in time where the assignment becomes visible for students. Users with teacher backend access rights always see the assignment in their student dashboard, so that they can test the validation before the official start.</dd>
+<dt>Soft deadline (optional)</dt>
+<dd><p class="first">The deadline shown to the students. After this point in time, submission is still possible, although the remaining time counter on the student dashboard shows zero.</p>
+<p>If you leave that value empty, then the hard deadline becomes the soft deadline, too.</p>
+<p class="last">The separation between hard and soft deadline is intended for the typical late-comers, which try to submit their solution shortly after the deadline. Broken internet, time zone difficulties, dogs eating the homework … we all know the excuses.</p>
+</dd>
+<dt>Hard deadline (optional)</dt>
+<dd><p class="first">The deadline after which submissions for this assignment are no longer possible.</p>
+<p class="last">If you leave that value empty, then submissions are possible as long as the course is <a class="reference internal" href="#active"><span class="std std-ref">active</span></a>.</p>
+</dd>
+<dt>Validation script (optional)</dt>
+<dd>The uploaded <a class="reference internal" href="#testing"><span class="std std-ref">validation script</span></a> is executed automatically for each student submission and can lead to different subsequent <a class="reference internal" href="#states"><span class="std std-ref">states</span></a> for the submission. Students are informed about this state change by email. The test is executed before the hard deadline. It is intended to help the students to write a valid solution.</dd>
+<dt>Download of validation script (optional)</dt>
+<dd>The flag defines if the students should get a link to the <a class="reference internal" href="#testing"><span class="std std-ref">validation script</span></a>. This makes programming for the students much more easy, since the can locally if their uploaded code would pass the validation checks.</dd>
+<dt>Full test script (optional)</dt>
+<dd>The uploaded <a class="reference internal" href="#testing"><span class="std std-ref">full test script</span></a> is executed automatically for each student submission and can lead to different subsequent <a class="reference internal" href="#states"><span class="std std-ref">states</span></a> for the submission. Students are <em>not informed</em> about this test. The test is executed after the hard deadline. It is intended to support the teachers in their grading with additional information.</dd>
+<dt>Support files (optiona)</dt>
+<dd>A set of files that you want to have in the same directory when the:ref:<cite>validation script &lt;testing&gt;</cite> or the <a class="reference internal" href="#testing"><span class="std std-ref">full test script</span></a> is running.</dd>
+<dt>Test machines (mandatory in some cases)</dt>
+<dd>When you configure a <a class="reference internal" href="#testing"><span class="std std-ref">validation script</span></a> or <a class="reference internal" href="#testing"><span class="std std-ref">full test script</span></a>, you need to specify the :<a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a> that runs the tests.</dd>
+</dl>
+</div>
 </div>
 <div class="section" id="managing-submissions">
 <h2>Managing submissions<a class="headerlink" href="#managing-submissions" title="Permalink to this headline">¶</a></h2>
-<p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend.</p>
-<p>The internal states are represented in different ways to frontend and backend users:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
+<p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend:</p>
+<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
     <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span> 
 
         <span class="c1"># The submission is currently uploaded,</span>
@@ -248,6 +326,9 @@
 </pre></div>
 </div>
 </div>
+<div class="section" id="automated-testing-of-submissions">
+<h2>Automated testing of submissions<a class="headerlink" href="#automated-testing-of-submissions" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="testing"></span></div>
 </div>
 
 

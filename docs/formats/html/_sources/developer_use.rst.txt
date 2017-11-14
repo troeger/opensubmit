@@ -1,5 +1,9 @@
 Developer manual
-================
+################
+
+.. warning::
+
+   This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
 
 OpenSubmit runs with Python 3.5 or newer versions. 
 
