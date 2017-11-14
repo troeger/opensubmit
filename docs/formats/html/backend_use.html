@@ -91,7 +91,13 @@
 <li><a class="reference internal" href="#assignment-creation">Assignment creation</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#managing-submissions">Managing submissions</a></li>
+<li><a class="reference internal" href="#managing-submissions">Managing submissions</a><ul>
+<li><a class="reference internal" href="#submission-states">Submission states</a></li>
+<li><a class="reference internal" href="#submission-grading">Submission grading</a></li>
+<li><a class="reference internal" href="#grading-table">Grading table</a></li>
+<li><a class="reference internal" href="#duplicate-report">Duplicate report</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#automated-testing-of-submissions">Automated testing of submissions</a></li>
 </ul>
 </li>
@@ -167,7 +173,7 @@
 </div>
 <div class="section" id="grading-scheme-creation">
 <h3>Grading scheme creation<a class="headerlink" href="#grading-scheme-creation" title="Permalink to this headline">¶</a></h3>
-<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">grading</span> <span class="pre">schemes</span></code></p>
+<p id="gradingscheme">Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">grading</span> <span class="pre">schemes</span></code></p>
 <p>Before you can create assignments for students, you must think about the grading scheme. A grading scheme is an arbitrary collection of gradings, were each grading either means ‘pass’ or ‘fail’.</p>
 <a class="reference internal image-reference" href="files/ui_backend_gradingscheme.png"><img alt="files/ui_backend_gradingscheme.png" src="files/ui_backend_gradingscheme.png" /></a>
 <p>Grading schemes can later be used in the creation of assignments.</p>
@@ -200,21 +206,23 @@
 <dd><p class="first">The deadline after which submissions for this assignment are no longer possible.</p>
 <p class="last">If you leave that value empty, then submissions are possible as long as the course is <a class="reference internal" href="#active"><span class="std std-ref">active</span></a>.</p>
 </dd>
-<dt>Validation script (optional)</dt>
-<dd>The uploaded <a class="reference internal" href="#testing"><span class="std std-ref">validation script</span></a> is executed automatically for each student submission and can lead to different subsequent <a class="reference internal" href="#states"><span class="std std-ref">states</span></a> for the submission. Students are informed about this state change by email. The test is executed before the hard deadline. It is intended to help the students to write a valid solution.</dd>
-<dt>Download of validation script (optional)</dt>
-<dd>The flag defines if the students should get a link to the <a class="reference internal" href="#testing"><span class="std std-ref">validation script</span></a>. This makes programming for the students much more easy, since the can locally if their uploaded code would pass the validation checks.</dd>
-<dt>Full test script (optional)</dt>
-<dd>The uploaded <a class="reference internal" href="#testing"><span class="std std-ref">full test script</span></a> is executed automatically for each student submission and can lead to different subsequent <a class="reference internal" href="#states"><span class="std std-ref">states</span></a> for the submission. Students are <em>not informed</em> about this test. The test is executed after the hard deadline. It is intended to support the teachers in their grading with additional information.</dd>
+<dt>Validation test (optional)</dt>
+<dd>The uploaded <a class="reference internal" href="#testing"><span class="std std-ref">validation test</span></a> is executed automatically for each student submission and can lead to different subsequent <a class="reference internal" href="#states"><span class="std std-ref">states</span></a> for the submission. Students are informed about this state change by email. The test is executed before the hard deadline. It is intended to help the students to write a valid solution.</dd>
+<dt>Download of validation test (optional)</dt>
+<dd>The flag defines if the students should get a link to the <a class="reference internal" href="#testing"><span class="std std-ref">validation test</span></a>. This makes programming for the students much more easy, since the can locally if their uploaded code would pass the validation checks.</dd>
+<dt>Full test (optional)</dt>
+<dd>The uploaded <a class="reference internal" href="#testing"><span class="std std-ref">full test</span></a> is executed automatically for each student submission and can lead to different subsequent <a class="reference internal" href="#states"><span class="std std-ref">states</span></a> for the submission. Students are <em>not informed</em> about this test. The test is executed after the hard deadline. It is intended to support the teachers in their grading with additional information.</dd>
 <dt>Support files (optiona)</dt>
-<dd>A set of files that you want to have in the same directory when the:ref:<cite>validation script &lt;testing&gt;</cite> or the <a class="reference internal" href="#testing"><span class="std std-ref">full test script</span></a> is running.</dd>
+<dd>A set of files that you want to have in the same directory when the <a class="reference internal" href="#testing"><span class="std std-ref">validation test</span></a> or the <a class="reference internal" href="#testing"><span class="std std-ref">full test</span></a> is running.</dd>
 <dt>Test machines (mandatory in some cases)</dt>
-<dd>When you configure a <a class="reference internal" href="#testing"><span class="std std-ref">validation script</span></a> or <a class="reference internal" href="#testing"><span class="std std-ref">full test script</span></a>, you need to specify the :<a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a> that runs the tests.</dd>
+<dd>When you configure a <a class="reference internal" href="#testing"><span class="std std-ref">validation test</span></a> or <a class="reference internal" href="#testing"><span class="std std-ref">full test</span></a>, you need to specify the :<a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a> that run it. When chosing multiple machines, the testing load is distributed.</dd>
 </dl>
 </div>
 </div>
 <div class="section" id="managing-submissions">
 <h2>Managing submissions<a class="headerlink" href="#managing-submissions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="submission-states">
+<h3>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h3>
 <p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend:</p>
 <div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
     <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span> 
@@ -326,9 +334,66 @@
 </pre></div>
 </div>
 </div>
+<div class="section" id="submission-grading">
+<h3>Submission grading<a class="headerlink" href="#submission-grading" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">submissions</span></code></p>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">assignments</span></code>  - <code class="docutils literal"><span class="pre">Show</span> <span class="pre">submissions</span></code></p>
+<p>The grading of student submissions follows the same workflow, regardless of the fact if you have code evaluation activated or not.</p>
+<p>Short version:</p>
+<ul class="simple">
+<li>For each submission:
+- Open the submission in the teacher backend.
+- Use the preview function for inspecting uploaded student archives.
+- Check the output from validation test and full test.
+- Optional: Add grading notes and a grading file for the student as feedback.
+- Decide for a grading, based on the provided information.
+- Mark the submission as <strong>grading finished</strong> if you are done with it.</li>
+<li>Close and notify all finished submissions as bulk action.</li>
+</ul>
+<p>Long version:</p>
+<p>On the right side of the submissions overview page, different filtering options are available.</p>
+<a class="reference internal image-reference" href="_images/ui_backend_submissions.png"><img alt="_images/ui_backend_submissions.png" src="_images/ui_backend_submissions.png" style="width: 690.0px; height: 498.5px;" /></a>
+<p>The most important thing is the distinguishing between <strong>non-graded</strong>, <strong>graded</strong> and <strong>closed</strong> submissions:</p>
+<p><strong>Non-graded</strong> submissions are the ones that were submitted (and successfully validated) before the hard deadline. Your task is to go through these submissions and decided for a particular grading. If this is done, than the grading is marked as being completed for this particular submission. This moves it into the <strong>graded</strong> state.</p>
+<p>When all gradings are done, then the submissions can be <strong>closed</strong>. This is the point in time were the status for the students changes, before that, no notification is done. The idea here is to first finish the grading - maybe with multiple people being involved - before notifying all students about their results. Only submissions in the <strong>graded</strong> status can be closed. This is a safeguard to not forget the finishing of some grading procedure.</p>
+<p>The submission details dialogue shows different information:</p>
+<a class="reference internal image-reference" href="_images/ui_backend_submission.png"><img alt="_images/ui_backend_submission.png" src="_images/ui_backend_submission.png" style="width: 688.0px; height: 496.0px;" /></a>
+<p>The assignment may allow the students to define co-authors for their submission. You can edit this list manually, for example when students made a mistake during the submission. The according section is hidden by default, click on the <cite>Authors</cite> tab to see it.</p>
+<p>The original <em>submitter</em> of the solution is stated separately. Submitters automatically become authors.</p>
+<p>Students can always add notes to their submission. If file upload is disabled for the assignment, this is the only gradable information.</p>
+<p>The <em>file upload</em> of the students is available for direct download, simply by clicking on the file name. This is especially relevant when having text or PDF document as solution attachment. The <em>Preview</em> link opens a separate web page with a preview of the file resp. the archive content.</p>
+<p>When <a class="reference internal" href="#testing"><span class="std std-ref">testing</span></a> is activated for this assignment, then the according result output is shown in the submission details.</p>
+<p>The choice of a <em>grading</em> is offered according to the <a class="reference internal" href="#gradingscheme"><span class="std std-ref">grading scheme</span></a> being configured for the particular assignment. The <em>grading notes</em> are shown in the student frontend, together with the grade, when the submission is closed.</p>
+<p>The <em>grading file</em> is also offered after closing, and may - for example - contain some explanary template solution or a manually annotated version of the student file upload.</p>
+<p>The radio buttons at the bottom of the page allow to mark the submission as <strong>non-graded</strong> or <strong>graded</strong>.</p>
+<p>When all submissions are finally graded, it is time to release the information to the students. In order to do this, mark on the overview page all finished submissions. This can be easily done by using the filters on the right side and the ‘mark all’ checkbox in the upper left corner. The choose the action ‘Close graded submissions + send notification’.</p>
+</div>
+<div class="section" id="grading-table">
+<h3>Grading table<a class="headerlink" href="#grading-table" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Show</span> <span class="pre">grading</span> <span class="pre">table</span></code></p>
+<p>If you want to have a course-level overview of all student results so far, use the <em>grading table</em> overview. It is available as action in the <em>Courses</em> section of the teacher backend.</p>
+</div>
+<div class="section" id="duplicate-report">
+<h3>Duplicate report<a class="headerlink" href="#duplicate-report" title="Permalink to this headline">¶</a></h3>
+<p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">assignments</span></code>  - <code class="docutils literal"><span class="pre">Show</span> <span class="pre">duplicates</span></code></p>
+</div>
+</div>
 <div class="section" id="automated-testing-of-submissions">
 <h2>Automated testing of submissions<a class="headerlink" href="#automated-testing-of-submissions" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="testing"></span></div>
+<p id="testing">The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the :<a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a>. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness.</p>
+<p>Since OpenSubmit makes no assumption about your style of student code evaluation, these scripts are rather generic. You can upload a validation test or full test in two ways:</p>
+<ul class="simple">
+<li>As single Python file named <cite>validator.py</cite>.</li>
+<li>As ZIP / TGZ archive with an arbitrary name, which must contain a file <cite>validator.py</cite>. This allows you to deploy custom validator support code (e.g. profiling tools, libraries) to the test machine.</li>
+</ul>
+<p>The test machine daemon makes sure that all test-related files are uncompressed in the same directory as the student code.</p>
+<p>Independent from the fact that tests might be archives, you have also the support files archive as additional option in the assignment creation dialogue. These files are also put into the same directory, regardless of the test type. An example:</p>
+<ul class="simple">
+<li>Suport files archive: Predefined <cite>Makefile</cite> from the tutor, invisible for students</li>
+<li>Validator archive: <cite>validator.py</cite>, input data for validation, possible to download by students</li>
+<li>Full test archive: <cite>validator.py</cite>, bigger input data for extended tests, invisible for students</li>
+</ul>
+</div>
 </div>
 
 

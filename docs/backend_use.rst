@@ -52,6 +52,7 @@ If you want to make sure that students automatically see the assignments for you
 
 Grading scheme creation
 =======================
+.. _gradingscheme:
 
 Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage grading schemes``
 
@@ -93,19 +94,23 @@ Hard deadline (optional)
     The deadline after which submissions for this assignment are no longer possible.
 
     If you leave that value empty, then submissions are possible as long as the course is :ref:`active <active>`.
-Validation script (optional)
-    The uploaded :ref:`validation script <testing>` is executed automatically for each student submission and can lead to different subsequent :ref:`states <states>` for the submission. Students are informed about this state change by email. The test is executed before the hard deadline. It is intended to help the students to write a valid solution.
-Download of validation script (optional)
-    The flag defines if the students should get a link to the :ref:`validation script <testing>`. This makes programming for the students much more easy, since the can locally if their uploaded code would pass the validation checks.
-Full test script (optional)
-    The uploaded :ref:`full test script <testing>` is executed automatically for each student submission and can lead to different subsequent :ref:`states <states>` for the submission. Students are *not informed* about this test. The test is executed after the hard deadline. It is intended to support the teachers in their grading with additional information.  
+Validation test (optional)
+    The uploaded :ref:`validation test <testing>` is executed automatically for each student submission and can lead to different subsequent :ref:`states <states>` for the submission. Students are informed about this state change by email. The test is executed before the hard deadline. It is intended to help the students to write a valid solution.
+Download of validation test (optional)
+    The flag defines if the students should get a link to the :ref:`validation test <testing>`. This makes programming for the students much more easy, since the can locally if their uploaded code would pass the validation checks.
+Full test (optional)
+    The uploaded :ref:`full test <testing>` is executed automatically for each student submission and can lead to different subsequent :ref:`states <states>` for the submission. Students are *not informed* about this test. The test is executed after the hard deadline. It is intended to support the teachers in their grading with additional information.  
 Support files (optiona)
-    A set of files that you want to have in the same directory when the:ref:`validation script <testing>` or the :ref:`full test script <testing>` is running.
+    A set of files that you want to have in the same directory when the :ref:`validation test <testing>` or the :ref:`full test <testing>` is running.
 Test machines (mandatory in some cases)
-    When you configure a :ref:`validation script <testing>` or :ref:`full test script <testing>`, you need to specify the ::ref:`test machines <executors>` that runs the tests.
+    When you configure a :ref:`validation test <testing>` or :ref:`full test <testing>`, you need to specify the ::ref:`test machines <executors>` that run it. When chosing multiple machines, the testing load is distributed.
 
 Managing submissions
 ********************
+
+Submission states
+=================
+
 A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend: 
 
 .. _states:
@@ -113,8 +118,91 @@ A student submission can be in different states. Each of the states is represent
    :language: python
    :lines: 95-201
 
+Submission grading
+==================
+
+Location: ``Teacher backend`` - ``Course`` - ``Manage submissions``
+
+Location: ``Teacher backend`` - ``Course`` - ``Manage assignments``  - ``Show submissions``
+
+The grading of student submissions follows the same workflow, regardless of the fact if you have code evaluation activated or not. 
+
+Short version:
+
+- For each submission:
+  - Open the submission in the teacher backend.
+  - Use the preview function for inspecting uploaded student archives.
+  - Check the output from validation test and full test.
+  - Optional: Add grading notes and a grading file for the student as feedback.
+  - Decide for a grading, based on the provided information.
+  - Mark the submission as **grading finished** if you are done with it.
+- Close and notify all finished submissions as bulk action.
+
+Long version:
+
+On the right side of the submissions overview page, different filtering options are available.
+
+.. image:: files/ui_backend_submissions.png    
+   :scale: 50%
+
+The most important thing is the distinguishing between **non-graded**, **graded** and **closed** submissions:
+
+**Non-graded** submissions are the ones that were submitted (and successfully validated) before the hard deadline. Your task is to go through these submissions and decided for a particular grading. If this is done, than the grading is marked as being completed for this particular submission. This moves it into the **graded** state.
+
+When all gradings are done, then the submissions can be **closed**. This is the point in time were the status for the students changes, before that, no notification is done. The idea here is to first finish the grading - maybe with multiple people being involved - before notifying all students about their results. Only submissions in the **graded** status can be closed. This is a safeguard to not forget the finishing of some grading procedure.
+
+The submission details dialogue shows different information:
+
+.. image:: files/ui_backend_submission.png    
+   :scale: 50%
+
+The assignment may allow the students to define co-authors for their submission. You can edit this list manually, for example when students made a mistake during the submission. The according section is hidden by default, click on the `Authors` tab to see it.
+
+The original *submitter* of the solution is stated separately. Submitters automatically become authors. 
+
+Students can always add notes to their submission. If file upload is disabled for the assignment, this is the only gradable information.
+
+The *file upload* of the students is available for direct download, simply by clicking on the file name. This is especially relevant when having text or PDF document as solution attachment. The *Preview* link opens a separate web page with a preview of the file resp. the archive content.
+
+When :ref:`testing <testing>` is activated for this assignment, then the according result output is shown in the submission details.
+
+The choice of a *grading* is offered according to the :ref:`grading scheme <gradingscheme>` being configured for the particular assignment. The *grading notes* are shown in the student frontend, together with the grade, when the submission is closed. 
+
+The *grading file* is also offered after closing, and may - for example - contain some explanary template solution or a manually annotated version of the student file upload.
+
+The radio buttons at the bottom of the page allow to mark the submission as **non-graded** or **graded**.
+
+When all submissions are finally graded, it is time to release the information to the students. In order to do this, mark on the overview page all finished submissions. This can be easily done by using the filters on the right side and the 'mark all' checkbox in the upper left corner. The choose the action 'Close graded submissions + send notification'.
+
+Grading table
+=============
+
+Location: ``Teacher backend`` - ``Course`` - ``Show grading table``
+
+If you want to have a course-level overview of all student results so far, use the *grading table* overview. It is available as action in the *Courses* section of the teacher backend.
+
+Duplicate report
+================
+
+Location: ``Teacher backend`` - ``Course`` - ``Manage assignments``  - ``Show duplicates``
+
+
 Automated testing of submissions
 ********************************
 .. _testing:
 
+The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the ::ref:`test machines <executors>`. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness. 
+
+Since OpenSubmit makes no assumption about your style of student code evaluation, these scripts are rather generic. You can upload a validation test or full test in two ways:
+
+- As single Python file named `validator.py`.
+- As ZIP / TGZ archive with an arbitrary name, which must contain a file `validator.py`. This allows you to deploy custom validator support code (e.g. profiling tools, libraries) to the test machine. 
+
+The test machine daemon makes sure that all test-related files are uncompressed in the same directory as the student code.
+
+Independent from the fact that tests might be archives, you have also the support files archive as additional option in the assignment creation dialogue. These files are also put into the same directory, regardless of the test type. An example:
+
+- Suport files archive: Predefined `Makefile` from the tutor, invisible for students
+- Validator archive: `validator.py`, input data for validation, possible to download by students
+- Full test archive: `validator.py`, bigger input data for extended tests, invisible for students
 
