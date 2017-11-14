@@ -172,7 +172,7 @@ class Executor(StudentTestCase, LiveServerTestCase):
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        assertEqual(None, self._runExecutor())       # No job is available
+        self.assertEqual(None, self._runExecutor())       # No job is available
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
@@ -202,7 +202,7 @@ class Executor(StudentTestCase, LiveServerTestCase):
 
         self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
+            submission_file=sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
         self.assertEqual(1, len(results))
@@ -241,11 +241,13 @@ class Executor(StudentTestCase, LiveServerTestCase):
 
 
     def testFullTest(self):
-        # We need a fully working validation run beforehand
-        self.testValidationTest()
+        sub = self._register_and_compile()
+        # validation test
+        self.assertEqual(True, self._runExecutor())
+        # full test
         self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
+            submission_file=sub.file_upload,
             kind=SubmissionTestResult.FULL_TEST
         )
         self.assertEqual(1, len(results))
