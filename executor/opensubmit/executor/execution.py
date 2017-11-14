@@ -15,7 +15,7 @@ from threading import Timer
 def kill_longrunning(config):
     '''
         Terminate everything under the current user account that has run too long.
-        This is a final safeguard if the SIGALRM stuff is not working.
+        This is a final safeguard if the subprocess timeout stuff is not working.
         You better have no production servers running also under the current user account ...
     '''
     import psutil 
@@ -73,7 +73,7 @@ def shell_execution(cmdline, working_dir, timeout=999999):
     except Exception:
         details = str(sys.exc_info())
         logger.info("Exception on process execution: " + details)
-        return FailResult("Error on execution: "+details)
+        return FailResult("Internal error on execution: "+details)
 
     logger.info("Executed with error code {0}.".format(proc.returncode))
     if proc.returncode!=0:

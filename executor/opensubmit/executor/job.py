@@ -141,7 +141,8 @@ class Job():
         '''
         Send validation result for Submission to OpenSubmit server.
         '''
-        result.info_student = result.stdout     # legacy approach
+        if len(result.info_student.strip())==0:
+            result.info_student = result.stdout     # legacy approach
         post_data = [("SubmissionFileId",self.submission.file_id),
                     ("Message", result.info_student),
                     ("ErrorCode", result.error_code),

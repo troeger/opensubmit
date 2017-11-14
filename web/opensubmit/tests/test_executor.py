@@ -24,10 +24,10 @@ from executor.config import read_config
 from executor.job import send_hostinfo
 from executor.cmdline import fetch_and_run
 
-class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
+class Executor(StudentTestCase, LiveServerTestCase):
 
     def setUp(self):
-        super(ExecutorTestCase, self).setUp()
+        super(Executor, self).setUp()
         self.config = read_config(os.path.dirname(__file__)+"/executor.cfg", override_url=self.live_server_url)
 
     def _registerExecutor(self):
@@ -36,6 +36,35 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
 
     def _runExecutor(self):
         return fetch_and_run(self.config)
+
+    def _register_and_compile(self):
+        '''
+        Utility step for a common test case preparation:
+        - Create validatable submission
+        - Register a test machine for it
+        - Run the compile step
+        '''
+        sub = self.createValidatableSubmission(self.current_user) 
+        test_machine = self._registerExecutor()
+        sub.assignment.test_machines.add(test_machine)
+        # Compile, should work
+        self.assertEqual(True, self._runExecutor())
+        return sub
+
+    def test_subprocess_exception(self):
+        '''
+        Test reaction when the executor crashes internally.
+        '''
+        sub = self._register_and_compile()
+
+        self.config['Execution']['script_runner']='efergää4'
+        # Validation, should fail now
+        self.assertEqual(False, self._runExecutor())
+        result = SubmissionTestResult.objects.get(
+            submission_file=sub.file_upload,
+            kind=SubmissionTestResult.VALIDITY_TEST
+        )
+        self.assertIn('FileNotFoundError', result.result)
 
     def testRegisterExecutorExplicit(self):
         machine_count = TestMachine.objects.all().count()
@@ -52,12 +81,10 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         self.assertEqual(None, self._runExecutor())
 
     def testCompileTest(self):
-        self.sub = self.createValidatableSubmission(self.current_user) 
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(True, self._runExecutor())
+        sub = self._register_and_compile()
+
         results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
+            submission_file=sub.file_upload,
             kind=SubmissionTestResult.COMPILE_TEST
         )
         self.assertEqual(1, len(results))
@@ -135,70 +162,44 @@ class ExecutorTestCase(StudentTestCase, LiveServerTestCase):
         assert("timeout" in self.sub.get_compile_result().result)
 
     def testTooLongValidation(self):
-        self.sub = self.createValidatableSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        # perform compilation step
-        self.assertEqual(True, self._runExecutor())
+        sub = self._register_and_compile()
+
         # set very short timeout
-        self.sub.assignment.attachment_test_timeout=1
-        self.sub.assignment.save()
+        sub.assignment.attachment_test_timeout=1
+        sub.assignment.save()
         # mock that this submission was already fetched for validation, and the result never returned
-        self.sub.save_fetch_date()
+        sub.save_fetch_date()
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(None, self._runExecutor())       # No job is available
+        assertEqual(None, self._runExecutor())       # No job is available
         # Check if timeout marking took place
-        self.sub.refresh_from_db()
-        self.assertEqual(self.sub.state, Submission.TEST_VALIDITY_FAILED)
-        assert("timeout" in self.sub.get_validation_result().result)
+        sub.refresh_from_db()
+        self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
+        assert("timeout" in sub.get_validation_result().result)
 
     def testTooLongFullTest(self):
-        self.sub = self.createValidatableSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        # perform compilation step
-        self.assertEqual(True, self._runExecutor())
+        sub = self._register_and_compile()
+
         # perform validation step
         self.assertEqual(True, self._runExecutor())
         # set very short timeout
-        self.sub.assignment.attachment_test_timeout=1
-        self.sub.assignment.save()
+        sub.assignment.attachment_test_timeout=1
+        sub.assignment.save()
         # mock that this submission was already fetched for full test, and the result never returned
-        self.sub.save_fetch_date()
+        sub.save_fetch_date()
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
         self.assertEqual(None, self._runExecutor())       # No job is available
         # Check if timeout marking took place
-        self.sub.refresh_from_db()
-        self.assertEqual(self.sub.state, Submission.TEST_FULL_FAILED)
-        assert("timeout" in self.sub.get_fulltest_result().result)
-
-
-    def testValidationTest(self):
-        # compile
-        self.sub = self.createValidatableSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(True, self._runExecutor())
-        # validate
-        self.assertEqual(True, self._runExecutor())
-        results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
-            kind=SubmissionTestResult.VALIDITY_TEST
-        )
-        self.assertEqual(1, len(results))
-        self.assertNotEqual(0, len(results[0].result))
+        sub.refresh_from_db()
+        self.assertEqual(sub.state, Submission.TEST_FULL_FAILED)
+        assert("timeout" in sub.get_fulltest_result().result)
 
     def testSingleFileValidatorTest(self):
-        # compile
-        self.sub = self.createSingleFileValidatorSubmission(self.current_user)
-        test_machine = self._registerExecutor()
-        self.sub.assignment.test_machines.add(test_machine)
-        self.assertEqual(True, self._runExecutor())
-        # validate
+        sub = self._register_and_compile()
+
         self.assertEqual(True, self._runExecutor())
         results = SubmissionTestResult.objects.filter(
             submission_file=self.sub.file_upload,
