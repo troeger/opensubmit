@@ -308,7 +308,6 @@ class SubmitTestCase(LiveServerTestCase):
                 hard_deadline=next_week,
                 has_attachment=True,
                 validity_script_download=True,
-                attachment_test_compile=True,
                 attachment_test_validity=DjangoFile(validator_script),
                 attachment_test_full=DjangoFile(validator_script),
                 max_authors=3            
@@ -442,14 +441,6 @@ class SubmitTestCase(LiveServerTestCase):
     def createDescriptionFile(self, relpath="/opensubmit/tests/submfiles/python.pdf"):
         return DjangoFile(open(rootdir+relpath,'rb'), str(datetime.datetime.now()))
 
-    def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
-        fname=relpath[relpath.rfind(os.sep)+1:]
-        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        with open(settings.MEDIA_ROOT+fname,'rb') as subfile:
-            sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
-            sf.save()
-        return sf
-
     def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
         fname=relpath[relpath.rfind(os.sep)+1:]
         shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
@@ -464,12 +455,6 @@ class SubmitTestCase(LiveServerTestCase):
             Create finalized test result in the database.
         '''
         sf = self.createSubmissionFile()
-        result_compile  = SubmissionTestResult(
-            kind=SubmissionTestResult.COMPILE_TEST,
-            result=uccrap+"Compilation ok.",
-            machine=test_machine,
-            submission_file=sf
-            ).save()
         result_validity = SubmissionTestResult(
             kind=SubmissionTestResult.VALIDITY_TEST,
             result=uccrap+"Validation ok.",
@@ -493,26 +478,11 @@ class SubmitTestCase(LiveServerTestCase):
             assignment=self.validatedAssignment,
             submitter=user.user,
             notes=uccrap+"This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=sf
         )
         sub.save()
         return sub
-
-    def createCompileBrokenSubmission(self, user):
-        '''
-            Create a submission that cannot be compiled.
-        '''
-        sf = self.createCompileBrokenSubmissionFile()
-        sub = Submission(
-            assignment=self.validatedAssignment,
-            submitter=user.user,
-            notes=uccrap+"This is a non-compilable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
-            file_upload=sf
-        )
-        return sub
-
 
     def createSingleFileValidatorSubmission(self, user):
         '''
@@ -524,7 +494,7 @@ class SubmitTestCase(LiveServerTestCase):
             assignment=self.singleFileValidatorAssignment,
             submitter=user.user,
             notes=uccrap+"This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=sf
         )
         sub.save()
@@ -533,8 +503,7 @@ class SubmitTestCase(LiveServerTestCase):
     def createValidatableNoArchiveSubmission(self, user):
         '''
             Create a submission that can be validated by executor.
-            It is not an archive and cant be compiled. This tests special
-            executor cases, e.g. PDF report submission.
+            This tests special executor cases, e.g. PDF report submission.
         '''
         sf = self.createNoArchiveSubmissionFile()
         sub = Submission(

@@ -61,16 +61,12 @@ class AssignmentAdminForm(forms.ModelForm):
         super(AssignmentAdminForm, self).clean()
         d = defaultdict(lambda: False)
         d.update(self.cleaned_data)
-        # Having compilation, validation or full test enabled demands file upload
-        if d['attachment_test_compile'] and not d['has_attachment']:
-            raise ValidationError('You cannot have compilation enabled without allowing file upload.')
+        # Having validation or full test enabled demands file upload
         if d['attachment_test_validity'] and not d['has_attachment']:
             raise ValidationError('You cannot have a validation script without allowing file upload.')
         if d['attachment_test_full'] and not d['has_attachment']:
             raise ValidationError('You cannot have a full test script without allowing file upload.')
-        # Having compilation, validation or full test enabled demands a test machine
-        if d['attachment_test_compile'] and 'test_machines' in d and not len(d['test_machines'])>0:
-            raise ValidationError('You cannot have compilation enabled without specifying test machines.')
+        # Having validation or full test enabled demands a test machine
         if d['attachment_test_validity'] and 'test_machines' in d and not len(d['test_machines'])>0:
             raise ValidationError('You cannot have a validation script without specifying test machines.')
         if d['attachment_test_full'] and 'test_machines' in d and not len(d['test_machines'])>0:
@@ -82,9 +78,8 @@ class AssignmentAdminForm(forms.ModelForm):
         # Having test machines demands compilation or validation scripts
         if 'test_machines' in d and len(d['test_machines'])>0               \
             and not 'attachment_test_validity' in d  \
-            and not 'attachment_test_full' in d      \
-            and not 'attachment_test_compile' in d:
-            raise ValidationError('For using test machines, you need to enable compilation, validation or full test.')
+            and not 'attachment_test_full' in d:
+            raise ValidationError('For using test machines, you need to enable validation or full test.')
 
 def course(obj):
     ''' Course name as string.'''
@@ -137,8 +132,7 @@ class AssignmentAdmin(ModelAdmin):
             ('Time',
                 {   'fields': ('publish_at', ('soft_deadline', 'hard_deadline'))}),
             ('File Upload Validation',
-                {   'fields': ('attachment_test_compile',  \
-                               ('attachment_test_validity', 'validity_script_download'), \
+                {   'fields': (('attachment_test_validity', 'validity_script_download'), \
                                'attachment_test_full', \
                                ('test_machines', 'attachment_test_timeout') )},
             )

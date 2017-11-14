@@ -37,25 +37,22 @@ class Executor(StudentTestCase, LiveServerTestCase):
     def _runExecutor(self):
         return fetch_and_run(self.config)
 
-    def _register_and_compile(self):
+    def _registerTestMachine(self):
         '''
         Utility step for a common test case preparation:
         - Create validatable submission
         - Register a test machine for it
-        - Run the compile step
         '''
         sub = self.createValidatableSubmission(self.current_user) 
         test_machine = self._registerExecutor()
         sub.assignment.test_machines.add(test_machine)
-        # Compile, should work
-        self.assertEqual(True, self._runExecutor())
         return sub
 
     def test_subprocess_exception(self):
         '''
         Test reaction when the executor crashes internally.
         '''
-        sub = self._register_and_compile()
+        sub = self._registerTestMachine()
 
         self.config['Execution']['script_runner']='efergää4'
         # Validation, should fail now

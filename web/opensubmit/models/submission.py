@@ -36,10 +36,7 @@ class PendingStudentTestsManager(models.Manager):
     '''
 
     def get_queryset(self):
-        jobs = Submission.objects.filter(
-            state__in=[ Submission.TEST_COMPILE_PENDING,
-                        Submission.TEST_VALIDITY_PENDING]
-            ).order_by('state').order_by('-modified')
+        jobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
         return jobs
 
 class PendingFullTestsManager(models.Manager):
@@ -66,7 +63,6 @@ class PendingTestsManager(models.Manager):
         jobs = Submission.objects.filter(
             state__in=[ Submission.TEST_FULL_PENDING,           # PF
                         Submission.CLOSED_TEST_FULL_PENDING,    # CT
-                        Submission.TEST_COMPILE_PENDING,        # PC
                         Submission.TEST_VALIDITY_PENDING ]      # PV
             ).order_by('-state').order_by('-modified')
         return jobs
@@ -80,8 +76,6 @@ class Submission(models.Model):
     RECEIVED = 'R'                   # Only for initialization, this should never persist
     WITHDRAWN = 'W'                  # Withdrawn by the student
     SUBMITTED = 'S'                  # Submitted, no tests so far
-    TEST_COMPILE_PENDING = 'PC'      # Submitted, compile test planned
-    TEST_COMPILE_FAILED = 'FC'       # Submitted, compile test failed
     TEST_VALIDITY_PENDING = 'PV'     # Submitted, validity test planned
     TEST_VALIDITY_FAILED = 'FV'      # Submitted, validity test failed
     TEST_FULL_PENDING = 'PF'         # Submitted, full test planned
@@ -106,21 +100,8 @@ class Submission(models.Model):
 
         # The submission is completely uploaded. 
         # If code validation is configured, the state will 
-        # directly change to TEST_COMPILE_PENDING or 
-        # TEST_VALIDITY_PENDING.
+        # directly change to TEST_VALIDITY_PENDING.
         (SUBMITTED, 'Submitted'),
-
-        # The submission is waiting to be test-compiled on one
-        # of the test machines. The submission remains in this
-        # state until some test compilation result was
-        # sent from the test machines.
-        (TEST_COMPILE_PENDING, 'Compilation test pending'),
-
-        # The compilation of the student sources on the
-        # test machine failed. No further automated action will
-        # take place with this submission. 
-        # The students get informed by email.
-        (TEST_COMPILE_FAILED, 'Compilation test failed'),
 
         # The submission is waiting to be validated with the
         # validation script on one of the test machines. 
@@ -187,8 +168,6 @@ class Submission(models.Model):
         (RECEIVED, 'Received'),
         (WITHDRAWN, 'Withdrawn'),
         (SUBMITTED, 'Waiting for grading'),
-        (TEST_COMPILE_PENDING, 'Waiting for compilation test'),
-        (TEST_COMPILE_FAILED, 'Compilation failed'),
         (TEST_VALIDITY_PENDING, 'Waiting for validation test'),
         (TEST_VALIDITY_FAILED, 'Validation failed'),
         (TEST_FULL_PENDING, 'Waiting for grading'),
@@ -392,7 +371,7 @@ class Submission(models.Model):
                 return True
 
         # Submissions, that are executed right now, cannot be modified
-        if self.state in [self.TEST_COMPILE_PENDING, self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING, ]:
+        if self.state in [self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]:
             if not self.file_upload:
                 self.log('CRITICAL', "Submission is in invalid state! State is '{}', but there is no file uploaded!", self.state)
                 raise AssertionError()
@@ -441,7 +420,7 @@ class Submission(models.Model):
         Re-uploads are allowed only when test executions have failed."""
 
         # Re-uploads are allowed only when test executions have failed.
-        if self.state not in (self.TEST_COMPILE_FAILED, self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED, ):
+        if self.state not in (self.TEST_VALIDITY_FAILED, self.TEST_FULL_FAILED):
             return False
 
         # It must be allowed to modify the submission.
@@ -482,9 +461,7 @@ class Submission(models.Model):
         if not self.assignment.attachment_is_tested():
             return Submission.SUBMITTED
         else:
-            if self.assignment.attachment_test_compile:
-                return Submission.TEST_COMPILE_PENDING
-            elif self.assignment.attachment_test_validity:
+            if self.assignment.attachment_test_validity:
                 return Submission.TEST_VALIDITY_PENDING
             elif self.assignment.attachment_test_full:
                 return Submission.TEST_FULL_PENDING
@@ -530,20 +507,11 @@ class Submission(models.Model):
     def clean_fetch_date(self):
         SubmissionFile.objects.filter(pk=self.file_upload.pk).update(fetched=None)
 
-    def save_compile_result(self, machine, text):
-        self._save_test_result(machine, text, SubmissionTestResult.COMPILE_TEST, None)
-
     def save_validation_result(self, machine, text, perf_data):
         self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST, perf_data)
 
     def save_fulltest_result(self, machine, text, perf_data):
         self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST, perf_data)
-
-    def get_compile_result(self):
-        '''
-            Return the most recent compile result object for this submission.
-        '''
-        return self._get_test_result(SubmissionTestResult.COMPILE_TEST)
 
     def get_validation_result(self):
         '''
@@ -564,12 +532,7 @@ class Submission(models.Model):
             in the model at the moment.
         '''
         # we cannot send eMail on SUBMITTED_TESTED, since this may have been triggered by test repitition in the backend
-        if state == Submission.TEST_COMPILE_FAILED:
-            subject = 'Warning: Your submission did not pass the compilation test'
-            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated compilation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
-
-        elif state == Submission.TEST_VALIDITY_FAILED:
+        if state == Submission.TEST_VALIDITY_FAILED:
             subject = 'Warning: Your submission did not pass the validation test'
             message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
             message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)

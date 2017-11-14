@@ -26,8 +26,7 @@ class Assignment(models.Model):
     hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible. Can be empty.")
     has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only provide notes.")
     attachment_test_timeout = models.IntegerField(default=30, verbose_name="Timout for tests", help_text="Timeout (in seconds) after which the compilation / validation test / full test is cancelled. The submission is marked as invalid in this case. Intended for student code with deadlocks.")
-    attachment_test_compile = models.BooleanField(default=False, verbose_name="Compile test ?", help_text="If activated, the student upload is uncompressed and 'make' is executed on one of the test machines.")
-    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed, compiled and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
+    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
     validity_script_download = models.BooleanField(default=False, verbose_name='Download of validation script ?', help_text='If activated, the students can download the validation script for offline analysis.')
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Full test script', help_text='Same as the validation script, but executed AFTER the hard deadline to determine final grading criterias for the submission. Results are not shown to students.')
     test_machines = models.ManyToManyField('TestMachine', blank=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
@@ -131,7 +130,7 @@ class Assignment(models.Model):
         return str(self.description).strip() != ""
 
     def attachment_is_tested(self):
-        return self.attachment_test_compile is True or self.has_validity_test() or self.has_full_test()
+        return self.has_validity_test() or self.has_full_test()
 
     def can_create_submission(self, user=None):
         '''

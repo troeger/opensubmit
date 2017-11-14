@@ -24,7 +24,7 @@ def state_label_css(subm):
             return red_label
     if subm.state in [subm.SUBMITTED_TESTED, subm.SUBMITTED, subm.TEST_FULL_PENDING, subm.GRADED, subm.TEST_FULL_FAILED]:
         return green_label
-    if subm.state in [subm.TEST_COMPILE_FAILED, subm.TEST_VALIDITY_FAILED]:
+    if subm.state = subm.TEST_VALIDITY_FAILED:
         return red_label
     return grey_label
 
