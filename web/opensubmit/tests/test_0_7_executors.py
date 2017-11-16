@@ -9,7 +9,7 @@ from django.test import TestCase
 
 sys.path.insert(0, os.path.dirname(__file__)+'/../../../executor/')
 print(sys.path)
-from opensubmit_exec.executor import cmdline, config
+from opensubmitexec import cmdline, config
 
 class ExecutorTestingMode(TestCase):
     '''

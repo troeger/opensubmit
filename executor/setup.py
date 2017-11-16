@@ -21,11 +21,11 @@ setup(
 
     install_requires=required,
     extras_require={'report-opencl': ["pyopencl"]},
-    packages = ['opensubmit.executor'],
-    package_data = {'opensubmit.executor': ['VERSION']},
+    packages = ['opensubmitexec'],
+    package_data = {'opensubmitexec': ['VERSION']},
     entry_points={
         'console_scripts': [
-            'opensubmit-exec = opensubmit.executor.cmdline:console_script',
+            'opensubmit-exec = opensubmitexec.cmdline:console_script',
         ],
     }
 )

@@ -3,7 +3,7 @@
 '''
 
 import logging, os
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 from twisted.python.lockfile import FilesystemLock
 

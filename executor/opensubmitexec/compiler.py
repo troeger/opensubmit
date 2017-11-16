@@ -7,7 +7,7 @@ from .result import ValidatorBrokenResult
 from .filesystem import has_file
 
 import logging
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 GCC = ['gcc','-o','{output}','{inputs}']
 GPP = ['g++','-o','{output}','{inputs}']

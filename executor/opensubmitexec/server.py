@@ -3,7 +3,7 @@ Helper functions to deal with the OpenSubmit server and its downloads.
 '''
 
 import logging
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 import shutil
 import os

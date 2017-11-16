@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from opensubmit.executor import compiler
+from opensubmitexec import compiler
 
 def validate(job):
 	student_files = ['sum.cpp']

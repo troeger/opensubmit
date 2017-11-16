@@ -3,7 +3,7 @@
 '''
 
 import logging
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 import zipfile, tarfile, os, tempfile
 

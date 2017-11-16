@@ -3,7 +3,7 @@ The official executor API for validation test and full test scripts.
 '''
 
 import logging
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 import os, shutil, json, sys, subprocess, platform, stat, importlib
 

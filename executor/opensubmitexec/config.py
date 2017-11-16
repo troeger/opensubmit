@@ -3,7 +3,7 @@
 '''
 
 import logging
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 import platform,os,uuid
 from configparser import ConfigParser, RawConfigParser

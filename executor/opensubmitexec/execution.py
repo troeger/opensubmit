@@ -6,7 +6,7 @@ from .result import Result, PassResult, FailResult
 
 
 import logging
-logger = logging.getLogger('opensubmit.executor')
+logger = logging.getLogger('opensubmitexec')
 
 import os, sys, platform, subprocess, signal
 from threading import Timer
