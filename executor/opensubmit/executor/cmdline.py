@@ -3,39 +3,39 @@
 import sys
 
 from . import CONFIG_FILE_DEFAULT
-from .job import fetch_job, send_hostinfo
+from .server import fetch_job, fake_fetch_job, send_hostinfo
 from .execution import kill_longrunning
 from .locking import ScriptLock, break_lock
 from .result import FailResult
 from .config import read_config, has_config, create_config, check_config
 
-import logging
-logger = logging.getLogger('opensubmit.executor')
-
-def fetch_and_run(config):
+def download_and_run(config):
     '''
-    Main operation of the daemon mode. Also used by the test suite with its
-    own configuration.
+    Main operation of the executor. 
 
-    Returns True when a job was fetched and successfully executed.
-    Returns False when a job was fetched and executed failed.
-    Returns None when no job was available.
+    Returns True when a job was downloaded and executed.
+    Returns False when no job could be downloaded.
     '''
     job = fetch_job(config) 
     if job:
-        prep_result=job.prepare()
-        if not prep_result.is_ok():
-            job.send_result(prep_result)
-            return False
-        else:
-            validation_result=job.run()
-            job.send_result(validation_result)
-            if not validation_result.is_ok():
-                return False
-            else:
-                return True
+        job.run()
+        return True
     else:
-        return None
+        return False
+
+def copy_and_run(config, src_dir):
+    '''
+    Local-only operation of the executor. Intended for validation script developers. 
+
+    Returns True when a job was prepared and executed.
+    Returns False when no job could be prepared.
+    '''
+    job = fake_fetch_job(config, src_dir) 
+    if job:
+        job.run()
+        return True
+    else:
+        return False
 
 def console_script():
     '''
@@ -48,6 +48,7 @@ def console_script():
     if "help" in sys.argv[1]:
         print("configure:        Check config files and registration of a OpenSubmit test machine.")
         print("run:              Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab.")
+        print("test <dir>:       Run test script from a local folder for testing purposes.")
         print("unlock:           Break the script lock, because of crashed script."    )
         print("help:             Print this help")
         print("-c config_file    Configuration file to be used (default: {0})".format(CONFIG_FILE_DEFAULT))
@@ -85,9 +86,15 @@ def console_script():
 
     if "run" in sys.argv[1]:
         config=read_config(config_fname)
+        # Perform additional precautions for unattended mode in cron
         kill_longrunning(config)
         with ScriptLock(config):
-            fetch_and_run(config)
+            download_and_run(config)
+        exit(0)
+
+    if "test" in sys.argv[1]:
+        config=read_config(config_fname)
+        copy_and_run(config, sys.argv[2])
         exit(0)
 
 if __name__ == "__main__":
