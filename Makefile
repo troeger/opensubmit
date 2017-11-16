@@ -44,7 +44,7 @@ docker: build
 
 tests:
 	# Run all tests.
-	export PYTHONPATH=../executor/opensubmit:$PYTHONPATH; pushd web; ./manage.py test; popd
+	pushd web; ./manage.py test; popd
 
 coverage:
 	# Run all tests and obtain coverage information.
