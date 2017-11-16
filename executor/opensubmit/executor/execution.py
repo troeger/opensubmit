@@ -2,7 +2,6 @@
     Functions related to command execution on the local host.
 '''
 
-from .submission import Submission
 from .result import Result, PassResult, FailResult
 
 
@@ -75,7 +74,7 @@ def shell_execution(cmdline, working_dir, timeout=999999):
         logger.info("Exception on process execution: " + details)
         return FailResult("Internal error on execution: "+details)
 
-    logger.info("Executed with error code {0}.".format(proc.returncode))
+    logger.info("Executed {0} with error code {1}.".format(cmdline, proc.returncode))
     if proc.returncode!=0:
         logger.debug("Output of the failed execution:\n"+output)
     dircontent = os.listdir(working_dir)
@@ -84,11 +83,14 @@ def shell_execution(cmdline, working_dir, timeout=999999):
     if got_timeout:
         res=FailResult("Execution was terminated because it took too long (%u seconds). Output so far:\n\n%s"%(timeout,output))
     else:
+        text = 'Execution of "{0}" ended with error code {1}.\n{2}\nDirectory content as I see it:\n{3}'.format(
+               ' '.join(cmdline),
+               proc.returncode,
+               output,
+               str(dircontent))
         if proc.returncode == 0:
-            res = PassResult()
+            res = PassResult(text)
         else:
-            res = FailResult()
-        res.error_code=proc.returncode
-        res.stdout=output+"\n\nDirectory content as I see it:\n\n" + str(dircontent)
-
+            res = FailResult(text)
+            res.error_code=proc.returncode
     return res
