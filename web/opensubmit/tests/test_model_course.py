@@ -3,7 +3,8 @@
 '''
 
 from opensubmit.models import Submission
-from opensubmit.tests.cases import StudentTestCase, SubmitTutorTestCase, SubmitAdminTestCase
+from opensubmit.tests.cases import StudentTestCase
+
 
 class CourseModelStudentTestCase(StudentTestCase):
     def setUp(self):
@@ -15,8 +16,6 @@ class CourseModelStudentTestCase(StudentTestCase):
             (0, Submission.RECEIVED),
             (0, Submission.WITHDRAWN),
             (1, Submission.SUBMITTED),
-            (0, Submission.TEST_COMPILE_PENDING),
-            (0, Submission.TEST_COMPILE_FAILED),
             (0, Submission.TEST_VALIDITY_PENDING),
             (0, Submission.TEST_VALIDITY_FAILED),
             (0, Submission.TEST_FULL_PENDING),
@@ -35,7 +34,9 @@ class CourseModelStudentTestCase(StudentTestCase):
             sub = self.createSubmission(self.current_user, self.openAssignment)
             sub.state = state
             sub.save()
-            self.assertEqual(qs.count(), count, "Submission count for state %s is incorrect."%state)
+            self.assertEqual(
+                qs.count(), count,
+                "Submission count for state %s is incorrect." % state)
 
     def testGradedSubmissionsList(self):
         # Expected number of results when the submission has that state
@@ -43,8 +44,6 @@ class CourseModelStudentTestCase(StudentTestCase):
             (0, Submission.RECEIVED),
             (0, Submission.WITHDRAWN),
             (0, Submission.SUBMITTED),
-            (0, Submission.TEST_COMPILE_PENDING),
-            (0, Submission.TEST_COMPILE_FAILED),
             (0, Submission.TEST_VALIDITY_PENDING),
             (0, Submission.TEST_VALIDITY_FAILED),
             (0, Submission.TEST_FULL_PENDING),
@@ -63,7 +62,9 @@ class CourseModelStudentTestCase(StudentTestCase):
             sub = self.createSubmission(self.current_user, self.openAssignment)
             sub.state = state
             sub.save()
-            self.assertEqual(qs.count(), count, "Submission count for state %s is incorrect."%state)
+            self.assertEqual(
+                qs.count(), count,
+                "Submission count for state %s is incorrect." % state)
 
     def testCourseAuthors(self):
         # Course without submissions should have no authors
@@ -72,4 +73,3 @@ class CourseModelStudentTestCase(StudentTestCase):
 
         sub = self.createSubmission(self.current_user, self.openAssignment)
         self.assertEqual(qs.count(), len(sub.authors.all()))
-
