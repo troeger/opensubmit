@@ -224,13 +224,7 @@
 <div class="section" id="submission-states">
 <h3>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h3>
 <p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend:</p>
-<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
-    <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span> 
-
-        <span class="c1"># The submission is currently uploaded,</span>
-        <span class="c1"># some internal processing still takes place.</span>
-        <span class="p">(</span><span class="n">RECEIVED</span><span class="p">,</span> <span class="s1">&#39;Received&#39;</span><span class="p">),</span>
-
+<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>
         <span class="c1"># The submission was withdrawn by the student</span>
         <span class="c1"># before the deadline. No further automated action</span>
         <span class="c1"># will take place with this submission.</span>
@@ -238,21 +232,8 @@
 
         <span class="c1"># The submission is completely uploaded. </span>
         <span class="c1"># If code validation is configured, the state will </span>
-        <span class="c1"># directly change to TEST_COMPILE_PENDING or </span>
-        <span class="c1"># TEST_VALIDITY_PENDING.</span>
+        <span class="c1"># directly change to TEST_VALIDITY_PENDING.</span>
         <span class="p">(</span><span class="n">SUBMITTED</span><span class="p">,</span> <span class="s1">&#39;Submitted&#39;</span><span class="p">),</span>
-
-        <span class="c1"># The submission is waiting to be test-compiled on one</span>
-        <span class="c1"># of the test machines. The submission remains in this</span>
-        <span class="c1"># state until some test compilation result was</span>
-        <span class="c1"># sent from the test machines.</span>
-        <span class="p">(</span><span class="n">TEST_COMPILE_PENDING</span><span class="p">,</span> <span class="s1">&#39;Compilation test pending&#39;</span><span class="p">),</span>
-
-        <span class="c1"># The compilation of the student sources on the</span>
-        <span class="c1"># test machine failed. No further automated action will</span>
-        <span class="c1"># take place with this submission. </span>
-        <span class="c1"># The students get informed by email.</span>
-        <span class="p">(</span><span class="n">TEST_COMPILE_FAILED</span><span class="p">,</span> <span class="s1">&#39;Compilation test failed&#39;</span><span class="p">),</span>
 
         <span class="c1"># The submission is waiting to be validated with the</span>
         <span class="c1"># validation script on one of the test machines. </span>
@@ -319,8 +300,6 @@
         <span class="p">(</span><span class="n">RECEIVED</span><span class="p">,</span> <span class="s1">&#39;Received&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">WITHDRAWN</span><span class="p">,</span> <span class="s1">&#39;Withdrawn&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">SUBMITTED</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
-        <span class="p">(</span><span class="n">TEST_COMPILE_PENDING</span><span class="p">,</span> <span class="s1">&#39;Waiting for compilation test&#39;</span><span class="p">),</span>
-        <span class="p">(</span><span class="n">TEST_COMPILE_FAILED</span><span class="p">,</span> <span class="s1">&#39;Compilation failed&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">TEST_VALIDITY_PENDING</span><span class="p">,</span> <span class="s1">&#39;Waiting for validation test&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">TEST_VALIDITY_FAILED</span><span class="p">,</span> <span class="s1">&#39;Validation failed&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
@@ -331,6 +310,27 @@
         <span class="p">(</span><span class="n">CLOSED</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">CLOSED_TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">)</span>
     <span class="p">)</span>
+
+    <span class="n">assignment</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;Assignment&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submissions&#39;</span><span class="p">)</span>
+    <span class="n">submitter</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submitted&#39;</span><span class="p">)</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;authored&#39;</span><span class="p">)</span> <span class="c1"># includes also submitter, see submission_post_save() handler</span>
+    <span class="n">notes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">file_upload</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;SubmissionFile&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submissions&#39;</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="s1">&#39;New upload&#39;</span><span class="p">)</span>
+    <span class="n">created</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">modified</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">grading</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;Grading&#39;</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">grading_notes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Specific notes about the grading for this submission.&quot;</span><span class="p">)</span>
+    <span class="n">grading_file</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FileField</span><span class="p">(</span><span class="n">upload_to</span><span class="o">=</span><span class="n">upload_path</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Additional information about the grading as file.&quot;</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">STATES</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">RECEIVED</span><span class="p">)</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
+    <span class="n">pending_student_tests</span> <span class="o">=</span> <span class="n">PendingStudentTestsManager</span><span class="p">()</span>
+    <span class="n">pending_full_tests</span> <span class="o">=</span> <span class="n">PendingFullTestsManager</span><span class="p">()</span>
+    <span class="n">pending_tests</span> <span class="o">=</span> <span class="n">PendingTestsManager</span><span class="p">()</span>
+    <span class="n">valid_ones</span> <span class="o">=</span> <span class="n">ValidSubmissionsManager</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">app_label</span> <span class="o">=</span> <span class="s1">&#39;opensubmit&#39;</span>
 </pre></div>
 </div>
 </div>
