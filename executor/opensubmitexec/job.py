@@ -91,14 +91,14 @@ class Job():
         '''
         pass
 
-    def run_configure(self):
+    def run_configure(self, mandatory=True):
         '''
         Runs the configure tool configured for the machine in self.working_dir.
         Returns a CompletedProcess object.
         '''
         pass
 
-    def run_make(self):
+    def run_make(self, mandatory=True):
         '''
         Runs the make tool configured for the machine in self.working_dir.
         Returns a CompletedProcess object.
