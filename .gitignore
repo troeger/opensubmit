@@ -1,5 +1,5 @@
 syntax: glob
-py2env
+opensubmit.sublime-workspace
 *.pyc
 media
 bin
@@ -8,7 +8,6 @@ include
 lib
 .Python
 .DS_Store
-*.sublime-*
 executor.cfg
 *.orig
 *.tar.gz
@@ -24,7 +23,4 @@ web/htmlcov
 *venv*
 *.bak*
 *.whl
-docs/formats/html/.buildinfo
-docs/formats/html/.buildinfo
-docs/formats/html/.buildinfo
 docs/formats/html/.buildinfo
