@@ -4,7 +4,7 @@ build:
 	# Build the install packages.
 	pip install -r requirements.txt
 
-	pushd web;      ./setup.py bdist_wheel; popd
+	pushd web; ./setup.py bdist_wheel; popd
 	mv web/dist/* dist/
 	rmdir web/dist
 	rm -rf ./web/build

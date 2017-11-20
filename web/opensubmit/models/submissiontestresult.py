@@ -5,11 +5,9 @@ class SubmissionTestResult(models.Model):
         An executor test result for a given submission file.
     '''
 
-    COMPILE_TEST = 'c'
     VALIDITY_TEST = 'v'
     FULL_TEST = 'f'
     JOB_TYPES = (
-        (COMPILE_TEST, 'Compilation test'),
         (VALIDITY_TEST, 'Validation test'),
         (FULL_TEST, 'Full test')
     )

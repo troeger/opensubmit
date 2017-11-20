@@ -58,12 +58,6 @@ def download(request, obj_id, filetype, secret=None):
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.attachment_test_full
         fname = f.name[f.name.rfind('/') + 1:]
-    elif filetype == "support_files":
-        if secret != settings.JOB_EXECUTOR_SECRET:
-            raise PermissionDenied
-        ass = get_object_or_404(Assignment, pk=obj_id)
-        f = ass.attachment_test_support
-        fname = f.name[f.name.rfind('/') + 1:]
     elif filetype == "description":
         ass = get_object_or_404(Assignment, pk=obj_id)
         f = ass.description
@@ -145,10 +139,6 @@ def jobs(request):
                 logger.debug("Resetting executor fetch status for submission %u, due to timeout"%sub.pk)
                 # TODO:  Late delivery for such a submission by the executor may lead to result overwriting. Check this.
                 sub.clean_fetch_date()
-                if sub.state == Submission.TEST_COMPILE_PENDING:
-                    sub.state = Submission.TEST_COMPILE_FAILED
-                    sub.save_compile_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.")
-                    sub.inform_student(sub.state)
                 if sub.state == Submission.TEST_VALIDITY_PENDING:
                     sub.save_validation_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
                     sub.state = Submission.TEST_VALIDITY_FAILED
@@ -186,12 +176,7 @@ def jobs(request):
         response['SubmissionFileId'] = str(sub.file_upload.pk)
         response['SubmissionId'] = str(sub.pk)
         response['Timeout'] = sub.assignment.attachment_test_timeout
-        response['Compile'] = sub.assignment.attachment_test_compile
-        if sub.assignment.has_test_support_files():
-            response['SupportFiles'] = sub.assignment.test_support_files_url()
-        if sub.state == Submission.TEST_COMPILE_PENDING:
-            response['Action'] = 'test_compile'
-        elif sub.state == Submission.TEST_VALIDITY_PENDING:
+        if sub.state == Submission.TEST_VALIDITY_PENDING:
             response['Action'] = 'test_validity'
             response['PostRunValidation'] = sub.assignment.validity_test_url()
         elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
@@ -217,39 +202,10 @@ def jobs(request):
         sub = submission_file.submissions.all()[0]
         logger.debug("Storing executor results for submission %u"%(sub.pk))
         error_code = int(request.POST['ErrorCode'])
-        # Job state: Waiting for compilation test
-        # Possible with + without validation
-        # Possible with + without full test
-        # Possible with + without grading
-        if request.POST['Action'] == 'test_compile' and sub.state == Submission.TEST_COMPILE_PENDING:
-            sub.save_compile_result(machine, request.POST['Message'])
-            if error_code == 0:
-                if sub.assignment.attachment_test_validity:
-                    # We have a validity test
-                    logger.debug("Compile working, setting state to pending validity test")
-                    sub.state = Submission.TEST_VALIDITY_PENDING
-                elif sub.assignment.attachment_test_full:
-                    # We have a full test
-                    logger.debug("Compile working, setting state to pending full test")
-                    sub.state = Submission.TEST_FULL_PENDING
-                else:
-                    # We have no validity test and no full test
-                    logger.debug("Compile working, setting state to tested")
-                    sub.state = Submission.SUBMITTED_TESTED
-                    if sub.assignment.gradingScheme:
-                        # Assignment is graded. Get the course owner to work, if notification is enabled.
-                        sub.inform_course_owner(request)
-                    else:
-                        # Assignment is not graded. We are done here.
-                        sub.state = Submission.CLOSED
-            else:
-                logger.debug("Compile test not working, setting state to failed")
-                sub.state = Submission.TEST_COMPILE_FAILED
-            sub.inform_student(sub.state)
         # Job state: Waiting for validity test
         # Possible with + without full test
         # Possible with + without grading
-        elif request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
+        if request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             sub.save_validation_result(machine, request.POST['Message'], perf_data)
             if error_code == 0:
                 # We have a full test

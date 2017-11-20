@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from django.db.migrations.executor import MigrationExecutor
 from django.db import connection
-from django.test import TransactionTestCase, LiveServerTestCase, TestCase
+from django.test import LiveServerTestCase, TestCase
 from django.test.utils import override_settings
 from django.test.client import Client
 from django.core.files import File as DjangoFile
@@ -23,23 +23,26 @@ from django.core.files import File as DjangoFile
 
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password, PBKDF2SHA1PasswordHasher
+from django.contrib.auth.hashers import make_password
 
-from opensubmit.models import Course, Assignment, Submission, SubmissionFile, SubmissionTestResult
+from opensubmit.models import Course, Assignment, Submission
+from opensubmit.models import SubmissionFile, SubmissionTestResult
 from opensubmit.models import Grading, GradingScheme, TestMachine
 from opensubmit.models import UserProfile
 
-rootdir=os.getcwd()
+rootdir = os.getcwd()
 
 # Unicode crap, to be added to all test suite string input
 # Ensures proper handling of unicode content everywhere, as reaction to #154
 uccrap = "öäüßé"
 
+
 class AnonStruct(object):
     def __init__(self, entries):
         self.__dict__.update(entries)
 
-@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher',])
+
+@override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher', ])
 @override_settings(MEDIA_ROOT='/tmp/')
 class SubmitTestCase(LiveServerTestCase):
     '''
@@ -88,7 +91,7 @@ class SubmitTestCase(LiveServerTestCase):
     current_user = None
 
     def setUp(self):
-        settings.MAIN_URL=self.live_server_url
+        settings.MAIN_URL = self.live_server_url
         super(SubmitTestCase, self).setUp()
         # How much do you want to see from the OpenSubmit web code
         self.logger = logging.getLogger('OpenSubmit')
@@ -115,7 +118,8 @@ class SubmitTestCase(LiveServerTestCase):
         return user_struct
 
     def loginUser(self, user_struct):
-        assert(self.c.login(username=user_struct.username, password=user_struct.password))
+        assert(self.c.login(username=user_struct.username,
+                            password=user_struct.password))
         uid = self.c.session['_auth_user_id']
         user_struct.user = User.objects.get(pk=uid)
         self.current_user = user_struct
@@ -124,36 +128,36 @@ class SubmitTestCase(LiveServerTestCase):
         self.c = Client()
 
         self.admin_dict = {
-            'username': uccrap+'testrunner_admin',
-            'password': uccrap+'PNZabhExaL6H',
-            'email': uccrap+'testrunner_admin@django.localhost.local',
+            'username': uccrap + 'testrunner_admin',
+            'password': uccrap + 'PNZabhExaL6H',
+            'email': uccrap + 'testrunner_admin@django.localhost.local',
             'is_staff': True,
             'is_superuser': True
         }
         self.admin = self.createUser(self.admin_dict)
 
         self.teacher_dict = {
-            'username': uccrap+'testrunner_teacher',
-            'password': uccrap+'2tVvWzdknP56',
-            'email': uccrap+'testrunner_teacher@django.localhost.local',
+            'username': uccrap + 'testrunner_teacher',
+            'password': uccrap + '2tVvWzdknP56',
+            'email': uccrap + 'testrunner_teacher@django.localhost.local',
             'is_staff': True,
             'is_superuser': False
         }
         self.teacher = self.createUser(self.teacher_dict)
 
         self.another_teacher_dict = {
-            'username': uccrap+'testrunner_anotherTeacher',
-            'password': uccrap+'LW8vhgQWz5kT',
-            'email': uccrap+'testrunner_anotherTeacher@django.localhost.local',
+            'username': uccrap + 'testrunner_anotherTeacher',
+            'password': uccrap + 'LW8vhgQWz5kT',
+            'email': uccrap + 'testrunner_anotherTeacher@django.localhost.local',
             'is_staff': True,
             'is_superuser': False
         }
         self.another_teacher = self.createUser(self.another_teacher_dict)
 
         self.tutor_dict = {
-            'username': uccrap+'testrunner_tutor',
-            'password': uccrap+'2tVP56vMadkn',
-            'email': uccrap+'testrunner_tutor@django.localhost.local',
+            'username': uccrap + 'testrunner_tutor',
+            'password': uccrap + '2tVP56vMadkn',
+            'email': uccrap + 'testrunner_tutor@django.localhost.local',
             'is_staff': True,
             'is_superuser': False
         }
@@ -162,32 +166,34 @@ class SubmitTestCase(LiveServerTestCase):
         self.enrolled_students = list()
         for i in range(0, 5):
             enrolled_student_dict = {
-                'username': uccrap+'testrunner_enrolled_student{}'.format(i),
-                'password': uccrap+'very{}secret'.format(i),
-                'email': uccrap+'testrunner_enrolled_student{}@django.localhost.local'.format(i),
+                'username': uccrap + 'testrunner_enrolled_student{}'.format(i),
+                'password': uccrap + 'very{}secret'.format(i),
+                'email': uccrap + 'testrunner_enrolled_student{}@django.localhost.local'.format(i),
                 'is_staff': False,
                 'is_superuser': False,
-                'first_name': uccrap+'Harold',
-                'last_name': uccrap+'Finch'
+                'first_name': uccrap + 'Harold',
+                'last_name': uccrap + 'Finch'
             }
-            self.enrolled_students.append(self.createUser(enrolled_student_dict))
+            self.enrolled_students.append(
+                self.createUser(enrolled_student_dict))
 
         self.not_enrolled_students = list()
         for i in range(0, 5):
             not_enrolled_student_dict = {
-                'username': uccrap+'testrunner_not_enrolled_student{}'.format(i),
-                'password': uccrap+'not.very{}secret'.format(i),
-                'email': uccrap+'testrunner_not_enrolled_student{}@django.localhost.local'.format(i),
+                'username': uccrap + 'testrunner_not_enrolled_student{}'.format(i),
+                'password': uccrap + 'not.very{}secret'.format(i),
+                'email': uccrap + 'testrunner_not_enrolled_student{}@django.localhost.local'.format(i),
                 'is_staff': False,
                 'is_superuser': False
             }
-            self.not_enrolled_students.append(self.createUser(not_enrolled_student_dict))
+            self.not_enrolled_students.append(
+                self.createUser(not_enrolled_student_dict))
 
     def setUpCourses(self):
         self.all_courses = []
 
         self.course = Course(
-            title=uccrap+'Active test course',
+            title=uccrap + 'Active test course',
             active=True,
             owner=self.teacher.user
         )
@@ -198,7 +204,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.all_courses.append(self.course)
 
         self.anotherCourse = Course(
-            title=uccrap+'Another active test course',
+            title=uccrap + 'Another active test course',
             active=True,
             owner=self.another_teacher.user
         )
@@ -206,7 +212,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.all_courses.append(self.anotherCourse)
 
         self.inactiveCourse = Course(
-            title=uccrap+'Inactive test course',
+            title=uccrap + 'Inactive test course',
             active=False,
             owner=self.another_teacher.user
         )
@@ -214,12 +220,13 @@ class SubmitTestCase(LiveServerTestCase):
         self.all_courses.append(self.inactiveCourse)
 
     def setUpGradings(self):
-        self.passGrade = Grading(title=uccrap+'passed', means_passed=True)
+        self.passGrade = Grading(title=uccrap + 'passed', means_passed=True)
         self.passGrade.save()
-        self.failGrade = Grading(title=uccrap+'failed', means_passed=False)
+        self.failGrade = Grading(title=uccrap + 'failed', means_passed=False)
         self.failGrade.save()
 
-        self.passFailGrading = GradingScheme(title=uccrap+'Pass/Fail Grading Scheme')
+        self.passFailGrading = GradingScheme(
+            title=uccrap + 'Pass/Fail Grading Scheme')
         self.passFailGrading.save()
         self.passFailGrading.gradings.add(self.passGrade)
         self.passFailGrading.gradings.add(self.failGrade)
@@ -236,9 +243,9 @@ class SubmitTestCase(LiveServerTestCase):
         self.allAssignments = []
 
         self.openAssignment = Assignment(
-            title=uccrap+'Open assignment',
+            title=uccrap + 'Open assignment',
             course=self.course,
-            download='http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -250,9 +257,9 @@ class SubmitTestCase(LiveServerTestCase):
         self.allAssignments.append(self.openAssignment)
 
         self.openSingleAuthorAssignment = Assignment(
-            title=uccrap+'Open assignment with single author',
+            title=uccrap + 'Open assignment with single author',
             course=self.course,
-            download='http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -263,24 +270,23 @@ class SubmitTestCase(LiveServerTestCase):
         self.openSingleAuthorAssignment.save()
         self.allAssignments.append(self.openSingleAuthorAssignment)
 
-
         self.anotherAssignment = Assignment(
-            title=uccrap+'Another open assignment',
+            title=uccrap + 'Another open assignment',
             course=self.anotherCourse,
-            download='http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
             has_attachment=False,
-            max_authors=3            
+            max_authors=3
         )
         self.anotherAssignment.save()
 
         self.fileAssignment = Assignment(
-            title=uccrap+'File assignment',
+            title=uccrap + 'File assignment',
             course=self.course,
-            download='http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -292,56 +298,36 @@ class SubmitTestCase(LiveServerTestCase):
         self.allAssignments.append(self.fileAssignment)
 
         # Move test files to current MEDIA_ROOT, otherwise Django security complains
-        working_zip=settings.MEDIA_ROOT+"working.zip"
-        supportfiles_zip=settings.MEDIA_ROOT+"supportfiles.zip"
-        single_file=settings.MEDIA_ROOT+"validator.py"
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_working.zip', working_zip)
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_supportfiles.zip', supportfiles_zip)
-        shutil.copyfile(rootdir+'/opensubmit/tests/validators/validator_legacy_working.py', single_file)
+        working_zip = settings.MEDIA_ROOT + "working.zip"
+        single_file = settings.MEDIA_ROOT + "validator.py"
+        shutil.copyfile(
+            rootdir + '/opensubmit/tests/validators/validator_legacy_working.zip', working_zip)
+        shutil.copyfile(
+            rootdir + '/opensubmit/tests/validators/validator_legacy_working.py', single_file)
 
         with open(working_zip, 'rb') as validator_script:
             self.validatedAssignment = Assignment(
-                title=uccrap+'Validated assignment',
+                title=uccrap + 'Validated assignment',
                 course=self.course,
-                download='http://example.org/assignments/1/download'+uccrap,
+                download='http://example.org/assignments/1/download' + uccrap,
                 gradingScheme=self.passFailGrading,
                 publish_at=last_week,
                 soft_deadline=tomorrow,
                 hard_deadline=next_week,
                 has_attachment=True,
                 validity_script_download=True,
-                attachment_test_compile=True,
                 attachment_test_validity=DjangoFile(validator_script),
                 attachment_test_full=DjangoFile(validator_script),
-                max_authors=3            
+                max_authors=3
             )
             self.validatedAssignment.save()
             self.allAssignments.append(self.validatedAssignment)
 
-            with open(supportfiles_zip, 'rb') as support_files:
-                self.validatedWithSupportFilesAssignment = Assignment(
-                    title=uccrap+'Validated assignment with support files',
-                    course=self.course,
-                    download='http://example.org/assignments/1/download'+uccrap,
-                    gradingScheme=self.passFailGrading,
-                    publish_at=last_week,
-                    soft_deadline=tomorrow,
-                    hard_deadline=next_week,
-                    has_attachment=True,
-                    validity_script_download=True,
-                    attachment_test_validity=DjangoFile(validator_script),
-                    attachment_test_full=DjangoFile(validator_script),
-                    attachment_test_support=DjangoFile(support_files),
-                    max_authors=3            
-                )
-                self.validatedWithSupportFilesAssignment.save()
-                self.allAssignments.append(self.validatedWithSupportFilesAssignment)
-
         with open(single_file, 'rb') as validator_script:
             self.singleFileValidatorAssignment = Assignment(
-                title=uccrap+'Validated assignment with single file validator',
+                title=uccrap + 'Validated assignment with single file validator',
                 course=self.course,
-                download='http://example.org/assignments/1/download'+uccrap,
+                download='http://example.org/assignments/1/download' + uccrap,
                 gradingScheme=self.passFailGrading,
                 publish_at=last_week,
                 soft_deadline=tomorrow,
@@ -350,15 +336,15 @@ class SubmitTestCase(LiveServerTestCase):
                 validity_script_download=True,
                 attachment_test_validity=DjangoFile(validator_script),
                 attachment_test_full=DjangoFile(validator_script),
-                max_authors=3            
+                max_authors=3
             )
             self.singleFileValidatorAssignment.save()
             self.allAssignments.append(self.singleFileValidatorAssignment)
 
         self.softDeadlinePassedAssignment = Assignment(
-            title=uccrap+'Soft deadline passed assignment',
+            title=uccrap + 'Soft deadline passed assignment',
             course=self.course,
-            download='http://example.org/assignments/2/download'+uccrap,
+            download='http://example.org/assignments/2/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -370,9 +356,9 @@ class SubmitTestCase(LiveServerTestCase):
         self.allAssignments.append(self.softDeadlinePassedAssignment)
 
         self.hardDeadlinePassedAssignment = Assignment(
-            title=uccrap+'Hard deadline passed assignment',
+            title=uccrap + 'Hard deadline passed assignment',
             course=self.course,
-            download='http://example.org/assignments/3/download'+uccrap,
+            download='http://example.org/assignments/3/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -381,12 +367,12 @@ class SubmitTestCase(LiveServerTestCase):
             max_authors=3
         )
         self.hardDeadlinePassedAssignment.save()
-        self.allAssignments.append(self.hardDeadlinePassedAssignment)        
+        self.allAssignments.append(self.hardDeadlinePassedAssignment)
 
         self.noHardDeadlineAssignment = Assignment(
-            title=uccrap+'Assignment without hard deadline',
+            title=uccrap + 'Assignment without hard deadline',
             course=self.course,
-            download='http://example.org/assignments/3/download'+uccrap,
+            download='http://example.org/assignments/3/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=last_week,
             soft_deadline=yesterday,
@@ -395,12 +381,12 @@ class SubmitTestCase(LiveServerTestCase):
             max_authors=3
         )
         self.noHardDeadlineAssignment.save()
-        self.allAssignments.append(self.noHardDeadlineAssignment)        
+        self.allAssignments.append(self.noHardDeadlineAssignment)
 
         self.unpublishedAssignment = Assignment(
-            title=uccrap+'Unpublished assignment',
+            title=uccrap + 'Unpublished assignment',
             course=self.course,
-            download='http://example.org/assignments/4/download'+uccrap,
+            download='http://example.org/assignments/4/download' + uccrap,
             gradingScheme=self.passFailGrading,
             publish_at=tomorrow,
             soft_deadline=next_week,
@@ -409,12 +395,12 @@ class SubmitTestCase(LiveServerTestCase):
             max_authors=3
         )
         self.unpublishedAssignment.save()
-        self.allAssignments.append(self.unpublishedAssignment)        
+        self.allAssignments.append(self.unpublishedAssignment)
 
         self.noGradingAssignment = Assignment(
-            title=uccrap+'Open assignment without grading',
+            title=uccrap + 'Open assignment without grading',
             course=self.course,
-            download='http://example.org/assignments/1/download'+uccrap,
+            download='http://example.org/assignments/1/download' + uccrap,
             gradingScheme=None,
             publish_at=last_week,
             soft_deadline=tomorrow,
@@ -426,7 +412,7 @@ class SubmitTestCase(LiveServerTestCase):
         self.allAssignments.append(self.noGradingAssignment)
 
         self.uploadedDescriptionAssignment = Assignment(
-            title=uccrap+'Open assignment with uploaded description file',
+            title=uccrap + 'Open assignment with uploaded description file',
             course=self.course,
             download=None,
             description=self.createDescriptionFile(),
@@ -440,7 +426,6 @@ class SubmitTestCase(LiveServerTestCase):
         self.uploadedDescriptionAssignment.save()
         self.allAssignments.append(self.uploadedDescriptionAssignment)
 
-
     def createTestMachine(self, test_host):
         '''
             Create test machine entry. The configuration information
@@ -449,58 +434,44 @@ class SubmitTestCase(LiveServerTestCase):
         '''
         self.machine = TestMachine(
             last_contact=datetime.datetime.now(),
-            host = test_host,
-            config=json.dumps([['Operating system',uccrap+'Plan 9'],]))
+            host=test_host,
+            config=json.dumps([['Operating system', uccrap + 'Plan 9'], ]))
         self.machine.save()
         return self.machine
 
     def createSubmissionFile(self, relpath="/opensubmit/tests/submfiles/working_withsubdir.zip"):
-        with open(rootdir+relpath,'rb') as subfile:
-            sf = SubmissionFile(attachment=DjangoFile(subfile, str(datetime.datetime.now())))
+        with open(rootdir + relpath, 'rb') as subfile:
+            sf = SubmissionFile(attachment=DjangoFile(
+                subfile, str(datetime.datetime.now())))
             sf.save()
         return sf
 
     def createDescriptionFile(self, relpath="/opensubmit/tests/submfiles/python.pdf"):
-        return DjangoFile(open(rootdir+relpath,'rb'), str(datetime.datetime.now()))
-
-    def createCompileBrokenSubmissionFile(self, relpath="/opensubmit/tests/submfiles/reverse_submission.zip"):
-        fname=relpath[relpath.rfind(os.sep)+1:]
-        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        with open(settings.MEDIA_ROOT+fname,'rb') as subfile:
-            sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
-            sf.save()
-        return sf
+        return DjangoFile(open(rootdir + relpath, 'rb'), str(datetime.datetime.now()))
 
     def createNoArchiveSubmissionFile(self, relpath="/opensubmit/tests/submfiles/noarchive.txt"):
-        fname=relpath[relpath.rfind(os.sep)+1:]
-        shutil.copyfile(rootdir+relpath, settings.MEDIA_ROOT+fname)
-        with open(settings.MEDIA_ROOT+fname,'rb') as subfile:
+        fname = relpath[relpath.rfind(os.sep) + 1:]
+        shutil.copyfile(rootdir + relpath, settings.MEDIA_ROOT + fname)
+        with open(settings.MEDIA_ROOT + fname, 'rb') as subfile:
             sf = SubmissionFile(attachment=DjangoFile(subfile, str(fname)))
             sf.save()
         return sf
-
 
     def createTestedSubmissionFile(self, test_machine):
         '''
             Create finalized test result in the database.
         '''
         sf = self.createSubmissionFile()
-        result_compile  = SubmissionTestResult(
-            kind=SubmissionTestResult.COMPILE_TEST,
-            result=uccrap+"Compilation ok.",
-            machine=test_machine,
-            submission_file=sf
-            ).save()
         result_validity = SubmissionTestResult(
             kind=SubmissionTestResult.VALIDITY_TEST,
-            result=uccrap+"Validation ok.",
+            result=uccrap + "Validation ok.",
             machine=self.machine,
-            perf_data = uccrap+";41;42;43",
+            perf_data=uccrap + ";41;42;43",
             submission_file=sf).save()
-        result_full     = SubmissionTestResult(
+        result_full = SubmissionTestResult(
             kind=SubmissionTestResult.FULL_TEST,
-            result=uccrap+"Full test ok.",
-            perf_data = uccrap+";77;88;99",
+            result=uccrap + "Full test ok.",
+            perf_data=uccrap + ";77;88;99",
             machine=self.machine,
             submission_file=sf).save()
         return sf
@@ -513,33 +484,12 @@ class SubmitTestCase(LiveServerTestCase):
         sub = Submission(
             assignment=self.validatedAssignment,
             submitter=user.user,
-            notes=uccrap+"This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
+            notes=uccrap + "This is a validatable submission.",
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=sf
         )
         sub.save()
         return sub
-
-    def createCompileBrokenSubmission(self, user):
-        '''
-            Create a submission that cannot be compiled.
-        '''
-        sf = self.createCompileBrokenSubmissionFile()
-        sub = Submission(
-            assignment=self.validatedAssignment,
-            submitter=user.user,
-            notes=uccrap+"This is a non-compilable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
-            file_upload=sf
-        )
-        fname="reverse_support_files.zip"
-        shutil.copyfile(rootdir+'/opensubmit/tests/submfiles/'+fname, settings.MEDIA_ROOT+fname)
-        with open(settings.MEDIA_ROOT+fname, 'rb') as subfile:
-            sub.assignment.attachment_test_support=DjangoFile(subfile)
-            sub.assignment.save()
-            sub.save()
-        return sub
-
 
     def createSingleFileValidatorSubmission(self, user):
         '''
@@ -550,24 +500,8 @@ class SubmitTestCase(LiveServerTestCase):
         sub = Submission(
             assignment=self.singleFileValidatorAssignment,
             submitter=user.user,
-            notes=uccrap+"This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
-            file_upload=sf
-        )
-        sub.save()
-        return sub
-
-    def createValidatableWithSupportFilesSubmission(self, user):
-        '''
-            Create a submission that can be validated by executor,
-            which as support files in the assignment.
-        '''
-        sf = self.createSubmissionFile()
-        sub = Submission(
-            assignment=self.validatedWithSupportFilesAssignment,
-            submitter=user.user,
-            notes=uccrap+"This is a validatable submission for an assignment with support files.",
-            state=Submission.TEST_COMPILE_PENDING,
+            notes=uccrap + "This is a validatable submission.",
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=sf
         )
         sub.save()
@@ -576,14 +510,13 @@ class SubmitTestCase(LiveServerTestCase):
     def createValidatableNoArchiveSubmission(self, user):
         '''
             Create a submission that can be validated by executor.
-            It is not an archive and cant be compiled. This tests special
-            executor cases, e.g. PDF report submission.
+            This tests special executor cases, e.g. PDF report submission.
         '''
         sf = self.createNoArchiveSubmissionFile()
         sub = Submission(
             assignment=self.validatedAssignment,
             submitter=user.user,
-            notes=uccrap+"This is a validatable submission with a non-archive.",
+            notes=uccrap + "This is a validatable submission with a non-archive.",
             state=Submission.TEST_VALIDITY_PENDING,
             file_upload=sf
         )
@@ -599,7 +532,7 @@ class SubmitTestCase(LiveServerTestCase):
         sub = Submission(
             assignment=self.validatedAssignment,
             submitter=user.user,
-            notes=uccrap+"This is an already validated submission.",
+            notes=uccrap + "This is an already validated submission.",
             state=Submission.SUBMITTED_TESTED,
             file_upload=sf
         )
@@ -610,11 +543,12 @@ class SubmitTestCase(LiveServerTestCase):
         sub = Submission(
             assignment=assignment,
             submitter=user.user,
-            notes=uccrap+"This is a submission.",
+            notes=uccrap + "This is a submission.",
             state=Submission.SUBMITTED
         )
         sub.save()
         return sub
+
 
 class MockRequest(http.HttpRequest):
     def __init__(self, user):
@@ -624,10 +558,12 @@ class MockRequest(http.HttpRequest):
         self.session = 'session'
         self._messages = FallbackStorage(self)
 
+
 class SubmitAdminTestCase(SubmitTestCase):
     '''
         Test case with an admin logged-in.
     '''
+
     def setUp(self):
         super(SubmitAdminTestCase, self).setUp()
         self.loginUser(self.admin)
@@ -637,10 +573,12 @@ class SubmitAdminTestCase(SubmitTestCase):
         assert(self.current_user.user.is_superuser)
         assert(self.current_user.user.is_staff)
 
+
 class SubmitTeacherTestCase(SubmitTestCase):
     '''
         Test case with an teacher (course owner) logged-in.
     '''
+
     def setUp(self):
         super(SubmitTeacherTestCase, self).setUp()
         self.loginUser(self.teacher)
@@ -654,6 +592,7 @@ class SubmitTutorTestCase(SubmitTestCase):
     '''
         Test case with a tutor logged-in.
     '''
+
     def setUp(self):
         super(SubmitTutorTestCase, self).setUp()
         self.loginUser(self.tutor)
@@ -663,16 +602,20 @@ class SubmitTutorTestCase(SubmitTestCase):
         assert(not self.current_user.user.is_superuser)
         assert(self.current_user.user.is_staff)
 
+
 class StudentTestCase(SubmitTestCase):
     '''
         Test case with a student logged-in.
     '''
+
     def setUp(self):
         super(StudentTestCase, self).setUp()
         self.loginUser(self.enrolled_students[0])
         self.request = MockRequest(self.enrolled_students[0].user)
 
 # Taken from https://www.caktusgroup.com/blog/2016/02/02/writing-unit-tests-django-migrations/
+
+
 class TestMigrations(TestCase):
     @property
     def app(self):
@@ -683,7 +626,8 @@ class TestMigrations(TestCase):
 
     def setUp(self):
         assert self.migrate_from and self.migrate_to, \
-            "TestCase '{}' must define migrate_from and migrate_to properties".format(type(self).__name__)
+            "TestCase '{}' must define migrate_from and migrate_to properties".format(
+                type(self).__name__)
         self.migrate_from = [(self.app, self.migrate_from)]
         self.migrate_to = [(self.app, self.migrate_to)]
         executor = MigrationExecutor(connection)
@@ -703,4 +647,3 @@ class TestMigrations(TestCase):
 
     def setUpBeforeMigration(self, apps):
         pass
-

@@ -26,12 +26,10 @@ class Assignment(models.Model):
     hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible. Can be empty.")
     has_attachment = models.BooleanField(default=False, verbose_name="Student file upload ?", help_text="Activate this if the students must upload a (document / ZIP /TGZ) file as solution. Otherwise, they can only provide notes.")
     attachment_test_timeout = models.IntegerField(default=30, verbose_name="Timout for tests", help_text="Timeout (in seconds) after which the compilation / validation test / full test is cancelled. The submission is marked as invalid in this case. Intended for student code with deadlocks.")
-    attachment_test_compile = models.BooleanField(default=False, verbose_name="Compile test ?", help_text="If activated, the student upload is uncompressed and 'make' is executed on one of the test machines.")
-    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed, compiled and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
+    attachment_test_validity = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Validation script', help_text="If given, the student upload is uncompressed and the script is executed for it on a test machine. Student submissions are marked as valid if this script was successful.")
     validity_script_download = models.BooleanField(default=False, verbose_name='Download of validation script ?', help_text='If activated, the students can download the validation script for offline analysis.')
     attachment_test_full = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Full test script', help_text='Same as the validation script, but executed AFTER the hard deadline to determine final grading criterias for the submission. Results are not shown to students.')
     test_machines = models.ManyToManyField('TestMachine', blank=True, related_name="assignments", help_text="The test machines that will take care of submissions for this assignment.")
-    attachment_test_support = models.FileField(upload_to="testscripts", blank=True, null=True, verbose_name='Support files', help_text="An archive (!) of files that should always be in the directory, beside the student files, during compilation / validation / full test.")
     max_authors = models.PositiveSmallIntegerField(default=1, help_text="Maximum number of authors (= group size) for this assignment.")
 
     class Meta:
@@ -122,19 +120,6 @@ class Assignment(models.Model):
         else:
             return None
 
-    def test_support_files_url(self):
-        '''
-            Return absolute download URL for the support archive.
-            Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
-        '''
-        if self.pk and self.has_test_support_files():
-            return settings.MAIN_URL + "/download/%u/support_files/secret=%s" % (self.pk, settings.JOB_EXECUTOR_SECRET)
-        else:
-            return None
-
-    def has_test_support_files(self):
-        return str(self.attachment_test_support).strip() != ""
-
     def has_validity_test(self):
         return str(self.attachment_test_validity).strip() != ""
 
@@ -145,7 +130,7 @@ class Assignment(models.Model):
         return str(self.description).strip() != ""
 
     def attachment_is_tested(self):
-        return self.attachment_test_compile is True or self.has_validity_test() or self.has_full_test()
+        return self.has_validity_test() or self.has_full_test()
 
     def can_create_submission(self, user=None):
         '''

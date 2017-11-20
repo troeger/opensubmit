@@ -8,7 +8,7 @@ from opensubmit.models import Course, Assignment, Submission
 from opensubmit.models import Grading, GradingScheme
 from opensubmit.models import UserProfile
 
-class ModelSubmissionFileTestCase(SubmitTestCase):
+class SubmissionFile(SubmitTestCase):
 
     def prepareSubmission(self, fname1, fname2):
         '''
@@ -20,7 +20,7 @@ class ModelSubmissionFileTestCase(SubmitTestCase):
             assignment=self.validatedAssignment,
             submitter=self.current_user.user,
             notes="This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=f1
         )
         sub1.save()
@@ -28,7 +28,7 @@ class ModelSubmissionFileTestCase(SubmitTestCase):
             assignment=self.validatedAssignment,
             submitter=self.current_user.user,
             notes="This is a validatable submission.",
-            state=Submission.TEST_COMPILE_PENDING,
+            state=Submission.TEST_VALIDITY_PENDING,
             file_upload=f2
         )
         sub2.save()

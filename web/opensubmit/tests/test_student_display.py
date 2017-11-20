@@ -58,7 +58,6 @@ class StudentDisplayTestCase(SubmitTestCase):
         self.loginUser(self.enrolled_students[0])
         sub=self.createValidatedSubmission(self.current_user)
         response = self.c.get('/details/%s/' % sub.pk)
-        self.assertContains(response, str(sub.get_compile_result().result))
         self.assertContains(response, str(sub.get_validation_result().result))
 
     def testCanSeeOnlyEnabledCourseAssignments(self):
