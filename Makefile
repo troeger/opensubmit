@@ -4,7 +4,7 @@ build:
 	# Build the install packages.
 	pip install -r requirements.txt
 
-	pushd web;      ./setup.py bdist_wheel; popd
+	pushd web; ./setup.py bdist_wheel; popd
 	mv web/dist/* dist/
 	rmdir web/dist
 	rm -rf ./web/build
@@ -44,7 +44,7 @@ docker: build
 
 tests:
 	# Run all tests.
-	export PYTHONPATH=../executor/opensubmit:$PYTHONPATH; pushd web; ./manage.py test; popd
+	pushd web; ./manage.py test; popd
 
 coverage:
 	# Run all tests and obtain coverage information.
