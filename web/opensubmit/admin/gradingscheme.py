@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.core.urlresolvers import resolve
 from opensubmit.models import Course, Grading
 
+
 def gradings(gradingScheme):
     ''' Determine the list of gradings in this scheme as rendered string.
         TODO: Use nice little icons instead of (p) / (f) marking.
