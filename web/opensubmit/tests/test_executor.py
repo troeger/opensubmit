@@ -12,7 +12,7 @@ import sys
 from django.core import mail
 from django.test import LiveServerTestCase, TestCase
 from django.test.utils import override_settings
-from opensubmit.tests.cases import StudentTestCase
+from opensubmit.tests.cases import SubmitStudentTestCase
 from django.core.urlresolvers import reverse
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
@@ -49,7 +49,7 @@ class Validation(TestCase):
                     self.config, root + directory)
 
 
-class Communication(StudentTestCase, LiveServerTestCase):
+class Communication(SubmitStudentTestCase, LiveServerTestCase):
     '''
     Tests for the communication of the executor with the OpenSubmit server.
     '''

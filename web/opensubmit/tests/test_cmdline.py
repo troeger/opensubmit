@@ -26,7 +26,7 @@ class CmdLineConfigureTestCase(TestCase):
         print("Removing temporary installation directory")
         shutil.rmtree(self.tmpdir)
 
-    def testConfigureCall(self):
+    def test_configure_call(self):
         '''
         Simulate real command-line calls of the 'configure' functionality.
 
