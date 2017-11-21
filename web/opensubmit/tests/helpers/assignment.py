@@ -219,15 +219,28 @@ def create_validated_assignment_with_file(course, grading_scheme):
         assign.save()
         return assign
 
+
 def create_all_assignments(course, grading_scheme):
-    return [create_validated_assignment_with_archive(course, grading_scheme),
-            create_validated_assignment_with_file(course, grading_scheme),
-            create_file_assignment(course, grading_scheme),
-            create_soft_passed_assignment(course, grading_scheme).
-            create_uploaded_desc_assignment(course, grading_scheme),
-            create_hard_passed_assignment(course, grading_scheme),
-            create_no_hard_soft_passed_assignment(course, grading_scheme),
-            create_unpublished_assignment(course, grading_scheme),
-            create_open_assignment(course, grading_scheme),
-            create_open_assignment(course, grading_scheme, authors=1),
-            ]
+    return [
+        create_validated_assignment_with_archive(course, grading_scheme),
+        create_validated_assignment_with_file(course, grading_scheme),
+        create_file_assignment(course, grading_scheme),
+        create_soft_passed_assignment(course, grading_scheme).
+        create_uploaded_desc_assignment(course, grading_scheme),
+        create_hard_passed_assignment(course, grading_scheme),
+        create_no_hard_soft_passed_assignment(course, grading_scheme),
+        create_unpublished_assignment(course, grading_scheme),
+        create_open_assignment(course, grading_scheme),
+        create_no_grading_assignment(course),
+        create_open_assignment(course, grading_scheme, authors=1),
+    ]
+
+
+def create_non_validated_assignments(course, grading_scheme):
+    return [
+        create_open_assignment(course, grading_scheme),
+        create_file_assignment(course, grading_scheme),
+        create_no_grading_assignment(course),
+        create_unpublished_assignment(course, grading_scheme),
+        create_open_assignment(course, grading_scheme, authors=1),
+    ]
