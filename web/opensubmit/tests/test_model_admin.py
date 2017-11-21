@@ -48,7 +48,7 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
             self.course, self.grading_scheme)
         self.assign2 = create_soft_passed_assignment(
             self.course, self.grading_scheme)
-        self.assign3 = create_validated_assignment(
+        self.assign3 = create_validated_assignment_with_archive(
             self.course, self.grading_scheme)
         self.all_assignments = [self.assign1, self.assign2, self.assign3]
         # Prepare submissions

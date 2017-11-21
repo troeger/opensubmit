@@ -2,110 +2,140 @@
     Tets cases focusing on the Submission model class methods.
 '''
 
-from opensubmit.tests.cases import SubmitTestCase
+from .helpers.submission import create_submission
+from .helpers.assignment import *
+from .helpers.user import *
+from .helpers.course import create_course
 
+from opensubmit.tests.cases import SubmitStudentTestCase
 from opensubmit.models import Submission
 
 import os
 
 
-class ModelSubmissionTestCase(SubmitTestCase):
+class SubmissionModel(SubmitStudentTestCase):
 
-    def createSubmissions(self):
-        self.openAssignmentSub = self.createSubmission(
-            self.current_user, self.openAssignment)
-        self.softDeadlinePassedAssignmentSub = self.createSubmission(
-            self.current_user, self.softDeadlinePassedAssignment)
-        self.hardDeadlinePassedAssignmentSub = self.createSubmission(
-            self.current_user, self.hardDeadlinePassedAssignment)
-        self.noHardDeadlineAssignmentSub = self.createSubmission(
-            self.current_user, self.noHardDeadlineAssignment)
-        self.noGradingAssignmentSub = self.createSubmission(
-            self.current_user, self.noGradingAssignment)
+    def setUp(self):
+        super(SubmissionModel, self).setUp()
+        self.admin = create_user(admin_dict)
+        self.teacher = create_user(teacher_dict)
+        self.tutor = create_user(tutor_dict)
+        course = create_course(self.admin)
+        grading = create_pass_fail_grading()
 
-        self.submissions = (
-            self.openAssignmentSub,
-            self.softDeadlinePassedAssignmentSub,
-            self.hardDeadlinePassedAssignmentSub,
-            self.noHardDeadlineAssignmentSub,
-            self.noGradingAssignmentSub
+        self.open_assignment = create_open_assignment(course, grading)
+        self.soft_deadline_passed_assignment = create_soft_passed_assignment(
+            course, grading)
+        self.hard_deadline_passed_assignment = create_hard_passed_assignment(
+            course, grading)
+        self.no_hard_assignment = create_no_hard_soft_passed_assignment(
+            course, grading)
+        self.no_grading_assignment = create_no_grading_assignment(
+            course)
+        self.unpublished_assignment = create_unpublished_assignment(
+            course, grading)
+
+        self.all_assignments = (
+            self.open_assignment,
+            self.soft_deadline_passed_assignment,
+            self.hard_deadline_passed_assignment,
+            self.no_hard_assignment,
+            self.no_grading_assignment,
+            self.unpublished_assignment
         )
 
-    def testInfoFileCreation(self):
-        self.loginUser(self.enrolled_students[0])
-        sub = self.createSubmission(
-            self.current_user, self.hardDeadlinePassedAssignment)
+        self.open_assignment_sub = create_submission(
+            self.user,
+            self.open_assignment)
+        self.soft_deadline_passed_assignment_sub = create_submission(
+            self.user,
+            self.soft_deadline_passed_assignment)
+        self.hard_deadline_passed_assignment_sub = create_submission(
+            self.user,
+            self.hard_deadline_passed_assignment)
+        self.no_hard_assignment_sub = create_submission(
+            self.user,
+            self.no_hard_assignment)
+        self.no_grading_assignment_sub = create_submission(
+            self.user,
+            self.no_grading_assignment)
+        self.unpublished_assignment_sub = create_submission(
+            self.user,
+            self.unpublished_assignment)
+
+        self.submissions = (
+            self.open_assignment_sub,
+            self.soft_deadline_passed_assignment_sub,
+            self.hard_deadline_passed_assignment_sub,
+            self.no_hard_assignment_sub,
+            self.no_grading_assignment_sub,
+            self.unpublished_assignment_sub
+        )
+
+    def test_info_file_creation(self):
+        sub = self.hard_deadline_passed_assignment_sub
         # Info file is opened in write-only mode,
         # so we need the explicit re-opening and deletion here
         info_file = sub.info_file(delete=False)
         info_file.close()
-        with open(info_file.name, 'rt') as tmpfile:
+        with open(info_file.name, 'rt', encoding='utf-8') as tmpfile:
             content = tmpfile.read()
         os.remove(info_file.name)
         self.assertIn(sub.submitter.get_full_name(), content)
 
-    def testCanCreateSubmission(self):
-        self.loginUser(self.enrolled_students[0])
-        self.assertEqual(self.openAssignment.can_create_submission(
-            self.current_user.user), True)
+    def test_can_create_submission(self):
         self.assertEqual(
-            self.softDeadlinePassedAssignment.can_create_submission(
-                self.current_user.user), True)
-
-    def testCannotCreateSubmissionAfterDeadline(self):
-        self.loginUser(self.enrolled_students[0])
+            self.open_assignment.can_create_submission(
+                self.user), True)
         self.assertEqual(
-            self.hardDeadlinePassedAssignment.can_create_submission(
-                self.current_user.user), False)
+            self.soft_deadline_passed_assignment.can_create_submission(
+                self.user), True)
 
-    def testCanCreateSubmissionWithoutHardDeadline(self):
-        self.loginUser(self.enrolled_students[0])
-        self.assertEqual(self.noHardDeadlineAssignment.can_create_submission(
-            self.current_user.user), True)
+    def test_cannot_create_submission_after_deadline(self):
+        self.assertEqual(
+            self.hard_deadline_passed_assignment.can_create_submission(
+                self.user), False)
 
-    def testCanCreateSubmissionWithoutGrading(self):
-        self.loginUser(self.enrolled_students[0])
-        self.assertEqual(self.noGradingAssignment.can_create_submission(
-            self.current_user.user), True)
+    def test_cannot_create_submission_only_soft_passed(self):
+        self.assertEqual(
+            self.no_hard_assignment.can_create_submission(
+                self.user), False)
 
-    def testCannotCreateSubmissionBeforePublishing(self):
-        self.loginUser(self.enrolled_students[0])
-        self.assertEqual(self.unpublishedAssignment.can_create_submission(
-            self.current_user.user), False)
+    def test_can_create_submission_without_grading(self):
+        self.assertEqual(
+            self.no_grading_assignment.can_create_submission(
+                self.user), True)
 
-    def testAdminTeacherTutorAlwaysCanCreateSubmission(self):
+    def test_cannot_create_submission_before_publishing(self):
+        self.assertEqual(
+            self.unpublished_assignment.can_create_submission(
+                self.user), False)
+
+    def test_admin_teacher_tutor_always_can_create_submission(self):
         for user in (self.admin, self.teacher, self.tutor, ):
-            for ass in self.allAssignments:
-                self.assertEqual(ass.can_create_submission(user.user), True)
+            for ass in self.all_assignments:
+                self.assertEqual(ass.can_create_submission(user), True)
 
-    def testCannotDoubleSubmit(self):
-        self.loginUser(self.enrolled_students[0])
-        self.createSubmissions()
+    def test_cannot_double_submit(self):
         for sub in self.submissions:
             self.assertEqual(sub.assignment.can_create_submission(
-                self.current_user.user), False)
+                self.user), False)
 
-    def testCanModifySubmission(self):
-        self.loginUser(self.enrolled_students[0])
-        self.createSubmissions()
-        self.assertEqual(self.openAssignmentSub.can_modify(
-            self.current_user.user), True)
-        self.assertEqual(self.softDeadlinePassedAssignmentSub.can_modify(
-            self.current_user.user), True)
-        self.assertEqual(self.noGradingAssignmentSub.can_modify(
-            self.current_user.user), True)
-        self.assertEqual(self.noHardDeadlineAssignmentSub.can_modify(
-            self.current_user.user), True)
+    def test_can_modify_submission(self):
+        self.assertEqual(self.open_assignment_sub.can_modify(
+            self.user), True)
+        self.assertEqual(self.soft_deadline_passed_assignment_sub.can_modify(
+            self.user), True)
+        self.assertEqual(self.no_grading_assignment_sub.can_modify(
+            self.user), True)
+        self.assertEqual(self.no_hard_assignment_sub.can_modify(
+            self.user), True)
 
-    def testCannotModifySubmissionAfterDeadline(self):
-        self.loginUser(self.enrolled_students[0])
-        self.createSubmissions()
-        self.assertEqual(self.hardDeadlinePassedAssignmentSub.can_modify(
-            self.current_user.user), False)
+    def test_cannot_modify_submission_after_deadline(self):
+        self.assertEqual(self.hard_deadline_passed_assignment_sub.can_modify(
+            self.user), False)
 
-    def testCanOrCannotReuploadSubmissions(self):
-        self.loginUser(self.enrolled_students[0])
-        self.createSubmissions()
+    def test_can_or_cannot_reupload_submissions(self):
         for state, desc in Submission.STATES:
             for submission in self.submissions:
                 submission.state = state
@@ -120,21 +150,21 @@ class ModelSubmissionTestCase(SubmitTestCase):
                 Submission.TEST_FULL_FAILED,
             ):
                 self.assertEqual(
-                    self.openAssignmentSub.can_reupload(
-                        self.current_user.user), True)
+                    self.open_assignment_sub.can_reupload(
+                        self.user), True)
                 self.assertEqual(
-                    self.softDeadlinePassedAssignmentSub.can_reupload(
-                        self.current_user.user), True)
+                    self.soft_deadline_passed_assignment_sub.can_reupload(
+                        self.user), True)
                 self.assertEqual(
-                    self.hardDeadlinePassedAssignmentSub.can_reupload(
-                        self.current_user.user), False)
+                    self.hard_deadline_passed_assignment_sub.can_reupload(
+                        self.user), False)
             else:
                 self.assertEqual(
-                    self.openAssignmentSub.can_reupload(
-                        self.current_user.user), False)
+                    self.open_assignment_sub.can_reupload(
+                        self.user), False)
                 self.assertEqual(
-                    self.softDeadlinePassedAssignmentSub.can_reupload(
-                        self.current_user.user), False)
+                    self.soft_deadline_passed_assignment_sub.can_reupload(
+                        self.user), False)
                 self.assertEqual(
-                    self.hardDeadlinePassedAssignmentSub.can_reupload(
-                        self.current_user.user), False)
+                    self.hard_deadline_passed_assignment_sub.can_reupload(
+                        self.user), False)

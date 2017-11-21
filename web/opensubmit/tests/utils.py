@@ -1,11 +1,12 @@
 from threading import Thread
 
+
 def run_parallel(num, func):
     threads = []
     results = []
 
     def wrapper():
-        result=func()
+        result = func()
         results.append(result)
 
     for i in range(num):
@@ -17,4 +18,4 @@ def run_parallel(num, func):
     for t in threads:
         t.join()
 
-    return results 
+    return results

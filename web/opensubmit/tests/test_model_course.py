@@ -2,15 +2,23 @@
     Tets cases focusing on the Course model class methods.
 '''
 
+from .helpers.course import create_course
+from .helpers.assignment import create_pass_fail_grading, create_open_assignment
+from .helpers.submission import create_submission
+
+
 from opensubmit.models import Submission
-from opensubmit.tests.cases import StudentTestCase
+from opensubmit.tests.cases import SubmitStudentTestCase
 
 
-class CourseModelStudentTestCase(StudentTestCase):
+class CourseModelStudentTestCase(SubmitStudentTestCase):
     def setUp(self):
         super(CourseModelStudentTestCase, self).setUp()
+        self.course = create_course(self.user)
+        grading = create_pass_fail_grading()
+        self.assignment = create_open_assignment(self.course, grading)
 
-    def testGradableSubmissionsList(self):
+    def test_gradable_submissions_list(self):
         # Expected number of results when the submission has that state
         expected = (
             (0, Submission.RECEIVED),
@@ -31,7 +39,7 @@ class CourseModelStudentTestCase(StudentTestCase):
         self.assertEqual(qs.count(), 0)
 
         for count, state in expected:
-            sub = self.createSubmission(self.current_user, self.openAssignment)
+            sub = create_submission(self.user, self.assignment)
             sub.state = state
             sub.save()
             self.assertEqual(
@@ -59,7 +67,7 @@ class CourseModelStudentTestCase(StudentTestCase):
         self.assertEqual(qs.count(), 0)
 
         for count, state in expected:
-            sub = self.createSubmission(self.current_user, self.openAssignment)
+            sub = create_submission(self.user, self.assignment)
             sub.state = state
             sub.save()
             self.assertEqual(
@@ -71,5 +79,5 @@ class CourseModelStudentTestCase(StudentTestCase):
         qs = self.course.authors()
         self.assertEqual(qs.count(), 0)
 
-        sub = self.createSubmission(self.current_user, self.openAssignment)
+        sub = create_submission(self.user, self.assignment)
         self.assertEqual(qs.count(), len(sub.authors.all()))

@@ -1,12 +1,12 @@
 '''
-    Tets cases focusing on the Assignment model class methods.
+    Test cases focusing on the Assignment model class methods.
 '''
 
 from opensubmit.tests.cases import SubmitTutorTestCase, SubmitAdminTestCase
 
 from .helpers.course import create_course
 from .helpers.assignment import create_pass_fail_grading
-from .helpers.assignment import create_assignments_with_url
+from .helpers.assignment import create_non_validated_assignments
 from .helpers.assignment import create_validated_assignment_with_file
 
 
@@ -17,8 +17,8 @@ class AssignmentModelTutorTestCase(SubmitTutorTestCase):
         self.grading_scheme = create_pass_fail_grading()
 
     def test_script_url(self):
-        assignments = create_assignments_with_url(self.course,
-                                                  self.grading_scheme)
+        assignments = create_non_validated_assignments(self.course,
+                                                       self.grading_scheme)
         v_ass = create_validated_assignment_with_file(self.course,
                                                       self.grading_scheme)
 
@@ -34,7 +34,7 @@ class AssignmentModelAdminTestCase(SubmitAdminTestCase):
         self.grading_scheme = create_pass_fail_grading()
 
     def test_script_url(self):
-        assignments = create_assignments_with_url(
+        assignments = create_non_validated_assignments(
             self.course, self.grading_scheme)
         v_ass = create_validated_assignment_with_file(self.course,
                                                       self.grading_scheme)
