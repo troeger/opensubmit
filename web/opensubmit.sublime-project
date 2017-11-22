@@ -1,4 +1,5 @@
 {
+    "show_errors_inline": false,
 	"build_systems":
 	[
 		{
@@ -22,5 +23,6 @@
         "disable_anaconda_completion": false,
         "suppress_word_completions": false,
         "suppress_explicit_completions": false,
+        "anaconda_linter_mark_style": "stippled_underline",        
 	}
 }
