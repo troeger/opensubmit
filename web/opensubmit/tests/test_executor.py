@@ -20,7 +20,7 @@ from opensubmit.tests import utils
 from opensubmit import settings
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-# pylint: disable=E402
+# pyflakes: disable=E402
 import opensubmitexec
 
 

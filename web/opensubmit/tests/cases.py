@@ -5,7 +5,10 @@ from django.test import client
 from django.apps import apps
 from django import db, http
 
-from opensubmit.tests.helpers.user import *
+from .helpers.user import *
+from .helpers.assignment import *
+from .helpers.course import create_course
+from .helpers.submission import create_submission
 
 
 class MockRequest(http.HttpRequest):
@@ -80,8 +83,84 @@ class SubmitStudentTestCase(SubmitTestCase):
 
     def setUp(self):
         super(SubmitStudentTestCase, self).setUp()
-        self.create_and_login_user(enrolled_students_dict[0])
+        self.create_and_login_user(get_student_dict(0))
         self.request = MockRequest(self.user)
+
+
+class SubmitStudentScenarioTestCase(SubmitStudentTestCase):
+    '''
+    As above, but with a common set of prepared resources
+    from a default usage scenario.
+
+    To speed up test runs, it is preferrable to create
+    the needed resources explicitely, instead of inherting
+    from this class.
+    '''
+    def setUp(self):
+        super(SubmitStudentScenarioTestCase, self).setUp()
+        self.admin = create_user(admin_dict)
+        self.teacher = create_user(teacher_dict)
+        self.tutor = create_user(tutor_dict)
+        self.course = create_course(self.admin)
+        self.another_course = create_course(self.admin)
+        grading = create_pass_fail_grading()
+
+        self.open_assignment = create_open_assignment(
+            self.course, grading)
+        self.soft_deadline_passed_assignment = create_soft_passed_assignment(
+            self.course, grading)
+        self.hard_deadline_passed_assignment = create_hard_passed_assignment(
+            self.course, grading)
+        self.no_hard_assignment = create_no_hard_soft_passed_assignment(
+            self.course, grading)
+        self.no_grading_assignment = create_no_grading_assignment(
+            self.course)
+        self.unpublished_assignment = create_unpublished_assignment(
+            self.course, grading)
+        self.uploaded_desc_assignment = create_uploaded_desc_assignment(
+            self.course, grading)
+
+        self.all_assignments = (
+            self.open_assignment,
+            self.soft_deadline_passed_assignment,
+            self.hard_deadline_passed_assignment,
+            self.no_hard_assignment,
+            self.no_grading_assignment,
+            self.unpublished_assignment,
+            self.uploaded_desc_assignment
+        )
+
+        self.open_assignment_sub = create_submission(
+            self.user,
+            self.open_assignment)
+        self.soft_deadline_passed_assignment_sub = create_submission(
+            self.user,
+            self.soft_deadline_passed_assignment)
+        self.hard_deadline_passed_assignment_sub = create_submission(
+            self.user,
+            self.hard_deadline_passed_assignment)
+        self.no_hard_assignment_sub = create_submission(
+            self.user,
+            self.no_hard_assignment)
+        self.no_grading_assignment_sub = create_submission(
+            self.user,
+            self.no_grading_assignment)
+        self.unpublished_assignment_sub = create_submission(
+            self.user,
+            self.unpublished_assignment)
+        self.uploaded_desc_assignment_sub = create_submission(
+            self.user,
+            self.uploaded_desc_assignment)
+
+        self.submissions = (
+            self.open_assignment_sub,
+            self.soft_deadline_passed_assignment_sub,
+            self.hard_deadline_passed_assignment_sub,
+            self.no_hard_assignment_sub,
+            self.no_grading_assignment_sub,
+            self.unpublished_assignment_sub,
+            self.uploaded_desc_assignment_sub
+        )
 
 
 class TestMigrations(TestCase):

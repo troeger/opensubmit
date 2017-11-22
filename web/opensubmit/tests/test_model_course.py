@@ -3,7 +3,8 @@
 '''
 
 from .helpers.course import create_course
-from .helpers.assignment import create_pass_fail_grading, create_open_assignment
+from .helpers.assignment import create_pass_fail_grading
+from .helpers.assignment import create_open_assignment
 from .helpers.submission import create_submission
 
 

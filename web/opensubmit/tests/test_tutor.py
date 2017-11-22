@@ -37,8 +37,8 @@ class TutorTestCase(SubmitTutorTestCase):
     def testDuplicateReportView(self):
         # Using this method twice generates a duplicate upload
         sub1 = self.createValidatableSubmission(self.enrolled_students[0])
-        sub2 = self.createValidatableSubmission(self.enrolled_students[1])
-        sub3 = self.createValidatableSubmission(self.enrolled_students[2])
+        sub2 = create_validatable_submission(self.enrolled_students[1])
+        sub3 = create_validatable_submission(self.enrolled_students[2])
         sub3.state=Submission.WITHDRAWN
         sub3.save()
         response=self.c.get('/assignments/%u/duplicates/'%self.validatedAssignment.pk)
@@ -50,7 +50,7 @@ class TutorTestCase(SubmitTutorTestCase):
         self.assertNotIn('#%u'%sub3.pk, str(response))
 
     def testPreviewView(self):
-        sub1 = self.createValidatedSubmission(self.current_user)
+        sub1 = create_validated_submission(self.user)
         response=self.c.get('/preview/%u/'%sub1.pk)
         self.assertEqual(response.status_code, 200)
 
@@ -58,7 +58,7 @@ class TutorTestCase(SubmitTutorTestCase):
         '''
             Test proper handling of archives containing files with invalid unicode.
         '''
-        sub1 = self.createValidatedSubmission(self.current_user)
+        sub1 = create_validated_submission(self.user)
         for fname in ['broken_preview.gz', 'broken_preview2.gz', 'broken_preview.zip']:
             subfile = self.createSubmissionFile("/opensubmit/tests/submfiles/"+fname)
             sub1.file_upload=subfile

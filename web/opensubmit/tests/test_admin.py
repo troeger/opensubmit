@@ -4,22 +4,22 @@ They include all cases for teachers through inheritance.
 '''
 
 from .cases import SubmitAdminTestCase
-from .helpers.user import enrolled_students_dict, create_user
+from .helpers.user import create_user, get_student_dict
 from .helpers.testmachine import create_test_machine
 
 
 class Admin(SubmitAdminTestCase):
     def test_merge_users_view(self):
-        user1 = create_user(enrolled_students_dict[1])
-        user2 = create_user(enrolled_students_dict[2])
+        user1 = create_user(get_student_dict(1))
+        user2 = create_user(get_student_dict(2))
         response = self.c.get('/mergeusers/?primary_id=%u&secondary_id=%u' %
                               (user1.pk,
                                user2.pk))
         self.assertEqual(response.status_code, 200)
 
     def test_merge_users_action(self):
-        user1 = create_user(enrolled_students_dict[1])
-        user2 = create_user(enrolled_students_dict[2])
+        user1 = create_user(get_student_dict(1))
+        user2 = create_user(get_student_dict(2))
         response = self.c.post('/mergeusers/', {
             'primary_id': user1.pk,
             'secondary_id': user2.pk})

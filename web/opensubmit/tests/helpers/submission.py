@@ -16,6 +16,21 @@ def create_submission(user, assignment):
     return sub
 
 
+def create_validatable_submission(user, assignment, upload):
+    '''
+    Create a submission that is ready to be fetched.
+    '''
+    sub = Submission(
+        assignment=assignment,
+        submitter=user,
+        notes="This is a validatable submission.",
+        state=Submission.TEST_VALIDITY_PENDING,
+        file_upload=upload
+    )
+    sub.save()
+    return sub
+
+
 def create_validated_submission(user, assignment, test_host='127.0.0.1'):
     '''
     Create a submission that already has test results in the database.

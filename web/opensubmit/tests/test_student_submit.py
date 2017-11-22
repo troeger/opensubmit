@@ -1,120 +1,113 @@
 '''
-    Tets cases focusing on the frontend submission and update operations of students.
+    Test cases focusing on the frontend submission and
+    update operations of students.
 '''
 
-from opensubmit.tests.cases import SubmitTestCase, rootdir
+from opensubmit.models import Submission
+from opensubmit.tests.cases import SubmitStudentScenarioTestCase
+from opensubmit.tests import rootdir
+from .helpers.submission import create_validatable_submission
+from .helpers.user import create_user, get_student_dict
 
-from opensubmit.models import Course, Assignment, Submission
-from opensubmit.models import Grading, GradingScheme
-from opensubmit.models import UserProfile
 
-class StudentSubmissionTestCase(SubmitTestCase):
+class Student(SubmitStudentScenarioTestCase):
 
-    def testCanSubmitWithoutFile(self):
-        submitter = self.enrolled_students[0]
-        self.loginUser(submitter)
+    def test_can_submit_without_file(self):
         # expect dashboard redirect -> 302
         # expect permission error -> 403
         cases = {
-            self.openAssignment: (True, 302),
-            self.softDeadlinePassedAssignment: (True, 302),
-            self.hardDeadlinePassedAssignment: (False, 403),
-            self.unpublishedAssignment: (False, 403),
+            self.open_assignment: (True, 302),
+            self.soft_deadline_passed_assignment: (True, 302),
+            self.hard_deadline_passed_assignment: (False, 403),
+            self.unpublished_assignment: (False, 403),
         }
         for assignment in cases:
             response = self.c.post('/assignments/%s/new/' % assignment.pk, {
                 'notes': 'This is a test submission.',
-                'authors': str(submitter.user.pk)
+                'authors': str(self.user.pk)
             })
             expect_success, expected_response = cases[assignment]
             self.assertEqual(response.status_code, expected_response)
 
             submission_exists = Submission.objects.filter(
                 assignment__exact=assignment,
-                submitter__exact=submitter.user,
+                submitter__exact=self.user,
             ).exists()
             self.assertEqual(submission_exists, expect_success)
 
-    def testCanSubmitWithFile(self):
-        submitter = self.enrolled_students[0]
-        self.loginUser(submitter)
-        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip",'rb') as f:
-            response = self.c.post('/assignments/%s/new/' % self.validatedAssignment.pk, {
+    def test_can_submit_with_file(self):
+        with open(rootdir + "submfiles/1000tff/packed.zip", 'rb') as f:
+            response = self.c.post('/assignments/%s/new/' % self.validated_assignment.pk, {
                 'notes': 'This is a test submission.',
-                'authors': str(submitter.user.pk),
+                'authors': str(self.user.pk),
                 'attachment': f
             })
         # expect dashboard redirect
         self.assertEqual(response.status_code, 302)
 
         sub = Submission.objects.get(
-            assignment__exact=self.validatedAssignment,
-            submitter__exact=submitter.user)
+            assignment__exact=self.validated_assignment,
+            submitter__exact=self.user)
 
         assert(sub)
         assert(sub.file_upload)
         assert(sub.file_upload.md5)
 
-    def testMD5OnSubmitGeneration(self):
+    def test_md5_on_submit_generation(self):
         def submit(submitter, filename):
             self.loginUser(submitter)
-            with open(rootdir+"/opensubmit/tests/submfiles/"+filename,'rb') as f:
+            with open(rootdir + "/opensubmit/tests/submfiles/" + filename, 'rb') as f:
                 response = self.c.post('/assignments/%s/new/' % self.fileAssignment.pk, {
                     'notes': 'This is a test submission.',
                     'authors': str(submitter.user.pk),
                     'attachment': f
                 })
                 return Submission.objects.get(
-                    assignment__exact=self.fileAssignment,
+                    assignment__exact=self.file_assignment,
                     submitter__exact=submitter.user)
-        md5_1 = submit(self.enrolled_students[0], 'django.pdf').file_upload.md5
-        md5_2 = submit(self.enrolled_students[1], 'python.pdf').file_upload.md5
+        md5_1 = submit(self.user, 'django.pdf').file_upload.md5
+        md5_2 = submit(self.another_user, 'python.pdf').file_upload.md5
         self.assertNotEqual(md5_1, md5_2)
 
-    def testCannotUpdate(self):
-        submitter = self.enrolled_students[0]
-        self.loginUser(submitter)
-
+    def test_cannot_update(self):
         # pending compilation, update not allowed
-        sub = self.createValidatableSubmission(self.current_user)
+        sub = create_validatable_submission(self.user)
         response = self.c.post('/update/%u/' % sub.pk)
         # expect dashboard redirect
         self.assertEqual(response.status_code, 302)
 
         # test successful, update not allowed
-        sub = self.createValidatedSubmission(self.current_user)
+        sub = create_validated_submission(self.user)
         response = self.c.post('/update/%u/' % sub.pk)
         # expect dashboard redirect
         self.assertEqual(response.status_code, 302)
 
-    def testCanUpdateInvalidData(self):
-        submitter = self.enrolled_students[0]
-        self.loginUser(submitter)
-
+    def test_can_update_invalid_data(self):
         # Move submission into valid state for re-upload
-        sub = self.createValidatableSubmission(self.current_user)
+        sub = create_validatable_submission(self.user)
         sub.state = Submission.TEST_VALIDITY_FAILED
         sub.save()
 
         # Try to update file with invalid form data
-        response = self.c.post('/update/%u/' % sub.pk, {'attachment':'bar'})   # invalid form data
-        self.assertEqual(response.status_code, 200)    # render update view, again
+        response = self.c.post('/update/%u/' % sub.pk,
+                               {'attachment': 'bar'})   # invalid form data
+        # render update view, again
+        self.assertEqual(response.status_code, 200)
 
-    def testCanUpdateValidData(self):
-        submitter = self.enrolled_students[0]
-        self.loginUser(submitter)
-
+    def test_can_update_valid_data(self):
         # Move submission into valid state for re-upload
-        sub = self.createValidatableSubmission(self.current_user)
+        sub = create_validatable_submission(self.user)
         sub.state = Submission.TEST_VALIDITY_FAILED
         sub.save()
 
         # Try to update file with correct POST data
-        with open(rootdir+"/opensubmit/tests/submfiles/working_withsubdir.zip",'rb') as f:
-            response = self.c.post('/update/%u/' % sub.pk, {'notes': '', 'attachment': f})
-            self.assertEqual(response.status_code, 302)    # redirect to dashboard after upload
+        with open(rootdir + "/opensubmit/tests/submfiles/1000tff/packed.zip", 'rb') as f:
+            response = self.c.post('/update/%u/' % sub.pk,
+                                   {'notes': '', 'attachment': f})
+            # redirect to dashboard after upload
+            self.assertEqual(response.status_code, 302)
 
-    def testNonEnrolledCannotSubmit(self):
+    def test_non_enrolled_cannot_submit(self):
         submitter = self.not_enrolled_students[0]
         self.loginUser(submitter)
         response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
@@ -131,13 +124,13 @@ class StudentSubmissionTestCase(SubmitTestCase):
         ).count()
         self.assertEqual(submission_count, 0)
 
-    def testCanSubmitAsTeam(self):
-        self.loginUser(self.enrolled_students[0])
-        response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
+    def test_can_submit_as_team(self):
+        second_guy = create_user(get_student_dict(1))
+        response = self.c.post('/assignments/%s/new/' % self.open_assignment.pk, {
             'notes': """This assignment is handed in by student0,
                         who collaborated with student1 on the
                         assignment.""",
-            'authors': str(self.enrolled_students[1].user.pk),
+            'authors': str(second_guy.pk),
         })
         self.assertIn(response.status_code, (200, 302, ))
 
@@ -145,11 +138,11 @@ class StudentSubmissionTestCase(SubmitTestCase):
             submitter__exact=self.enrolled_students[0].user,
             assignment__exact=self.openAssignment,
         )
-        self.assertTrue(submission.authors.filter(pk__exact=self.enrolled_students[1].user.pk).exists())
+        self.assertTrue(submission.authors.filter(
+            pk__exact=self.enrolled_students[1].user.pk).exists())
 
-    def testCannotSubmitAsTeamWithoutEnrollment(self):
-        self.loginUser(self.enrolled_students[0])
-        response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
+    def test_cannot_submit_as_team_without_enrollment(self):
+        response = self.c.post('/assignments/%s/new/' % self.open_assignment.pk, {
             'notes': """This assignment is handed in by student0,
                         who collaborated with student1 on the
                         assignment.""",
@@ -159,27 +152,26 @@ class StudentSubmissionTestCase(SubmitTestCase):
 
         submission_count = Submission.objects.filter(
             submitter__exact=self.enrolled_students[0].user,
-            assignment__exact=self.openAssignment,
+            assignment__exact=self.open_assignment,
         ).count()
         self.assertEqual(submission_count, 0)
 
-    def testCannotDoubleSubmitThroughTeam(self):
-        submitter = self.enrolled_students[1]
-        self.loginUser(submitter)
-        response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
-            'notes': """This is an assignment that student1 has published.""",
+    def test_cannot_double_submit_through_team(self):
+        self.create_and_login_user(get_student_dict(1))
+        response = self.c.post('/assignments/%s/new/' % self.open_assignment.pk, {
+            'notes': """This is a solution that student1 has submitted.""",
             'authors': str(submitter.user.pk)
         })
         self.assertIn(response.status_code, (302, 200, ))
 
         first_submission_exists = Submission.objects.filter(
             submitter__exact=submitter.user,
-            assignment__exact=self.openAssignment,
+            assignment__exact=self.open_assignment,
         ).exists()
         self.assertTrue(first_submission_exists)
 
         self.loginUser(self.enrolled_students[0])
-        response = self.c.post('/assignments/%s/new/' % self.openAssignment.pk, {
+        response = self.c.post('/assignments/%s/new/' % self.open_assignment.pk, {
             'notes': """This assignment is handed in by student0,
                         who collaborated with student1 on the
                         assignment.""",
@@ -189,7 +181,6 @@ class StudentSubmissionTestCase(SubmitTestCase):
 
         submission_exists = Submission.objects.filter(
             submitter__exact=self.enrolled_students[0].user,
-            assignment__exact=self.openAssignment,
+            assignment__exact=self.open_assignment,
         ).exists()
         self.assertFalse(submission_exists)
-

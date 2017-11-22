@@ -40,31 +40,18 @@ tutor_dict = {
     'is_superuser': False
 }
 
-enrolled_students_dict = list()
-for i in range(0, 5):
-    enrolled_student_dict = {
-        'username': uccrap + 'testrunner_enrolled_student{}'.format(i),
-        'password': uccrap + 'very{}secret'.format(i),
+
+def get_student_dict(index):
+    return {
+        'username': uccrap + 'testrunner_enrolled_student{}'.format(index),
+        'password': uccrap + 'very{}secret'.format(index),
         'email': uccrap +
-        'testrunner_enrolled_student{}@django.localhost.local'.format(i),
+        'testrunner_enrolled_student{}@django.localhost.local'.format(index),
         'is_staff': False,
         'is_superuser': False,
         'first_name': uccrap + 'Harold',
         'last_name': uccrap + 'Finch'
     }
-    enrolled_students_dict.append(enrolled_student_dict)
-
-not_enrolled_students_dict = list()
-for i in range(0, 5):
-    not_enrolled_student_dict = {
-        'username': uccrap + 'testrunner_not_enrolled_student{}'.format(i),
-        'password': uccrap + 'not.very{}secret'.format(i),
-        'email': uccrap +
-        'testrunner_not_enrolled_student{}@django.localhost.local'.format(i),
-        'is_staff': False,
-        'is_superuser': False
-    }
-    not_enrolled_students_dict.append(not_enrolled_student_dict)
 
 
 class AnonStruct(object):
