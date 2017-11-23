@@ -3,37 +3,40 @@ Functions dealing with the compilation of code.
 '''
 
 from .execution import shell_execution
-from .result import ValidatorBrokenResult
+from .result import ValidatorBrokenResult, FailResult
 from .filesystem import has_file
 
 import logging
 logger = logging.getLogger('opensubmitexec')
 
-GCC = ['gcc','-o','{output}','{inputs}']
-GPP = ['g++','-o','{output}','{inputs}']
+GCC = ['gcc', '-o', '{output}', '{inputs}']
+GPP = ['g++', '-o', '{output}', '{inputs}']
+
 
 def call_configure(directory):
-    ''' 
+    '''
     Call configure to generate a Makefile.
     '''
     if has_file(directory, 'configure'):
-        logger.info("Running ./configure in "+directory)
+        logger.info("Running ./configure in " + directory)
         return shell_execution(['configure'], directory)
     else:
         return FailResult("Could not find a configure script for execution.")
 
+
 def call_make(directory):
-    ''' 
+    '''
     Call make to build the stuff.
     '''
     if has_file(directory, 'Makefile'):
-        logger.info("Running make in "+directory)
+        logger.info("Running make in " + directory)
         return shell_execution(['make'], directory)
     else:
         return FailResult("Could not find a Makefile.")
 
+
 def call_compiler(directory, compiler=GCC, output=None, inputs=None):
-    ''' 
+    '''
     Call the compiler to build the stuff.
 
     If the compile demands the output file name, it should be given in the
@@ -41,7 +44,7 @@ def call_compiler(directory, compiler=GCC, output=None, inputs=None):
     If the compiler demands the input file names, it should be given in the
     inputs parameter as list of strings.
     '''
-    cmdline=[]
+    cmdline = []
     for element in compiler:
         if element == '{output}':
             if output:
@@ -58,6 +61,6 @@ def call_compiler(directory, compiler=GCC, output=None, inputs=None):
         else:
             cmdline.append(element)
 
-    logger.info("Running compilation in {0} with {1}".format(directory, cmdline))
+    logger.info("Running compilation in {0} with {1}".format(
+        directory, cmdline))
     return shell_execution(cmdline, directory)
-

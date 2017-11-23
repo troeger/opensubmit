@@ -2,37 +2,48 @@
 The official executor API for validation test and full test scripts.
 '''
 
-import logging
-logger = logging.getLogger('opensubmitexec')
+import os
+import sys
+import importlib
 
-import os, shutil, json, sys, subprocess, platform, stat, importlib
-
-from .compiler import call_compiler, call_make, GCC
-from .execution import shell_execution
-from .result import Result, PassResult, FailResult, ExecutorBrokenResult
+from .compiler import call_compiler, call_make, call_configure, GCC
+from .result import PassResult, FailResult
 from .config import read_config
 from . import server
 
+import logging
+logger = logging.getLogger('opensubmitexec')
+
+
 class Job():
-    _config = None                # The current executor configuration.
-    _online = None                # Should we talk to the configured OpenSubmit server? 
+    # The current executor configuration.
+    _config = None
+    # Talk to the configured OpenSubmit server?
+    _online = None
+    # Download source for the student sub
+    submission_url = None
+    # Download source for the validator
+    validator_url = None
+    # The working directory for this job
+    working_dir = None
+    # The timeout for execution, as demanded by the server
+    timeout = None
+    # The OpenSubmit submission ID
+    submission_id = None
+    # The OpenSubmit submission file ID
+    file_id = None
 
-    submission_url = None         # Download source for the student file / archive
-    validator_url = None          # Download source for the validator file / archive
-    working_dir = None            # The working directory for this job
-    timeout = None                # The timeout for execution, as demanded by the server
-    submission_id = None          # The OpenSubmit submission ID
-    file_id = None                # The OpenSubmit submission file ID
-
-    # The base name of the validation / full test script on disk, for importing.
+    # The base name of the validation / full test script
+    # on disk, for importing.
     validator_import_name = 'validator'
 
     @property
-    # The file name of the validation / full test script on disk, after unpacking / renaming.
+    # The file name of the validation / full test script
+    # on disk, after unpacking / renaming.
     def validator_script_name(self):
         return self.working_dir + self.validator_import_name + '.py'
 
-    def __init__(self, config = None, online = True):
+    def __init__(self, config=None, online=True):
         if config:
             self._config = config
         else:
@@ -69,24 +80,25 @@ class Job():
         Send test result to the OpenSubmit server.
         '''
         if result:
-            post_data = [("SubmissionFileId",self.file_id),
-                        ("Message", result.info_student),
-                        ("MessageTutor", result.info_tutor),
-                        ("ExecutorDir", self.working_dir),
-                        ("ErrorCode", result.error_code),
-                        ("Secret", self._config.get("Server","secret")),
-                        ("UUID", self._config.get("Server","uuid"))
-                        ]
-            logger.debug('Sending result to OpenSubmit Server: '+str(post_data))
+            post_data = [("SubmissionFileId", self.file_id),
+                         ("Message", result.info_student),
+                         ("MessageTutor", result.info_tutor),
+                         ("ExecutorDir", self.working_dir),
+                         ("ErrorCode", result.error_code),
+                         ("Secret", self._config.get("Server", "secret")),
+                         ("UUID", self._config.get("Server", "uuid"))
+                         ]
+            logger.debug(
+                'Sending result to OpenSubmit Server: ' + str(post_data))
             if self._online:
                 server.send(self._config, "/jobs/", post_data)
         else:
             logger.debug('Result is empty, nothing to send.')
 
-
     def delete_binaries(self):
         '''
-        Scans the submission files in the self.working_dir for binaries and deletes them.
+        Scans the submission files in the self.working_dir for
+        binaries and deletes them.
         Returns the list of deleted files.
         '''
         pass
@@ -94,19 +106,28 @@ class Job():
     def run_configure(self, mandatory=True):
         '''
         Runs the configure tool configured for the machine in self.working_dir.
-        Returns a CompletedProcess object.
+
+        Returns a Result object.
         '''
-        pass
+        result = call_configure(self.working_dir)
+        if mandatory:
+            return result
+        else:
+            return PassResult()
 
     def run_make(self, mandatory=True):
         '''
         Runs the make tool configured for the machine in self.working_dir.
-        Returns a CompletedProcess object.
-        '''
-        logger.debug("Running make ...")
-        return call_make(self.working_dir)
 
-    def run_compiler(self, compiler=GCC, output=None, inputs=None):
+        Returns a Result object.
+        '''
+        result = call_make(self.working_dir)
+        if mandatory:
+            return result
+        else:
+            return PassResult()
+
+    def run_compiler(self, compiler=GCC, inputs=None, output=None):
         '''
         Runs the compiler in self.working_dir.
 
@@ -115,22 +136,27 @@ class Job():
         logger.debug("Running compiler ...")
         return call_compiler(self.working_dir, compiler, output, inputs)
 
+    def run_build(self, inputs, output):
+        self.run_configure(mandatory=False)
+        self.run_make(mandatory=False)
+        return self.run_compiler(inputs=inputs, output=output)
+
     def run_binary(self, args, timeout, exclusive=False):
         '''
         Runs something from self.working_dir in a shell.
         The caller can demand exclusive execution on this machine.
         Returns a CompletedProcess object.
         '''
-        pass
+        return FailResult("Not implemented")
 
     def find_keywords(self, keywords, filepattern):
         '''
         Searches self.working_dir for files containing specific keywords.
-        Expects a list of keywords to be searched for and the file pattern (*.c)
-        as parameters.
+        Expects a list of keywords to be searched for and the file pattern
+        (*.c) as parameters.
         Returns the names of the files containing all of the keywords.
         '''
-        pass
+        return FailResult("Not implemented")
 
     def ensure_files(self, filenames):
         '''
@@ -139,10 +165,10 @@ class Job():
 
         Returns a Result object.
         '''
-        logger.debug("Testing {0} for the following files: {1}".format(self.working_dir, filenames))
+        logger.debug("Testing {0} for the following files: {1}".format(
+            self.working_dir, filenames))
         dircontent = os.listdir(self.working_dir)
         for fname in filenames:
             if fname not in dircontent:
-                return FailResult("The file %s is missing."%fname)
-        return PassResult("All files found: "+','.join(filenames))
-
+                return FailResult("The file %s is missing." % fname)
+        return PassResult("All files found: " + ','.join(filenames))
