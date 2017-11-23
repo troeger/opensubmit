@@ -20,6 +20,7 @@ def create_validatable_submission(user, assignment, upload):
     '''
     Create a submission that is ready to be fetched.
     '''
+    assert(assignment.has_attachment)
     sub = Submission(
         assignment=assignment,
         submitter=user,
@@ -35,6 +36,7 @@ def create_validated_submission(user, assignment, test_host='127.0.0.1'):
     '''
     Create a submission that already has test results in the database.
     '''
+    assert(assignment.has_attachment)
     machine = create_test_machine(test_host)
     sf = create_tested_submission_file(machine)
     sub = Submission(

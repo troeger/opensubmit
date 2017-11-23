@@ -11,6 +11,7 @@ import os
 class SubmissionModel(SubmitStudentScenarioTestCase):
 
     def test_info_file_creation(self):
+        self.create_submissions()
         sub = self.hard_deadline_passed_assignment_sub
         # Info file is opened in write-only mode,
         # so we need the explicit re-opening and deletion here
@@ -55,11 +56,13 @@ class SubmissionModel(SubmitStudentScenarioTestCase):
                 self.assertEqual(ass.can_create_submission(user), True)
 
     def test_cannot_double_submit(self):
+        self.create_submissions()
         for sub in self.submissions:
             self.assertEqual(sub.assignment.can_create_submission(
                 self.user), False)
 
     def test_can_modify_submission(self):
+        self.create_submissions()
         self.assertEqual(self.open_assignment_sub.can_modify(
             self.user), True)
         self.assertEqual(self.soft_deadline_passed_assignment_sub.can_modify(
@@ -70,10 +73,12 @@ class SubmissionModel(SubmitStudentScenarioTestCase):
             self.user), True)
 
     def test_cannot_modify_submission_after_deadline(self):
+        self.create_submissions()
         self.assertEqual(self.hard_deadline_passed_assignment_sub.can_modify(
             self.user), False)
 
     def test_can_or_cannot_reupload_submissions(self):
+        self.create_submissions()
         for state, desc in Submission.STATES:
             for submission in self.submissions:
                 submission.state = state

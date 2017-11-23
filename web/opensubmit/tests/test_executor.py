@@ -10,18 +10,23 @@ import os.path
 import sys
 
 from django.core import mail
-from django.test import LiveServerTestCase, TestCase
+from django.conf import settings
+from django.test import TestCase
 from django.test.utils import override_settings
-from opensubmit.tests.cases import SubmitStudentTestCase
+from opensubmit.tests.cases import SubmitStudentScenarioTestCase
 from django.core.urlresolvers import reverse
 
 from opensubmit.models import TestMachine, SubmissionTestResult, Submission
 from opensubmit.tests import utils
-from opensubmit import settings
+
+from .helpers.submission import create_validatable_submission
+from .helpers.submission import create_validated_submission
+from .helpers.djangofiles import create_submission_file
+from .helpers.user import create_user, get_student_dict
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
 # pyflakes: disable=E402
-import opensubmitexec
+from opensubmitexec import config, cmdline, server
 
 
 class Validation(TestCase):
@@ -31,7 +36,7 @@ class Validation(TestCase):
 
     def setUp(self):
         super(Validation, self).setUp()
-        self.config = opensubmitexec.config.read_config(
+        self.config = config.read_config(
             os.path.dirname(__file__) + "/executor.cfg")
 
     def test_all(self):
@@ -45,27 +50,28 @@ class Validation(TestCase):
 
         for root, dirs, files in os.walk(base_dir):
             for directory in dirs:
-                opensubmitexec.cmdline.copy_and_run(
+                cmdline.copy_and_run(
                     self.config, root + directory)
 
 
-class Communication(SubmitStudentTestCase, LiveServerTestCase):
+class Communication(SubmitStudentScenarioTestCase):
     '''
     Tests for the communication of the executor with the OpenSubmit server.
     '''
 
     def setUp(self):
+        settings.MAIN_URL = self.live_server_url
         super(Communication, self).setUp()
-        self.config = opensubmitexec.config.read_config(
+        self.config = config.read_config(
             os.path.dirname(__file__) + "/executor.cfg",
             override_url=self.live_server_url)
 
     def _register_executor(self):
-        opensubmitexec.server.send_hostinfo(self.config)
+        server.send_hostinfo(self.config)
         return TestMachine.objects.order_by('-last_contact')[0]
 
     def _run_executor(self):
-        return opensubmitexec.cmdline.download_and_run(self.config)
+        return cmdline.download_and_run(self.config)
 
     def _register_test_machine(self):
         '''
@@ -73,7 +79,8 @@ class Communication(SubmitStudentTestCase, LiveServerTestCase):
         - Create validatable submission
         - Register a test machine for it
         '''
-        sub = self.createValidatableSubmission(self.current_user)
+        sf = create_submission_file()
+        sub = create_validatable_submission(self.user, self.validated_assignment, sf)
         test_machine = self._register_executor()
         sub.assignment.test_machines.add(test_machine)
         return sub
@@ -103,26 +110,28 @@ class Communication(SubmitStudentTestCase, LiveServerTestCase):
         self.assertNotEqual(True, self._run_executor())
 
     def test_everything_already_tested(self):
-        self.createValidatedSubmission(self.current_user)
+        create_validated_submission(self.user, self.validated_assignment)
         assert(self._register_executor().pk)
-        self.assertEqual(None, self._run_executor())
+        self.assertEqual(False, self._run_executor())
 
     def test_parallel_executors_test(self):
-        self.validatedAssignment.test_machines.add(self._register_executor())
-        num_students = len(self.enrolled_students)
-        subs = [self.createValidatableSubmission(
-            stud) for stud in self.enrolled_students]
+        self.validated_assignment.test_machines.add(self._register_executor())
+        subs = []
+        for i in range(1,5):
+            stud = create_user(get_student_dict(i))
+            self.course.participants.add(stud.profile)
+            self.course.save()
+            sf = create_submission_file()
+            subs.append(create_validatable_submission(stud, self.validated_assignment, sf))
 
         # Span a number of threads, each triggering the executor
         # This only creates a real test case if executor serialization
         # is off (see tests/executor.cfg)
-        return_codes = utils.run_parallel(num_students, self._run_executor)
-        # Compile + validation + full test makes 3 expected successful runs
+        return_codes = utils.run_parallel(len(subs), self._run_executor)
         self.assertEqual(
             len(list(filter((lambda x: x is True), return_codes))),
-            num_students)
+            len(subs))
 
-        # Make sure that compilation result is given
         for sub in subs:
             results = SubmissionTestResult.objects.filter(
                 submission_file=sub.file_upload,
@@ -143,7 +152,7 @@ class Communication(SubmitStudentTestCase, LiveServerTestCase):
         # wait for the timeout
         time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(None, self._run_executor())
+        self.assertEqual(True, self._run_executor())
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
@@ -213,7 +222,8 @@ class Communication(SubmitStudentTestCase, LiveServerTestCase):
         Since executor execution and submission sending is one step,
         we need to mock the incoming invalid executor request.
         '''
-        self.sub = self.createValidatableSubmission(self.current_user)
+        sf = create_submission_file()
+        self.sub = create_validatable_submission(self.user, self.validated_assignment, sf)
         test_machine = self._register_executor()
         self.sub.assignment.test_machines.add(test_machine)
         self.sub.state = Submission.TEST_FULL_PENDING
@@ -236,19 +246,19 @@ class Communication(SubmitStudentTestCase, LiveServerTestCase):
         fake_machine = TestMachine(host="127.0.0.2")
         fake_machine.save()
         # Assign each of them to a different assignment
-        self.openAssignment.test_machines.add(real_machine)
-        self.validatedAssignment.test_machines.add(fake_machine)
+        self.open_assignment.test_machines.add(real_machine)
+        self.validated_assignment.test_machines.add(fake_machine)
         # Produce submission for the assignment linked to fake_machine
         sub1 = Submission(
-            assignment=self.validatedAssignment,
-            submitter=self.current_user.user,
+            assignment=self.validated_assignment,
+            submitter=self.user,
             state=Submission.TEST_VALIDITY_PENDING,
-            file_upload=self.createSubmissionFile()
+            file_upload=create_submission_file()
         )
         sub1.save()
         # Run real_machine executor, should not react on this submission
         old_sub1_state = sub1.state
-        self.assertEqual(None, self._run_executor())
+        self.assertEqual(False, self._run_executor())
         # Make sure that submission object was not touched,
         # whatever the executor says
         sub1 = Submission.objects.get(pk=sub1.pk)

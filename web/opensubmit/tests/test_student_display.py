@@ -12,6 +12,7 @@ from .helpers.testmachine import create_test_machine
 
 class Student(SubmitStudentScenarioTestCase):
     def test_assignment_description_url_on_dashboard(self):
+        self.create_submissions()
         response = self.c.get('/dashboard/')
         # Check for assignment description links of open assignments
         for assignment in self.all_assignments:
@@ -22,6 +23,7 @@ class Student(SubmitStudentScenarioTestCase):
             self.assertContains(response, sub.assignment.url())
 
     def test_can_see_submissions(self):
+        self.create_submissions()
         cases = {
             self.open_assignment_sub: (200, ),
             self.soft_deadline_passed_assignment_sub: (200, ),
@@ -33,9 +35,13 @@ class Student(SubmitStudentScenarioTestCase):
             self.assertIn(response.status_code, expected_responses)
 
     def test_validation_result_rendering(self):
-        sub = create_validated_submission(self.user, self.open_assignment)
+        sub = create_validated_submission(self.user, self.open_file_assignment)
         response = self.c.get('/details/%s/' % sub.pk)
-        self.assertContains(response, str(sub.get_validation_result().result))
+        assert(sub.get_validation_result().result)
+        # Search for headline
+        self.assertContains(response, "Validity test result:")
+        # Search for content
+        self.assertContains(response, sub.get_validation_result().result)
 
     def test_can_see_only_enabled_course_assignments(self):
         # One default course registration in cases.py
@@ -84,6 +90,8 @@ class Student(SubmitStudentScenarioTestCase):
 
         # One default course registration in cases.py
         assignments_before = len(student.profile.open_assignments())
+        self.assertEqual(assignments_before,
+                         len(self.all_student_visible_assignments))
 
         # Go to root URL with course demand,
         # message for missing details should show up
@@ -96,6 +104,7 @@ class Student(SubmitStudentScenarioTestCase):
         self.assertNotEqual(assignments_before, assignments_after)
 
     def test_cannot_see_other_users(self):
+        self.create_submissions()
         self.create_and_login_user(get_student_dict(1))
         cases = {
             self.open_assignment_sub: (403, ),

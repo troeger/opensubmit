@@ -11,7 +11,11 @@ def create_description_file(relpath="/submfiles/validation/0100fff/python.pdf"):
                       str(datetime.datetime.now()))
 
 
-def create_submission_file(relpath="/submfiles/validation/1000tff/packed.zip"):
+def create_submission_file(relpath="/submfiles/validation/1000ttt/packed.zip"):
+    '''
+    Several test cases assume a packed submission with subdirs,
+    so the default above is intentional.
+    '''
     with open(rootdir + relpath, 'rb') as subfile:
         sf = SubmissionFile(attachment=DjangoFile(
             subfile, str(datetime.datetime.now())))

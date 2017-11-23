@@ -33,7 +33,26 @@ def create_pass_fail_grading():
     return pass_fail_grading
 
 
+def get_pass_grading(grading_scheme):
+    return grading_scheme.gradings.get(title=uccrap + 'passed')
+
+
+def get_fail_grading(grading_scheme):
+    return grading_scheme.gradings.objects.get(title=uccrap + 'failed')
+
+
 def create_open_assignment(course, grading_scheme, authors=3):
+    '''
+    Published: Yes
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: Yes
+    File attachment: No
+    Validation: No
+    Group work: <depends on authors parameter>
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'Open assignment',
         course=course,
@@ -50,6 +69,17 @@ def create_open_assignment(course, grading_scheme, authors=3):
 
 
 def create_uploaded_desc_assignment(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: Yes
+    File attachment: No
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'Open assignment with uploaded description file',
         course=course,
@@ -67,6 +97,17 @@ def create_uploaded_desc_assignment(course, grading_scheme):
 
 
 def create_no_hard_soft_passed_assignment(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Passed
+    Hard deadline: No
+    -> visible
+    Grading: Yes
+    File attachment: No
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'No hard soft passed deadline assignment',
         course=course,
@@ -83,6 +124,17 @@ def create_no_hard_soft_passed_assignment(course, grading_scheme):
 
 
 def create_no_grading_assignment(course):
+    '''
+    Published: Yes
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: No
+    File attachment: No
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'No grading assignment',
         course=course,
@@ -99,6 +151,17 @@ def create_no_grading_assignment(course):
 
 
 def create_unpublished_assignment(course, grading_scheme):
+    '''
+    Published: No
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> not visible
+    Grading: Yes
+    File attachment: No
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'Unpublished assignment',
         course=course,
@@ -114,7 +177,18 @@ def create_unpublished_assignment(course, grading_scheme):
     return assign
 
 
-def create_file_assignment(course, grading_scheme):
+def create_open_file_assignment(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: Yes
+    File attachment: Yes
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'File assignment',
         course=course,
@@ -131,6 +205,17 @@ def create_file_assignment(course, grading_scheme):
 
 
 def create_soft_passed_assignment(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: Yes
+    File attachment: No
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'Soft deadline passed assignment',
         course=course,
@@ -147,6 +232,17 @@ def create_soft_passed_assignment(course, grading_scheme):
 
 
 def create_hard_passed_assignment(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Passed
+    Hard deadline: Passed
+    -> not visible
+    Grading: Yes
+    File attachment: No
+    Validation: No
+    Group work: Yes
+    Upload for description: No 
+    '''
     assign = Assignment(
         title=uccrap + 'Hard deadline passed assignment',
         course=course,
@@ -163,6 +259,17 @@ def create_hard_passed_assignment(course, grading_scheme):
 
 
 def create_validated_assignment_with_archive(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: Yes
+    File attachment: Yes
+    Validation: Yes
+    Group work: Yes
+    Upload for description: No 
+    '''
     # Move test files to current MEDIA_ROOT,
     # otherwise Django security complains
     source = rootdir + 'submfiles/validation/1000tft/packed.zip'
@@ -192,6 +299,17 @@ def create_validated_assignment_with_archive(course, grading_scheme):
 
 
 def create_validated_assignment_with_file(course, grading_scheme):
+    '''
+    Published: Yes
+    Soft deadline: Not passed
+    Hard deadline: Not passed
+    -> visible
+    Grading: Yes
+    File attachment: Yes
+    Validation: Yes
+    Group work: Yes
+    Upload for description: No 
+    '''
     # Move test files to current MEDIA_ROOT,
     # otherwise Django security complains
     source = rootdir + 'submfiles/validation/1000tff/packed.zip'
@@ -224,8 +342,8 @@ def create_all_assignments(course, grading_scheme):
     return [
         create_validated_assignment_with_archive(course, grading_scheme),
         create_validated_assignment_with_file(course, grading_scheme),
-        create_file_assignment(course, grading_scheme),
-        create_soft_passed_assignment(course, grading_scheme).
+        create_open_file_assignment(course, grading_scheme),
+        create_soft_passed_assignment(course, grading_scheme),
         create_uploaded_desc_assignment(course, grading_scheme),
         create_hard_passed_assignment(course, grading_scheme),
         create_no_hard_soft_passed_assignment(course, grading_scheme),
@@ -239,7 +357,7 @@ def create_all_assignments(course, grading_scheme):
 def create_non_validated_assignments(course, grading_scheme):
     return [
         create_open_assignment(course, grading_scheme),
-        create_file_assignment(course, grading_scheme),
+        create_open_file_assignment(course, grading_scheme),
         create_no_grading_assignment(course),
         create_unpublished_assignment(course, grading_scheme),
         create_open_assignment(course, grading_scheme, authors=1),

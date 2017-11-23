@@ -14,4 +14,5 @@ def create_course(owner, tutor=None, students=None):
     if students:
         for student in students:
             c.participants.add(student.profile)
+    c.save()
     return c

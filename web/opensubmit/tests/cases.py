@@ -24,12 +24,21 @@ class MockRequest(http.HttpRequest):
     PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher', ])
 @override_settings(MEDIA_ROOT='/tmp/')
 class SubmitTestCase(LiveServerTestCase):
+    def setUp(self):
+        self.c = client.Client()
+
+    def login_user(self, user_struct):
+        self.user_struct = user_struct
+        self.c.login(username=user_struct['username'],
+                     password=user_struct['password'])
+        if not self.user:
+            uid = self.c.session['_auth_user_id']
+            self.user = User.objects.get(pk=uid)
+
     def create_and_login_user(self, user_struct):
         self.user_struct = user_struct
         self.user = create_user(user_struct)
-        self.c = client.Client()
-        self.c.login(username=user_struct['username'],
-                     password=user_struct['password'])
+        self.login_user(user_struct)
 
 
 class SubmitAdminTestCase(SubmitTestCase):
@@ -95,6 +104,9 @@ class SubmitStudentScenarioTestCase(SubmitStudentTestCase):
     To speed up test runs, it is preferrable to create
     the needed resources explicitely, instead of inherting
     from this class.
+
+    Some cases create the submissions at specific points,
+    so this is not part of the constructor.
     '''
     def setUp(self):
         super(SubmitStudentScenarioTestCase, self).setUp()
@@ -102,10 +114,12 @@ class SubmitStudentScenarioTestCase(SubmitStudentTestCase):
         self.teacher = create_user(teacher_dict)
         self.tutor = create_user(tutor_dict)
         self.course = create_course(self.admin)
-        self.another_course = create_course(self.admin)
+        self.course.participants.add(self.user.profile)
         grading = create_pass_fail_grading()
 
         self.open_assignment = create_open_assignment(
+            self.course, grading)
+        self.open_file_assignment = create_open_file_assignment(
             self.course, grading)
         self.soft_deadline_passed_assignment = create_soft_passed_assignment(
             self.course, grading)
@@ -119,17 +133,38 @@ class SubmitStudentScenarioTestCase(SubmitStudentTestCase):
             self.course, grading)
         self.uploaded_desc_assignment = create_uploaded_desc_assignment(
             self.course, grading)
+        self.validated_assignment = create_validated_assignment_with_file(
+            self.course, grading)
 
         self.all_assignments = (
             self.open_assignment,
+            self.open_file_assignment,
             self.soft_deadline_passed_assignment,
             self.hard_deadline_passed_assignment,
             self.no_hard_assignment,
             self.no_grading_assignment,
             self.unpublished_assignment,
-            self.uploaded_desc_assignment
+            self.uploaded_desc_assignment,
+            self.validated_assignment
         )
 
+        self.all_student_visible_assignments = (
+            self.open_assignment,
+            self.open_file_assignment,
+            self.soft_deadline_passed_assignment,
+            self.no_hard_assignment,
+            self.no_grading_assignment,
+            self.uploaded_desc_assignment,
+            self.validated_assignment
+        )
+
+        self.another_course = create_course(self.admin)
+
+        self.another_open_assignment = create_open_assignment(
+            self.another_course, grading)
+
+
+    def create_submissions(self):
         self.open_assignment_sub = create_submission(
             self.user,
             self.open_assignment)
