@@ -1,27 +1,20 @@
-import os
-
 import json
 import io
-import shutil
-import tarfile
-import tempfile
-import urllib.request, urllib.parse, urllib.error
 import zipfile
 import csv
 
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied, SuspiciousOperation
-from django.core.mail import mail_managers, send_mail, send_mass_mail
+from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mass_mail
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
 from django.forms.models import model_to_dict
@@ -31,7 +24,7 @@ from .forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, Ma
 from .models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
 from .models.userprofile import db_fixes, move_user_data
 from .models.course import lti_secret
-from .settings import JOB_EXECUTOR_SECRET, MAIN_URL
+from .settings import MAIN_URL
 from .social import passthrough
 
 
@@ -41,10 +34,12 @@ def index(request):
 
     return render(request, 'index.html', {})
 
+
 @login_required
 def logout(request):
     auth.logout(request)
     return redirect('index')
+
 
 @login_required
 def settings(request):
@@ -80,18 +75,22 @@ def dashboard(request):
     db_fixes(request.user)
     profile = request.user.profile
 
-    # If this is pass-through authentication, we can determine additional information
+    # If this is pass-through authentication,
+    # we can determine additional information
     if 'passthroughauth' in request.session:
         if 'ltikey' in request.session['passthroughauth']:
-            # User coming through LTI. Check the course having this LTI key and enable it for the user.
+            # User coming through LTI.
+            # Check the course having this LTI key and
+            # enable it for the user.
             try:
                 ltikey = request.session['passthroughauth']['ltikey']
-                request.session['ui_disable_logout']=True
+                request.session['ui_disable_logout'] = True
                 course = Course.objects.get(lti_key=ltikey)
                 profile.courses.add(course)
                 profile.save()
-            except:
-                # This is only a comfort function, so we should not crash the app if that goes wrong
+            except Exception:
+                # This is only a comfort function,
+                # so we should not crash the app if that goes wrong
                 pass
 
     # This is the first view than can check if the user information is complete.
