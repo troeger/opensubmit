@@ -8,6 +8,7 @@ logger = logging.getLogger('opensubmitexec')
 import shutil
 import os
 import glob
+import json
 
 from urllib.request import urlopen, urlretrieve
 from urllib.error import HTTPError, URLError
@@ -106,7 +107,7 @@ def fetch_job(config):
 
         # Store validator package in working directory
         validator_fname  = job.working_dir + 'download.validator'
-        server.fetch(job.validator_url, validator_fname)
+        fetch(job.validator_url, validator_fname)
 
         # Unpack validator package
         unpack_if_needed(job.working_dir, validator_fname)
