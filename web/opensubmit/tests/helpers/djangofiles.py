@@ -11,7 +11,7 @@ def create_description_file(relpath="/submfiles/validation/0100fff/python.pdf"):
                       str(datetime.datetime.now()))
 
 
-def create_submission_file(relpath="/submfiles/validation/1000ttt/packed.zip"):
+def create_submission_file(relpath="/submfiles/validation/1000ttt/packed.tgz"):
     '''
     Several test cases assume a packed submission with subdirs,
     so the default above is intentional.

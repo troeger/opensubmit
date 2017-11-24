@@ -6,6 +6,9 @@ from opensubmit.tests.cases import SubmitStudentScenarioTestCase
 from opensubmit.models import Submission
 
 import os
+import logging
+
+logger = logging.getLogger('opensubmitexec')
 
 
 class SubmissionModel(SubmitStudentScenarioTestCase):
@@ -35,10 +38,10 @@ class SubmissionModel(SubmitStudentScenarioTestCase):
             self.hard_deadline_passed_assignment.can_create_submission(
                 self.user), False)
 
-    def test_cannot_create_submission_only_soft_passed(self):
+    def test_can_create_submission_only_soft_passed(self):
         self.assertEqual(
             self.no_hard_assignment.can_create_submission(
-                self.user), False)
+                self.user), True)
 
     def test_can_create_submission_without_grading(self):
         self.assertEqual(
@@ -53,7 +56,10 @@ class SubmissionModel(SubmitStudentScenarioTestCase):
     def test_admin_teacher_tutor_always_can_create_submission(self):
         for user in (self.admin, self.teacher, self.tutor, ):
             for ass in self.all_assignments:
-                self.assertEqual(ass.can_create_submission(user), True)
+                msg = "User {0} cannot create submission for assignment {1}".format(user, ass)
+                self.assertEqual(ass.can_create_submission(user),
+                                 True,
+                                 msg=msg)
 
     def test_cannot_double_submit(self):
         self.create_submissions()

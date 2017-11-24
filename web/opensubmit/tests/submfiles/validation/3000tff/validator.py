@@ -3,13 +3,13 @@
 from opensubmitexec import compiler
 
 def validate(job):
-	student_files = ['helloworld.c']
+	student_files = ['lib.c','lib.h','main.c']
 
-	result = job.run_build(inputs=student_files, output='helloworld')
-	assert(not result.is_ok())
+	result = job.run_build(inputs=student_files, output='add')
+	assert(result.is_ok())
 
-	result = job.run_compiler(inputs=student_files, output='helloworld')
-	assert(not result.is_ok())
+	result = job.run_compiler(inputs=student_files, output='add')
+	assert(result.is_ok())
 
 	result = job.run_make(mandatory=False)
 	assert(result.is_ok())
@@ -21,4 +21,4 @@ def validate(job):
 	assert(result.is_ok())
 
 	result = job.run_configure(mandatory=True)
-	assert(result.is_ok())
+	assert(not result.is_ok())

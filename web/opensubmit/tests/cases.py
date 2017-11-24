@@ -113,7 +113,7 @@ class SubmitStudentScenarioTestCase(SubmitStudentTestCase):
         self.admin = create_user(admin_dict)
         self.teacher = create_user(teacher_dict)
         self.tutor = create_user(tutor_dict)
-        self.course = create_course(self.admin)
+        self.course = create_course(self.teacher, self.tutor)
         self.course.participants.add(self.user.profile)
         grading = create_pass_fail_grading()
 

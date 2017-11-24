@@ -2,12 +2,18 @@
     Test cases for the executor code.
 
     Note the neccessary python search path manipulation below.
+
+Missing tests:
+
+  - Makefile in validator package should override student Makefile
+
 '''
 
 import os
 import time
 import os.path
 import sys
+import logging
 
 from django.core import mail
 from django.conf import settings
@@ -28,6 +34,8 @@ sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
 # pyflakes: disable=E402
 from opensubmitexec import config, cmdline, server
 
+logger = logging.getLogger('opensubmitexec')
+
 
 class Validation(TestCase):
     '''
@@ -39,19 +47,71 @@ class Validation(TestCase):
         self.config = config.read_config(
             os.path.dirname(__file__) + "/executor.cfg")
 
-    def test_all(self):
+    def _test_validation_case(self, directory):
         '''
-        Go through all cases in ./submfiles/validation and run them.
         Each of the validator.py files uses the Python assert()
         statement to check by itself if the result is the expected
         one for its case.
         '''
         base_dir = os.path.dirname(__file__) + '/submfiles/validation/'
+        cmdline.copy_and_run(self.config, base_dir + directory)
 
-        for root, dirs, files in os.walk(base_dir):
-            for directory in dirs:
-                cmdline.copy_and_run(
-                    self.config, root + directory)
+    def test_0100fff(self):
+        self._test_validation_case('0100fff')
+
+    def test_0100tff(self):
+        self._test_validation_case('0100tff')
+
+    def test_0100ttf(self):
+        self._test_validation_case('0100ttf')
+
+    def test_1000fff(self):
+        self._test_validation_case('1000fff')
+
+    def test_1000fft(self):
+        self._test_validation_case('1000fft')
+
+    def test_1000tff(self):
+        self._test_validation_case('1000tff')
+
+    def test_1000tft(self):
+        self._test_validation_case('1000tft')
+
+    def test_1000ttf(self):
+        self._test_validation_case('1000ttf')
+
+    def test_1000ttt(self):
+        self._test_validation_case('1000ttt')
+
+    def test_1010tff(self):
+        self._test_validation_case('1010tff')
+
+    def test_1010ttf(self):
+        self._test_validation_case('1010ttf')
+
+    def test_1100tff(self):
+        self._test_validation_case('1100tff')
+
+    def test_1100ttf(self):
+        self._test_validation_case('1100ttf')
+
+    def test_3000tff(self):
+        self._test_validation_case('3000tff')
+
+    def test_3000ttf(self):
+        self._test_validation_case('3000ttf')
+
+    def test_3010tff(self):
+        self._test_validation_case('3010tff')
+
+    def test_3010ttf(self):
+        self._test_validation_case('3010ttf')
+
+    def test_b000tff(self):
+        self._test_validation_case('b000tff')
+
+    def test_b010tff(self):
+        self._test_validation_case('b010tff')
 
 
 class Communication(SubmitStudentScenarioTestCase):
@@ -80,7 +140,8 @@ class Communication(SubmitStudentScenarioTestCase):
         - Register a test machine for it
         '''
         sf = create_submission_file()
-        sub = create_validatable_submission(self.user, self.validated_assignment, sf)
+        sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
         test_machine = self._register_executor()
         sub.assignment.test_machines.add(test_machine)
         return sub
@@ -115,14 +176,16 @@ class Communication(SubmitStudentScenarioTestCase):
         self.assertEqual(False, self._run_executor())
 
     def test_parallel_executors_test(self):
+        NUM_PARALLEL = 3
         self.validated_assignment.test_machines.add(self._register_executor())
         subs = []
-        for i in range(1,5):
+        for i in range(1, NUM_PARALLEL + 1):
             stud = create_user(get_student_dict(i))
             self.course.participants.add(stud.profile)
             self.course.save()
             sf = create_submission_file()
-            subs.append(create_validatable_submission(stud, self.validated_assignment, sf))
+            subs.append(create_validatable_submission(
+                stud, self.validated_assignment, sf))
 
         # Span a number of threads, each triggering the executor
         # This only creates a real test case if executor serialization
@@ -137,7 +200,7 @@ class Communication(SubmitStudentScenarioTestCase):
                 submission_file=sub.file_upload,
                 kind=SubmissionTestResult.VALIDITY_TEST
             )
-            self.assertEqual(1, len(results))
+            self.assertEqual(NUM_PARALLEL, len(results))
             self.assertNotEqual(0, len(results[0].result))
 
     def test_too_long_validation(self):
@@ -223,7 +286,8 @@ class Communication(SubmitStudentScenarioTestCase):
         we need to mock the incoming invalid executor request.
         '''
         sf = create_submission_file()
-        self.sub = create_validatable_submission(self.user, self.validated_assignment, sf)
+        self.sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
         test_machine = self._register_executor()
         self.sub.assignment.test_machines.add(test_machine)
         self.sub.state = Submission.TEST_FULL_PENDING

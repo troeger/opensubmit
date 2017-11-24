@@ -11,5 +11,6 @@ is the following:
 - Pos 3: Number of Makefiles ('0'/'1')
 - Pos 4: Number of configure files ('0'/'1')
 - Pos 5: Submission zipped ('t'rue/'f'alse)
-- Pos 6: Submission files in subdirectory in archive ('t'rue/'f'alse)
-- Pos 7: Validator zipped ('t'rue/'f'alse)
+- Pos 6: Submission files in single subdirectory in archive ('t'rue/'f'alse)
+- Pos 7: Validator zipped ('t'rue/'f'alse), either named validator.py or validator.zip
+

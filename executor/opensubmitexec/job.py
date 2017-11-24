@@ -137,8 +137,11 @@ class Job():
         return call_compiler(self.working_dir, compiler, output, inputs)
 
     def run_build(self, inputs, output):
+        logger.debug("Running build (configure) ...")
         self.run_configure(mandatory=False)
+        logger.debug("Running build (make) ...")
         self.run_make(mandatory=False)
+        logger.debug("Running build (compiler) ...")
         return self.run_compiler(inputs=inputs, output=output)
 
     def run_binary(self, args, timeout, exclusive=False):
