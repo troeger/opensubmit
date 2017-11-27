@@ -49,9 +49,14 @@ def shell_execution(cmdline, working_dir, timeout=None):
 
     cmdline is an array.
     '''
-    got_timeout = False
+
     # Allow code to load its own libraries
     os.environ["LD_LIBRARY_PATH"] = working_dir
+
+    cmd_text = ' '.join(cmdline)
+
+    logger.debug("Let's execute '{0}' in {1} ...".format(cmd_text, working_dir))
+
     try:
         if platform.system() == "Windows":
             proc = subprocess.Popen(cmdline,
@@ -70,39 +75,42 @@ def shell_execution(cmdline, working_dir, timeout=None):
         output = None
 
         try:
+            got_timeout = False
             output, stderr = proc.communicate(timeout=timeout)
-            logger.debug("Process regulary finished.")
-        except subprocess.TimeoutExpired as e:
+            logger.debug("Execution finished in time.")
+        except subprocess.TimeoutExpired:
             got_timeout = True
-            logger.debug("Process killed by timeout: " + str(e))
 
         if output is None:
             output = ""
 
+    except FileNotFoundError:
+        details = "Tried to execute '%s', but this file cannot be found."%(cmd_text)
+        logger.info(details)
+        return FailResult(info_student=details)
+
     except Exception:
-        details = str(sys.exc_info())
-        logger.info("Exception on process execution: " + details)
-        return FailResult("Internal error on execution: " + details)
+        details = "Execution of '{0}' failed: {1}".format(cmd_text, str(sys.exc_info()))
+        logger.info(details)
+        return FailResult(info_student=details)
 
-    logger.info("Executed {0} with error code {1}.".format(
-        cmdline, proc.returncode))
-    if proc.returncode != 0:
-        logger.debug("Output of the failed execution:\n" + output)
-    dircontent = os.listdir(working_dir)
-    logger.debug("Working directory after execution: " + str(dircontent))
-
-    if got_timeout:
-        res = FailResult(
-            "Execution was terminated because it took too long (%u seconds). Output so far:\n\n%s" % (timeout, output))
     else:
-        text = 'Execution of "{0}" ended with error code {1}.\n{2}\nDirectory content as I see it:\n{3}'.format(
-               ' '.join(cmdline),
-               proc.returncode,
-               output,
-               str(dircontent))
+        dircontent = str(os.listdir(working_dir))
+        logger.debug("Working directory after execution: " + dircontent)
+
+        # No exception, but timeout, so we still have no error code
+        if got_timeout:
+            details = "Execution of '{0}' was terminated because it took too long ({1} seconds).\n".format(cmd_text, timeout)
+            details += "This was the output so far: \n{0}\n".format(output)
+            return FailResult(info_student=details)
+
+        # Ok, it seems like we got a legitimate error code
+        details = "Execution of '{0}' finished with error code {1}.\n".format(cmd_text, proc.returncode)
+        details += "This was the output: \n{0}\n".format(output)
+        details += "The working directory now looks like this: \n{0}".format(dircontent)
+
         if proc.returncode == 0:
-            res = PassResult(text)
+            res = PassResult(details)
         else:
-            res = FailResult(text)
-            res.error_code = proc.returncode
-    return res
+            res = FailResult(info_student=details, error_code=proc.returncode)
+        return res
