@@ -15,7 +15,7 @@ rootdir = os.path.dirname(__file__) + os.sep
 
 
 # Override for log output during test run
-log_level = logging.DEBUG
+log_level = logging.ERROR
 
 
 class DiscoverRunner(DjangoRunner):
