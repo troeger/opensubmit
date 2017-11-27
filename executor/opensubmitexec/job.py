@@ -9,6 +9,7 @@ import importlib
 from .compiler import call_compiler, call_make, call_configure, GCC
 from .result import PassResult, FailResult
 from .config import read_config
+from .execution import shell_execution, kill_longrunning
 from . import server
 
 import logging
@@ -32,6 +33,10 @@ class Job():
     submission_id = None
     # The OpenSubmit submission file ID
     file_id = None
+    # Did the validator script sent a result to the server?
+    result_sent = False
+    # Action requested by the server (legacy)
+    action = None
 
     # The base name of the validation / full test script
     # on disk, for importing.
@@ -70,7 +75,22 @@ class Job():
         importlib.reload(module)
 
         # make the call
-        module.validate(self)
+        try:
+            module.validate(self)
+        except Exception as e:
+            error_msg = "Exception while running the validate() function: {0}".format(
+                e)
+            logger.debug(error_msg)
+            if not self.result_sent:
+                logger.debug(
+                    "Sending negative result in the name of the validation script.")
+                self.send_result(FailResult(error_msg))
+                return
+        if not self.result_sent:
+            logger.debug(
+                "Validation script forgot result sending, sending positive default text.")
+            self.send_result(PassResult(
+                "The validation was successful. Good job!"))
 
         # roll back
         sys.path = old_path
@@ -82,6 +102,7 @@ class Job():
         if result:
             post_data = [("SubmissionFileId", self.file_id),
                          ("Message", result.info_student),
+                         ("Action", self.action),
                          ("MessageTutor", result.info_tutor),
                          ("ExecutorDir", self.working_dir),
                          ("ErrorCode", result.error_code),
@@ -92,6 +113,7 @@ class Job():
                 'Sending result to OpenSubmit Server: ' + str(post_data))
             if self._online:
                 server.send(self._config, "/jobs/", post_data)
+            self.result_sent = True
         else:
             logger.debug('Result is empty, nothing to send.')
 
@@ -142,15 +164,25 @@ class Job():
         logger.debug("Running build (make) ...")
         self.run_make(mandatory=False)
         logger.debug("Running build (compiler) ...")
-        return self.run_compiler(compiler=compiler, inputs=inputs, output=output)
+        return self.run_compiler(compiler=compiler,
+                                 inputs=inputs,
+                                 output=output)
 
-    def run_binary(self, args, timeout, exclusive=False):
+    def run_binary(self, name, args=None, timeout=None, exclusive=False):
         '''
         Runs something from self.working_dir in a shell.
         The caller can demand exclusive execution on this machine.
         Returns a CompletedProcess object.
         '''
-        return FailResult("Not implemented")
+        if type(name) is str:
+            name = [name]
+        assert(type(args is list))
+        cmdline = name + args
+
+        if exclusive:
+            kill_longrunning(self.config)
+
+        return shell_execution(cmdline, self.working_dir, timeout=timeout)
 
     def find_keywords(self, keywords, filepattern):
         '''
