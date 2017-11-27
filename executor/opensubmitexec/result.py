@@ -58,9 +58,9 @@ class FailResult(Result):
     '''
         A validation result indication failure.
     '''
-    def __init__(self, info_student=''):
+    def __init__(self, info_student='', error_code=UNSPECIFIC_ERROR):
         super().__init__()
-        self.error_code=UNSPECIFIC_ERROR
+        self.error_code=error_code
         self.info_student=info_student
 
     def __str__(self):
