@@ -27,14 +27,55 @@ from opensubmit.tests import utils
 
 from .helpers.submission import create_validatable_submission
 from .helpers.submission import create_validated_submission
-from .helpers.assignment import create_validated_assignment, create_pass_fail_grading
+from .helpers.assignment import create_validated_assignment
+from .helpers.assignment import create_pass_fail_grading
 from .helpers.djangofiles import create_submission_file
 from .helpers.user import create_user, get_student_dict
+from . import uccrap
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-from opensubmitexec import config, cmdline, server  # NOQA
+from opensubmitexec import config, cmdline, server, result  # NOQA
 
 logger = logging.getLogger('opensubmitexec')
+
+
+class Library(SubmitStudentScenarioTestCase):
+    '''
+    Tests for the executor library functions used by the validator script.
+    '''
+    def setUp(self):
+        settings.MAIN_URL = self.live_server_url
+        super(Library, self).setUp()
+        self.config = config.read_config(
+            os.path.dirname(__file__) + "/executor.cfg",
+            override_url=self.live_server_url)
+
+    def _register_executor(self):
+        server.send_hostinfo(self.config)
+        return TestMachine.objects.order_by('-last_contact')[0]
+
+    def _run_executor(self):
+        return cmdline.download_and_run(self.config)
+
+    def test_send_result(self):
+        sf = create_submission_file()
+        sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+
+        job = server.fetch_job(self.config)
+        self.assertNotEquals(None, job)
+
+        msg = uccrap + "Message from validation script."
+
+        pass_result = result.PassResult(msg)
+        job.send_result(pass_result)
+
+        db_entries = SubmissionTestResult.objects.filter(
+            kind=SubmissionTestResult.VALIDITY_TEST)
+
+        self.assertEqual(db_entries[0].result, msg)
 
 
 class Validation(TestCase):
@@ -198,11 +239,12 @@ class Communication(SubmitStudentScenarioTestCase):
         sub.assignment.test_machines.add(test_machine)
 
         # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(False, self._run_executor())
+        self.assertEqual(True, self._run_executor())
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
-        assert("timeout" in sub.get_validation_result().result)
+        text = sub.get_validation_result().result
+        self.assertIn("timeout", text)
 
     def test_too_long_full_test(self):
         sub = self._register_test_machine()
