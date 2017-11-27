@@ -37,7 +37,8 @@ setup(
         #   4 - Beta
         #   5 - Production/Stable
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6'
     ],
     install_requires=required,
     packages = ['opensubmit', 'opensubmit.admin', 'opensubmit.management.commands', 'opensubmit.migrations', 'opensubmit.models', 'opensubmit.social'],     # Just add Python packages
