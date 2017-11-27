@@ -54,7 +54,11 @@ def call_compiler(directory, compiler=GCC, output=None, inputs=None):
                 return ValidatorBrokenResult('You need to declare the output name for compilation.')
         elif element == '{inputs}':
             if inputs:
-                cmdline.append(' '.join(inputs))
+                for fname in inputs:
+                    if compiler in [GCC, GPP] and fname.endswith('.h'):
+                        logger.debug('Omitting {0} in the compiler call.'.format(fname))
+                    else:
+                        cmdline.append(fname)
             else:
                 logger.error('Missing input file names for call_compiler')
                 return ValidatorBrokenResult('You need to declare input files for compilation.')
