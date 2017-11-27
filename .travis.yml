@@ -1,12 +1,7 @@
 language: python
 python:
-  - "3.2"
-  - "3.3"
-  - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7"
-  - "3.8"
   - "nightly"
 # command to install dependencies
 install:
@@ -15,4 +10,6 @@ install:
   - pip install -r executor/requirements.txt
 # command to run tests
 script: cd web; ./manage.py test
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
