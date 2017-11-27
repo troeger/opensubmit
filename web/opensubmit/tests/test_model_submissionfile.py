@@ -49,7 +49,7 @@ class SubmissionFile(SubmitStudentTestCase):
     def testMD5UequalNonArchiveFile(self):
         sub1, sub2 = self.prepare_submission(
             "submfiles/validation/1100ttf/validator.py",
-            "submfiles/validation/1100ttf/python.pdf")
+            "submfiles/validation/1100ttf/packed.zip")
         self.assertNotEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
     def testMD5SimilarArchiveFile(self):
@@ -61,5 +61,5 @@ class SubmissionFile(SubmitStudentTestCase):
     def testMD5NonsimilarArchiveFile(self):
         sub1, sub2 = self.prepare_submission(
             "submfiles/duplicates/duplicate_copy.zip",
-            "submfiles/validation/1000ttt/packed.zip")
+            "submfiles/validation/1000ttt/packed.tgz")
         self.assertNotEqual(sub1.file_upload.md5, sub2.file_upload.md5)
