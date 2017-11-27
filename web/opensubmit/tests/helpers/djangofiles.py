@@ -4,6 +4,7 @@ from opensubmit.models import SubmissionTestResult, SubmissionFile
 from django.core.files import File as DjangoFile
 
 import datetime
+import os.path
 
 
 def create_description_file(relpath="/submfiles/validation/0100fff/python.pdf"):
@@ -17,8 +18,10 @@ def create_submission_file(relpath="/submfiles/validation/1000ttt/packed.tgz"):
     so the default above is intentional.
     '''
     with open(rootdir + relpath, 'rb') as subfile:
-        sf = SubmissionFile(attachment=DjangoFile(
-            subfile, str(datetime.datetime.now())))
+        sf = SubmissionFile(
+            attachment=DjangoFile(subfile, str(datetime.datetime.now())),
+            original_filename=os.path.basename(relpath)
+        )
         sf.save()
     return sf
 

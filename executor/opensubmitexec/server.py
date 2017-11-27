@@ -107,6 +107,7 @@ def fetch_job(config):
         job.action = headers["Action"]
         job.file_id = headers["SubmissionFileId"]
         job.sub_id = headers["SubmissionId"]
+        job.file_name = headers["SubmissionOriginalFilename"]
         if "Timeout" in headers:
             job.timeout = int(headers["Timeout"])
         if "PostRunValidation" in headers:
@@ -114,7 +115,7 @@ def fetch_job(config):
         job.working_dir = create_working_dir(config, job.sub_id)
 
         # Store submission in working directory
-        submission_fname = job.working_dir + 'download.student'
+        submission_fname = job.working_dir + job.file_name
         with open(submission_fname, 'wb') as target:
             target.write(result.read())
         assert(os.path.exists(submission_fname))

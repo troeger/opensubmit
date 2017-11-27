@@ -128,6 +128,7 @@ def jobs(request):
             "Test machine is unknown, creating entry and asking executor for configuration.")
         response = HttpResponse()
         response['Action'] = 'get_config'
+        response['APIVersion'] = '1.0.0'  # semantic versioning
         response['MachineId'] = machine.pk
         return response
 
@@ -183,6 +184,7 @@ def jobs(request):
         response['APIVersion'] = '1.0.0'  # semantic versioning
         response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
         response['SubmissionFileId'] = str(sub.file_upload.pk)
+        response['SubmissionOriginalFilename'] = sub.file_upload.original_filename
         response['SubmissionId'] = str(sub.pk)
         response['Timeout'] = sub.assignment.attachment_test_timeout
         if sub.state == Submission.TEST_VALIDITY_PENDING:

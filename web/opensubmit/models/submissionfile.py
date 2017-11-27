@@ -47,7 +47,7 @@ class SubmissionFile(models.Model):
 
     attachment = models.FileField(
         upload_to=upload_path, verbose_name="File upload")
-    upload_filename = models.CharField(max_length=255, default='student.upload')
+    original_filename = models.CharField(max_length=255, default='student.upload')
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey(
         'SubmissionFile', null=True, blank=True, editable=False)
