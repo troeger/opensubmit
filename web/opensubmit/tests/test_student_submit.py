@@ -196,10 +196,12 @@ class Student(SubmitStudentScenarioTestCase):
     def test_cannot_double_submit_through_team(self):
         first_guy = self.user
         second_guy = create_user(get_student_dict(1))
+        self.course.participants.add(second_guy.profile)
+        self.course.save()
 
         response = self.c.post('/assignments/%s/new/' %
                                self.open_assignment.pk, {
-                                   'notes': """This is a solution that student0 has submitted.""",
+                                   'notes': "This is a solution that student0 has submitted.",
                                    'authors': str(second_guy.pk)
                                })
         self.assertIn(response.status_code, (302, 200, ))
@@ -224,7 +226,7 @@ class Student(SubmitStudentScenarioTestCase):
         self.assertEqual(response.status_code, 403)
 
         submission_exists = Submission.objects.filter(
-            submitter__exact=self.user,
+            submitter__exact=second_guy,
             assignment__exact=self.open_assignment,
         ).exists()
         self.assertFalse(submission_exists)
