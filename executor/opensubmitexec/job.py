@@ -168,7 +168,7 @@ class Job():
                                  inputs=inputs,
                                  output=output)
 
-    def run_binary(self, name, args=None, timeout=None, exclusive=False):
+    def run_binary(self, name, arguments=None, timeout=None, exclusive=False):
         '''
         Runs something from self.working_dir in a shell.
         The caller can demand exclusive execution on this machine.
@@ -176,8 +176,11 @@ class Job():
         '''
         if type(name) is str:
             name = [name]
-        assert(type(args is list))
-        cmdline = name + args
+        if arguments:
+            assert(type(arguments is list))
+            cmdline = name + arguments
+        else:
+            cmdline = name
 
         if exclusive:
             kill_longrunning(self.config)
