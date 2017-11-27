@@ -136,7 +136,6 @@ class Assignment(models.Model):
         '''
             Central access control for submitting things related to assignments.
         '''
-
         if user:
             # Super users, course owners and tutors should be able to test their validations
             # before the submission is officially possible.
