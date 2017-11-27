@@ -1,7 +1,9 @@
-from django.test.runner import DiscoverRunner as DjangoRunner
-from django.conf import settings
 import os
 import unittest
+import logging
+
+from django.test.runner import DiscoverRunner as DjangoRunner
+from django.conf import settings
 from django.test.utils import setup_test_environment
 
 # Unicode crap, to be added to all test suite string input
@@ -10,6 +12,10 @@ uccrap = str('öäüßé')
 
 # Root directory of the test data, for finding the test files
 rootdir = os.path.dirname(__file__) + os.sep
+
+
+# Override for log output during test run
+log_level = logging.DEBUG
 
 
 class DiscoverRunner(DjangoRunner):
@@ -23,3 +29,9 @@ class DiscoverRunner(DjangoRunner):
         setup_test_environment()
         settings.DEBUG = True
         unittest.installHandler()
+
+        logger = logging.getLogger('OpenSubmit')
+        logger.setLevel(log_level)
+        logger = logging.getLogger('opensubmitexec')
+        logger.setLevel(log_level)
+
