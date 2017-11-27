@@ -127,6 +127,7 @@ def fake_fetch_job(config, src_dir):
 
     Check also cmdline.py.
     '''
+    logger.debug("Creating fake job from " + src_dir)
     job = Job(config, online=False)
     job.working_dir = create_working_dir(config, '42')
     case_files = glob.glob(src_dir + os.sep + '*')
@@ -141,7 +142,8 @@ def fake_fetch_job(config, src_dir):
     else:
         validator = case_files[1]
         submission = case_files[0]
-    logger.debug('{0} is the validator, {1} the submission.'.format(validator, submission))
+    logger.debug('{0} is the validator.'.format(validator))
+    logger.debug('{0} the submission.'.format(submission))
     result = prepare_working_directory(job, submission_fname=submission, validator_fname=validator)
     if not result.is_ok():
         return None
