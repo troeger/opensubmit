@@ -3,7 +3,8 @@
     security model in comparison to the ordinary views.
 '''
 from datetime import datetime, timedelta
-import os, logging
+import os
+import logging
 from time import timezone
 
 logger = logging.getLogger('OpenSubmit')
@@ -90,7 +91,6 @@ def jobs(request):
                     'Message',
                     'ErrorCode',
                     'Action',
-                    'PerfData',
                     'Secret',
                     'UUID'
 
@@ -112,17 +112,20 @@ def jobs(request):
             secret = request.POST['Secret']
             uuid = request.POST['UUID']
     except Exception as e:
-        logger.error("Error finding the neccessary data in the executor request: "+str(e))
+        logger.error(
+            "Error finding the neccessary data in the executor request: " + str(e))
         raise PermissionDenied
 
     if secret != settings.JOB_EXECUTOR_SECRET:
         raise PermissionDenied
 
     # Update last_contact information for test machine
-    machine, created = TestMachine.objects.update_or_create(host=uuid, defaults={'last_contact':datetime.now()})
+    machine, created = TestMachine.objects.update_or_create(
+        host=uuid, defaults={'last_contact': datetime.now()})
     if created:
         # ask for configuration of new execution hosts by returning the according action
-        logger.debug("Test machine is unknown, creating entry and asking executor for configuration.")
+        logger.debug(
+            "Test machine is unknown, creating entry and asking executor for configuration.")
         response = HttpResponse()
         response['Action'] = 'get_config'
         response['MachineId'] = machine.pk
@@ -130,37 +133,42 @@ def jobs(request):
 
     if request.method == "GET":
         # Clean up submissions where the answer from the executors took too long
-        pending_submissions = Submission.pending_tests.filter(file_upload__fetched__isnull=False)
+        pending_submissions = Submission.pending_tests.filter(
+            file_upload__fetched__isnull=False)
         #logger.debug("%u pending submission(s)"%(len(pending_submissions)))
         for sub in pending_submissions:
-            max_delay = timedelta(seconds=sub.assignment.attachment_test_timeout)
-            #There is a small chance that meanwhile the result was delivered, so fetched became NULL
+            max_delay = timedelta(
+                seconds=sub.assignment.attachment_test_timeout)
+            # There is a small chance that meanwhile the result was delivered, so fetched became NULL
             if sub.file_upload.fetched and sub.file_upload.fetched + max_delay < datetime.now():
-                logger.debug("Resetting executor fetch status for submission %u, due to timeout"%sub.pk)
+                logger.debug(
+                    "Resetting executor fetch status for submission %u, due to timeout" % sub.pk)
                 # TODO:  Late delivery for such a submission by the executor may lead to result overwriting. Check this.
                 sub.clean_fetch_date()
                 if sub.state == Submission.TEST_VALIDITY_PENDING:
-                    sub.save_validation_result(machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
+                    sub.save_validation_result(
+                        machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
                     sub.state = Submission.TEST_VALIDITY_FAILED
                     sub.inform_student(sub.state)
                 if sub.state == Submission.TEST_FULL_PENDING:
-                    sub.save_fulltest_result(machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.", None)
+                    sub.save_fulltest_result(
+                        machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.", None)
                     sub.state = Submission.TEST_FULL_FAILED
                 sub.save()
 
-        # Now get an appropriate submission. 
+        # Now get an appropriate submission.
         submissions = Submission.pending_tests
         submissions = submissions.filter(assignment__in=machine.assignments.all()) \
                                  .filter(file_upload__isnull=False) \
-                                 .filter(file_upload__fetched__isnull=True)        
+                                 .filter(file_upload__fetched__isnull=True)
         if len(submissions) == 0:
             # Nothing found to be fetchable
             #logger.debug("No pending work for executors")
             raise Http404
         else:
-            sub=submissions[0]
+            sub = submissions[0]
         sub.save_fetch_date()
-        sub.modified=datetime.now()
+        sub.modified = datetime.now()
         sub.save()
 
         # create HTTP response with file download
@@ -172,6 +180,7 @@ def jobs(request):
                               sub.file_upload.pk, str(sub.file_upload.attachment)), fail_silently=True)
             raise Http404
         response = HttpResponse(f, content_type='application/binary')
+        response['APIVersion'] = '1.0.0'  # semantic versioning
         response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
         response['SubmissionFileId'] = str(sub.file_upload.pk)
         response['SubmissionId'] = str(sub.pk)
@@ -184,37 +193,41 @@ def jobs(request):
             response['PostRunValidation'] = sub.assignment.full_test_url()
         else:
             assert (False)
-        logger.debug("Delivering submission %u as new %s job"%(sub.pk, response['Action']))
+        logger.debug("Delivering submission %u as new %s job" %
+                     (sub.pk, response['Action']))
         return response
 
     elif request.method == "POST":
         # first check if this is just configuration data, and not a job result
         if request.POST['Action'] == 'get_config':
-            machine = TestMachine.objects.get(pk=int(request.POST['MachineId']))
+            machine = TestMachine.objects.get(
+                pk=int(request.POST['MachineId']))
             machine.config = request.POST['Config']
             machine.save()
             return HttpResponse(status=201)
 
         # executor.py is providing the results as POST parameters
         sid = request.POST['SubmissionFileId']
-        perf_data = request.POST['PerfData'].strip()
         submission_file = get_object_or_404(SubmissionFile, pk=sid)
         sub = submission_file.submissions.all()[0]
-        logger.debug("Storing executor results for submission %u"%(sub.pk))
+        logger.debug("Storing executor results for submission %u" % (sub.pk))
         error_code = int(request.POST['ErrorCode'])
         # Job state: Waiting for validity test
         # Possible with + without full test
         # Possible with + without grading
         if request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
-            sub.save_validation_result(machine, request.POST['Message'], perf_data)
+            sub.save_validation_result(
+                machine, request.POST['Message'], None)
             if error_code == 0:
                 # We have a full test
                 if sub.assignment.attachment_test_full:
-                    logger.debug("Validity test working, setting state to pending full test")
+                    logger.debug(
+                        "Validity test working, setting state to pending full test")
                     sub.state = Submission.TEST_FULL_PENDING
                 # We have no full test
                 else:
-                    logger.debug("Validity test working, setting state to tested")
+                    logger.debug(
+                        "Validity test working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
                     if sub.assignment.gradingScheme:
                         # Assignment is graded. Get the course owner to work, if notification is enabled.
@@ -223,13 +236,15 @@ def jobs(request):
                         # Assignment is not graded. We are done here.
                         sub.state = Submission.CLOSED
             else:
-                logger.debug("Validity test not working, setting state to failed")
+                logger.debug(
+                    "Validity test not working, setting state to failed")
                 sub.state = Submission.TEST_VALIDITY_FAILED
             sub.inform_student(sub.state)
         # Job state: Waiting for full test
         # Possible with + without grading
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
-            sub.save_fulltest_result(machine, request.POST['Message'], perf_data)
+            sub.save_fulltest_result(
+                machine, request.POST['Message'], None)
             if error_code == 0:
                 logger.debug("Full test working, setting state to tested")
                 sub.state = Submission.SUBMITTED_TESTED
@@ -247,8 +262,10 @@ def jobs(request):
         # Job state: Waiting for full test of already closed jobs ("re-test")
         # Grading is already done
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.CLOSED_TEST_FULL_PENDING:
-            logger.debug("Closed full test done, setting state to closed again")
-            sub.save_fulltest_result(machine, request.POST['Message'], perf_data)
+            logger.debug(
+                "Closed full test done, setting state to closed again")
+            sub.save_fulltest_result(
+                machine, request.POST['Message'], None)
             sub.state = Submission.CLOSED
             # full tests may be performed several times and are meant to be a silent activity
             # therefore, we send no mail to the student here
@@ -257,7 +274,8 @@ def jobs(request):
             # Happens in reality only with >= 2 executors, since the second one is pulling for new jobs and triggers
             # the timeout check while the first one is still stucked with the big job.
             # Can be ignored.
-            logger.debug("Ignoring executor result, since the submission is already marked as failed.")
+            logger.debug(
+                "Ignoring executor result, since the submission is already marked as failed.")
         else:
             msg = '''
                 Dear OpenSubmit administrator,
@@ -273,10 +291,11 @@ def jobs(request):
                 Current state of the submission: %s (%s)
                 Message from the executor: %s
                 Error code from the executor: %u
-                '''%(   sub.pk, submission_file.pk, request.POST['Action'],
-                        sub.state_for_tutors(), sub.state,
-                        request.POST['Message'], error_code )
-            mail_managers('Warning: Inconsistent job state', msg, fail_silently=True)
+                ''' % (sub.pk, submission_file.pk, request.POST['Action'],
+                       sub.state_for_tutors(), sub.state,
+                       request.POST['Message'], error_code)
+            mail_managers('Warning: Inconsistent job state',
+                          msg, fail_silently=True)
         # Mark work as done
         sub.save()
         sub.clean_fetch_date()
@@ -300,7 +319,8 @@ def machines(request):
             uuid = request.POST['UUID']
             address = request.POST['Address']
         except Exception as e:
-            logger.error("Error finding the neccessary data in the executor request: "+str(e))
+            logger.error(
+                "Error finding the neccessary data in the executor request: " + str(e))
             raise PermissionDenied
 
         if secret != settings.JOB_EXECUTOR_SECRET:
@@ -312,7 +332,8 @@ def machines(request):
             machine.save()
         except:
             # Machine is not known so far, create new record
-            machine = TestMachine(host=uuid, address=address, last_contact=datetime.now())
+            machine = TestMachine(host=uuid, address=address,
+                                  last_contact=datetime.now())
             machine.save()
         # POST request contains all relevant machine information
         machine.config = request.POST['Config']

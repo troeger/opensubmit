@@ -54,12 +54,29 @@ def send_hostinfo(config):
     info = all_host_infos()
     logger.debug("Sending host information: " + str(info))
     post_data = [("Config", json.dumps(info)),
+                 ("Action", "get_config"),
                  ("UUID", config.get("Server", "uuid")),
                  ("Address", ipaddress()),
                  ("Secret", config.get("Server", "secret"))
                  ]
 
     send(config, "/machines/", post_data)
+
+
+def compatible_api_version(server_version):
+    '''
+    Check if this server API version is compatible to us.
+    '''
+    try:
+        semver = server_version.split('.')
+        if semver[0] != '1':
+            logger.error('Server API version (%s) is too new for us. Please update the executor installation.'%server_version)
+            return False
+        else:
+            return True
+    except Exception:
+        logger.error('Cannot understand the server API version (%s). Please update the executor installation.'%server_version)
+        return False
 
 
 def fetch_job(config):
@@ -75,6 +92,9 @@ def fetch_job(config):
         # Fetch information from server
         result = urlopen(url)
         headers = result.info()
+        if not compatible_api_version(headers["APIVersion"]):
+            return None
+
         if headers["Action"] == "get_config":
             # The server does not know us,
             # so it demands registration before hand.
@@ -84,6 +104,7 @@ def fetch_job(config):
 
         # Create job object with information we got
         job = Job(config)
+        job.action = headers["Action"]
         job.file_id = headers["SubmissionFileId"]
         job.sub_id = headers["SubmissionId"]
         if "Timeout" in headers:
@@ -102,7 +123,8 @@ def fetch_job(config):
         validator_fname = job.working_dir + 'download.validator'
         fetch(job.validator_url, validator_fname)
 
-        result = prepare_working_directory(job, submission_fname, validator_fname)
+        result = prepare_working_directory(
+            job, submission_fname, validator_fname)
         if not result.is_ok():
             logger.error("Preparation of working directory failed.")
             return None
@@ -144,7 +166,9 @@ def fake_fetch_job(config, src_dir):
         submission = case_files[0]
     logger.debug('{0} is the validator.'.format(validator))
     logger.debug('{0} the submission.'.format(submission))
-    result = prepare_working_directory(job, submission_fname=submission, validator_fname=validator)
+    result = prepare_working_directory(job,
+                                       submission_fname=submission,
+                                       validator_fname=validator)
     if not result.is_ok():
         return None
     else:
