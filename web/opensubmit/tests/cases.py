@@ -133,7 +133,7 @@ class SubmitStudentScenarioTestCase(SubmitStudentTestCase):
             self.course, grading)
         self.uploaded_desc_assignment = create_uploaded_desc_assignment(
             self.course, grading)
-        self.validated_assignment = create_validated_assignment_with_file(
+        self.validated_assignment = create_validated_assignment_with_archive(
             self.course, grading)
 
         self.all_assignments = (
