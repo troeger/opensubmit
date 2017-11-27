@@ -21,14 +21,15 @@ def unpack_if_needed(destination_path, fpath):
     The function moves the file, or the content if it is an
     archive, to the directory given by destination_path.
 
-    Returns a boolean indicator that is true if:
+    Returns a directory name if:
     - fpath is an archive.
-    - The archive contains only one single directory with
-      arbitrary content. This is helpful in catching the
-      typical "right-click to compress" cases for single
-      ZIP files.
+    - The archive contains only one this single directory with
+      arbitrary content.
+
+    This is helpful in catching the typical "right-click to compress"
+    cases for single ZIP files in Explorer / Finder.
     '''
-    result = False
+    result = None
 
     dircontent = os.listdir(destination_path)
     logger.debug("Content of %s before unarchiving: %s" %
@@ -48,7 +49,7 @@ def unpack_if_needed(destination_path, fpath):
                 in_this_dir = [entry for entry in files if entry.startswith(d)]
                 if len(files) == len(in_this_dir):
                     logger.debug("ZIP archive contains only one subdirectory")
-                    result = True
+                    result = d
             zip.extractall(destination_path)
     elif tarfile.is_tarfile(fpath):
         logger.debug("Detected TAR file at %s, unpacking it." % (fpath))
@@ -65,7 +66,7 @@ def unpack_if_needed(destination_path, fpath):
                 in_this_dir = [entry for entry in files if entry.startswith(d)]
                 if len(files) == len(in_this_dir):
                     logger.debug("TGZ archive contains only one subdirectory")
-                    result = True
+                    result = d
             tar.extractall(destination_path)
     else:
         if not fpath.startswith(destination_path):
@@ -123,7 +124,7 @@ def prepare_working_directory(job, submission_fname, validator_fname):
     elif single_dir:
         logger.warning(
             "The submission archive contains only one directory. I assume I should go in there ...")
-        job.working_dir = job.working_dir + dircontent[0] + os.sep
+        job.working_dir = job.working_dir + single_dir + os.sep
 
     # Unpack validator package
     single_dir = unpack_if_needed(job.working_dir, validator_fname)
