@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/troeger/opensubmit.svg?branch=master
+    :target: https://travis-ci.org/troeger/opensubmit
+
 The OpenSubmit project
 ======================
 
