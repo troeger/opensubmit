@@ -8,8 +8,10 @@ from django.utils import timezone
 from django.core.files import File as DjangoFile
 
 import datetime
-import shutil
+import os
+import logging
 
+logger = logging.getLogger('opensubmitexec')
 
 today = timezone.now()
 last_week = today - datetime.timedelta(weeks=1)
@@ -258,47 +260,21 @@ def create_hard_passed_assignment(course, grading_scheme):
     return assign
 
 
-def create_validated_assignment_with_archive(course, grading_scheme):
-    '''
-    Published: Yes
-    Soft deadline: Not passed
-    Hard deadline: Not passed
-    -> visible
-    Grading: Yes
-    File attachment: Yes
-    Validation: Yes
-    Group work: Yes
-    Upload for description: No 
-    '''
-    # Move test files to current MEDIA_ROOT,
-    # otherwise Django security complains
-    source = rootdir + 'submfiles/validation/1000tft/packed.zip'
-    dest_submission = settings.MEDIA_ROOT + "packed.zip"
-    shutil.copyfile(source, dest_submission)
-    source = rootdir + 'submfiles/validation/1000tft/validator.zip'
-    dest_validator = settings.MEDIA_ROOT + "validator.zip"
-    shutil.copyfile(source, dest_validator)
-
-    with open(dest_validator, 'rb') as validator_script:
-        assign = Assignment(
-            title=uccrap + 'Validated assignment',
-            course=course,
-            download='http://example.org/assignments/1/download' + uccrap,
-            gradingScheme=grading_scheme,
-            publish_at=last_week,
-            soft_deadline=tomorrow,
-            hard_deadline=next_week,
-            has_attachment=True,
-            validity_script_download=True,
-            attachment_test_validity=DjangoFile(validator_script),
-            attachment_test_full=DjangoFile(validator_script),
-            max_authors=3
-        )
-        assign.save()
-        return assign
-
-
 def create_validated_assignment_with_file(course, grading_scheme):
+    return create_validated_assignment(course,
+                                       grading_scheme,
+                                       'submfiles/validation/1000fft/',
+                                       'validator.zip')
+
+
+def create_validated_assignment_with_archive(course, grading_scheme):
+    return create_validated_assignment(course,
+                                       grading_scheme,
+                                       'submfiles/validation/1000tft/',
+                                       'validator.zip')
+
+
+def create_validated_assignment(course, grading_scheme, casedir, validator):
     '''
     Published: Yes
     Soft deadline: Not passed
@@ -306,20 +282,18 @@ def create_validated_assignment_with_file(course, grading_scheme):
     -> visible
     Grading: Yes
     File attachment: Yes
-    Validation: Yes
+    Validation: Yes (default is validator archive)
     Group work: Yes
     Upload for description: No 
     '''
+    basedir = rootdir + casedir
+    #logger.debug('Preparing test case from ' + basedir)
+
     # Move test files to current MEDIA_ROOT,
     # otherwise Django security complains
-    source = rootdir + 'submfiles/validation/1000tff/packed.zip'
-    dest_submission = settings.MEDIA_ROOT + "packed.zip"
-    shutil.copyfile(source, dest_submission)
-    source = rootdir + 'submfiles/validation/1000tff/validator.py'
-    dest_validator = settings.MEDIA_ROOT + "validator.py"
-    shutil.copyfile(source, dest_validator)
+    os.system('cp {0}/* {1}'.format(basedir, settings.MEDIA_ROOT))
 
-    with open(dest_validator, 'rb') as validator_script:
+    with open(settings.MEDIA_ROOT + validator, 'rb') as validator_script:
         assign = Assignment(
             title=uccrap + 'Validated assignment',
             course=course,
@@ -340,8 +314,8 @@ def create_validated_assignment_with_file(course, grading_scheme):
 
 def create_all_assignments(course, grading_scheme):
     return [
-        create_validated_assignment_with_archive(course, grading_scheme),
         create_validated_assignment_with_file(course, grading_scheme),
+        create_validated_assignment_with_archive(course, grading_scheme),
         create_open_file_assignment(course, grading_scheme),
         create_soft_passed_assignment(course, grading_scheme),
         create_uploaded_desc_assignment(course, grading_scheme),
