@@ -41,9 +41,23 @@ def unpack_if_needed(destination_path, fpath):
         with zipfile.ZipFile(fpath, "r") as zip:
             infolist = zip.infolist()
             directories = [entry.filename for entry in infolist if entry.filename.endswith('/')]
+            logger.debug("List of directory entries: "+str(directories))
+
+            # Consider this case: ['subdir1/', 'subdir1/subdir2/']
+            if len(directories) > 1:
+                redundant = []
+                for current in directories:
+                    starts_with_this = [el for el in directories if el.startswith(current)]
+                    if len(starts_with_this) == len(directories):
+                        # current is a partial directory name that is contained
+                        # in all others
+                        redundant.append(current)
+                logger.debug("Redundant directory entries: "+str(redundant))
+                directories = [entry for entry in directories if entry not in redundant]
+                logger.debug("Updated list of directory entries: "+str(directories))
+
             files = [entry.filename for entry in infolist if not entry.filename.endswith('/')]
-            logger.debug(directories)
-            logger.debug(files)
+            logger.debug("List of files: "+str(files))
             if len(directories) == 1:
                 d = directories[0]
                 in_this_dir = [entry for entry in files if entry.startswith(d)]
