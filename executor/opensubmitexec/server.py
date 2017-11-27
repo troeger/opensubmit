@@ -104,10 +104,17 @@ def fetch_job(config):
 
         # Create job object with information we got
         job = Job(config)
+
+        job.submitter_name = headers['SubmitterName']
+        job.author_names = headers['AuthorNames']
+        job.submitter_studyprogram = headers['SubmitterStudyProgram']
+        job.course = headers['Course']
+        job.assignment = headers['Assignment']
         job.action = headers["Action"]
         job.file_id = headers["SubmissionFileId"]
         job.sub_id = headers["SubmissionId"]
         job.file_name = headers["SubmissionOriginalFilename"]
+        job.submitter_student_id = headers["SubmitterStudentId"]
         if "Timeout" in headers:
             job.timeout = int(headers["Timeout"])
         if "PostRunValidation" in headers:

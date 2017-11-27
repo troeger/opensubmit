@@ -37,6 +37,18 @@ class Job():
     result_sent = False
     # Action requested by the server (legacy)
     action = None
+    # Name of the submitting student
+    submitter_name = None
+    # Student ID of the submitting student
+    submitter_student_id = None
+    # Names of the submission authors
+    author_names = None
+    # Name of the study program of the submitter
+    submitter_studyprogram = None
+    # Name of the course where this submission was done
+    course = None
+    # Name of the assignment where this job was done
+    assignment = None
 
     # The base name of the validation / full test script
     # on disk, for importing.

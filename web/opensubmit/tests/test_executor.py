@@ -10,7 +10,6 @@ Missing tests:
 '''
 
 import os
-import time
 import os.path
 import sys
 import logging
@@ -89,6 +88,23 @@ class Library(SubmitStudentScenarioTestCase):
         job = server.fetch_job(self.config)
         self.assertIn('helloworld.c', os.listdir(job.working_dir))
 
+    def test_job_attributes(self):
+        sf = create_submission_file()
+        sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+
+        job = server.fetch_job(self.config)
+        self.assertNotEquals(None, job)
+        self.assertEquals(job.timeout, self.validated_assignment.attachment_test_timeout)
+        self.assertEquals(job.sub_id, str(sub.pk))
+        self.assertEquals(job.file_id, str(sf.pk))
+        self.assertEquals(job.submitter_name, sub.submitter.get_full_name())
+        self.assertEquals(job.submitter_student_id, str(sub.submitter.profile.student_id))
+        self.assertEquals(job.submitter_studyprogram, str(sub.submitter.profile.study_program))
+        self.assertEquals(job.course, str(self.course))
+        self.assertEquals(job.assignment, str(self.validated_assignment))
 
 
 class Validation(TestCase):

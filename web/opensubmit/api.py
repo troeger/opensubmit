@@ -186,6 +186,12 @@ def jobs(request):
         response['SubmissionFileId'] = str(sub.file_upload.pk)
         response['SubmissionOriginalFilename'] = sub.file_upload.original_filename
         response['SubmissionId'] = str(sub.pk)
+        response['SubmitterName'] = sub.submitter.get_full_name()
+        response['SubmitterStudentId'] = sub.submitter.profile.student_id
+        response['AuthorNames'] = sub.author_list()
+        response['SubmitterStudyProgram'] = str(sub.submitter.profile.study_program)
+        response['Course'] = str(sub.assignment.course)
+        response['Assignment'] = str(sub.assignment)
         response['Timeout'] = sub.assignment.attachment_test_timeout
         if sub.state == Submission.TEST_VALIDITY_PENDING:
             response['Action'] = 'test_validity'
