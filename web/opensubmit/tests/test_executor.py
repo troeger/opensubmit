@@ -27,12 +27,12 @@ from opensubmit.tests import utils
 
 from .helpers.submission import create_validatable_submission
 from .helpers.submission import create_validated_submission
+from .helpers.assignment import create_validated_assignment, create_pass_fail_grading
 from .helpers.djangofiles import create_submission_file
 from .helpers.user import create_user, get_student_dict
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-# pyflakes: disable=E402
-from opensubmitexec import config, cmdline, server
+from opensubmitexec import config, cmdline, server  # NOQA
 
 logger = logging.getLogger('opensubmitexec')
 
@@ -146,21 +146,6 @@ class Communication(SubmitStudentScenarioTestCase):
         sub.assignment.test_machines.add(test_machine)
         return sub
 
-    def test_subprocess_exception(self):
-        '''
-        Test reaction when the executor crashes internally.
-        '''
-        sub = self._register_test_machine()
-
-        self.config['Execution']['script_runner'] = 'efergää4'
-        # Validation, should fail now
-        self.assertEqual(False, self._run_executor())
-        result = SubmissionTestResult.objects.get(
-            submission_file=sub.file_upload,
-            kind=SubmissionTestResult.VALIDITY_TEST
-        )
-        self.assertIn('FileNotFoundError', result.result)
-
     def test_register_executor_explicit(self):
         machine_count = TestMachine.objects.all().count()
         assert(self._register_executor().pk)
@@ -197,25 +182,23 @@ class Communication(SubmitStudentScenarioTestCase):
 
         for sub in subs:
             results = SubmissionTestResult.objects.filter(
-                submission_file=sub.file_upload,
                 kind=SubmissionTestResult.VALIDITY_TEST
             )
             self.assertEqual(NUM_PARALLEL, len(results))
             self.assertNotEqual(0, len(results[0].result))
 
     def test_too_long_validation(self):
-        sub = self._register_test_machine()
+        grading = create_pass_fail_grading()
+        assignment = create_validated_assignment(
+            self.course, grading, "/submfiles/validation/d000fff/", "validator.py")
+        sf = create_submission_file("/submfiles/validation/d000fff/helloworld.c")
+        sub = create_validatable_submission(
+            self.user, assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
 
-        # set very short timeout
-        sub.assignment.attachment_test_timeout = 1
-        sub.assignment.save()
-        # mock that this submission was already fetched for validation,
-        # and the result never returned
-        sub.save_fetch_date()
-        # wait for the timeout
-        time.sleep(2)
         # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(True, self._run_executor())
+        self.assertEqual(False, self._run_executor())
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
@@ -251,16 +234,9 @@ class Communication(SubmitStudentScenarioTestCase):
         )
         self.assertEqual(1, len(results))
 
-        # compile
-        self.sub = self.createValidatableNoArchiveSubmission(self.current_user)
-        self.sub.assignment.attachment_test_compile = False
-        self.sub.assignment.save()
-        test_machine = self._register_executor()
-        self.sub.assignment.test_machines.add(test_machine)
-        # validate
         self.assertEqual(True, self._run_executor())
         results = SubmissionTestResult.objects.filter(
-            submission_file=self.sub.file_upload,
+            submission_file=sub.file_upload,
             kind=SubmissionTestResult.VALIDITY_TEST
         )
         self.assertEqual(1, len(results))
