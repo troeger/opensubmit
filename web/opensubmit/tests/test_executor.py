@@ -31,7 +31,7 @@ from .helpers.assignment import create_validated_assignment
 from .helpers.assignment import create_pass_fail_grading
 from .helpers.djangofiles import create_submission_file
 from .helpers.user import create_user, get_student_dict
-from . import uccrap
+from . import uccrap, rootdir
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
 from opensubmitexec import config, cmdline, server, result  # NOQA
@@ -76,6 +76,19 @@ class Library(SubmitStudentScenarioTestCase):
             kind=SubmissionTestResult.VALIDITY_TEST)
 
         self.assertEqual(db_entries[0].result, msg)
+
+    def test_fetch_job_renaming(self):
+        test_machine = self._register_executor()
+        self.validated_assignment.test_machines.add(test_machine)
+        with open(rootdir + "submfiles/validation/1000fff/helloworld.c", 'rb') as f:
+            self.c.post('/assignments/%s/new/' % self.validated_assignment.pk, {
+                'notes': 'This is a test submission.',
+                'authors': str(self.user.pk),
+                'attachment': f
+            })
+        job = server.fetch_job(self.config)
+        self.assertIn('helloworld.c', os.listdir(job.working_dir))
+
 
 
 class Validation(TestCase):
@@ -231,7 +244,9 @@ class Communication(SubmitStudentScenarioTestCase):
     def test_too_long_validation(self):
         grading = create_pass_fail_grading()
         assignment = create_validated_assignment(
-            self.course, grading, "/submfiles/validation/d000fff/", "validator.py")
+            self.course, grading, "/submfiles/validation/d000fff/", "validator_run.py")
+        assignment.attachment_test_timeout = 1
+        assignment.save()
         sf = create_submission_file("/submfiles/validation/d000fff/helloworld.c")
         sub = create_validatable_submission(
             self.user, assignment, sf)
@@ -244,27 +259,32 @@ class Communication(SubmitStudentScenarioTestCase):
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
         text = sub.get_validation_result().result
-        self.assertIn("timeout", text)
+        self.assertIn("1 second", text)
 
     def test_too_long_full_test(self):
-        sub = self._register_test_machine()
+        grading = create_pass_fail_grading()
+        assignment = create_validated_assignment(
+            self.course, 
+            grading, 
+            "/submfiles/validation/d000fff/",
+            "validator_build.py",
+            "validator_run.py")
+        assignment.attachment_test_timeout = 1
+        assignment.save()
+        sf = create_submission_file("/submfiles/validation/d000fff/helloworld.c")
+        sub = create_validatable_submission(
+            self.user, assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
 
-        # perform validation step
+        # Fire up the executor for validation
         self.assertEqual(True, self._run_executor())
-        # set very short timeout
-        sub.assignment.attachment_test_timeout = 1
-        sub.assignment.save()
-        # mock that this submission was already fetched for full test,
-        # and the result never returned
-        sub.save_fetch_date()
-        # wait for the timeout
-        time.sleep(2)
-        # Fire up the executor, should mark the submission as timed out
-        self.assertEqual(None, self._run_executor())
+        # Fire up the executor for full test
+        self.assertEqual(True, self._run_executor())
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_FULL_FAILED)
-        assert("timeout" in sub.get_fulltest_result().result)
+        assert("1 second" in sub.get_fulltest_result().result)
 
     def test_single_file_validator_test(self):
         sub = self._register_test_machine()
