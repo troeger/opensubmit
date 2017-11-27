@@ -27,6 +27,9 @@ from .models.course import lti_secret
 from .settings import MAIN_URL
 from .social import passthrough
 
+import logging
+logger = logging.getLogger('OpenSubmit')
+
 
 def index(request):
     if request.user.is_authenticated():
@@ -144,26 +147,38 @@ def new(request, ass_id):
             if not ass.authors_valid(authors):
                 raise PermissionDenied("The given list of co-authors is invalid!")
 
-        # we need to fill all forms here, so that they can be rendered on validation errors
-        submissionForm = SubmissionForm(request.user, ass, request.POST, request.FILES)
+        # we need to fill all forms here,
+        # so that they can be rendered on validation errors
+        submissionForm = SubmissionForm(request.user,
+                                        ass,
+                                        request.POST,
+                                        request.FILES)
         if submissionForm.is_valid():
-            submission = submissionForm.save(commit=False)   # commit=False to set submitter in the instance
+            # commit=False to set submitter in the instance
+            submission = submissionForm.save(commit=False)
             submission.submitter = request.user
             submission.assignment = ass
             submission.state = submission.get_initial_state()
             # take uploaded file from extra field
             if ass.has_attachment:
-                submissionFile = SubmissionFile(attachment=submissionForm.cleaned_data['attachment'])
+                upload_file = request.FILES['attachment']
+                submissionFile = SubmissionFile(
+                    attachment=submissionForm.cleaned_data['attachment'],
+                    original_filename=upload_file.name)
                 submissionFile.save()
                 submission.file_upload = submissionFile
             submission.save()
-            submissionForm.save_m2m()               # because of commit=False, we first need to add the form-given authors
+            # because of commit=False, we first need to add
+            # the form-given authors
+            submissionForm.save_m2m()
             submission.save()
             messages.info(request, "New submission saved.")
             if submission.state == Submission.SUBMITTED:
-                # Initial state is SUBMITTED, which means that there is no validation
+                # Initial state is SUBMITTED,
+                # which means that there is no validation
                 if submission.assignment.gradingScheme:
-                    submission.inform_course_owner(request) # Tell tutor to correct it
+                    # Tell tutor to correct it
+                    submission.inform_course_owner(request)
                 else:
                     # No validation, no grading. We are done.
                     submission.state = Submission.CLOSED
