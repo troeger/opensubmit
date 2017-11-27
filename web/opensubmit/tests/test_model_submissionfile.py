@@ -35,30 +35,30 @@ class SubmissionFile(SubmitStudentTestCase):
         sub2 = create_validatable_submission(self.user, self.assign, f2)
         return sub1, sub2
 
-    def testMD5EqualArchiveFile(self):
+    def test_md5_equal_archive_file(self):
         sub1 = create_validated_submission(self.user, self.assign)
         sub2 = create_validated_submission(self.user, self.assign)
         self.assertEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
-    def testMD5EqualNonArchiveFile(self):
+    def test_md5_equal_non_archive_file(self):
         sub1, sub2 = self.prepare_submission(
             "submfiles/duplicates/duplicate_orig.zip",
             "submfiles/duplicates/duplicate_orig.zip")
         self.assertEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
-    def testMD5UequalNonArchiveFile(self):
+    def test_md5_uequal_non_archive_file(self):
         sub1, sub2 = self.prepare_submission(
             "submfiles/validation/1100ttf/validator.py",
             "submfiles/validation/1100ttf/packed.zip")
         self.assertNotEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
-    def testMD5SimilarArchiveFile(self):
+    def test_md5_similar_archive_file(self):
         sub1, sub2 = self.prepare_submission(
             "submfiles/duplicates/duplicate_copy.zip",
             "submfiles/duplicates/duplicate_orig.zip")
         self.assertEqual(sub1.file_upload.md5, sub2.file_upload.md5)
 
-    def testMD5NonsimilarArchiveFile(self):
+    def test_md5_nonsimilar_archive_file(self):
         sub1, sub2 = self.prepare_submission(
             "submfiles/duplicates/duplicate_copy.zip",
             "submfiles/validation/1000ttt/packed.tgz")
