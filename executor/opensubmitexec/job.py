@@ -79,7 +79,7 @@ class Job():
             module.validate(self)
         except Exception as e:
             error_msg = "Exception while running the validate() function: {0}".format(
-                e)
+                str(e))
             logger.debug(error_msg)
             if not self.result_sent:
                 logger.debug(
