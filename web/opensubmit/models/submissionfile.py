@@ -4,10 +4,15 @@ from django.core.urlresolvers import reverse
 
 from django.conf import settings
 
-import zipfile, tarfile, unicodedata, os, hashlib
+import zipfile
+import tarfile
+import unicodedata
+import os
+import hashlib
 
 import logging
 logger = logging.getLogger('OpenSubmit')
+
 
 def upload_path(instance, filename):
     '''
@@ -18,14 +23,17 @@ def upload_path(instance, filename):
     filename = unicodedata.normalize('NFKD', filename).lower()
     return os.path.join(str(timezone.now().date().isoformat()), filename)
 
+
 class ValidSubmissionFileManager(models.Manager):
     '''
         A model manager used by SubmissionFile. It returns only submission files
         that were not replaced, for submission that were not withdrawn.
     '''
+
     def get_queryset(self):
         from .submission import Submission
         return super(ValidSubmissionFileManager, self).get_queryset().filter(replaced_by=None).exclude(submissions__state=Submission.WITHDRAWN).exclude(submissions=None)
+
 
 class SubmissionFile(models.Model):
     '''
@@ -37,10 +45,14 @@ class SubmissionFile(models.Model):
         The "md5" field keeps a checksum of the file upload, for duplicate detection.
     '''
 
-    attachment = models.FileField(upload_to=upload_path, verbose_name="File upload")
+    attachment = models.FileField(
+        upload_to=upload_path, verbose_name="File upload")
+    upload_filename = models.CharField(max_length=255, default='student.upload')
     fetched = models.DateTimeField(editable=False, null=True)
-    replaced_by = models.ForeignKey('SubmissionFile', null=True, blank=True, editable=False)
-    md5 = models.CharField(max_length=36, null=True, blank=True, editable=False)
+    replaced_by = models.ForeignKey(
+        'SubmissionFile', null=True, blank=True, editable=False)
+    md5 = models.CharField(max_length=36, null=True,
+                           blank=True, editable=False)
 
     class Meta:
         app_label = 'opensubmit'
@@ -64,9 +76,10 @@ class SubmissionFile(models.Model):
 
         def md5_add_text(text):
             try:
-                text=str(text, errors='ignore')
-                text=text.replace(' ','').replace('\n','').replace('\t','')
-                hexvalues=hashlib.md5(text.encode('utf-8')).hexdigest()
+                text = str(text, errors='ignore')
+                text = text.replace(' ', '').replace(
+                    '\n', '').replace('\t', '')
+                hexvalues = hashlib.md5(text.encode('utf-8')).hexdigest()
                 md5_set.append(hexvalues)
             except Exception as e:
                 # not unicode decodable
@@ -78,7 +91,7 @@ class SubmissionFile(models.Model):
                 for chunk in f.chunks():
                     md5.update(chunk)
                 md5_set.append(md5.hexdigest())
-            except:
+            except Exception:
                 pass
 
         try:
@@ -88,7 +101,7 @@ class SubmissionFile(models.Model):
                     if zipinfo.file_size < MAX_MD5_FILE_SIZE:
                         md5_add_text(zf.read(zipinfo))
             elif tarfile.is_tarfile(self.attachment.path):
-                tf = tarfile.open(self.attachment.path,'r')
+                tf = tarfile.open(self.attachment.path, 'r')
                 for tarinfo in tf.getmembers():
                     if tarinfo.isfile():
                         if tarinfo.size < MAX_MD5_FILE_SIZE:
@@ -96,16 +109,19 @@ class SubmissionFile(models.Model):
             else:
                 md5_add_file(self.attachment)
         except Exception as e:
-            logger.warning("Exception on archive MD5 computation, using file checksum: "+str(e))
+            logger.warning(
+                "Exception on archive MD5 computation, using file checksum: " + str(e))
 
-        result=hashlib.md5(''.join(sorted(md5_set)).encode('utf-8')).hexdigest()
+        result = hashlib.md5(
+            ''.join(sorted(md5_set)).encode('utf-8')).hexdigest()
         return result
 
     def basename(self):
         return self.attachment.name[self.attachment.name.rfind('/') + 1:]
 
     def get_absolute_url(self):
-        # To realize access protection for student files, we implement our own download method here.
+        # To realize access protection for student files,
+        # we implement our own download method here.
         # This implies that the Apache media serving (MEDIA_URL) is disabled.
         assert(len(self.submissions.all()) > 0)
         return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
@@ -129,22 +145,24 @@ class SubmissionFile(models.Model):
         try:
             if zipfile.is_zipfile(self.attachment.path) or tarfile.is_tarfile(self.attachment.path):
                 return True
-        except:
+        except Exception:
             pass
         return False
 
     def previews(self):
         '''
             Return preview on archive file / single file content as dictionary.
-            In order to avoid browser and web server trashing by the students, there is a size limit for the single files shown.
+            In order to avoid browser and web server trashing by the students,
+            there is a size limit for the single files shown.
         '''
         MAX_PREVIEW_SIZE = 1000000
 
         def sanitize(bytes):
-            return bytes.decode('utf-8','ignore')
+            return bytes.decode('utf-8', 'ignore')
 
         def is_code(fname):
-            code_endings=['.c','.cpp','Makefile','.java','.py','.rb','.js']
+            code_endings = ['.c', '.cpp', 'Makefile',
+                            '.java', '.py', '.rb', '.js']
             for ending in code_endings:
                 if fname.endswith(ending):
                     return True
@@ -155,22 +173,27 @@ class SubmissionFile(models.Model):
             zf = zipfile.ZipFile(self.attachment.path, 'r')
             for zipinfo in zf.infolist():
                 if zipinfo.file_size < MAX_PREVIEW_SIZE:
-                    result.append({'name': zipinfo.filename, 'is_code': is_code(zipinfo.filename), 'preview': sanitize(zf.read(zipinfo))})
+                    result.append({'name': zipinfo.filename, 'is_code': is_code(
+                        zipinfo.filename), 'preview': sanitize(zf.read(zipinfo))})
                 else:
-                    result.append({'name': zipinfo.filename, 'is_code': False, 'preview': '(maximum size exceeded)'})
+                    result.append(
+                        {'name': zipinfo.filename, 'is_code': False, 'preview': '(maximum size exceeded)'})
         elif tarfile.is_tarfile(self.attachment.path):
-            tf = tarfile.open(self.attachment.path,'r')
+            tf = tarfile.open(self.attachment.path, 'r')
             for tarinfo in tf.getmembers():
                 if tarinfo.isfile():
                     if tarinfo.size < MAX_PREVIEW_SIZE:
-                        result.append({'name': tarinfo.name, 'is_code': is_code(tarinfo.name), 'preview': sanitize(tf.extractfile(tarinfo).read())})
+                        result.append({'name': tarinfo.name, 'is_code': is_code(
+                            tarinfo.name), 'preview': sanitize(tf.extractfile(tarinfo).read())})
                     else:
-                        result.append({'name': tarinfo.name, 'is_code': False, 'preview': '(maximum size exceeded)'})
+                        result.append(
+                            {'name': tarinfo.name, 'is_code': False, 'preview': '(maximum size exceeded)'})
         else:
             # single file
-            f=open(self.attachment.path,'rb')
-            fname = f.name[f.name.rfind(os.sep)+1:]
-            result = [{'name': fname, 'is_code': is_code(fname), 'preview': sanitize(f.read())},]
+            f = open(self.attachment.path, 'rb')
+            fname = f.name[f.name.rfind(os.sep) + 1:]
+            result = [{'name': fname, 'is_code': is_code(
+                fname), 'preview': sanitize(f.read())}, ]
         return result
 
     def test_result_dict(self):
@@ -181,9 +204,8 @@ class SubmissionFile(models.Model):
             Returns a dictionary where the keys are the result types, and
             the values are dicts of all the other result information.
         '''
-        list_of_dicts=list(self.test_results.all().values())
-        return {entry['kind']: {'result':entry['result']} for entry in list_of_dicts}
+        list_of_dicts = list(self.test_results.all().values())
+        return {entry['kind']: {'result': entry['result']} for entry in list_of_dicts}
 
     objects = models.Manager()
     valid_ones = ValidSubmissionFileManager()
-
