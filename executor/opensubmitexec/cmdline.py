@@ -18,7 +18,7 @@ def download_and_run(config):
     '''
     job = fetch_job(config)
     if job:
-        job.run()
+        job._run_validate()
         return True
     else:
         return False
@@ -40,7 +40,7 @@ def copy_and_run(config, src_dir):
     '''
     job = fake_fetch_job(config, src_dir)
     if job:
-        job.run()
+        job._run_validate()
         return True
     else:
         return False

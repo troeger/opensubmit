@@ -3,8 +3,10 @@ Functions dealing with the compilation of code.
 '''
 
 from .execution import shell_execution
-from .result import ValidatorBrokenResult, FailResult
 from .filesystem import has_file
+from .exceptions import ValidatorBrokenException
+
+from exception import FileNotFoundError
 
 import logging
 logger = logging.getLogger('opensubmitexec')
@@ -13,26 +15,14 @@ GCC = ['gcc', '-o', '{output}', '{inputs}']
 GPP = ['g++', '-o', '{output}', '{inputs}']
 
 
-def call_configure(directory):
-    '''
-    Call configure to generate a Makefile.
-    '''
-    if has_file(directory, 'configure'):
-        logger.info("Running ./configure in " + directory)
-        return shell_execution(['configure'], directory)
-    else:
-        return FailResult("Could not find a configure script for execution.")
-
-
 def call_make(directory):
     '''
     Call make to build the stuff.
     '''
-    if has_file(directory, 'Makefile'):
-        logger.info("Running make in " + directory)
-        return shell_execution(['make'], directory)
-    else:
-        return FailResult("Could not find a Makefile.")
+    if not has_file(directory, 'Makefile'):
+        raise FileNotFoundError("Could not find a Makefile.")
+    logger.info("Running make in " + directory)
+    shell_execution(['make'], directory)
 
 
 def call_compiler(directory, compiler=GCC, output=None, inputs=None):
@@ -51,7 +41,7 @@ def call_compiler(directory, compiler=GCC, output=None, inputs=None):
                 cmdline.append(output)
             else:
                 logger.error('Missing output name for call_compiler')
-                return ValidatorBrokenResult('You need to declare the output name for compilation.')
+                raise ValidatorBrokenException("You need to declare the output name for compilation.")
         elif element == '{inputs}':
             if inputs:
                 for fname in inputs:
@@ -61,10 +51,10 @@ def call_compiler(directory, compiler=GCC, output=None, inputs=None):
                         cmdline.append(fname)
             else:
                 logger.error('Missing input file names for call_compiler')
-                return ValidatorBrokenResult('You need to declare input files for compilation.')
+                raise ValidatorBrokenException('You need to declare input files for compilation.')
         else:
             cmdline.append(element)
 
     logger.info("Running compilation in {0} with {1}".format(
         directory, cmdline))
-    return shell_execution(cmdline, directory)
+    shell_execution(cmdline, directory)

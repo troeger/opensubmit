@@ -1,18 +1,15 @@
 #! /usr/bin/env python3
 
-from opensubmitexec import compiler
 
 def validate(job):
-	student_files = ['helloworld.c']
-	result = job.run_build(inputs=student_files, output='helloworld')
-	assert(result.is_ok())
-	result = job.run_compiler(inputs=student_files, output='helloworld')
-	assert(result.is_ok())
-	result = job.run_make(mandatory=False)
-	assert(result.is_ok())
-	result = job.run_make(mandatory=True)
-	assert(not result.is_ok())
-	result = job.run_configure(mandatory=False)
-	assert(result.is_ok())
-	result = job.run_configure(mandatory=True)
-	assert(not result.is_ok())
+    try:
+        job.run_build(inputs=['helloworld.c'], output='helloworld')
+        running = job.spawn_program('./helloworld')
+        running.expect('Please provide your input: ')
+        running.sendline('The quick brown fox')
+        running.expect('Your input was: The quick brown fox')
+        running.expect_end()
+    except Exception as e:
+        job.send_result(e)
+    else:
+        job.send_pass_result('Everything worked. Congratulations!')
