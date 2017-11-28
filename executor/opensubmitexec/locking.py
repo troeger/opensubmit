@@ -2,18 +2,22 @@
     Locking helper functions.
 '''
 
-import logging, os
+from twisted.python.lockfile import FilesystemLock
+from exception import FileNotFoundError
+import os
+
+import logging
 logger = logging.getLogger('opensubmitexec')
 
-from twisted.python.lockfile import FilesystemLock
 
 def break_lock(config):
-    fname=config.get("Execution", "pidfile")
+    fname = config.get("Execution", "pidfile")
     try:
         os.remove(fname)
         logger.info("Lock file at {0} removed.".format(fname))
     except FileNotFoundError:
         logger.info("No lock file found at {0}.".format(fname))
+
 
 class ScriptLock():
     config = None
@@ -23,14 +27,14 @@ class ScriptLock():
         '''
         Parse machine-local configuration file.
         '''
-        self.config=config
+        self.config = config
 
     def __enter__(self):
         '''
         Be a context manager.
         '''
         fname = self.config.get("Execution", "pidfile")
-        self.flock = FilesystemLock(fname) 
+        self.flock = FilesystemLock(fname)
         logger.debug("Obtaining script lock")
         self.flock.lock()
 
