@@ -8,9 +8,9 @@ import importlib
 import pexpect
 
 from . import server
-from .compiler import call_compiler, call_make, GCC
+from .compiler import compiler_cmdline, GCC
 from .config import read_config
-from .execution import kill_longrunning, shell_execution
+from .execution import kill_longrunning
 from .running import RunningProgram
 from .exceptions import JobException, RunningProgramException
 from .filesystem import has_file
@@ -112,11 +112,15 @@ class Job():
                     text_student = "Your program terminated unexpectedly."
                     text_tutor = "The student program terminated unexpectedly."
                 elif type(e.real_exception) == pexpect.TIMEOUT:
-                    text_student = "The execution of your program was cancelled, since it took longer than {0} seconds. ".format(self.timeout)
-                    text_tutor = "The execution of the program was cancelled due to the timeout of {0} seconds. ".format(self.timeout)
+                    text_student = "The execution of your program was cancelled, since it took longer than {0} seconds. ".format(
+                        self.timeout)
+                    text_tutor = "The execution of the program was cancelled due to the timeout of {0} seconds. ".format(
+                        self.timeout)
                 else:
-                    text_student = "Unexpected problem during the execution of your program. {0}".format(str(e.real_exception))
-                    text_tutor = "Unkown exception during the execution of the student program. {0}".format(str(e.real_exception))
+                    text_student = "Unexpected problem during the execution of your program. {0}".format(
+                        str(e.real_exception))
+                    text_tutor = "Unkown exception during the execution of the student program. {0}".format(
+                        str(e.real_exception))
                 output = str(e.instance._spawn.before, encoding='utf-8')
                 text_student += "\n\nOutput so far: " + output
                 text_tutor += "\n\nOutput so far: " + output
@@ -124,10 +128,20 @@ class Job():
                 # Some problem with our own code
                 text_student = e.info_student
                 text_tutor = e.info_tutor
+            elif type(e) is FileNotFoundError:
+                text_student = "A file is missing: {0}".format(
+                    str(e))
+                text_tutor = "Missing file: {0}".format(
+                    str(e))
+            elif type(e) is AssertionError:
+                text_student = "Internal problem with the vaildator."
+                text_tutor = "Your validator script is broken (failed assertion)."
             else:
                 # Something really unexpected
-                text_student = "Internal problem while validating your submission. {0}".format(str(e))
-                text_tutor = "Unknown exception while running the validator. {0}".format(str(e))
+                text_student = "Internal problem while validating your submission. {0}".format(
+                    str(e))
+                text_tutor = "Unknown exception while running the validator. {0}".format(
+                    str(e))
             # We got the text. Report the problem.
             self._send_result(text_student, text_tutor, error_code)
             return
@@ -174,39 +188,41 @@ class Job():
         '''
         Runs the configure tool configured for the machine in self.working_dir.
         '''
-        logger.debug("Running configure ...")
-        if not has_file(self.working_dir, 'configure'):
-            raise FileNotFoundError("Could not find a configure script for execution.")
-        logger.info("Running ./configure in " + self.working_dir)
+        if not has_file(self.working_dir, 'configure') and mandatory:
+            raise FileNotFoundError(
+                "Could not find a configure script for execution.")
         try:
             prog = RunningProgram(self, 'configure')
-            prog.expect_end()
+            prog.expect_exit_status(0)
         except Exception:
             if mandatory:
                 raise
-
-
-
 
     def run_make(self, mandatory=True):
         '''
         Runs the make tool configured for the machine in self.working_dir.
         '''
-        logger.debug("Running make ...")
-        result = call_make(self.working_dir)
-        if mandatory and not result.is_ok():
-            raise JobException(result)
+        if not has_file(self.working_dir, 'Makefile') and mandatory:
+            raise FileNotFoundError("Could not find a Makefile.")
+        try:
+            prog = RunningProgram(self, 'make')
+            prog.expect_exit_status(0)
+        except Exception:
+            if mandatory:
+                raise
 
     def run_compiler(self, compiler=GCC, inputs=None, output=None):
         '''
         Runs the compiler in self.working_dir.
         '''
-        logger.debug("Running compiler ...")
-        result = call_compiler(self.working_dir, compiler, output, inputs)
-        if not result.is_ok():
-            raise JobException(result)
+        # Let exceptions travel through
+        prog = RunningProgram(self, *compiler_cmdline(compiler=compiler,
+                                                      inputs=inputs,
+                                                      output=output))
+        prog.expect_exit_status(0)
 
     def run_build(self, compiler=GCC, inputs=None, output=None):
+        logger.info("Running build steps ...")
         self.run_configure(mandatory=False)
         self.run_make(mandatory=False)
         self.run_compiler(compiler=compiler,
@@ -225,30 +241,6 @@ class Job():
             kill_longrunning(self.config)
 
         return RunningProgram(self.working_dir, name, arguments, timeout)
-
-    def run_program(self, name, arguments=None, timeout=30, exclusive=False):
-        '''
-        Runs a program in the working directory to completion.
-
-        The caller can demand exclusive execution on this machine.
-
-        Returns a Result object.
-        '''
-        logger.debug("Running program to completion ...")
-        if type(name) is str:
-            name = [name]
-        if arguments:
-            assert(type(arguments is list))
-            cmdline = name + arguments
-        else:
-            cmdline = name
-
-        if exclusive:
-            kill_longrunning(self.config)
-
-        result = shell_execution(cmdline, self.working_dir, timeout=timeout)
-        if not result.is_ok():
-            raise JobException(result)
 
     def find_keywords(self, keywords, filepattern):
         '''

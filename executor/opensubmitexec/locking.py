@@ -3,7 +3,6 @@
 '''
 
 from twisted.python.lockfile import FilesystemLock
-from exception import FileNotFoundError
 import os
 
 import logging

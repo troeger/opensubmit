@@ -33,7 +33,7 @@ from .helpers.user import create_user, get_student_dict
 from . import uccrap, rootdir
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-from opensubmitexec import config, cmdline, server, result  # NOQA
+from opensubmitexec import config, cmdline, server  # NOQA
 
 logger = logging.getLogger('opensubmitexec')
 
@@ -68,8 +68,7 @@ class Library(SubmitStudentScenarioTestCase):
 
         msg = uccrap + "Message from validation script."
 
-        pass_result = result.PassResult(msg)
-        job.send_result(pass_result)
+        job.send_pass_result(info_student=msg)
 
         db_entries = SubmissionTestResult.objects.filter(
             kind=SubmissionTestResult.VALIDITY_TEST)
@@ -125,6 +124,12 @@ class Validation(TestCase):
         '''
         base_dir = os.path.dirname(__file__) + '/submfiles/validation/'
         cmdline.copy_and_run(self.config, base_dir + directory)
+        results = SubmissionTestResult.objects.filter(
+            kind=SubmissionTestResult.VALIDITY_TEST
+        )
+        self.assertEqual(1, len(results))
+        self.assertNotEqual(0, len(results[0].result))
+
 
     def test_0100fff(self):
         self._test_validation_case('0100fff')

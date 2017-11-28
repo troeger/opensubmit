@@ -125,6 +125,9 @@ def prepare_working_directory(job, submission_fname, validator_fname):
     When the student submission is a single directory, we change the
     working directory and go directly into it, before fetching the
     validator stuff.
+
+    If unrecoverable errors happen, such as an empty student archive,
+    a JobException is raised.
     '''
     single_dir = unpack_if_needed(job.working_dir, submission_fname)
     dircontent = os.listdir(job.working_dir)

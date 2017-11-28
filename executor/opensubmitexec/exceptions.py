@@ -10,7 +10,7 @@ class JobException(Exception):
 
 
 class RunningProgramException(Exception):
-    def __init__(self, instance, real_exception):
+    def __init__(self, instance, real_exception=None):
         '''
         Wrapper for an arbitrary exception
         that occured while running a student program.
