@@ -2,43 +2,49 @@
     Common functions dealing with the library configuration.
 '''
 
-import logging
-logger = logging.getLogger('opensubmitexec')
-
-import platform,os,uuid
+import platform
+import os
+import uuid
 from configparser import ConfigParser, RawConfigParser
 
 from urllib.request import urlopen
 
 from . import CONFIG_FILE_DEFAULT
 
+import logging
+logger = logging.getLogger('opensubmitexec')
+
+
 DEFAULT_SETTINGS = {
-     'Execution': {
+    'Execution': {
         'cleanup': 'True',                       # Override for disabling file cleanup
         'message_size': '10000',                 # Override for result text limit
         'timeout': '3600',                       # Override for execution timeout
-        'compile_cmd': 'make',                   # Command to compile something on this machine
+        # Command to compile something on this machine
+        'compile_cmd': 'make',
         'directory': '/tmp/',                    # Base directory for temporary directories
         'pidfile': '/tmp/executor.lock',         # Lock file for script lock
-        'script_runner': '/usr/bin/env python3'  # Execution environment for validation scripts
-        },
-     'Server': {
+        # Execution environment for validation scripts
+        'script_runner': '/usr/bin/env python3'
+    },
+    'Server': {
         'url': 'http://localhost:8000',          # OpenSubmit web server
-        'secret': '49846zut93purfh977TTTiuhgalkjfnk89', # Shared secret with OpenSubmit web server
+        # Shared secret with OpenSubmit web server
+        'secret': '49846zut93purfh977TTTiuhgalkjfnk89',
         'uuid': uuid.getnode()
-        },
-     'Logging': {
+    },
+    'Logging': {
         'format': '%%(asctime)-15s (%%(process)d): %%(message)s',
         'file': '/tmp/executor.log',
         'to_file': 'False',
         'level': 'DEBUG'
-        }
     }
+}
 
-DEFAULT_SETTINGS_FLAT={}
-for outer_key,inner_dict in DEFAULT_SETTINGS.items():
+DEFAULT_SETTINGS_FLAT = {}
+for outer_key, inner_dict in DEFAULT_SETTINGS.items():
     for key, value in inner_dict.items():
-        DEFAULT_SETTINGS_FLAT[key]=value
+        DEFAULT_SETTINGS_FLAT[key] = value
 
 DEFAULT_FILE_CONTENT = '''
 [Server]
@@ -99,6 +105,7 @@ to_file={to_file}
 level={level}
 '''
 
+
 def read_config(config_file=CONFIG_FILE_DEFAULT, override_url=None):
     ''' Read configuration file, perform sanity check and return configuration
         dictionary used by other functions.'''
@@ -107,9 +114,10 @@ def read_config(config_file=CONFIG_FILE_DEFAULT, override_url=None):
 
     try:
         config.readfp(open(config_file))
-        logger.debug("Using config file at "+config_file)
+        logger.debug("Using config file at " + config_file)
     except:
-        logger.error("Could not find {0}, running with defaults.".format(config_file))
+        logger.error(
+            "Could not find {0}, running with defaults.".format(config_file))
 
     if not logger.handlers:
         # Before doing anything else, configure logging
@@ -119,7 +127,8 @@ def read_config(config_file=CONFIG_FILE_DEFAULT, override_url=None):
             handler = logging.FileHandler(config.get("Logging", "file"))
         else:
             handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter(config.get("Logging", "format")))
+        handler.setFormatter(logging.Formatter(
+            config.get("Logging", "format")))
         logger.addHandler(handler)
     logger.setLevel(config.get("Logging", "level"))
 
@@ -128,26 +137,31 @@ def read_config(config_file=CONFIG_FILE_DEFAULT, override_url=None):
 
     return config
 
+
 def check_config(config):
     '''
         Check the executor config file for consistency.
     '''
     # Check server URL
-    url=config.get("Server", "url")
+    url = config.get("Server", "url")
     try:
         urlopen(url)
     except Exception as e:
-        logger.error("The configured OpenSubmit server URL ({0}) seems to be invalid: {1}".format(url, e))
+        logger.error(
+            "The configured OpenSubmit server URL ({0}) seems to be invalid: {1}".format(url, e))
         return False
     # Check directory specification
-    targetdir=config.get("Execution", "directory")
+    targetdir = config.get("Execution", "directory")
     if platform.system() is not "Windows" and not targetdir.startswith("/"):
-        logger.error("Please use absolute paths, starting with a /, in your Execution-directory setting.")
+        logger.error(
+            "Please use absolute paths, starting with a /, in your Execution-directory setting.")
         return False
     if not targetdir.endswith(os.sep):
-        logger.error("Your Execution-directory setting must end with a "+os.sep)
+        logger.error(
+            "Your Execution-directory setting must end with a " + os.sep)
         return False
     return True
+
 
 def has_config(config_fname):
     '''
@@ -160,19 +174,20 @@ def has_config(config_fname):
     except IOError:
         return False
 
+
 def create_config(config_fname, override_url=None):
     '''
     Create the config file from the defaults under the given name.
     '''
-    config_path=os.path.dirname(config_fname)
+    config_path = os.path.dirname(config_fname)
     os.makedirs(config_path, exist_ok=True)
 
     # Consider override URL. Only used by test suite runs
-    settings=DEFAULT_SETTINGS_FLAT
+    settings = DEFAULT_SETTINGS_FLAT
     if override_url:
-        settings['url']=override_url
+        settings['url'] = override_url
 
     # Create fresh config file, including new UUID
-    with open(config_fname,'x') as config:
+    with open(config_fname, 'x') as config:
         config.write(DEFAULT_FILE_CONTENT.format(**settings))
     return True
