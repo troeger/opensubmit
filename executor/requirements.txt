@@ -1,3 +1,4 @@
 psutil
 twisted
 py-cpuinfo
+pexpect

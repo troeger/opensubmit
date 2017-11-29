@@ -33,7 +33,7 @@ from .helpers.user import create_user, get_student_dict
 from . import uccrap, rootdir
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-from opensubmitexec import config, cmdline, server, result  # NOQA
+from opensubmitexec import config, cmdline, server  # NOQA
 
 logger = logging.getLogger('opensubmitexec')
 
@@ -68,8 +68,7 @@ class Library(SubmitStudentScenarioTestCase):
 
         msg = uccrap + "Message from validation script."
 
-        pass_result = result.PassResult(msg)
-        job.send_result(pass_result)
+        job.send_pass_result(info_student=msg)
 
         db_entries = SubmissionTestResult.objects.filter(
             kind=SubmissionTestResult.VALIDITY_TEST)
@@ -275,7 +274,7 @@ class Communication(SubmitStudentScenarioTestCase):
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
         text = sub.get_validation_result().result
-        self.assertIn("1 second", text)
+        self.assertIn("took too long", text)
 
     def test_too_long_full_test(self):
         grading = create_pass_fail_grading()
@@ -300,7 +299,7 @@ class Communication(SubmitStudentScenarioTestCase):
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_FULL_FAILED)
-        assert("1 second" in sub.get_fulltest_result().result)
+        assert("took too long" in sub.get_fulltest_result().result)
 
     def test_single_file_validator_test(self):
         sub = self._register_test_machine()

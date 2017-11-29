@@ -4,7 +4,7 @@ import sys
 
 from . import CONFIG_FILE_DEFAULT
 from .server import fetch_job, fake_fetch_job, send_hostinfo
-from .execution import kill_longrunning
+from .running import kill_longrunning
 from .locking import ScriptLock, break_lock
 from .config import read_config, has_config, create_config, check_config
 
@@ -18,7 +18,7 @@ def download_and_run(config):
     '''
     job = fetch_job(config)
     if job:
-        job.run()
+        job._run_validate()
         return True
     else:
         return False
@@ -40,7 +40,7 @@ def copy_and_run(config, src_dir):
     '''
     job = fake_fetch_job(config, src_dir)
     if job:
-        job.run()
+        job._run_validate()
         return True
     else:
         return False

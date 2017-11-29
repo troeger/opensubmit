@@ -5,22 +5,32 @@ The official executor API for validation test and full test scripts.
 import os
 import sys
 import importlib
+import pexpect
 
-from .compiler import call_compiler, call_make, call_configure, GCC
-from .result import PassResult, FailResult
-from .config import read_config
-from .execution import shell_execution, kill_longrunning
 from . import server
+from .compiler import compiler_cmdline, GCC
+from .config import read_config
+from .running import kill_longrunning
+from .running import RunningProgram
+from .exceptions import JobException, RunningProgramException, NestedException
+from .filesystem import has_file
 
 import logging
 logger = logging.getLogger('opensubmitexec')
 
+UNSPECIFIC_ERROR = -9999
+
 
 class Job():
+    '''
+    A OpenSubmit job to be run by the test machine.
+    '''
+
     # The current executor configuration.
     _config = None
     # Talk to the configured OpenSubmit server?
     _online = None
+
     # Download source for the student sub
     submission_url = None
     # Download source for the validator
@@ -52,13 +62,13 @@ class Job():
 
     # The base name of the validation / full test script
     # on disk, for importing.
-    validator_import_name = 'validator'
+    _validator_import_name = 'validator'
 
     @property
     # The file name of the validation / full test script
     # on disk, after unpacking / renaming.
     def validator_script_name(self):
-        return self.working_dir + self.validator_import_name + '.py'
+        return self.working_dir + self._validator_import_name + '.py'
 
     def __init__(self, config=None, online=True):
         if config:
@@ -73,15 +83,15 @@ class Job():
         '''
         return str(vars(self))
 
-    def run(self):
+    def _run_validate(self):
         '''
         Execute the validate() method in the test script belonging to this job.
         '''
         assert(os.path.exists(self.validator_script_name))
         old_path = sys.path
         sys.path = [self.working_dir] + old_path
-        logger.debug('Python search path is now {0}.'.format(sys.path))
-        module = importlib.import_module(self.validator_import_name)
+        # logger.debug('Python search path is now {0}.'.format(sys.path))
+        module = importlib.import_module(self._validator_import_name)
 
         # Looped validator loading in the test suite demands this
         importlib.reload(module)
@@ -90,44 +100,83 @@ class Job():
         try:
             module.validate(self)
         except Exception as e:
-            error_msg = "Exception while running the validate() function: {0}".format(
-                str(e))
-            logger.debug(error_msg)
-            if not self.result_sent:
-                logger.debug(
-                    "Sending negative result in the name of the validation script.")
-                self.send_result(FailResult(error_msg))
-                return
+            # get more info
+            text_student = None
+            text_tutor = None
+            error_code = UNSPECIFIC_ERROR
+            if type(e) is NestedException:
+                # Some problem with pexpect.
+                if type(e.real_exception) == pexpect.EOF:
+                    if e.instance._spawn.exitstatus:
+                        error_code = e.instance._spawn.exitstatus
+                    text_student = "Your program terminated unexpectedly."
+                    text_tutor = "The student program terminated unexpectedly."
+                elif type(e.real_exception) == pexpect.TIMEOUT:
+                    text_student = "The execution of your program was cancelled, since it took too long."
+                    text_tutor = "The execution of the program was cancelled due to timeout."
+                else:
+                    text_student = "Unexpected problem during the execution of your program. {0}".format(
+                        str(e.real_exception))
+                    text_tutor = "Unkown exception during the execution of the student program. {0}".format(
+                        str(e.real_exception))
+                output = str(e.instance._spawn.before, encoding='utf-8')
+                text_student += "\n\nOutput so far: " + output
+                text_tutor += "\n\nOutput so far: " + output
+            elif type(e) is JobException:
+                # Some problem with our own code
+                text_student = e.info_student
+                text_tutor = e.info_tutor
+            elif type(e) is FileNotFoundError:
+                text_student = "A file is missing: {0}".format(
+                    str(e))
+                text_tutor = "Missing file: {0}".format(
+                    str(e))
+            elif type(e) is AssertionError:
+                # Need this harsh approach to kill the
+                # test suite execution at this point
+                # Otherwise, the problem gets lost in
+                # the log storm
+                logger.error("Failed assertion in validation script. Should not happen in production.")
+                exit(-1)
+            else:
+                # Something really unexpected
+                text_student = "Internal problem while validating your submission. {0}".format(
+                    str(e))
+                text_tutor = "Unknown exception while running the validator. {0}".format(
+                    str(e))
+            # We got the text. Report the problem.
+            self._send_result(text_student, text_tutor, error_code)
+            return
+        # no unhandled exception during the execution of the validator
         if not self.result_sent:
-            logger.debug(
-                "Validation script forgot result sending, sending positive default text.")
-            self.send_result(PassResult(
-                "The validation was successful. Good job!"))
-
+            logger.debug("Validation script forgot result sending.")
+            self.send_pass_result()
         # roll back
         sys.path = old_path
 
-    def send_result(self, result):
-        '''
-        Send test result to the OpenSubmit server.
-        '''
-        if result:
-            post_data = [("SubmissionFileId", self.file_id),
-                         ("Message", result.info_student),
-                         ("Action", self.action),
-                         ("MessageTutor", result.info_tutor),
-                         ("ExecutorDir", self.working_dir),
-                         ("ErrorCode", result.error_code),
-                         ("Secret", self._config.get("Server", "secret")),
-                         ("UUID", self._config.get("Server", "uuid"))
-                         ]
-            logger.debug(
-                'Sending result to OpenSubmit Server: ' + str(post_data))
-            if self._online:
-                server.send(self._config, "/jobs/", post_data)
-            self.result_sent = True
-        else:
-            logger.debug('Result is empty, nothing to send.')
+    def _send_result(self, info_student, info_tutor, error_code):
+        post_data = [("SubmissionFileId", self.file_id),
+                     ("Message", info_student),
+                     ("Action", self.action),
+                     ("MessageTutor", info_tutor),
+                     ("ExecutorDir", self.working_dir),
+                     ("ErrorCode", error_code),
+                     ("Secret", self._config.get("Server", "secret")),
+                     ("UUID", self._config.get("Server", "uuid"))
+                     ]
+        logger.debug(
+            'Sending result to OpenSubmit Server: ' + str(post_data))
+        if self._online:
+            server.send(self._config, "/jobs/", post_data)
+        self.result_sent = True
+
+    def send_fail_result(self, info_student, info_tutor):
+        self._send_result(info_student, info_tutor, UNSPECIFIC_ERROR)
+
+    def send_pass_result(self,
+                         info_student="All tests passed. Awesome!",
+                         info_tutor="All tests passed."):
+        self._send_result(info_student, info_tutor, 0)
 
     def delete_binaries(self):
         '''
@@ -135,69 +184,85 @@ class Job():
         binaries and deletes them.
         Returns the list of deleted files.
         '''
-        pass
+        raise NotImplementedError
 
     def run_configure(self, mandatory=True):
         '''
         Runs the configure tool configured for the machine in self.working_dir.
-
-        Returns a Result object.
         '''
-        result = call_configure(self.working_dir)
-        if mandatory:
-            return result
-        else:
-            return PassResult()
+        if not has_file(self.working_dir, 'configure'):
+            if mandatory:
+                raise FileNotFoundError(
+                    "Could not find a configure script for execution.")
+            else:
+                return
+        try:
+            prog = RunningProgram(self, 'configure')
+            prog.expect_exit_status(0)
+        except Exception:
+            if mandatory:
+                raise
 
     def run_make(self, mandatory=True):
         '''
         Runs the make tool configured for the machine in self.working_dir.
-
-        Returns a Result object.
         '''
-        result = call_make(self.working_dir)
-        if mandatory:
-            return result
-        else:
-            return PassResult()
+        if not has_file(self.working_dir, 'Makefile'):
+            if mandatory:
+                raise FileNotFoundError("Could not find a Makefile.")
+            else:
+                return
+        try:
+            prog = RunningProgram(self, 'make')
+            prog.expect_exit_status(0)
+        except Exception:
+            if mandatory:
+                raise
 
     def run_compiler(self, compiler=GCC, inputs=None, output=None):
         '''
         Runs the compiler in self.working_dir.
-
-        Returns a Result object.
         '''
-        logger.debug("Running compiler ...")
-        return call_compiler(self.working_dir, compiler, output, inputs)
+        # Let exceptions travel through
+        prog = RunningProgram(self, *compiler_cmdline(compiler=compiler,
+                                                      inputs=inputs,
+                                                      output=output))
+        prog.expect_exit_status(0)
 
     def run_build(self, compiler=GCC, inputs=None, output=None):
-        logger.debug("Running build (configure) ...")
+        logger.info("Running build steps ...")
         self.run_configure(mandatory=False)
-        logger.debug("Running build (make) ...")
         self.run_make(mandatory=False)
-        logger.debug("Running build (compiler) ...")
-        return self.run_compiler(compiler=compiler,
-                                 inputs=inputs,
-                                 output=output)
+        self.run_compiler(compiler=compiler,
+                          inputs=inputs,
+                          output=output)
 
-    def run_binary(self, name, arguments=None, timeout=None, exclusive=False):
+    def spawn_program(self, name, arguments=[], timeout=30, exclusive=False):
         '''
-        Runs something from self.working_dir in a shell.
+        Spawns a program in the working directory and allows
+        interaction with it. Returns a RunningProgram object.
+
         The caller can demand exclusive execution on this machine.
-        Returns a CompletedProcess object.
         '''
-        if type(name) is str:
-            name = [name]
-        if arguments:
-            assert(type(arguments is list))
-            cmdline = name + arguments
-        else:
-            cmdline = name
-
+        logger.debug("Spawning program for interaction ...")
         if exclusive:
             kill_longrunning(self.config)
 
-        return shell_execution(cmdline, self.working_dir, timeout=timeout)
+        return RunningProgram(self, name, arguments, timeout)
+
+    def run_program(self, name, arguments=[], timeout=30, exclusive=False):
+        '''
+        Runs a program in the working directory and returns the tuple
+        (output, exitstatus) as result.
+
+        The caller can demand exclusive execution on this machine.
+        '''
+        logger.debug("Running program ...")
+        if exclusive:
+            kill_longrunning(self.config)
+
+        prog = RunningProgram(self, name, arguments, timeout)
+        prog.expect_end()
 
     def find_keywords(self, keywords, filepattern):
         '''
@@ -206,19 +271,17 @@ class Job():
         (*.c) as parameters.
         Returns the names of the files containing all of the keywords.
         '''
-        return FailResult("Not implemented")
+        raise NotImplementedError
 
     def ensure_files(self, filenames):
         '''
         Searches the student submission for specific files.
-        Expects a list of filenames.
-
-        Returns a Result object.
+        Expects a list of filenames. Returns a boolean indicator.
         '''
         logger.debug("Testing {0} for the following files: {1}".format(
             self.working_dir, filenames))
         dircontent = os.listdir(self.working_dir)
         for fname in filenames:
             if fname not in dircontent:
-                return FailResult("The file %s is missing." % fname)
-        return PassResult("All files found: " + ','.join(filenames))
+                return False
+        return True

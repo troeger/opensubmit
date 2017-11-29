@@ -8,7 +8,7 @@ import os
 import tempfile
 import shutil
 
-from .result import FailResult, PassResult
+from .exceptions import JobException
 
 import logging
 logger = logging.getLogger('opensubmitexec')
@@ -126,15 +126,18 @@ def prepare_working_directory(job, submission_fname, validator_fname):
     working directory and go directly into it, before fetching the
     validator stuff.
 
-    Returns a Result object. 
+    If unrecoverable errors happen, such as an empty student archive,
+    a JobException is raised.
     '''
     single_dir = unpack_if_needed(job.working_dir, submission_fname)
     dircontent = os.listdir(job.working_dir)
 
     # Check what we got from the student
     if len(dircontent) is 0:
-        logger.error("Submission archive file has no content.")
-        return FailResult("Your compressed upload is empty - no files in there.")
+        info_student = "Your compressed upload is empty - no files in there."
+        info_tutor = "Submission archive file has no content."
+        logger.error(info_tutor)
+        raise JobException(info_student=info_student, info_tutor=info_tutor)
     elif single_dir:
         logger.warning(
             "The submission archive contains only one directory. I assume I should go in there ...")
@@ -143,15 +146,15 @@ def prepare_working_directory(job, submission_fname, validator_fname):
     # Unpack validator package
     single_dir = unpack_if_needed(job.working_dir, validator_fname)
     if single_dir:
-        logger.error("The validator archive contains only one directory.")
-        return FailResult("Invalid validator archive, don't use subdirectories.")
+        info_student = "Internal error with the validator. Please contact your course responsible."
+        info_tutor = "Error: Directories are not allowed in the validator archive."
+        logger.error(info_tutor)
+        raise JobException(info_student=info_student, info_tutor=info_tutor)
 
     if not os.path.exists(job.validator_script_name):
         # The download is already the script
         logger.debug("Using the download directly als validator script.")
         shutil.move(validator_fname, job.validator_script_name)
-
-    return PassResult()
 
 
 def has_file(dir, fname):

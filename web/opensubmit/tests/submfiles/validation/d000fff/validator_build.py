@@ -1,7 +1,7 @@
-#! /usr/bin/env python3
+from opensubmitexec.helpers import assert_raises, assert_dont_raises
+from opensubmitexec import compiler
 
 
 def validate(job):
     student_files = ['helloworld.c']
-    result = job.run_build(inputs=student_files, output='helloworld')
-    job.send_result(result)
+    assert_dont_raises(job.run_build, inputs=student_files, output='helloworld')

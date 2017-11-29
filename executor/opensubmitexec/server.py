@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from .hostinfo import all_host_infos, ipaddress
 from .job import Job
 from .filesystem import create_working_dir, prepare_working_directory
+from .exceptions import JobException
 
 import logging
 logger = logging.getLogger('opensubmitexec')
@@ -131,9 +132,9 @@ def fetch_job(config):
         validator_fname = job.working_dir + 'download.validator'
         fetch(job.validator_url, validator_fname)
 
-        result = prepare_working_directory(
-            job, submission_fname, validator_fname)
-        if not result.is_ok():
+        try:
+            prepare_working_directory(job, submission_fname, validator_fname)
+        except JobException:
             logger.error("Preparation of working directory failed.")
             return None
         else:
@@ -162,7 +163,6 @@ def fake_fetch_job(config, src_dir):
     job.working_dir = create_working_dir(config, '42')
     case_files = glob.glob(src_dir + os.sep + '*')
     assert(len(case_files) == 2)
-    logger.debug('Found ')
     for fname in glob.glob(src_dir + os.sep + '*'):
         logger.debug("Copying {0} to {1} ...".format(fname, job.working_dir))
         shutil.copy(fname, job.working_dir)
@@ -174,10 +174,11 @@ def fake_fetch_job(config, src_dir):
         submission = case_files[0]
     logger.debug('{0} is the validator.'.format(validator))
     logger.debug('{0} the submission.'.format(submission))
-    result = prepare_working_directory(job,
-                                       submission_fname=submission,
-                                       validator_fname=validator)
-    if not result.is_ok():
+    try:
+        prepare_working_directory(job,
+                                  submission_fname=submission,
+                                  validator_fname=validator)
+    except JobException:
         return None
     else:
         logger.debug("Got fake job: " + str(job))
