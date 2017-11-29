@@ -10,16 +10,29 @@ class JobException(Exception):
 
 
 class RunningProgramException(Exception):
-    def __init__(self, instance, real_exception=None):
+    def __init__(self, instance):
         '''
-        Wrapper for an arbitrary exception
-        that occured while running a student program.
+        A problem that occured while running a student program.
         The instance parameter stores the
         RunningProgram instance raising this
-        issue. The real_exception parameter
-        holds the truly happened exception.
+        issue.
         '''
-        super.__init__(self)
+        self.instance = instance
+
+
+class WrongExitStatusException(RunningProgramException):
+    def __init__(self, instance, expected, got=None):
+        self.instance = instance
+        self.expected = expected
+        self.got = got
+
+
+class NestedException(RunningProgramException):
+    '''
+    An exception occured while running the student
+    program.
+    '''
+    def __init__(self, instance, real_exception):
         self.instance = instance
         self.real_exception = real_exception
 
