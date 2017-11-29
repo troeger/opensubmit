@@ -4,7 +4,7 @@ import sys
 
 from . import CONFIG_FILE_DEFAULT
 from .server import fetch_job, fake_fetch_job, send_hostinfo
-from .execution import kill_longrunning
+from .running import kill_longrunning
 from .locking import ScriptLock, break_lock
 from .config import read_config, has_config, create_config, check_config
 
