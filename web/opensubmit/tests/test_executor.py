@@ -124,12 +124,6 @@ class Validation(TestCase):
         '''
         base_dir = os.path.dirname(__file__) + '/submfiles/validation/'
         cmdline.copy_and_run(self.config, base_dir + directory)
-        results = SubmissionTestResult.objects.filter(
-            kind=SubmissionTestResult.VALIDITY_TEST
-        )
-        self.assertEqual(1, len(results))
-        self.assertNotEqual(0, len(results[0].result))
-
 
     def test_0100fff(self):
         self._test_validation_case('0100fff')
@@ -280,7 +274,7 @@ class Communication(SubmitStudentScenarioTestCase):
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
         text = sub.get_validation_result().result
-        self.assertIn("1 second", text)
+        self.assertIn("took too long", text)
 
     def test_too_long_full_test(self):
         grading = create_pass_fail_grading()
@@ -305,7 +299,7 @@ class Communication(SubmitStudentScenarioTestCase):
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_FULL_FAILED)
-        assert("1 second" in sub.get_fulltest_result().result)
+        assert("took too long" in sub.get_fulltest_result().result)
 
     def test_single_file_validator_test(self):
         sub = self._register_test_machine()
