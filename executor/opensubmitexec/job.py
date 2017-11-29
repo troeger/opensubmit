@@ -10,9 +10,9 @@ import pexpect
 from . import server
 from .compiler import compiler_cmdline, GCC
 from .config import read_config
-from .execution import kill_longrunning
+from .running import kill_longrunning
 from .running import RunningProgram
-from .exceptions import JobException, RunningProgramException
+from .exceptions import JobException, RunningProgramException, NestedException
 from .filesystem import has_file
 
 import logging
@@ -104,7 +104,7 @@ class Job():
             text_student = None
             text_tutor = None
             error_code = UNSPECIFIC_ERROR
-            if type(e) is RunningProgramException:
+            if type(e) is NestedException:
                 # Some problem with pexpect.
                 if type(e.real_exception) == pexpect.EOF:
                     if e.instance._spawn.exitstatus:
@@ -112,10 +112,8 @@ class Job():
                     text_student = "Your program terminated unexpectedly."
                     text_tutor = "The student program terminated unexpectedly."
                 elif type(e.real_exception) == pexpect.TIMEOUT:
-                    text_student = "The execution of your program was cancelled, since it took longer than {0} seconds. ".format(
-                        self.timeout)
-                    text_tutor = "The execution of the program was cancelled due to the timeout of {0} seconds. ".format(
-                        self.timeout)
+                    text_student = "The execution of your program was cancelled, since it took too long."
+                    text_tutor = "The execution of the program was cancelled due to timeout."
                 else:
                     text_student = "Unexpected problem during the execution of your program. {0}".format(
                         str(e.real_exception))
@@ -134,8 +132,12 @@ class Job():
                 text_tutor = "Missing file: {0}".format(
                     str(e))
             elif type(e) is AssertionError:
-                text_student = "Internal problem with the vaildator."
-                text_tutor = "Your validator script is broken (failed assertion)."
+                # Need this harsh approach to kill the
+                # test suite execution at this point
+                # Otherwise, the problem gets lost in
+                # the log storm
+                logger.error("Failed assertion in validation script. Should not happen in production.")
+                exit(-1)
             else:
                 # Something really unexpected
                 text_student = "Internal problem while validating your submission. {0}".format(
@@ -188,9 +190,12 @@ class Job():
         '''
         Runs the configure tool configured for the machine in self.working_dir.
         '''
-        if not has_file(self.working_dir, 'configure') and mandatory:
-            raise FileNotFoundError(
-                "Could not find a configure script for execution.")
+        if not has_file(self.working_dir, 'configure'):
+            if mandatory:
+                raise FileNotFoundError(
+                    "Could not find a configure script for execution.")
+            else:
+                return
         try:
             prog = RunningProgram(self, 'configure')
             prog.expect_exit_status(0)
@@ -202,8 +207,11 @@ class Job():
         '''
         Runs the make tool configured for the machine in self.working_dir.
         '''
-        if not has_file(self.working_dir, 'Makefile') and mandatory:
-            raise FileNotFoundError("Could not find a Makefile.")
+        if not has_file(self.working_dir, 'Makefile'):
+            if mandatory:
+                raise FileNotFoundError("Could not find a Makefile.")
+            else:
+                return
         try:
             prog = RunningProgram(self, 'make')
             prog.expect_exit_status(0)
@@ -240,7 +248,21 @@ class Job():
         if exclusive:
             kill_longrunning(self.config)
 
-        return RunningProgram(self.working_dir, name, arguments, timeout)
+        return RunningProgram(self, name, arguments, timeout)
+
+    def run_program(self, name, arguments=[], timeout=30, exclusive=False):
+        '''
+        Runs a program in the working directory and returns the tuple
+        (output, exitstatus) as result.
+
+        The caller can demand exclusive execution on this machine.
+        '''
+        logger.debug("Running program ...")
+        if exclusive:
+            kill_longrunning(self.config)
+
+        prog = RunningProgram(self, name, arguments, timeout)
+        prog.expect_end()
 
     def find_keywords(self, keywords, filepattern):
         '''
