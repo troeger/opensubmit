@@ -22,7 +22,7 @@ docs:
 venv:
 	# Create a virtualenv.
 	# Activate it afterwards with "source venv/bin/activate"
-	(python3.5 -m venv venv; \
+	(python3.4 -m venv venv; \
 	 source venv/bin/activate; \
 	 pip install -r requirements.txt; \
 	 pushd executor; pip install -r requirements.txt; popd; \
