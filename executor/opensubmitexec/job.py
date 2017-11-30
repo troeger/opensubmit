@@ -5,14 +5,13 @@ The official executor API for validation test and full test scripts.
 import os
 import sys
 import importlib
-import pexpect
 
 from . import server
 from .compiler import compiler_cmdline, GCC
 from .config import read_config
 from .running import kill_longrunning
 from .running import RunningProgram
-from .exceptions import JobException, RunningProgramException, NestedException
+from .exceptions import *
 from .filesystem import has_file
 
 import logging
@@ -103,25 +102,38 @@ class Job():
             # get more info
             text_student = None
             text_tutor = None
-            error_code = UNSPECIFIC_ERROR
-            if type(e) is NestedException:
-                # Some problem with pexpect.
-                if type(e.real_exception) == pexpect.EOF:
-                    if e.instance._spawn.exitstatus:
-                        error_code = e.instance._spawn.exitstatus
-                    text_student = "Your program terminated unexpectedly."
-                    text_tutor = "The student program terminated unexpectedly."
-                elif type(e.real_exception) == pexpect.TIMEOUT:
-                    text_student = "The execution of your program was cancelled, since it took too long."
-                    text_tutor = "The execution of the program was cancelled due to timeout."
-                else:
-                    text_student = "Unexpected problem during the execution of your program. {0}".format(
-                        str(e.real_exception))
-                    text_tutor = "Unkown exception during the execution of the student program. {0}".format(
-                        str(e.real_exception))
-                output = str(e.instance._spawn.before, encoding='utf-8')
-                text_student += "\n\nOutput so far: " + output
-                text_tutor += "\n\nOutput so far: " + output
+            if type(e) is TerminationException:
+                text_student = "The execution of '{0}' terminated unexpectely.".format(
+                    e.instance.name)
+                text_tutor = "The execution of '{0}' terminated unexpectely.".format(
+                    e.instance.name)
+                text_student += "\n\nOutput so far:\n" + e.output
+                text_tutor += "\n\nOutput so far:\n" + e.output
+            elif type(e) is TimeoutException:
+                text_student = "The execution of '{0}' was cancelled, since it took too long.".format(
+                    e.instance.name)
+                text_tutor = "The execution of '{0}' was cancelled due to timeout.".format(
+                    e.instance.name)
+                text_student += "\n\nOutput so far:\n" + e.output
+                text_tutor += "\n\nOutput so far:\n" + e.output
+            elif type(e) is NestedException:
+                text_student = "Unexpected problem during the execution of '{0}'. {1}".format(
+                    e.instance.name,
+                    str(e.real_exception))
+                text_tutor = "Unkown exception during the execution of '{0}'. {1}".format(
+                    e.instance.name,
+                    str(e.real_exception))
+                text_student += "\n\nOutput so far:\n" + e.output
+                text_tutor += "\n\nOutput so far:\n" + e.output
+            elif type(e) is WrongExitStatusException:
+                text_student = "The execution of '{0}' resulted in the unexpected exit status {1}.".format(
+                    e.instance.name,
+                    e.got)
+                text_tutor = "The execution of '{0}' resulted in the unexpected exit status {1}.".format(
+                    e.instance.name,
+                    e.got)
+                text_student += "\n\nOutput so far:\n" + e.output
+                text_tutor += "\n\nOutput so far:\n" + e.output
             elif type(e) is JobException:
                 # Some problem with our own code
                 text_student = e.info_student
@@ -136,7 +148,8 @@ class Job():
                 # test suite execution at this point
                 # Otherwise, the problem gets lost in
                 # the log storm
-                logger.error("Failed assertion in validation script. Should not happen in production.")
+                logger.error(
+                    "Failed assertion in validation script. Should not happen in production.")
                 exit(-1)
             else:
                 # Something really unexpected
@@ -145,7 +158,7 @@ class Job():
                 text_tutor = "Unknown exception while running the validator. {0}".format(
                     str(e))
             # We got the text. Report the problem.
-            self._send_result(text_student, text_tutor, error_code)
+            self._send_result(text_student, text_tutor, UNSPECIFIC_ERROR)
             return
         # no unhandled exception during the execution of the validator
         if not self.result_sent:
@@ -164,7 +177,7 @@ class Job():
                      ("Secret", self._config.get("Server", "secret")),
                      ("UUID", self._config.get("Server", "uuid"))
                      ]
-        logger.debug(
+        logger.info(
             'Sending result to OpenSubmit Server: ' + str(post_data))
         if self._online:
             server.send(self._config, "/jobs/", post_data)
@@ -252,8 +265,8 @@ class Job():
 
     def run_program(self, name, arguments=[], timeout=30, exclusive=False):
         '''
-        Runs a program in the working directory and returns the tuple
-        (output, exitstatus) as result.
+        Runs a program in the working directory.
+        The result is a tuple of exit code and output.
 
         The caller can demand exclusive execution on this machine.
         '''
@@ -262,7 +275,7 @@ class Job():
             kill_longrunning(self.config)
 
         prog = RunningProgram(self, name, arguments, timeout)
-        prog.expect_end()
+        return prog.expect_end()
 
     def find_keywords(self, keywords, filepattern):
         '''

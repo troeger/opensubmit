@@ -1,9 +1,8 @@
 import pexpect
 import os
 import time
-import sys
 
-from .exceptions import RunningProgramException, WrongExitStatusException, NestedException
+from .exceptions import WrongExitStatusException, NestedException, TimeoutException, TerminationException
 
 import logging
 logger = logging.getLogger('opensubmitexec')
@@ -46,6 +45,21 @@ class RunningProgram(pexpect.spawn):
     job = None
     name = None
     arguments = None
+    _spawn = None
+
+    def get_output(self):
+        if self._spawn and self._spawn.before:
+            return str(self._spawn.before, encoding='utf-8')
+        else:
+            return ""
+
+    def get_exitstatus(self):
+        logger.debug("Exit status is {0}".format(self._spawn.exitstatus))
+        if self._spawn.exitstatus is None:
+            logger.debug("Translating non-available exit code to -1.")
+            return -1
+        else:
+            return self._spawn.exitstatus
 
     def __init__(self, job, name, arguments=[], timeout=30):
         self.job = job
@@ -69,22 +83,30 @@ class RunningProgram(pexpect.spawn):
                                         cwd=self.job.working_dir)
         except Exception as e:
             logger.debug("Spawning failed: " + str(e))
-            raise NestedException(self, e)
+            raise NestedException(
+                instance=self, real_exception=e, output=self.get_output())
 
-    def expect(self, pattern):
+    def expect(self, pattern, timeout=-1):
         '''
         Expect an output pattern from the running program.
+
+        The default timeout is the one defined on object creation.
+
         '''
-        logger.debug("Expecting output '{0}' from '{1}'".format(pattern, self.name))
+        logger.debug("Expecting output '{0}' from '{1}'".format(
+            pattern, self.name))
         try:
-            return self._spawn.expect(pattern)
-        except pexpect.exceptions.EOF:
-            raise
-        except pexpect.exceptions.TIMEOUT:
-            raise
+            return self._spawn.expect(pattern, timeout)
+        except pexpect.exceptions.EOF as e:
+            logger.debug("Raising termination exception.")
+            raise TerminationException(instance=self, real_exception=e, output=self.get_output())
+        except pexpect.exceptions.TIMEOUT as e:
+            logger.debug("Raising timeout exception.")
+            raise TimeoutException(instance=self, real_exception=e, output=self.get_output())
         except Exception as e:
             logger.debug("Expecting output failed: " + str(e))
-            raise NestedException(self, e)
+            raise NestedException(
+                instance=self, real_exception=e, output=self.get_output())
 
     def sendline(self, pattern):
         '''
@@ -93,18 +115,21 @@ class RunningProgram(pexpect.spawn):
         logger.debug("Sending input '{0}' to '{1}'".format(pattern, self.name))
         try:
             return self._spawn.sendline(pattern)
-        except pexpect.exceptions.EOF:
-            raise
-        except pexpect.exceptions.TIMEOUT:
-            raise
+        except pexpect.exceptions.EOF as e:
+            logger.debug("Raising termination exception.")
+            raise TerminationException(instance=self, real_exception=e, output=self.get_output())
+        except pexpect.exceptions.TIMEOUT as e:
+            logger.debug("Raising timeout exception.")
+            raise TimeoutException(instance=self, real_exception=e, output=self.get_output())
         except Exception as e:
             logger.debug("Sending input failed: " + str(e))
-            raise NestedException(self, e)
+            raise NestedException(
+                instance=self, real_exception=e, output=self.get_output())
 
     def expect_end(self):
         '''
-        Wait for the program to finish, regardless of 
-        error code.
+        Wait for the program to finish.
+        Returns a tuple with the exit code and the output.
         '''
         logger.debug("Waiting for termination of '{0}'".format(self.name))
         try:
@@ -114,9 +139,17 @@ class RunningProgram(pexpect.spawn):
             self._spawn.wait()
             dircontent = str(os.listdir(self.job.working_dir))
             logger.debug("Working directory after execution: " + dircontent)
+            return self.get_exitstatus(), self.get_output()
+        except pexpect.exceptions.EOF as e:
+            logger.debug("Raising termination exception.")
+            raise TerminationException(instance=self, real_exception=e, output=self.get_output())
+        except pexpect.exceptions.TIMEOUT as e:
+            logger.debug("Raising timeout exception.")
+            raise TimeoutException(instance=self, real_exception=e, output=self.get_output())
         except Exception as e:
             logger.debug("Waiting for expected program end failed.")
-            raise NestedException(self, e)
+            raise NestedException(
+                instance=self, real_exception=e, output=self.get_output())
 
     def expect_exit_status(self, exit_status):
         '''
@@ -124,9 +157,15 @@ class RunningProgram(pexpect.spawn):
         exit status. Throws exception otherwise.
         '''
         self.expect_end()
-        logger.debug("Checking exit status of '{0}', output so far: {1}".format(self.name, self._spawn.before))
+        logger.debug("Checking exit status of '{0}', output so far: {1}".format(
+            self.name, self.get_output()))
         if self._spawn.exitstatus is None:
-            raise WrongExitStatusException(self, exit_status)
+            raise WrongExitStatusException(
+                instance=self, expected=exit_status, output=self.get_output())
 
         if self._spawn.exitstatus is not exit_status:
-            raise WrongExitStatusException(self, exit_status, self._spawn.exitstatus)
+            raise WrongExitStatusException(
+                instance=self,
+                expected=exit_status,
+                got=self._spawn.exitstatus,
+                output=self.get_output())
