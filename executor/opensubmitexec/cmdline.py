@@ -53,7 +53,7 @@ def console_script():
         installed by setuptools.
     '''
     if len(sys.argv) == 1:
-        print("opensubmit-exec [configure|run|unlock|help] [-c config_file]")
+        print("opensubmit-exec [configure|run|test <dir>|unlock|help] [-c config_file]")
         exit(0)
 
     if "help" in sys.argv[1]:
