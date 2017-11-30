@@ -209,7 +209,10 @@ def update(request, subm_id):
     if request.POST:
         updateForm = SubmissionFileUpdateForm(request.POST, request.FILES)
         if updateForm.is_valid():
-            new_file = SubmissionFile(attachment=updateForm.files['attachment'])
+            upload_file = request.FILES['attachment']
+            new_file = SubmissionFile(
+                attachment=updateForm.files['attachment'],
+                original_filename=upload_file.name)
             new_file.save()
             # fix status of old uploaded file
             submission.file_upload.replaced_by = new_file
