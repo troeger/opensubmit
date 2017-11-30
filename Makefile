@@ -36,7 +36,7 @@ re-install: build uninstall
 	# Installs built packages locally.
 	# This is intended for staging tests in a virtualenv.
 	# On production systems, install a release directly from PyPI.
-	pip install dist/*.whl
+	pip install --upgrade dist/*.whl
 
 docker: build
 	# Create Docker image, based on fresh build
