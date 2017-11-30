@@ -48,7 +48,7 @@ tests:
 
 coverage:
 	# Run all tests and obtain coverage information.
-	pushd web; coverage run --branch --source='.','../executor/' --omit='*/setup.py',opensubmit/wsgi.py manage.py test opensubmit.tests; coverage html; popd
+	pushd web; coverage run manage.py test opensubmit.tests; coverage html; popd
 
 clean:
 	rm -f  ./dist/*.whl

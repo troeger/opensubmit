@@ -1,0 +1,14 @@
+[run]
+branch = True
+
+[run]
+source =
+  web/
+  executor/
+
+omit =
+  */setup.py
+  *wsgi.py*
+
+
+
