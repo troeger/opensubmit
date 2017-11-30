@@ -59,7 +59,10 @@ class UserProfile(models.Model):
         if not self.can_see_future():
             qs = qs.filter(publish_at__lt=timezone.now())
         qs = qs.filter(course__in=self.user_courses())
-        qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('title')
+        # Assignment with deadlines come first
+        # Then come graded assignments
+        # Non-graded assignments without deadline are last
+        qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('gradingScheme').order_by('title')
         waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
 
