@@ -114,7 +114,7 @@ def dashboard(request):
         'username': username,
         'courses' : request.user.profile.user_courses(),
         'assignments': assignments,
-        'machines': TestMachine.objects.all(),
+        'machines': TestMachine.objects.filter(enabled=True),
         'today': datetime.now()}
     )
 

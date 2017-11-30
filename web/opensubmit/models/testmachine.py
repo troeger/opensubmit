@@ -6,6 +6,8 @@ class TestMachine(models.Model):
     address = models.CharField(null=True,  max_length=50, help_text="Internal IP address of the test machine, at the time of registration.")
     last_contact = models.DateTimeField(editable=False, default=timezone.now)
     config = models.TextField(null=True, help_text="Host configuration, as shown to the students, in JSON format.")
+    enabled = models.BooleanField(default=True, help_text="Test machines can be temporarily disabled for maintenance. All jobs are held back during that time.")
+
 
     class Meta:
         app_label = 'opensubmit'

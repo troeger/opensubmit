@@ -40,7 +40,7 @@ class TeacherDashboard(Dashboard):
                     '<tr><td>Administrator</td><td><a href="mailto:%s">%s</a></td></tr>' % (settings.ADMINS[0][1], settings.ADMINS[0][0]) +
                     '<tr><td>Registered users</td><td>%u</td></tr>' % (User.objects.count()) +
                     '<tr><td>Submitted solutions</td><td>%u</td></tr>' % (Submission.objects.count()) +
-                    '<tr><td>Test machines</td><td>%u</td></tr>' % (TestMachine.objects.count()) +
+                    '<tr><td>Test machines</td><td>%u enabled, %u disabled</td></tr>' % (TestMachine.objects.filter(enabled=True).count(), TestMachine.objects.filter(enabled=False).count()) +
                     "</table>"
                 )
             ]

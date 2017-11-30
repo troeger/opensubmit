@@ -156,11 +156,13 @@
 </section>
 
 <section>
-    <h3>Test Machines</h3>
-    <ul class="list">
-    {% for machine in machines %}
-        <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
-    {% endfor %}
+    {% if machines %}
+        <h3>Test Machines</h3>
+        <ul class="list">
+        {% for machine in machines %}
+            <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+        {% endfor %}
+    {% endif %}
 </ul>
 </section>
 

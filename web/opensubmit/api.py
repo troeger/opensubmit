@@ -132,6 +132,10 @@ def jobs(request):
         response['MachineId'] = machine.pk
         return response
 
+    if not machine.enabled:
+        # Act like no jobs are given for him
+        raise Http404
+
     if request.method == "GET":
         # Clean up submissions where the answer from the executors took too long
         pending_submissions = Submission.pending_tests.filter(
