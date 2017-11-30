@@ -7,7 +7,7 @@ from .exceptions import ValidatorBrokenException
 import logging
 logger = logging.getLogger('opensubmitexec')
 
-GCC = ['gcc', '-fdiagnostics-color=never', '-o', '{output}', '{inputs}']
+GCC = ['gcc', '-o', '{output}', '{inputs}']
 GPP = ['g++', '-pthread', '-o', '{output}', '{inputs}']
 
 
