@@ -19,4 +19,5 @@ filter:
         - 'docs/*'
         - '*/tests/submfiles/*'
         - 'examples/*'
+        - '*/migrations/*'
 
