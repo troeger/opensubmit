@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger('opensubmitexec')
 
 GCC = ['gcc', '-o', '{output}', '{inputs}']
-GPP = ['g++', '-o', '{output}', '{inputs}']
+GPP = ['g++', '-pthread', '-o', '{output}', '{inputs}']
 
 
 def compiler_cmdline(compiler=GCC, output=None, inputs=None):
