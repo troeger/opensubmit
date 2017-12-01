@@ -52,9 +52,8 @@ coverage:
 
 clean:
 	rm -f  ./dist/*.whl
-	rm -f  ./web/.coverage
+	rm -f  ./.coverage
 	rm -rf ./htmlcov
-	rm -rf ./web/htmlcov
 	find . -name "*.bak" -delete
 
 clean-docs:
