@@ -48,7 +48,7 @@ tests:
 
 coverage:
 	# Run all tests and obtain coverage information.
-	pushd web; coverage run manage.py test opensubmit.tests; coverage html; popd
+	coverage run ./web/manage.py test opensubmit.tests; coverage html
 
 clean:
 	rm -f  ./dist/*.whl
@@ -56,6 +56,8 @@ clean:
 	rm -rf ./htmlcov
 	rm -rf ./web/htmlcov
 	find . -name "*.bak" -delete
+
+clean-docs:
 	rm -rf docs/formats
 
 pypi: build

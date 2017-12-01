@@ -1,7 +1,5 @@
 [run]
 branch = True
-
-[run]
 source =
   web/
   executor/
@@ -9,6 +7,9 @@ source =
 omit =
   */setup.py
   *wsgi.py*
+  */venv/*
+  */migrations*/
+  */tmp/*
 
 
 
