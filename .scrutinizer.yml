@@ -15,9 +15,6 @@ build:
                     version: 6.0.0
         tests: true
 filter:
-    excluded_paths:
-        - 'docs/*'
-        - '*/tests/submfiles/*'
-        - 'examples/*'
-        - '*/migrations/*'
-
+    included_paths:
+        - 'web/*'
+        - 'executor/*'
