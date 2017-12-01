@@ -54,7 +54,7 @@ def console_script():
     '''
     if len(sys.argv) == 1:
         print("opensubmit-exec [configure|run|test <dir>|unlock|help] [-c config_file]")
-        exit(0)
+        return 0
 
     if "help" in sys.argv[1]:
         print("configure:        Check config files and registration of a OpenSubmit test machine.")
@@ -64,7 +64,7 @@ def console_script():
         print("help:             Print this help")
         print(
             "-c config_file    Configuration file to be used (default: {0})".format(CONFIG_FILE_DEFAULT))
-        exit(0)
+        return 0
 
     if len(sys.argv) > 2 and sys.argv[2] == "-c":
         config_fname = sys.argv[3]
@@ -77,7 +77,7 @@ def console_script():
             print("Config file found at " + config_fname)
             config = read_config(config_fname)
             if not check_config(config):
-                exit(1)
+                return 1
         else:
             print("ERROR: Seems like the config file %s does not exist." %
                   config_fname)
@@ -85,17 +85,17 @@ def console_script():
             print("       Re-run this script again afterwards.")
             if create_config(config_fname):
                 print("File created.")
-                exit(0)
+                return 0
             else:
-                exit(1)
+                return 1
 
         send_hostinfo(config)
-        exit(0)
+        return 0
 
     if "unlock" in sys.argv[1]:
         config = read_config(config_fname)
         break_lock(config)
-        exit(0)
+        return 0
 
     if "run" in sys.argv[1]:
         config = read_config(config_fname)
@@ -103,13 +103,13 @@ def console_script():
         kill_longrunning(config)
         with ScriptLock(config):
             download_and_run(config)
-        exit(0)
+        return 0
 
     if "test" in sys.argv[1]:
         config = read_config(config_fname)
         copy_and_run(config, sys.argv[2])
-        exit(0)
+        return 0
 
 
 if __name__ == "__main__":
-    console_script()
+    exit(console_script())
