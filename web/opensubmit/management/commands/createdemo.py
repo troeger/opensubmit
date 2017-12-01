@@ -20,6 +20,8 @@ class Command(BaseCommand):
     help = 'Creates demo data in the installation'
     def handle(self, *args, **options):
 
+        print("Adding demo data ...")
+
         # create demo users
         users={}
         for name in ['demo_student', 'demo_cheater', 'demo_tutor', 'demo_owner']:
