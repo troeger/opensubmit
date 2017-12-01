@@ -33,9 +33,35 @@ from .helpers.user import create_user, get_student_dict
 from . import uccrap, rootdir
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-from opensubmitexec import config, cmdline, server  # NOQA
+from opensubmitexec import config, cmdline, server, locking, compiler, exceptions  # NOQA
 
 logger = logging.getLogger('opensubmitexec')
+
+
+
+class CmdLine(TestCase):
+    '''
+    Test cases for the executor command-line script.
+    '''
+    def setUp(self):
+        self.config = config.read_config(
+            os.path.dirname(__file__) + "/executor.cfg")
+
+    def test_help_call_without_config(self):
+        # simulate 'help' call
+        sys.argv = ['opensubmit-exec', 'help']
+        cmdline.console_script()
+
+    def test_unlock_call_without_lock(self):
+        # simulate 'unlock' call without existing lock
+        sys.argv = ['opensubmit-exec', 'unlock']
+        cmdline.console_script()
+
+    def test_unlock_call_with_lock(self):
+        # simulate 'unlock' call with existing lock
+        sys.argv = ['opensubmit-exec', 'unlock']
+        with locking.ScriptLock(self.config):
+            cmdline.console_script()
 
 
 class Library(SubmitStudentScenarioTestCase):
@@ -93,7 +119,6 @@ class Library(SubmitStudentScenarioTestCase):
             self.user, self.validated_assignment, sf)
         test_machine = self._register_executor()
         sub.assignment.test_machines.add(test_machine)
-
         job = server.fetch_job(self.config)
         self.assertNotEquals(None, job)
         self.assertEquals(job.timeout, self.validated_assignment.attachment_test_timeout)
@@ -104,6 +129,20 @@ class Library(SubmitStudentScenarioTestCase):
         self.assertEquals(job.submitter_studyprogram, str(sub.submitter.profile.study_program))
         self.assertEquals(job.course, str(self.course))
         self.assertEquals(job.assignment, str(self.validated_assignment))
+
+    def test_wrong_compile_call(self):
+        sf = create_submission_file()
+        sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+        job = server.fetch_job(self.config)
+        # Missing output
+        self.assertRaises(exceptions.ValidatorBrokenException, job.run_compiler, inputs=['input.c'])
+        # Missing input
+        self.assertRaises(exceptions.ValidatorBrokenException, job.run_compiler, output='output')
+        # Wrong file, determined by compiler
+        self.assertRaises(exceptions.WrongExitStatusException, job.run_compiler, inputs=['foo.c'], output='output')
 
 
 class Validation(TestCase):
