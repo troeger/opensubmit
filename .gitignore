@@ -12,13 +12,10 @@ executor.cfg
 *.orig
 *.tar.gz
 web/database.sqlite
-web/htmlcov
 .coverage
 .vagrant
 *.egg-info
 *static-production*
-*terraform.tfvars*
-*terraform.tfstate*
 *pip-selfcheck.json*
 *venv*
 *.bak*
