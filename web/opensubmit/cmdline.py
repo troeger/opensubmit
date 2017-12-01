@@ -298,6 +298,7 @@ def configure(fsroot='/'):
 
 def print_help():
     print("configure:           Check config files and database for correct installation of the OpenSubmit web server.")
+    print("createdemo:          Install some test data (courses, assignments, users).")
     print("fixperms:            Check and fix student and tutor permissions")
     print("fixchecksums:        Re-create all student file checksums (for duplicate detection)")
     print("makeadmin   <email>: Make this user an admin with backend rights.")
@@ -314,7 +315,7 @@ def console_script(fsroot='/'):
     if len(sys.argv) == 2 and "configure" in sys.argv[1]:
         configure(fsroot)
 
-    elif len(sys.argv) == 2 and sys.argv[1] in ['fixperms', 'fixchecksums']:
+    elif len(sys.argv) == 2 and sys.argv[1] in ['fixperms', 'fixchecksums', 'createdemo']:
         django_admin([sys.argv[1]])
 
     elif len(sys.argv) == 3 and  sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
