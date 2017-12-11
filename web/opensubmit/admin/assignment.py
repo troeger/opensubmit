@@ -115,7 +115,7 @@ def view_links(obj):
 view_links.short_description = ""
 
 class AssignmentAdmin(ModelAdmin):
-    list_display = ['__str__', course, 'soft_deadline', 'hard_deadline', 'gradingScheme', num_authors, num_subm, num_finished, num_unfinished, view_links]
+    list_display = ['title', course, 'soft_deadline', 'hard_deadline', 'gradingScheme', num_authors, num_subm, num_finished, num_unfinished, view_links]
     change_list_template = "admin/change_list_filter_sidebar.html"
 
     class Media:
