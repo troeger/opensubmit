@@ -470,7 +470,11 @@ class Submission(models.Model):
         '''
             Return human-readable description of current state for students.
         '''
-        return dict(self.STUDENT_STATES)[self.state]
+        try:
+            return dict(self.STUDENT_STATES)[self.state]
+        except:
+            # deal with old databases that have pre 0.7 states, such as "FC"
+            return "Unknown"
 
     def state_for_tutors(self):
         '''
