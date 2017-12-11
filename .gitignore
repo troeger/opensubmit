@@ -21,3 +21,4 @@ web/database.sqlite
 *.bak*
 *.whl
 docs/formats/html/.buildinfo
+*htmlcov*
