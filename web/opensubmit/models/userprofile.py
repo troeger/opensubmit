@@ -62,7 +62,7 @@ class UserProfile(models.Model):
         # Assignment with deadlines come first
         # Then come graded assignments
         # Non-graded assignments without deadline are last
-        qs = qs.order_by('soft_deadline').order_by('hard_deadline').order_by('gradingScheme').order_by('title')
+        qs = qs.order_by('-soft_deadline').order_by('-hard_deadline').order_by('-gradingScheme').order_by('title')
         waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
 
