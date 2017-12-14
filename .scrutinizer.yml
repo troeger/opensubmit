@@ -1,17 +1,26 @@
+filter:
+    paths:
+        - 'web/*'
+        - 'executor/*'
 checks:
     python:
         code_rating: true
         duplicate_code: true
 build:
+    dependencies:
+        before:
+            - pip install -r web/requirements.txt
+            - pip install -r executor/requirements.txt
+    environment:
+        python: 3.4.0
+        mysql: false
+        postgresql: false
+        mongodb: false
+        redis: false
+        memcached: false
+        neo4j: false
+        rabbitmq: false
     tests:
         override:
             -
-                command: './web/manage.py test opensubmit.tests'
-                coverage:
-                    file: '.coverage'
-                    config_file: '.coveragerc'
-                    format: 'py-cc'
-filter:
-    paths:
-        - 'web/*'
-        - 'executor/*'
+                command: './web/manage.py test'
