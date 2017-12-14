@@ -3,17 +3,14 @@ checks:
         code_rating: true
         duplicate_code: true
 build:
-    nodes:
-        analysis:
-            tests:
-                override:
-                    -
-                        command: pylint-run
-                        use_website_config: true
-            environment:
-                node:
-                    version: 6.0.0
-        tests: true
+    tests:
+        override:
+            -
+                command: './web/manage.py test opensubmit.tests'
+                coverage:
+                    file: '.coverage'
+                    config_file: '.coveragerc'
+                    format: 'py-cc'
 filter:
     paths:
         - 'web/*'
