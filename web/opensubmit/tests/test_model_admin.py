@@ -100,6 +100,10 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
         self.submadm.closeAndNotifyAction(
             self.request, Submission.objects.all())
         self.assertEqual(2, len(mail.outbox))
+        for email in mail.outbox:
+            self.assertIn("Grading", email.subject)
+            self.assertIn("grading", email.body)
+            self.assertIn("localhost", email.body)
 
     def test_set_full_pending_all(self):
         # Only one of the submission assignments has validation configured
