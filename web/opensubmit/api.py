@@ -1,16 +1,11 @@
 '''
-    These are the views being called by the executor. They typically have a different
+    These are the views being called by the executor.
+    They typically have a different
     security model in comparison to the ordinary views.
 '''
 from datetime import datetime, timedelta
 import os
-import logging
-from time import timezone
 
-logger = logging.getLogger('OpenSubmit')
-
-from django.db import transaction
-from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers
 from django.http import HttpResponseForbidden, Http404, HttpResponse
@@ -19,6 +14,10 @@ from django.views.decorators.csrf import csrf_exempt
 
 from opensubmit import settings
 from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
+from opensubmit.mails import inform_student
+
+import logging
+logger = logging.getLogger('OpenSubmit')
 
 
 def download(request, obj_id, filetype, secret=None):
@@ -241,12 +240,10 @@ def jobs(request):
                     logger.debug(
                         "Validity test working, setting state to tested")
                     sub.state = Submission.SUBMITTED_TESTED
-                    if sub.assignment.gradingScheme:
-                        # Assignment is graded. Get the course owner to work, if notification is enabled.
-                        sub.inform_course_owner(request)
-                    else:
+                    if not sub.assignment.is_graded():
                         # Assignment is not graded. We are done here.
                         sub.state = Submission.CLOSED
+                        sub.inform_student(Submission.CLOSED)
             else:
                 logger.debug(
                     "Validity test not working, setting state to failed")
@@ -258,14 +255,13 @@ def jobs(request):
             sub.save_fulltest_result(
                 machine, request.POST['Message'], None)
             if error_code == 0:
-                logger.debug("Full test working, setting state to tested")
-                sub.state = Submission.SUBMITTED_TESTED
-                if sub.assignment.gradingScheme:
-                    # Assignment is graded. Get the course owner to work, if notification is enabled.
-                    sub.inform_course_owner(request)
+                if sub.assignment.is_graded():
+                    logger.debug("Full test working, setting state to tested (since graded)")
+                    sub.state = Submission.SUBMITTED_TESTED
                 else:
-                    # Assignment is not graded. We are done here.
+                    logger.debug("Full test working, setting state to closed (since not graded)")
                     sub.state = Submission.CLOSED
+                    inform_student(sub, Submission.CLOSED)
             else:
                 logger.debug("Full test not working, setting state to failed")
                 sub.state = Submission.TEST_FULL_FAILED
