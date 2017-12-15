@@ -1,19 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.mail import send_mail, EmailMessage
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 
 from datetime import datetime
-import tempfile, zipfile, tarfile
+import tempfile
+import zipfile
+import tarfile
+
+from opensubmit import mails
 
 from .submissionfile import upload_path, SubmissionFile
 from .submissiontestresult import SubmissionTestResult
 
-from django.conf import settings
-
-import logging, shutil, os
+import logging
+import shutil
+import os
 logger = logging.getLogger('OpenSubmit')
+
 
 class ValidSubmissionsManager(models.Manager):
     '''
@@ -23,8 +27,9 @@ class ValidSubmissionsManager(models.Manager):
 
     def get_queryset(self):
         submissions = Submission.objects.exclude(
-                state__in=[Submission.WITHDRAWN, Submission.RECEIVED]).order_by('pk')
+            state__in=[Submission.WITHDRAWN, Submission.RECEIVED]).order_by('pk')
         return submissions
+
 
 class PendingStudentTestsManager(models.Manager):
     '''
@@ -36,8 +41,10 @@ class PendingStudentTestsManager(models.Manager):
     '''
 
     def get_queryset(self):
-        jobs = Submission.objects.filter(state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
+        jobs = Submission.objects.filter(
+            state=Submission.TEST_VALIDITY_PENDING).order_by('-modified')
         return jobs
+
 
 class PendingFullTestsManager(models.Manager):
     '''
@@ -50,21 +57,23 @@ class PendingFullTestsManager(models.Manager):
 
     def get_queryset(self):
         jobs = Submission.objects.filter(
-            state__in=[ Submission.TEST_FULL_PENDING,
-                        Submission.CLOSED_TEST_FULL_PENDING]
-            ).order_by('-state').order_by('-modified')
+            state__in=[Submission.TEST_FULL_PENDING,
+                       Submission.CLOSED_TEST_FULL_PENDING]
+        ).order_by('-state').order_by('-modified')
         return jobs
+
 
 class PendingTestsManager(models.Manager):
     '''
         A combination of both, with focus on getting the full tests later than the validity tests.
     '''
+
     def get_queryset(self):
         jobs = Submission.objects.filter(
-            state__in=[ Submission.TEST_FULL_PENDING,           # PF
-                        Submission.CLOSED_TEST_FULL_PENDING,    # CT
-                        Submission.TEST_VALIDITY_PENDING ]      # PV
-            ).order_by('-state').order_by('-modified')
+            state__in=[Submission.TEST_FULL_PENDING,           # PF
+                       Submission.CLOSED_TEST_FULL_PENDING,    # CT
+                       Submission.TEST_VALIDITY_PENDING]      # PV
+        ).order_by('-state').order_by('-modified')
         return jobs
 
 
@@ -87,7 +96,7 @@ class Submission(models.Model):
     CLOSED_TEST_FULL_PENDING = 'CT'  # Keep grading status, full test planned
 
     # State description in teacher backend
-    STATES = ( 
+    STATES = (
 
         # The submission is currently uploaded,
         # some internal processing still takes place.
@@ -98,18 +107,18 @@ class Submission(models.Model):
         # will take place with this submission.
         (WITHDRAWN, 'Withdrawn'),
 
-        # The submission is completely uploaded. 
-        # If code validation is configured, the state will 
+        # The submission is completely uploaded.
+        # If code validation is configured, the state will
         # directly change to TEST_VALIDITY_PENDING.
         (SUBMITTED, 'Submitted'),
 
         # The submission is waiting to be validated with the
-        # validation script on one of the test machines. 
+        # validation script on one of the test machines.
         # The submission remains in this state until some
         # validation result was sent from the test machines.
         (TEST_VALIDITY_PENDING, 'Validity test pending'),
 
-        # The validation of the student sources on the 
+        # The validation of the student sources on the
         # test machine failed. No further automated action will
         # take place with this submission.
         # The students get informed by email.
@@ -117,7 +126,7 @@ class Submission(models.Model):
 
         # The submission is waiting to be checked with the
         # full test script on one of the test machines.
-        # The submission remains in this state until 
+        # The submission remains in this state until
         # some result was sent from the test machines.
         (TEST_FULL_PENDING, 'Full test pending'),
 
@@ -133,38 +142,38 @@ class Submission(models.Model):
         # place with this submission.
         (SUBMITTED_TESTED, 'All tests passed, grading pending'),
 
-        # Some grading took place in the teacher backend, 
-        # and the submission was explicitly marked with 
+        # Some grading took place in the teacher backend,
+        # and the submission was explicitly marked with
         # 'grading not finished'. This allows correctors to have
-        # multiple runs over the submissions and see which 
+        # multiple runs over the submissions and see which
         # of the submissions were already investigated.
         (GRADING_IN_PROGRESS, 'Grading not finished'),
 
-        # Some grading took place in the teacher backend, 
-        # and the submission was explicitly marked with 
-        # 'grading not finished'. This allows correctors 
+        # Some grading took place in the teacher backend,
+        # and the submission was explicitly marked with
+        # 'grading not finished'. This allows correctors
         # to have multiple runs over the submissions and
         #  see which of the submissions were already investigated.
         (GRADED, 'Grading finished'),
 
-        # The submission is closed, meaning that in the 
+        # The submission is closed, meaning that in the
         # teacher backend, the submission was marked
-        # as closed to trigger the student notification 
+        # as closed to trigger the student notification
         # for their final assignment grades.
         # Students are notified by email.
         (CLOSED, 'Closed, student notified'),
 
-        # The submission is closed, but marked for 
+        # The submission is closed, but marked for
         # another full test run.
-        # This is typically used to have some post-assignment 
+        # This is typically used to have some post-assignment
         # analysis of student submissions
-        # by the help of full test scripts. 
+        # by the help of full test scripts.
         # Students never get any notification about this state.
         (CLOSED_TEST_FULL_PENDING, 'Closed, full test pending')
     )
 
     # State description in student dashboard
-    STUDENT_STATES = ( 
+    STUDENT_STATES = (
         (RECEIVED, 'Received'),
         (WITHDRAWN, 'Withdrawn'),
         (SUBMITTED, 'Waiting for grading'),
@@ -181,14 +190,19 @@ class Submission(models.Model):
 
     assignment = models.ForeignKey('Assignment', related_name='submissions')
     submitter = models.ForeignKey(User, related_name='submitted')
-    authors = models.ManyToManyField(User, related_name='authored') # includes also submitter, see submission_post_save() handler
+    # includes also submitter, see submission_post_save() handler
+    authors = models.ManyToManyField(User, related_name='authored')
     notes = models.TextField(max_length=200, blank=True)
-    file_upload = models.ForeignKey('SubmissionFile', related_name='submissions', blank=True, null=True, verbose_name='New upload')
+    file_upload = models.ForeignKey(
+        'SubmissionFile', related_name='submissions', blank=True, null=True, verbose_name='New upload')
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    modified = models.DateTimeField(auto_now=True, editable=False, blank=True, null=True)
+    modified = models.DateTimeField(
+        auto_now=True, editable=False, blank=True, null=True)
     grading = models.ForeignKey('Grading', blank=True, null=True)
-    grading_notes = models.TextField(max_length=10000, blank=True, null=True, help_text="Specific notes about the grading for this submission.")
-    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True, help_text="Additional information about the grading as file.")
+    grading_notes = models.TextField(max_length=10000, blank=True, null=True,
+                                     help_text="Specific notes about the grading for this submission.")
+    grading_file = models.FileField(upload_to=upload_path, blank=True, null=True,
+                                    help_text="Additional information about the grading as file.")
     state = models.CharField(max_length=2, choices=STATES, default=RECEIVED)
 
     objects = models.Manager()
@@ -259,7 +273,8 @@ class Submission(models.Model):
 
     def author_list(self):
         ''' The list of authors als text, for admin submission list overview.'''
-        author_list=[self.submitter] + [author for author in self.authors.all().exclude(pk=self.submitter.pk)]
+        author_list = [self.submitter] + \
+            [author for author in self.authors.all().exclude(pk=self.submitter.pk)]
         return ",\n".join([author.get_full_name() for author in author_list])
     author_list.admin_order_field = 'submitter'
 
@@ -267,14 +282,14 @@ class Submission(models.Model):
         ''' The course of this submission as text, for admin submission list overview.'''
         return self.assignment.course
     course.admin_order_field = 'assignment__course'
- 
+
     def grading_status_text(self):
         '''
         A rendering of the grading that is an answer on the question
         "Is it graded?".
         Used in duplicate view and submission list on the teacher backend.
         '''
-        if self.assignment.gradingScheme:
+        if self.assignment.is_graded():
             if self.is_grading_finished():
                 return str('Yes ({0})'.format(self.grading))
             else:
@@ -296,13 +311,12 @@ class Submission(models.Model):
     has_grading_notes.admin_order_field = 'grading_notes'
     has_grading_notes.boolean = True            # show nice little icon
 
-
     def grading_value_text(self):
         '''
         A rendering of the grading that is an answer to the question
         "What is the grade?".
         '''
-        if self.assignment.gradingScheme:
+        if self.assignment.is_graded():
             if self.is_grading_finished():
                 return str(self.grading)
             else:
@@ -318,7 +332,7 @@ class Submission(models.Model):
         Information if the given grading means passed.
         Non-graded assignments are always passed.
         '''
-        if self.assignment.gradingScheme:
+        if self.assignment.is_graded():
             if self.grading and self.grading.means_passed:
                 return True
             else:
@@ -362,7 +376,7 @@ class Submission(models.Model):
 
         # Modification of closed submissions is prohibited.
         if self.is_closed():
-            if self.assignment.gradingScheme:
+            if self.assignment.is_graded():
                 # There is a grading procedure, so taking it back would invalidate the tutors work
                 #self.log('DEBUG', "Submission cannot be modified, it is closed and graded")
                 return False
@@ -373,7 +387,8 @@ class Submission(models.Model):
         # Submissions, that are executed right now, cannot be modified
         if self.state in [self.TEST_VALIDITY_PENDING, self.TEST_FULL_PENDING]:
             if not self.file_upload:
-                self.log('CRITICAL', "Submission is in invalid state! State is '{}', but there is no file uploaded!", self.state)
+                self.log(
+                    'CRITICAL', "Submission is in invalid state! State is '{}', but there is no file uploaded!", self.state)
                 raise AssertionError()
                 return False
             if self.file_upload.is_executed():
@@ -503,19 +518,23 @@ class Submission(models.Model):
             return None
 
     def save_fetch_date(self):
-        SubmissionFile.objects.filter(pk=self.file_upload.pk).update(fetched=datetime.now())
+        SubmissionFile.objects.filter(
+            pk=self.file_upload.pk).update(fetched=datetime.now())
 
     def get_fetch_date(self):
         return self.file_upload.fetched
 
     def clean_fetch_date(self):
-        SubmissionFile.objects.filter(pk=self.file_upload.pk).update(fetched=None)
+        SubmissionFile.objects.filter(
+            pk=self.file_upload.pk).update(fetched=None)
 
     def save_validation_result(self, machine, text, perf_data):
-        self._save_test_result(machine, text, SubmissionTestResult.VALIDITY_TEST, perf_data)
+        self._save_test_result(
+            machine, text, SubmissionTestResult.VALIDITY_TEST, perf_data)
 
     def save_fulltest_result(self, machine, text, perf_data):
-        self._save_test_result(machine, text, SubmissionTestResult.FULL_TEST, perf_data)
+        self._save_test_result(
+            machine, text, SubmissionTestResult.FULL_TEST, perf_data)
 
     def get_validation_result(self):
         '''
@@ -531,53 +550,10 @@ class Submission(models.Model):
 
     def inform_student(self, state):
         '''
-            Create a mail message for the student, based on the given submission state.
-            We hand-in explicitely about which new state we want to inform, since this may not be reflected
-            in the model at the moment.
+            We hand-in explicitely about which new state we want to inform,
+            since this may not be reflected in the model at the moment.
         '''
-        # we cannot send eMail on SUBMITTED_TESTED, since this may have been triggered by test repitition in the backend
-        if state == Submission.TEST_VALIDITY_FAILED:
-            subject = 'Warning: Your submission did not pass the validation test'
-            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" did not pass the automated validation test. You need to update the uploaded files for a valid submission.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
-
-        elif state == Submission.CLOSED:
-            subject = 'Completed'
-            message = 'Hi,\n\nthis is a short automated notice that your submission for "%s" in "%s" is completed.\n\n Further information can be found at %s.\n\n'
-            message = message % (self.assignment, self.assignment.course, settings.MAIN_URL)
-        else:
-            return
-
-        subject = "[%s] %s" % (self.assignment.course, subject)
-        from_email = self.assignment.course.owner.email
-        recipients = self.authors.values_list('email', flat=True).distinct().order_by('email')
-        # send student email with BCC to course owner.
-        # TODO: This might be configurable later
-        # email = EmailMessage(subject, message, from_email, recipients, [self.assignment.course.owner.email])
-        email = EmailMessage(subject, message, from_email, recipients)
-        email.send(fail_silently=True)
-
-    def inform_course_owner(self, request):
-        if self.state == Submission.WITHDRAWN:
-            subject = "Submission withdrawn"
-            message = "Withdrawn solution %u for '%s'" % (self.pk, self.assignment)
-
-        elif self.state == Submission.SUBMITTED:
-            subject = "Submission ready for grading"
-            message = "Solution for '%s' that is ready for grading." % (self.assignment)
-
-        elif self.state == Submission.SUBMITTED_TESTED:
-            subject = "Submission tested and ready for grading"
-            message = "Solution for '%s' that was tested and is ready for grading." % (self.assignment)
-
-        else:
-            subject = "Submission changed state"
-            message = "Submission has now the state '%s'." % (self.STATES[self.state])
-
-        from_email = self.assignment.course.owner.email
-        recipients = [self.assignment.course.owner.email]
-        # TODO: Make this configurable, some course owners got annoyed by this
-        # send_mail(subject, message, from_email, recipients, fail_silently=True)
+        mails.inform_student(self, state)
 
     def info_file(self, delete=True):
         '''
@@ -585,9 +561,11 @@ class Submission(models.Model):
             Closing it will delete it, which must be considered by the caller.
             This file is not readable, since the tempfile library wants either readable or writable files.
         '''
-        info = tempfile.NamedTemporaryFile(mode='wt', encoding='utf-8', delete=delete)
+        info = tempfile.NamedTemporaryFile(
+            mode='wt', encoding='utf-8', delete=delete)
         info.write("Submission ID:\t%u\n" % self.pk)
-        info.write("Submitter:\t%s (%u)\n" % (self.submitter.get_full_name(), self.submitter.pk))
+        info.write("Submitter:\t%s (%u)\n" %
+                   (self.submitter.get_full_name(), self.submitter.pk))
         info.write("Authors:\n")
         for auth in self.authors.all():
             info.write("\t%s (%u)\n" % (auth.get_full_name(), auth.pk))
@@ -625,9 +603,11 @@ class Submission(models.Model):
                 tar.close()
             else:
                 # unpacking not possible, just copy it
-                shutil.copyfile(self.file_upload.absolute_path(), targetdir + "/" + self.file_upload.basename())
+                shutil.copyfile(self.file_upload.absolute_path(),
+                                targetdir + "/" + self.file_upload.basename())
         except IOError:
-            logger.error("I/O exception while accessing %s."%(self.file_upload.absolute_path()))
+            logger.error("I/O exception while accessing %s." %
+                         (self.file_upload.absolute_path()))
             pass
 
     def add_to_zipfile(self, z):
@@ -644,12 +624,14 @@ class Submission(models.Model):
             tempdir = tempfile.mkdtemp()
             self.copy_file_upload(tempdir)
             # Add content to final ZIP file
-            allfiles = [(subdir, files) for (subdir, dirs, files) in os.walk(tempdir)]
+            allfiles = [(subdir, files)
+                        for (subdir, dirs, files) in os.walk(tempdir)]
             for subdir, files in allfiles:
                 for f in files:
                     zip_relative_dir = subdir.replace(tempdir, "")
-                    zip_relative_file = '%s/%s'%(zip_relative_dir, f)
-                    z.write(subdir + "/" + f, submdir + 'student_files/%s'%zip_relative_file, zipfile.ZIP_DEFLATED)
+                    zip_relative_file = '%s/%s' % (zip_relative_dir, f)
+                    z.write(subdir + "/" + f, submdir + 'student_files/%s' %
+                            zip_relative_file, zipfile.ZIP_DEFLATED)
         # add text file with additional information
         info = self.info_file()
         z.write(info.name, submdir + "info.txt")
