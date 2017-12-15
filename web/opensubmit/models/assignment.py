@@ -87,6 +87,12 @@ class Assignment(models.Model):
         num_results = SubmissionTestResult.objects.filter(perf_data__isnull=False).filter(submission_file__submissions__assignment=self).count()
         return num_results != 0
 
+    def is_graded(self):
+        '''
+        Checks if this a graded assignment.
+        '''
+        return self.gradingScheme is not None
+
     def validity_test_url(self):
         '''
             Return absolute download URL for validity test script.
