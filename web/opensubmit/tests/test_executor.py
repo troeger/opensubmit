@@ -222,6 +222,9 @@ class Validation(TestCase):
     def test_b010tff(self):
         self._test_validation_case('b010tff')
 
+    def test_1000tfm(self):
+        self._test_validation_case('1000tfm')
+
 
 class Communication(SubmitStudentScenarioTestCase):
     '''
@@ -317,6 +320,32 @@ class Communication(SubmitStudentScenarioTestCase):
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
         text = sub.get_validation_result().result
         self.assertIn("took too long", text)
+        # Check mail outbox for student information
+        self.assertEqual(1, len(mail.outbox))
+        for email in mail.outbox:
+            self.assertIn("Validation failed", email.subject)
+            self.assertIn("failed", email.body)
+            self.assertIn("localhost", email.body)
+
+    def test_broken_validator_feedback(self):
+        from django.core import mail
+
+        grading = create_pass_fail_grading()
+        assignment = create_validated_assignment(
+            self.course, grading, "/submfiles/validation/1000tfm/", "validator.zip")
+        assignment.save()
+        sf = create_submission_file("/submfiles/validation/1000tfm/packed.zip")
+        sub = create_validatable_submission(
+            self.user, assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+
+        # Fire up the executor
+        self.assertEqual(False, self._run_executor())
+        sub.refresh_from_db()
+        self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
+        text = sub.get_validation_result().result
+        self.assertIn("Internal error", text)
         # Check mail outbox for student information
         self.assertEqual(1, len(mail.outbox))
         for email in mail.outbox:

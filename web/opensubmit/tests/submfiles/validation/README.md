@@ -16,5 +16,8 @@ is the following:
 - Pos 4: Number of configure files ('0'/'1')
 - Pos 5: Submission zipped ('t'rue/'f'alse)
 - Pos 6: Submission files in single subdirectory in archive ('t'rue/'f'alse)
-- Pos 7: Validator zipped ('t'rue/'f'alse), either named validator.py or validator.zip
+- Pos 7: Validator format:
+  - 't': Zipped (validator.zip)
+  - 'f': Not zipped (validator.py)
+  - 'm': Zipped (validator.zip), but missing validator.py file inside
 

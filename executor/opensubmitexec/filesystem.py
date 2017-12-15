@@ -18,18 +18,28 @@ def unpack_if_needed(destination_path, fpath):
     '''
     fpath is the fully qualified path to a single file that
     might be a ZIP / TGZ archive.
+
     The function moves the file, or the content if it is an
     archive, to the directory given by destination_path.
 
-    Returns a directory name if:
+    The function returns two values. The first one is a 
+    directory name if:
+
     - fpath is an archive.
     - The archive contains only one this single directory with
       arbitrary content.
 
+    Otherwise, it is zero.
+
     This is helpful in catching the typical "right-click to compress"
     cases for single ZIP files in Explorer / Finder.
+
+    The second return value is a boolean indicating if 
+    fpath was an archive.
+
     '''
-    result = None
+    single_dir = None
+    did_unpack = False
 
     dircontent = os.listdir(destination_path)
     logger.debug("Content of %s before unarchiving: %s" %
@@ -38,6 +48,7 @@ def unpack_if_needed(destination_path, fpath):
     # Perform un-archiving, in case
     if zipfile.is_zipfile(fpath):
         logger.debug("Detected ZIP file at %s, unpacking it." % (fpath))
+        did_unpack = True
         with zipfile.ZipFile(fpath, "r") as zip:
             infolist = zip.infolist()
             directories = [entry.filename for entry in infolist if entry.filename.endswith('/')]
@@ -63,10 +74,11 @@ def unpack_if_needed(destination_path, fpath):
                 in_this_dir = [entry for entry in files if entry.startswith(d)]
                 if len(files) == len(in_this_dir):
                     logger.debug("ZIP archive contains only one subdirectory")
-                    result = d
+                    single_dir = d
             zip.extractall(destination_path)
     elif tarfile.is_tarfile(fpath):
         logger.debug("Detected TAR file at %s, unpacking it." % (fpath))
+        did_unpack = True
         with tarfile.open(fpath) as tar:
             infolist = tar.getmembers()
             # A TGZ file of one subdirectory with arbitrary files
@@ -80,7 +92,7 @@ def unpack_if_needed(destination_path, fpath):
                 in_this_dir = [entry for entry in files if entry.startswith(d)]
                 if len(files) == len(in_this_dir):
                     logger.debug("TGZ archive contains only one subdirectory")
-                    result = d
+                    single_dir = d
             tar.extractall(destination_path)
     else:
         if not fpath.startswith(destination_path):
@@ -91,7 +103,7 @@ def unpack_if_needed(destination_path, fpath):
     dircontent = os.listdir(destination_path)
     logger.debug("Content of %s after unarchiving: %s" %
                  (destination_path, str(dircontent)))
-    return result
+    return single_dir, did_unpack
 
 
 def create_working_dir(config, prefix):
@@ -129,7 +141,7 @@ def prepare_working_directory(job, submission_fname, validator_fname):
     If unrecoverable errors happen, such as an empty student archive,
     a JobException is raised.
     '''
-    single_dir = unpack_if_needed(job.working_dir, submission_fname)
+    single_dir, did_unpack = unpack_if_needed(job.working_dir, submission_fname)
     dircontent = os.listdir(job.working_dir)
 
     # Check what we got from the student
@@ -144,7 +156,7 @@ def prepare_working_directory(job, submission_fname, validator_fname):
         job.working_dir = job.working_dir + single_dir + os.sep
 
     # Unpack validator package
-    single_dir = unpack_if_needed(job.working_dir, validator_fname)
+    single_dir, did_unpack = unpack_if_needed(job.working_dir, validator_fname)
     if single_dir:
         info_student = "Internal error with the validator. Please contact your course responsible."
         info_tutor = "Error: Directories are not allowed in the validator archive."
@@ -152,9 +164,17 @@ def prepare_working_directory(job, submission_fname, validator_fname):
         raise JobException(info_student=info_student, info_tutor=info_tutor)
 
     if not os.path.exists(job.validator_script_name):
-        # The download is already the script
-        logger.debug("Using the download directly als validator script.")
-        shutil.move(validator_fname, job.validator_script_name)
+        if did_unpack:
+            # The download was an archive, but the validator was not inside.
+            # This is a failure of the tutor.
+            info_student = "Internal error with the validator. Please contact your course responsible."
+            info_tutor = "Error: Missing validator.py in the validator archive."
+            logger.error(info_tutor)
+            raise JobException(info_student=info_student, info_tutor=info_tutor)
+        else:
+            # The download is already the script, but has the wrong name
+            logger.warning("Renaming {0} to {1}.".format(validator_fname, job.validator_script_name))
+            shutil.move(validator_fname, job.validator_script_name)
 
 
 def has_file(dir, fname):
