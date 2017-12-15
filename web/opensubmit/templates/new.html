@@ -40,7 +40,7 @@ $('#id_authors').multiselect('select', {{ user.pk }});
             The following test machines will be used for this assignment:
             <ul class="list">
             {% for machine in  assignment.test_machines.all %}
-             <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+             <li><a href="{% url 'machine' machine.pk %}">{{ machine }}</a></li>
             {% endfor %}
             </ul>
             The console output and exit code for the compilation / test run is available in the submission details. {% else %} You can find further information in the <a href="{{ assignment.download }}">assignment description</a>. {% endif %} {% if assignment.max_authors > 1 %}

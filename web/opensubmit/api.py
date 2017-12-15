@@ -325,7 +325,6 @@ def machines(request):
         try:
             secret = request.POST['Secret']
             uuid = request.POST['UUID']
-            address = request.POST['Address']
         except Exception as e:
             logger.error(
                 "Error finding the neccessary data in the executor request: " + str(e))
@@ -340,8 +339,7 @@ def machines(request):
             machine.save()
         except:
             # Machine is not known so far, create new record
-            machine = TestMachine(host=uuid, address=address,
-                                  last_contact=datetime.now())
+            machine = TestMachine(host=uuid, last_contact=datetime.now())
             machine.save()
         # POST request contains all relevant machine information
         machine.config = request.POST['Config']
