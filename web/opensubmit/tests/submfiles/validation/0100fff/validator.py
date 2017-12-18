@@ -9,3 +9,10 @@ def validate(job):
     assert_raises(job.run_make, mandatory=True)
     assert_dont_raises(job.run_configure, mandatory=False)
     assert_raises(job.run_configure, mandatory=True)
+
+    # Add some explicit checks about the working directory.
+    # Mainly intended to test if file download keeps
+    # the original file names appropriately (see #194)
+    import os
+    assert(os.path.isfile(job.working_dir + os.sep + 'validator.py'))
+    assert(os.path.isfile(job.working_dir + os.sep + 'python.pdf'))
