@@ -353,6 +353,24 @@ class Communication(SubmitStudentScenarioTestCase):
             self.assertIn("failed", email.body)
             self.assertIn("localhost", email.body)
 
+    def test_output_logging(self):
+        grading = create_pass_fail_grading()
+        assignment = create_validated_assignment(
+            self.course, grading, "/submfiles/validation/1000fff/", "validator.py")
+        assignment.save()
+        sf = create_submission_file("/submfiles/validation/1000fff/helloworld.c")
+        sub = create_validatable_submission(
+            self.user, assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+        # Fire up the executor
+        self.assertEqual(True, self._run_executor())
+        sub.refresh_from_db()
+        self.assertEqual(sub.state, Submission.SUBMITTED_TESTED)
+        text = sub.get_validation_result().result
+        self.assertIn("quick brown fox", text)
+        self.assertIn("provide your input", text)
+
     def test_too_long_full_test(self):
         grading = create_pass_fail_grading()
         assignment = create_validated_assignment(
