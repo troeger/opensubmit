@@ -167,9 +167,8 @@ class Job():
                 exit(-1)
             else:
                 # Something really unexpected
-                text_student = "Internal problem while validating your submission. {0}".format(
-                    str(e))
-                text_tutor = "Unknown exception while running the validator. {0}".format(
+                text_student = "Internal problem while validating your submission. Please contact the course responsible."
+                text_tutor = "Unknown exception while running the validator: {0}".format(
                     str(e))
             # We got the text. Report the problem.
             self._send_result(text_student, text_tutor, UNSPECIFIC_ERROR)
