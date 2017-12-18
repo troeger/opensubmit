@@ -9,4 +9,6 @@ def validate(job):
     assert_dont_raises(running.sendline, 'The quick brown fox')
     assert_dont_raises(running.expect, 'Your input was: The quick brown fox')
     assert_dont_raises(running.expect_end)
+    assert(job.grep('int argc') == ['helloworld.c'])
+    assert(job.grep('int argv') == [])
     job.send_pass_result("We saw the following console interaction:\n\n " + running.get_output())

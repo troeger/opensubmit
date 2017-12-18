@@ -9,6 +9,7 @@ import shutil
 import os.path
 import glob
 import json
+import re
 
 from .compiler import compiler_cmdline, GCC
 from .config import read_config
@@ -290,14 +291,22 @@ class Job():
         prog = RunningProgram(self, name, arguments, timeout)
         return prog.expect_end()
 
-    def find_keywords(self, keywords, filepattern):
+    def grep(self, regex):
         '''
-        Searches self.working_dir for files containing specific keywords.
-        Expects a list of keywords to be searched for and the file pattern
-        (*.c) as parameters.
-        Returns the names of the files containing all of the keywords.
+        Searches the student files in self.working_dir for files
+        containing a specific regular expression.
+
+        Returns the names of the matching files as list.
         '''
-        raise NotImplementedError
+        matches = []
+        logger.debug("Searching student files for '{0}'".format(regex))
+        for fname in self.student_files:
+            if os.path.isfile(self.working_dir + fname):
+                for line in open(self.working_dir + fname, 'br'):
+                    if re.search(regex.encode(), line):
+                        logger.debug("{0} contains '{1}'".format(fname, regex))
+                        matches.append(fname)
+        return matches
 
     def ensure_files(self, filenames):
         '''
@@ -475,8 +484,8 @@ def fake_fetch_job(config, src_dir):
     logger.debug('{0} the submission.'.format(submission))
     try:
         prepare_working_directory(job,
-                                  submission_fname=submission,
-                                  validator_fname=validator)
+                                  submission_path=submission,
+                                  validator_path=validator)
     except JobException as e:
         job.send_fail_result(e.info_student, e.info_tutor)
         return None
