@@ -2,6 +2,10 @@ filter:
     paths:
         - 'web/*'
         - 'executor/*'
+    excluded_paths:
+        - '*/migrations/*'
+        - '*/static/*'
+        - '*/submfiles/*'
 checks:
     python:
         code_rating: true
