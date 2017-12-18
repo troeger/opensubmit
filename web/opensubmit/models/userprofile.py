@@ -2,17 +2,21 @@ from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db.models.functions import Length
 
 from .assignment import Assignment
 from .course import Course
 from .submission import Submission
 from .studyprogram import StudyProgram
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
     student_id = models.CharField(max_length=30, blank=True, null=True)
-    courses = models.ManyToManyField(Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
-    study_program = models.ForeignKey(StudyProgram, blank=True, null=True, related_name='students')
+    courses = models.ManyToManyField(
+        Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
+    study_program = models.ForeignKey(
+        StudyProgram, blank=True, null=True, related_name='students')
 
     class Meta:
         app_label = 'opensubmit'
@@ -45,26 +49,36 @@ class UserProfile(models.Model):
 
     def user_courses(self):
         '''
-            Returns the list of courses this user is subscribed for, or owning, or tutoring.
-            This leads to the fact that tutors and owners don't need course membership.
+            Returns the list of courses this user is subscribed for,
+            or owning, or tutoring.
+            This leads to the fact that tutors and owners don't need
+            course membership.
         '''
-        registered=self.courses.filter(active__exact=True).distinct()
+        registered = self.courses.filter(active__exact=True).distinct()
         return (self.tutor_courses() | registered).distinct()
 
     def open_assignments(self):
         '''
-            Returns the list of open assignments from the viewpoint of this user.
+            Returns the list of open assignments from the
+            viewpoint of this user.
         '''
-        qs = Assignment.objects.filter(hard_deadline__gt=timezone.now()) | Assignment.objects.filter(hard_deadline__isnull=True)
+        # Include only assignments with future, or no, hard deadline
+        qs = Assignment.objects.filter(hard_deadline__gt=timezone.now(
+        )) | Assignment.objects.filter(hard_deadline__isnull=True)
+        # Include only assignments that are already published,
+        # as long as you are not a tutor / course owner
         if not self.can_see_future():
             qs = qs.filter(publish_at__lt=timezone.now())
+        # Include only assignments from courses that you are registered for
         qs = qs.filter(course__in=self.user_courses())
-        # Assignment with deadlines come first
-        # Then come graded assignments
-        # Non-graded assignments without deadline are last
-        qs = qs.order_by('-soft_deadline').order_by('-hard_deadline').order_by('-gradingScheme').order_by('title')
-        waiting_for_action = [subm.assignment for subm in self.user.authored.all().exclude(state=Submission.WITHDRAWN)]
+        # Ordering of resulting list
+        qs = qs.annotate(deadline_isnull=Length('soft_deadline'))
+        qs = qs.order_by('-deadline_isnull', 'soft_deadline',
+                         '-gradingScheme', 'title')
+        waiting_for_action = [subm.assignment for subm in self.user.authored.all(
+        ).exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
+
 
 def db_fixes(user):
     '''
@@ -74,6 +88,7 @@ def db_fixes(user):
         TODO: This belongs into a User post_save handler.
     '''
     profile, created = UserProfile.objects.get_or_create(user=user)
+
 
 def user_unicode(self):
     '''
@@ -91,7 +106,10 @@ def user_unicode(self):
         return '%s' % (self.username)
     else:
         return 'User %u' % (self.pk)
+
+
 User.__str__ = user_unicode
+
 
 @transaction.atomic
 def move_user_data(primary, secondary):
@@ -103,7 +121,7 @@ def move_user_data(primary, secondary):
     submissions = Submission.objects.filter(authors__id=secondary.pk)
     for subm in submissions:
         if subm.submitter == secondary:
-            subm.submitter = primary;
+            subm.submitter = primary
         subm.authors.remove(secondary)
         subm.authors.add(primary)
         subm.save()
