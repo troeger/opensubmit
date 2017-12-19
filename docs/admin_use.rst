@@ -29,9 +29,89 @@ OpenSubmit runs with Python 3.4 or newer versions. For an installation, you need
 Updating your installation
 ==========================
 
+Updating an existing OpenSubmit web installation consists of the following steps:
+
+- Run ``pip install --upgrade opensubmit-web`` as root or in a virtualenv environment. 
+- Run ``opensubmit-web configure`` to perform neccessary database updates.
+- Restart your web server.
+
 Authentication methods
 ======================
 .. _auth:
+
+OpenSubmit supports different authentication methods, as described in the following sections. There is **no password login** support in OpenSubmit - authentication is always supposed to be handled by some third-party service.
+
+If you need another authentication method for your institution, please `open an according issue <https://github.com/troeger/opensubmit/issues/new>`_.
+
+Login with OpenID
+-----------------
+
+If you want to allow users to login with OpenID, you need to configure the following settings:
+
+- ``LOGIN_OPENID: True``
+- ``LOGIN_DESCRIPTION: <visible button title>``
+- ``OPENID_PROVIDER: <provider URL>``
+
+The standard OpenSubmit installation already contains an example setting for using StackExchange as OpenID provider.
+
+Login with Shibboleth
+---------------------
+
+If you want to allow users to login with Shibboleth, you need to configure the following settings:
+
+- ``LOGIN_SHIB: True``
+- ``LOGIN_SHIB_DESCRIPTION: <visible button title>``
+
+You also need a fully working installation of the `Apache 2.4 mod_shib <https://wiki.shibboleth.net/confluence/display/SHIB2/NativeSPApacheConfig>`_ module. The authentication module of OpenSubmit assumes that, as result of the work of *mod_shib*, the following environment variables are given:
+
+- ``REMOTE_USER``: The user name of the authenticated user.
+- ``HTTP_SHIB_ORGPERSON_EMAILADDRESS``: The email address of the authenticated user.
+- ``HTTP_SHIB_INETORGPERSON_GIVENNAME``: The first name of the authenticated user.
+- ``HTTP_SHIB_PERSON_SURNAME``: The last name of the authenticated user.
+
+Note: If you are using Apache 2.4 with *mod_wsgi*, make sure to set ``WSGIPassAuthorization On``. Otherwise, these environment variables may not pass through.
+
+Login with Google account
+-------------------------
+
+If you want to allow users to login with an Google account, you need to configure the following settings:
+
+- ``LOGIN_GOOGLE: True``
+- ``LOGIN_GOOGLE_OAUTH_KEY: <OAuth key>``
+- ``LOGIN_GOOGLE_OAUTH_SECRET: <OAuth secret>``
+
+The standard OpenSubmit installation already contains a key/secret pair for development purposes. It only works for OpenSubmit installations operating on *http://localhost:8000*, so in a production environment, you need a new pair of OAuth key/secret for your server.
+
+A new pair can be created in the `Google API Console <https://console.developers.google.com/apis/credentials>`_. The authorized forwarding URL should be ``<base url of your installation>/complete/google-oauth2/``.
+
+You also need to `activate the Google+ API <https://console.developers.google.com/apis/api/plus.googleapis.com/overview>`_, so that OpenSubmit is able to fetch basic user information from Google.
+
+Login with Twitter account
+--------------------------
+
+If you want to allow users to login with an Twitter account, you need to configure the following settings:
+
+- ``LOGIN_TWITTER: True``
+- ``LOGIN_TWITTER_OAUTH_KEY: <OAuth key>``
+- ``LOGIN_TWITTER_OAUTH_SECRET: <OAuth secret>``
+
+The standard OpenSubmit installation already contains a key/secret pair for development purposes. It only works for OpenSubmit installations operating on *http://localhost:8000*, so in a production environment, you need a new pair of OAuth key/secret for your server.
+
+A new key / secret pair can be created in the `Twitter Application Management <https://apps.twitter.com/>`_.  The authorized forwarding URL should be ``<base url of your installation>/complete/twitter/``. We recommend to modify the application access to *Read only*, and to allow access to the email addresses. 
+
+Login with GitHub account
+-------------------------
+
+If you want to allow users to login with an GitHub account, you need to configure the following settings:
+
+- ``LOGIN_GITHUB: True``
+- ``LOGIN_GITHUB_OAUTH_KEY: <OAuth key>``
+- ``LOGIN_GITHUB_OAUTH_SECRET: <OAuth secret>``
+
+The standard OpenSubmit installation already contains a key/secret pair for development purposes. It only works for OpenSubmit installations operating on *http://localhost:8000*, so in a production environment, you need a new pair of OAuth key/secret for your server.
+
+A new key / secret pair can be created in the `OAuth application registration <https://github.com/settings/applications/new>`_.  The authorized forwarding URL should be ``<base url of your installation>/complete/github/``.
+
 
 User management
 ===============
@@ -63,4 +143,8 @@ Smart students may try to connect to their own machines from their code, mainly 
 Updating your installation
 ==========================
 
+Updating an existing OpenSubmit test machine installation consists of the following steps:
+
+- Run ``pip install --upgrade opensubmit-exec`` as root or in a virtualenv environment. 
+- Run ``opensubmit-exec configure`` to check the configuration for compatibility.
 
