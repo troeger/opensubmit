@@ -45,7 +45,7 @@ The students have to create a program in C that prints 'hello world' to the comm
 They have to submit the corresponding c-file and the makefile, which creates a program called 'hello'.
 
 The student files are located in an zip-archive.
-The directory for testing the newly created validator with the exemplary student submission should only contain the student submission archive (c-file and makefile) and the validator.py file.
+The directory for testing the newly created validator with the exemplary student submission should only contain the student submission archive (consisting of c-file and makefile) and the validator.py file.
 
 .. literalinclude:: files/validators/hello_example/hello.c
 .. literalinclude:: files/validators/hello_example/Makefile
