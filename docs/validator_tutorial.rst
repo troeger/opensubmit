@@ -40,8 +40,8 @@ The next step is to configure opensubmit-exec.
 
 ``sudo opensubmit-exec configure``
 
-On the first run a config file is created which can be changed accordingly.
-Run the configure command again afterwards.
+On the first run a configuration file is created which can be changed accordingly.
+Run the before mentioned command again afterwards.
 
 Creating validators and using opensubmit-exec
 *********************************************
@@ -70,4 +70,3 @@ The directory for testing your validator should only contain the validator.zip a
 
 Examples for validators
 ***********************
-
