@@ -50,7 +50,7 @@ The creation of a validator is illustrated by the following example.
 The students have to create a program in C that prints 'hello world' to the command prompt.
 They have to submit the corresponding c-file and the Makefile, which creates a program called 'hello'.
 
-.. image:: files/example_validator.png
+.. image:: files/validation_example_hello.png
 
 A validator is a python-file named validator.py containing a validate function, which is given an job-object as parameter.
 The following picture shows a validator for a hello-world program.
