@@ -95,6 +95,7 @@ class Submission(models.Model):
     CLOSED = 'C'                     # Graded, student notification done
     CLOSED_TEST_FULL_PENDING = 'CT'  # Keep grading status, full test planned
 
+    # Docs start: States
     # State description in teacher backend
     STATES = (
 
@@ -187,6 +188,7 @@ class Submission(models.Model):
         (CLOSED, 'Done'),
         (CLOSED_TEST_FULL_PENDING, 'Done')
     )
+    # Docs end: States    
 
     assignment = models.ForeignKey('Assignment', related_name='submissions')
     submitter = models.ForeignKey(User, related_name='submitted')

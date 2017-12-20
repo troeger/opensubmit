@@ -224,10 +224,7 @@
 <div class="section" id="submission-states">
 <h3>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h3>
 <p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend:</p>
-<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="n">CLOSED</span> <span class="o">=</span> <span class="s1">&#39;C&#39;</span>                     <span class="c1"># Graded, student notification done</span>
-    <span class="n">CLOSED_TEST_FULL_PENDING</span> <span class="o">=</span> <span class="s1">&#39;CT&#39;</span>  <span class="c1"># Keep grading status, full test planned</span>
-
-    <span class="c1"># State description in teacher backend</span>
+<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
     <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span>
 
         <span class="c1"># The submission is currently uploaded,</span>
@@ -319,18 +316,6 @@
         <span class="p">(</span><span class="n">CLOSED</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">CLOSED_TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">)</span>
     <span class="p">)</span>
-
-    <span class="n">assignment</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;Assignment&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submissions&#39;</span><span class="p">)</span>
-    <span class="n">submitter</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submitted&#39;</span><span class="p">)</span>
-    <span class="c1"># includes also submitter, see submission_post_save() handler</span>
-    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;authored&#39;</span><span class="p">)</span>
-    <span class="n">notes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">file_upload</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
-        <span class="s1">&#39;SubmissionFile&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submissions&#39;</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="s1">&#39;New upload&#39;</span><span class="p">)</span>
-    <span class="n">created</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-    <span class="n">modified</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span>
-        <span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">grading</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;Grading&#39;</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

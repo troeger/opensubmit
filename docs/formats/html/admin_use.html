@@ -83,7 +83,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Admin manual</a><ul>
-<li><a class="reference internal" href="#web-application">Web application</a><ul>
+<li><a class="reference internal" href="#web-server">Web server</a><ul>
 <li><a class="reference internal" href="#updating-your-installation">Updating your installation</a></li>
 <li><a class="reference internal" href="#authentication-methods">Authentication methods</a><ul>
 <li><a class="reference internal" href="#login-with-openid">Login with OpenID</a></li>
@@ -94,14 +94,15 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#user-management">User management</a><ul>
-<li><a class="reference internal" href="#user-permissions">User permissions</a></li>
+<li><a class="reference internal" href="#permissions">Permissions</a></li>
+<li><a class="reference internal" href="#assigning-users-to-groups">Assigning users to groups</a></li>
 <li><a class="reference internal" href="#merging-accounts">Merging accounts</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><a class="reference internal" href="#test-machines">Test machines</a><ul>
-<li><a class="reference internal" href="#id1">Updating your installation</a></li>
+<li><a class="reference internal" href="#id12">Updating your installation</a></li>
 </ul>
 </li>
 </ul>
@@ -137,12 +138,8 @@
       
   <div class="section" id="admin-manual">
 <h1>Admin manual<a class="headerlink" href="#admin-manual" title="Permalink to this headline">¶</a></h1>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This manual is work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
-</div>
-<div class="section" id="web-application">
-<h2>Web application<a class="headerlink" href="#web-application" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="web-server">
+<h2>Web server<a class="headerlink" href="#web-server" title="Permalink to this headline">¶</a></h2>
 <p>OpenSubmit runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:</p>
 <ul class="simple">
 <li>Prepare a Python 3 web hosting environment.<ul>
@@ -171,8 +168,8 @@
 </ul>
 </div>
 <div class="section" id="authentication-methods">
-<h3>Authentication methods<a class="headerlink" href="#authentication-methods" title="Permalink to this headline">¶</a></h3>
-<p id="auth">OpenSubmit supports different authentication methods, as described in the following sections. There is <strong>no password login</strong> support in OpenSubmit - authentication is always supposed to be handled by some third-party service.</p>
+<span id="auth"></span><h3>Authentication methods<a class="headerlink" href="#authentication-methods" title="Permalink to this headline">¶</a></h3>
+<p>OpenSubmit supports different authentication methods, as described in the following sections. There is <strong>no password login</strong> support in OpenSubmit - authentication is always supposed to be handled by some third-party service.</p>
 <p>If you need another authentication method for your institution, please <a class="reference external" href="https://github.com/troeger/opensubmit/issues/new">open an according issue</a>.</p>
 <div class="section" id="login-with-openid">
 <h4>Login with OpenID<a class="headerlink" href="#login-with-openid" title="Permalink to this headline">¶</a></h4>
@@ -237,27 +234,205 @@
 </div>
 <div class="section" id="user-management">
 <h3>User management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="user-permissions">
-<h4>User permissions<a class="headerlink" href="#user-permissions" title="Permalink to this headline">¶</a></h4>
+<p>One of the core concepts of OpenSubmit is that users register themselves by using an external authentication provider (see <a class="reference internal" href="#auth"><span class="std std-ref">Authentication methods</span></a>).</p>
+<p>Based on this, there are different groups such a registered user can belong to:</p>
+<ul class="simple">
+<li><em>Students</em> (default): Users who cannot access the teacher backend.</li>
+<li><em>Student Tutors</em>: Users with limited rights in the teacher backend.</li>
+<li><em>Course Owners</em>: Users with advanced rights in the teacher backend.</li>
+<li><em>Administrators</em>: Users will unrestricted rights.</li>
+</ul>
+<div class="section" id="permissions">
+<span id="id1"></span><h4>Permissions<a class="headerlink" href="#permissions" title="Permalink to this headline">¶</a></h4>
+<p>The following table summarized the default permissions for each of the user groups.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="9%" />
+<col width="18%" />
+<col width="18%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Permission</th>
+<th class="head">Students</th>
+<th class="head">Student Tutors</th>
+<th class="head">Course Owners</th>
+<th class="head">Administrators</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Student Frontend</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>Create submissions</li>
+</ul>
+</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li>Withdraw submission</li>
+</ul>
+</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>See unpublished assignments</li>
+</ul>
+</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-even"><td>Teacher Backend</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>eMail to participants</li>
+</ul>
+</td>
+<td>No</td>
+<td>Yes <a class="footnote-reference" href="#id10" id="id2">[1]</a></td>
+<td>Yes <a class="footnote-reference" href="#id11" id="id3">[2]</a></td>
+<td>Yes <a class="footnote-reference" href="#id11" id="id4">[2]</a></td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li>Manage/grade submissions</li>
+</ul>
+</td>
+<td>No</td>
+<td>Yes <a class="footnote-reference" href="#id10" id="id5">[1]</a></td>
+<td>Yes <a class="footnote-reference" href="#id11" id="id6">[2]</a></td>
+<td>Yes <a class="footnote-reference" href="#id11" id="id7">[2]</a></td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>Manage assignments</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>Yes <a class="footnote-reference" href="#id11" id="id8">[2]</a></td>
+<td>Yes <a class="footnote-reference" href="#id11" id="id9">[2]</a></td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li>Manage grading schemes</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>Manage study programs</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li>Manage courses</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>Manage users</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li>Manage test machines</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="row-odd"><td><ul class="first last simple">
+<li>Manage custom permissions</li>
+</ul>
+</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Only for courses where the user was chosen as tutor.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>, <a class="fn-backref" href="#id6">3</a>, <a class="fn-backref" href="#id7">4</a>, <a class="fn-backref" href="#id8">5</a>, <a class="fn-backref" href="#id9">6</a>)</em> Only for courses where the user was chosen as tutor or course owner.</td></tr>
+</tbody>
+</table>
+<p>Administrators can create custom user groups and permissions. Normally this should be avoided, since some permissions have a non-obvious impact on the usage of the teacher backend.</p>
+</div>
+<div class="section" id="assigning-users-to-groups">
+<h4>Assigning users to groups<a class="headerlink" href="#assigning-users-to-groups" title="Permalink to this headline">¶</a></h4>
+<p>There are two ways to assign users to user groups, assuming that they logged-in once for registration:</p>
+<ul class="simple">
+<li>In the teacher backend, as administrator (see <a class="reference internal" href="#auth"><span class="std std-ref">Authentication methods</span></a>).</li>
+<li>With the <code class="docutils literal"><span class="pre">opensubmit-web</span></code> command-line tool.</li>
+</ul>
+<p>The first option is the web-based configuration of user groups, which is only available for administrators. Click on <em>Manage users</em> and mark all user accounts to be modified. After that, choose an according action in the lower left corner of the screen.</p>
+<p>The second option is the <code class="docutils literal"><span class="pre">opensubmit-web</span></code> command-line tool that is available on the web server. Calling it without arguments shows the different options to assign users to user groups.</p>
 </div>
 <div class="section" id="merging-accounts">
-<span id="permissions"></span><h4>Merging accounts<a class="headerlink" href="#merging-accounts" title="Permalink to this headline">¶</a></h4>
+<span id="merge-users"></span><h4>Merging accounts<a class="headerlink" href="#merging-accounts" title="Permalink to this headline">¶</a></h4>
+<p>Since OpenSubmit users always register themselves in the platform (see <a class="reference internal" href="#auth"><span class="std std-ref">Authentication methods</span></a>), it can happen that the same physical person creates multiple accounts through different authentication providers. The main reason for that is a non-matching or missing email address being provided by the authentication provider.</p>
+<p>Administrators can merge users in the teacher backend. Click on <em>Manage users</em>, mark all user accounts to be merged, and choose the according action in the lower left corner. The nect screen shows you the intended merging activity and allows to chose the “primary” account by flipping roles. The non-primary account is deleted as part of the merging activity.</p>
 </div>
 </div>
 </div>
 <div class="section" id="test-machines">
-<span id="merge-users"></span><h2>Test machines<a class="headerlink" href="#test-machines" title="Permalink to this headline">¶</a></h2>
-<ul class="simple" id="executors">
-<li>Choose a dedicated machine beside the web server. This will compile (and run) the student submissions.</li>
+<span id="executors"></span><h2>Test machines<a class="headerlink" href="#test-machines" title="Permalink to this headline">¶</a></h2>
+<p>Test machines are used to run the validation scripts for student submission. These scripts use a specialized set of functions, the <span class="xref std std-ref">validatorlibrary</span>. Pending validation jobs are fetched from the OpenSubmit web server in regular intervals and executed on a test machine.</p>
+<p>The creator of an assignment can chose which test machines are used for the validation. This enables a flexible setup with dedicated test machines for special assignments, e.g. GPU programming.</p>
+<p>Both the validator library and the job fetching is implemented in a Python package called <code class="docutils literal"><span class="pre">opensubmit-exec</span></code> (the <em>executor</em>). It runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:</p>
+<ul class="simple">
+<li>Choose a dedicated machine with Python 3 beside the web server. It will compile (and run) the student submissions.</li>
 <li>Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.</li>
-<li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-exec</span></code>.</li>
-<li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> and follow the instructions. Make sure that you adjust <code class="docutils literal"><span class="pre">/etc/opensubmit/executor.ini</span></code> accordingly. You can run the script multiple times to check your configuration.</li>
+<li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-exec</span></code>. PIP should come as part of your Python installation.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> and follow the instructions. Make sure that you adjust <code class="docutils literal"><span class="pre">/etc/opensubmit/executor.ini</span></code> accordingly after the first run. You can run the script multiple times to check your configuration.</li>
 <li>Add a call to <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">run</span></code> to cron, so that it regulary asks the web server for fresh work. We have good experiences with a 30s interval. You can also do it manually for testing purposes.</li>
 </ul>
-<p>Smart students may try to connect to their own machines from their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only.</p>
-<div class="section" id="id1">
-<h3>Updating your installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>Updating an existing OpenSubmit test machine installation consists of the following steps:</p>
+<p>Smart students may try to connect to machines under their control in their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only.</p>
+<p>The fetching of validations is protected by a shared secret between the web application and the executor installations. Check both the <code class="docutils literal"><span class="pre">settings.ini</span></code> on the web server, and <code class="docutils literal"><span class="pre">executor.ini</span></code> on the test machines.</p>
+<div class="section" id="id12">
+<h3>Updating your installation<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<p>Updating an existing OpenSubmit executor installation consists of the following steps:</p>
 <ul class="simple">
 <li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment.</li>
 <li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> to check the configuration for compatibility.</li>

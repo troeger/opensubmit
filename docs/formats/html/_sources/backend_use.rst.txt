@@ -116,7 +116,8 @@ A student submission can be in different states. Each of the states is represent
 .. _states:
 .. literalinclude:: ../web/opensubmit/models/submission.py
    :language: python
-   :lines: 95-201
+   :start-after: # Docs start: States
+   :end-before:  # Docs end: States
 
 Submission grading
 ==================
