@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Teacher backend &#8212; OpenSubmit  documentation</title>
@@ -98,7 +98,11 @@
 <li><a class="reference internal" href="#duplicate-report">Duplicate report</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#automated-testing-of-submissions">Automated testing of submissions</a></li>
+<li><a class="reference internal" href="#automated-testing-of-submissions">Automated testing of submissions</a><ul>
+<li><a class="reference internal" href="#how-to-write-a-validator">How to write a validator</a></li>
+<li><a class="reference internal" href="#job-reference">Job reference</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -374,19 +378,289 @@
 </div>
 <div class="section" id="automated-testing-of-submissions">
 <h2>Automated testing of submissions<a class="headerlink" href="#automated-testing-of-submissions" title="Permalink to this headline">¶</a></h2>
-<p id="testing">The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the :<a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a>. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness.</p>
+<p id="testing">The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the <a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a>. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness.</p>
 <p>Since OpenSubmit makes no assumption about your style of student code evaluation, these scripts are rather generic. You can upload a validation test or full test in two ways:</p>
 <ul class="simple">
 <li>As single Python file named <cite>validator.py</cite>.</li>
 <li>As ZIP / TGZ archive with an arbitrary name, which must contain a file <cite>validator.py</cite>. This allows you to deploy custom validator support code (e.g. profiling tools, libraries) to the test machine.</li>
 </ul>
 <p>The test machine daemon makes sure that all test-related files are uncompressed in the same directory as the student code.</p>
-<p>Independent from the fact that tests might be archives, you have also the support files archive as additional option in the assignment creation dialogue. These files are also put into the same directory, regardless of the test type. An example:</p>
+<div class="section" id="how-to-write-a-validator">
+<h3>How to write a validator<a class="headerlink" href="#how-to-write-a-validator" title="Permalink to this headline">¶</a></h3>
+<p>OpenSubmit is compatible to Python 3.4 or higher. Given the fact that <a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a> directly call the validator code,
+these scripts must be written in the same language.</p>
+<p>It is possible to install the OpenSubmit executor standalone. Similar to the installation of <a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a>, the following procedure (for Debian / Ubuntu systems) helps to get a testing environment:</p>
 <ul class="simple">
-<li>Suport files archive: Predefined <cite>Makefile</cite> from the tutor, invisible for students</li>
-<li>Validator archive: <cite>validator.py</cite>, input data for validation, possible to download by students</li>
-<li>Full test archive: <cite>validator.py</cite>, bigger input data for extended tests, invisible for students</li>
+<li>Install Python 3: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python3</span> <span class="pre">python3-pip</span></code></li>
 </ul>
+<p>To keep your Python installation clean, we recommend to use <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">Virtualenv</a>:</p>
+<ul class="simple">
+<li>Install the Virtualenv tool: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">virtualenv</span></code></li>
+<li>Create a new virtual environment, e.g. in <code class="docutils literal"><span class="pre">~/my_env</span></code>: <code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">virtualenv</span> <span class="pre">~/my_env</span></code></li>
+<li>Activate it with <code class="docutils literal"><span class="pre">source</span> <span class="pre">~/my_env/bin/activate</span></code></li>
+<li>Install the OpenSubmit validator library / executor inside: <code class="docutils literal"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code></li>
+<li>Do your work.</li>
+<li>Deactivate it with <code class="docutils literal"><span class="pre">deactivate</span></code></li>
+</ul>
+<p>With a working installation of the OpenSubmit executor, it is now possible to develop validation scripts. Working demonstrators for different aspects can be found <a class="reference external" href="https://github.com/troeger/opensubmit/tree/master/examples">online</a>.</p>
+<p>We illustrate the idea with the following example:</p>
+<p>The students have to create a program in C that prints ‘Hello World’ on the terminal. The assignment demands that they submit a C-file and a matching <em>Makefile</em> that creates a program called <em>hello</em>. The assignment description explains the students that they have to <a class="reference external" href="_newsubmission">submit a ZIP archive</a> containing both files.</p>
+<p>Your job, as the assignment creator, is now to develop the <code class="docutils literal"><span class="pre">validator.py</span></code> file that checks an arbitrary student submission. Create a fresh directory that only contains an example student upload and the validator file:</p>
+<div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">run_make</span><span class="p">(</span><span class="n">mandatory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">exit_code</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run_program</span><span class="p">(</span><span class="s1">&#39;./hello&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;hello world&quot;</span><span class="p">:</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">send_pass_result</span><span class="p">(</span><span class="s2">&quot;The world greets you! Everything worked fine!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Wrong output: &quot;</span> <span class="o">+</span> <span class="n">output</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>A <code class="docutils literal"><span class="pre">validator.py</span></code> file must contain a function <code class="docutils literal"><span class="pre">validate(job)</span></code>, which is called when a student submission should be validated. In the example above, it performs the following steps:</p>
+<ul class="simple">
+<li>Line 1: The validator function is called when all student files (and all files from the validator archive) are unpacked in a temporary working directory on the test machine. In case of name conflicts, the validator files always overwrite the student files.</li>
+<li>Line 2: Run the <em>make</em> tool in the working directory. This step is declared to be mandatory, so <cite>job.run_make</cite> will throw an exception if <em>make</em> fails.</li>
+<li>Line 3: Run a binary called <em>hello</em> in the working directory. The result is the exit code and the output of the running program.</li>
+<li>Line 4: Check the generated output of the student program for some expected text.</li>
+<li>Line 5: Send a positive validation result back to the OpenSubmit web application. The text is the one shown to students and tutors.</li>
+<li>Line 6: Send a negative validation result back to the OpenSubmit web application. The text is the one shown to students and tutors.</li>
+</ul>
+<p>Validator scripts are ordinary Python code, so beside the functionalities provided by the job object, you can use any Python functionality. The example shows that in Line 4.</p>
+<p>If any of the functions throws an exception that is not catched by your validator code, it is automatically interpreted as negative validation result. The OpenSubmit executor code then ensures that a generic information is provided to the student. If you want to customize the reporting in those cases, catch the exception and use your own call of <cite>send_fail_result</cite> instead.</p>
+<p>To check if the validator is working correctly, you can run the command <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">test</span> <span class="pre">&lt;directory&gt;</span></code>. It assumes the given directory to contain a validator script resp. archive and the student submission file resp. archive. The command simulates a complete validation run on a test machine and prints exhaustive debugging information. The last line contains the feedback sent to the web application after finalization.</p>
+</div>
+<div class="section" id="job-reference">
+<h3>Job reference<a class="headerlink" href="#job-reference" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="opensubmitexec.server.Job">
+<em class="property">class </em><code class="descclassname">opensubmitexec.server.</code><code class="descname">Job</code><span class="sig-paren">(</span><em>config=None</em>, <em>online=True</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job" title="Permalink to this definition">¶</a></dt>
+<dd><p>A OpenSubmit validation job to be done.</p>
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.working_dir">
+<code class="descname">working_dir</code><a class="headerlink" href="#opensubmitexec.server.Job.working_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The working directory for this job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.timeout">
+<code class="descname">timeout</code><a class="headerlink" href="#opensubmitexec.server.Job.timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The timeout for execution, as demanded by the assignment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#opensubmitexec.server.Job.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The unique OpenSubmit submission ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.file_id">
+<code class="descname">file_id</code><a class="headerlink" href="#opensubmitexec.server.Job.file_id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The unique OpenSubmit submission file ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.submitter_name">
+<code class="descname">submitter_name</code><a class="headerlink" href="#opensubmitexec.server.Job.submitter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Name of the submitting student.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.submitter_student_id">
+<code class="descname">submitter_student_id</code><a class="headerlink" href="#opensubmitexec.server.Job.submitter_student_id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Student ID of the submitting student.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.submitter_studyprogram">
+<code class="descname">submitter_studyprogram</code><a class="headerlink" href="#opensubmitexec.server.Job.submitter_studyprogram" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Name of the study program of the submitter.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.author_names">
+<code class="descname">author_names</code><a class="headerlink" href="#opensubmitexec.server.Job.author_names" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Names of the submission authors.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.course">
+<code class="descname">course</code><a class="headerlink" href="#opensubmitexec.server.Job.course" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Name of the course where this submission happened.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="opensubmitexec.server.Job.assignment">
+<code class="descname">assignment</code><a class="headerlink" href="#opensubmitexec.server.Job.assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Name of the assignment for which this submission happened.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.delete_binaries">
+<code class="descname">delete_binaries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.delete_binaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scans for binary files in the student submission and deletes them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of deleted files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.ensure_files">
+<code class="descname">ensure_files</code><span class="sig-paren">(</span><em>filenames</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.ensure_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the student submission for specific files.
+Expects a list of filenames. Returns a boolean indicator.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.grep">
+<code class="descname">grep</code><span class="sig-paren">(</span><em>regex</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.grep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the student files in self.working_dir for files
+containing a specific regular expression.</p>
+<p>Returns the names of the matching files as list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.run_build">
+<code class="descname">run_build</code><span class="sig-paren">(</span><em>compiler=['gcc', '-o', '{output}', '{inputs}'], inputs=None, output=None</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.run_build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combined call of ‘configure’, ‘make’ and the compiler.</p>
+<p>The success of ‘configure’ and ‘make’ is optional.
+The arguments are the same as for run_compiler.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.run_compiler">
+<code class="descname">run_compiler</code><span class="sig-paren">(</span><em>compiler=['gcc', '-o', '{output}', '{inputs}'], inputs=None, output=None</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.run_compiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a compiler in the working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>compiler</strong> (<em>tuple</em>) – The compiler program and its command-line arguments,
+including placeholders for output and input files.</li>
+<li><strong>inputs</strong> (<em>tuple</em>) – The list of input files for the compiler.</li>
+<li><strong>output</strong> (<em>str</em>) – The name of the output file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.run_configure">
+<code class="descname">run_configure</code><span class="sig-paren">(</span><em>mandatory=True</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.run_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the ‘configure’ program in the working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mandatory</strong> (<em>bool</em>) – Throw exception if ‘configure’ fails or a
+‘configure’ file is missing.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.run_make">
+<code class="descname">run_make</code><span class="sig-paren">(</span><em>mandatory=True</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.run_make" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the ‘make’ program in the working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mandatory</strong> (<em>bool</em>) – Throw exception if ‘make’ fails or a
+‘Makefile’ file is missing.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.run_program">
+<code class="descname">run_program</code><span class="sig-paren">(</span><em>name</em>, <em>arguments=[]</em>, <em>timeout=30</em>, <em>exclusive=False</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.run_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a program in the working directory.
+The result is a tuple of exit code and output.</p>
+<p>The caller can demand exclusive execution on this machine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.send_fail_result">
+<code class="descname">send_fail_result</code><span class="sig-paren">(</span><em>info_student</em>, <em>info_tutor</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.send_fail_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports a negative result for this validation job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>info_student</strong> (<em>str</em>) – Information for the student(s)</li>
+<li><strong>info_tutor</strong> (<em>str</em>) – Information for the tutor(s)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.send_pass_result">
+<code class="descname">send_pass_result</code><span class="sig-paren">(</span><em>info_student='All tests passed. Awesome!'</em>, <em>info_tutor='All tests passed.'</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.send_pass_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports a positive result for this validation job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>info_student</strong> (<em>str</em>) – Information for the student(s)</li>
+<li><strong>info_tutor</strong> (<em>str</em>) – Information for the tutor(s)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.server.Job.spawn_program">
+<code class="descname">spawn_program</code><span class="sig-paren">(</span><em>name</em>, <em>arguments=[]</em>, <em>timeout=30</em>, <em>exclusive=False</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.server.Job.spawn_program" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawns a program in the working directory.</p>
+<p>This method allows the interaction with the running program,
+based on the returned RunningProgram object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – The name of the program to be executed.</li>
+<li><strong>arguments</strong> (<em>tuple</em>) – Command-line arguments for the program.</li>
+<li><strong>timeout</strong> (<em>int</em>) – The timeout for execution.</li>
+<li><strong>exclusive</strong> (<em>bool</em>) – Prevent parallel validation runs on the
+test machines, e.g. when doing performance
+measurements for submitted code.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">RunningProgram object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 </div>
 

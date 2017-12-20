@@ -26,6 +26,12 @@ Choosing your courses
 Open assignments
 ****************
 
+.. _newsubmission:
+
+Submitting a new solution
+-------------------------
+
+
 Active submissions
 ******************
 

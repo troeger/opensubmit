@@ -29,42 +29,46 @@ UNSPECIFIC_ERROR = -9999
 
 
 class Job():
+    """A OpenSubmit validation job to be done.
+
+    Attributes:
+        working_dir (str):            The working directory for this job.
+        timeout (str):                The timeout for execution, as demanded by the assignment.
+        submission_id (str):          The unique OpenSubmit submission ID.
+        file_id (str):                The unique OpenSubmit submission file ID.
+        submitter_name (str):         Name of the submitting student.
+        submitter_student_id (str):   Student ID of the submitting student.
+        submitter_studyprogram (str): Name of the study program of the submitter.
+        author_names (str):           Names of the submission authors.
+        course (str):                 Name of the course where this submission happened.
+        assignment (str):             Name of the assignment for which this submission happened.
+    """
+
+
+
     '''
     A OpenSubmit job to be run by the test machine.
     '''
-
+    
     # The current executor configuration.
     _config = None
     # Talk to the configured OpenSubmit server?
     _online = None
-
-    # Download source for the student sub
-    submission_url = None
-    # Download source for the validator
-    validator_url = None
-    # The working directory for this job
-    working_dir = None
-    # The timeout for execution, as demanded by the server
-    timeout = None
-    # The OpenSubmit submission ID
-    submission_id = None
-    # The OpenSubmit submission file ID
-    file_id = None
-    # Did the validator script sent a result to the server?
-    result_sent = False
     # Action requested by the server (legacy)
     action = None
-    # Name of the submitting student
+
+    submission_url = None
+    validator_url = None
+    result_sent = False
+    working_dir = None
+    timeout = None
+    submission_id = None
+    file_id = None
     submitter_name = None
-    # Student ID of the submitting student
     submitter_student_id = None
-    # Names of the submission authors
     author_names = None
-    # Name of the study program of the submitter
     submitter_studyprogram = None
-    # Name of the course where this submission was done
     course = None
-    # Name of the assignment where this job was done
     assignment = None
 
     # The base name of the validation / full test script
@@ -198,25 +202,44 @@ class Job():
         self.result_sent = True
 
     def send_fail_result(self, info_student, info_tutor):
+        """Reports a negative result for this validation job.
+
+        Args:
+            info_student (str): Information for the student(s)
+            info_tutor   (str): Information for the tutor(s)
+
+        """
         self._send_result(info_student, info_tutor, UNSPECIFIC_ERROR)
 
     def send_pass_result(self,
                          info_student="All tests passed. Awesome!",
                          info_tutor="All tests passed."):
+        """Reports a positive result for this validation job.
+
+        Args:
+            info_student (str): Information for the student(s)
+            info_tutor   (str): Information for the tutor(s)
+
+        """
         self._send_result(info_student, info_tutor, 0)
 
     def delete_binaries(self):
-        '''
-        Scans the submission files in the self.working_dir for
-        binaries and deletes them.
-        Returns the list of deleted files.
-        '''
+        """Scans for binary files in the student submission and deletes them.
+
+        Returns:
+            The list of deleted files.
+
+        """
         raise NotImplementedError
 
     def run_configure(self, mandatory=True):
-        '''
-        Runs the configure tool configured for the machine in self.working_dir.
-        '''
+        """Runs the 'configure' program in the working directory.
+
+        Args:
+            mandatory (bool): Throw exception if 'configure' fails or a
+                              'configure' file is missing.
+
+        """
         if not has_file(self.working_dir, 'configure'):
             if mandatory:
                 raise FileNotFoundError(
@@ -231,9 +254,13 @@ class Job():
                 raise
 
     def run_make(self, mandatory=True):
-        '''
-        Runs the make tool configured for the machine in self.working_dir.
-        '''
+        """Runs the 'make' program in the working directory.
+
+        Args:
+            mandatory (bool): Throw exception if 'make' fails or a
+                              'Makefile' file is missing.
+
+        """
         if not has_file(self.working_dir, 'Makefile'):
             if mandatory:
                 raise FileNotFoundError("Could not find a Makefile.")
@@ -247,9 +274,15 @@ class Job():
                 raise
 
     def run_compiler(self, compiler=GCC, inputs=None, output=None):
-        '''
-        Runs the compiler in self.working_dir.
-        '''
+        """Runs a compiler in the working directory.
+
+        Args:
+            compiler (tuple): The compiler program and its command-line arguments,
+                              including placeholders for output and input files.
+            inputs (tuple):   The list of input files for the compiler.
+            output (str):     The name of the output file.
+
+        """
         # Let exceptions travel through
         prog = RunningProgram(self, *compiler_cmdline(compiler=compiler,
                                                       inputs=inputs,
@@ -257,6 +290,12 @@ class Job():
         prog.expect_exit_status(0)
 
     def run_build(self, compiler=GCC, inputs=None, output=None):
+        """Combined call of 'configure', 'make' and the compiler.
+
+        The success of 'configure' and 'make' is optional.
+        The arguments are the same as for run_compiler.
+
+        """
         logger.info("Running build steps ...")
         self.run_configure(mandatory=False)
         self.run_make(mandatory=False)
@@ -265,12 +304,23 @@ class Job():
                           output=output)
 
     def spawn_program(self, name, arguments=[], timeout=30, exclusive=False):
-        '''
-        Spawns a program in the working directory and allows
-        interaction with it. Returns a RunningProgram object.
+        """Spawns a program in the working directory.
 
-        The caller can demand exclusive execution on this machine.
-        '''
+        This method allows the interaction with the running program,
+        based on the returned RunningProgram object.
+
+        Args:
+            name (str):        The name of the program to be executed.
+            arguments (tuple): Command-line arguments for the program.
+            timeout (int):     The timeout for execution.
+            exclusive (bool):  Prevent parallel validation runs on the
+                               test machines, e.g. when doing performance
+                               measurements for submitted code.
+
+        Returns:
+            RunningProgram object
+
+        """
         logger.debug("Spawning program for interaction ...")
         if exclusive:
             kill_longrunning(self.config)

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Installation and Configuration &#8212; OpenSubmit  documentation</title>
@@ -26,7 +26,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Contributors" href="developer_use.html" />
+    <link rel="next" title="Extending OpenSubmit" href="developer_use.html" />
     <link rel="prev" title="Teacher backend" href="backend_use.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -68,7 +68,7 @@
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student frontend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher backend</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation and Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Extending OpenSubmit</a></li>
 </ul>
 </ul>
 </li>
@@ -422,9 +422,10 @@
 <p>The creator of an assignment can chose which test machines are used for the validation. This enables a flexible setup with dedicated test machines for special assignments, e.g. GPU programming.</p>
 <p>Both the validator library and the job fetching is implemented in a Python package called <code class="docutils literal"><span class="pre">opensubmit-exec</span></code> (the <em>executor</em>). It runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:</p>
 <ul class="simple">
-<li>Choose a dedicated machine with Python 3 beside the web server. It will compile (and run) the student submissions.</li>
+<li>Choose a dedicated machine beside the web server. It will compile (and run) the student submissions.</li>
 <li>Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.</li>
-<li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-exec</span></code>. PIP should come as part of your Python installation.</li>
+<li>Install Python &gt;= 3.4 on the machine. e.g. through <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python3</span> <span class="pre">python3-pip</span></code>.</li>
+<li>Run <code class="docutils literal"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-exec</span></code>. PIP should come as part of your Python installation.</li>
 <li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> and follow the instructions. Make sure that you adjust <code class="docutils literal"><span class="pre">/etc/opensubmit/executor.ini</span></code> accordingly after the first run. You can run the script multiple times to check your configuration.</li>
 <li>Add a call to <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">run</span></code> to cron, so that it regulary asks the web server for fresh work. We have good experiences with a 30s interval. You can also do it manually for testing purposes.</li>
 </ul>

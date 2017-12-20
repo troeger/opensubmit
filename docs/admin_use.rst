@@ -188,9 +188,10 @@ The creator of an assignment can chose which test machines are used for the vali
 
 Both the validator library and the job fetching is implemented in a Python package called ``opensubmit-exec`` (the *executor*). It runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:
   
-- Choose a dedicated machine with Python 3 beside the web server. It will compile (and run) the student submissions.
+- Choose a dedicated machine beside the web server. It will compile (and run) the student submissions.
 - Think again. IT WILL RUN THE STUDENT SUBMISSIONS. Perform all neccessary security precautions, such as network isolation and limited local rights.
-- Run ``pip install opensubmit-exec`` as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running ``pip install -U opensubmit-exec``. PIP should come as part of your Python installation.
+- Install Python >= 3.4 on the machine. e.g. through ``sudo apt-get install python3 python3-pip``.
+- Run ``pip3 install opensubmit-exec`` as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running ``pip install -U opensubmit-exec``. PIP should come as part of your Python installation.
 - Run ``opensubmit-exec configure`` and follow the instructions. Make sure that you adjust ``/etc/opensubmit/executor.ini`` accordingly after the first run. You can run the script multiple times to check your configuration.
 - Add a call to ``opensubmit-exec run`` to cron, so that it regulary asks the web server for fresh work. We have good experiences with a 30s interval. You can also do it manually for testing purposes.
 

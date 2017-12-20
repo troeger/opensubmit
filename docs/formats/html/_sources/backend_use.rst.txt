@@ -208,7 +208,7 @@ Automated testing of submissions
 ********************************
 .. _testing:
 
-The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the ::ref:`test machines <executors>`. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness. 
+The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the :ref:`test machines <executors>`. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness. 
 
 Since OpenSubmit makes no assumption about your style of student code evaluation, these scripts are rather generic. You can upload a validation test or full test in two ways:
 
@@ -217,9 +217,53 @@ Since OpenSubmit makes no assumption about your style of student code evaluation
 
 The test machine daemon makes sure that all test-related files are uncompressed in the same directory as the student code.
 
-Independent from the fact that tests might be archives, you have also the support files archive as additional option in the assignment creation dialogue. These files are also put into the same directory, regardless of the test type. An example:
+How to write a validator
+========================
 
-- Suport files archive: Predefined `Makefile` from the tutor, invisible for students
-- Validator archive: `validator.py`, input data for validation, possible to download by students
-- Full test archive: `validator.py`, bigger input data for extended tests, invisible for students
+OpenSubmit is compatible to Python 3.4 or higher. Given the fact that :ref:`test machines <executors>` directly call the validator code,
+these scripts must be written in the same language.
 
+It is possible to install the OpenSubmit executor standalone. Similar to the installation of :ref:`test machines <executors>`, the following procedure (for Debian / Ubuntu systems) helps to get a testing environment:
+
+- Install Python 3: ``sudo apt-get install python3 python3-pip``
+
+To keep your Python installation clean, we recommend to use `Virtualenv <https://virtualenv.pypa.io/en/stable/>`_:
+
+- Install the Virtualenv tool: ``sudo pip3 install virtualenv``
+- Create a new virtual environment, e.g. in ``~/my_env``: ``python3 -m virtualenv ~/my_env``
+- Activate it with ``source ~/my_env/bin/activate``
+- Install the OpenSubmit validator library / executor inside: ``pip3 install opensubmit-exec``
+- Do your work.
+- Deactivate it with ``deactivate``
+
+With a working installation of the OpenSubmit executor, it is now possible to develop validation scripts. Working demonstrators for different aspects can be found `online <https://github.com/troeger/opensubmit/tree/master/examples>`_.
+
+We illustrate the idea with the following example:
+
+The students have to create a program in C that prints 'Hello World' on the terminal. The assignment demands that they submit a C-file and a matching *Makefile* that creates a program called *hello*. The assignment description explains the students that they have to `submit a ZIP archive <_newsubmission>`_ containing both files.
+
+Your job, as the assignment creator, is now to develop the ``validator.py`` file that checks an arbitrary student submission. Create a fresh directory that only contains an example student upload and the validator file:
+
+.. literalinclude:: files/validators/hello_example/validator.py
+   :linenos:
+
+A ``validator.py`` file must contain a function ``validate(job)``, which is called when a student submission should be validated. In the example above, it performs the following steps:
+
+- Line 1: The validator function is called when all student files (and all files from the validator archive) are unpacked in a temporary working directory on the test machine. In case of name conflicts, the validator files always overwrite the student files.
+- Line 2: Run the *make* tool in the working directory. This step is declared to be mandatory, so `job.run_make` will throw an exception if *make* fails.
+- Line 3: Run a binary called *hello* in the working directory. The result is the exit code and the output of the running program.
+- Line 4: Check the generated output of the student program for some expected text.
+- Line 5: Send a positive validation result back to the OpenSubmit web application. The text is the one shown to students and tutors.
+- Line 6: Send a negative validation result back to the OpenSubmit web application. The text is the one shown to students and tutors.
+
+Validator scripts are ordinary Python code, so beside the functionalities provided by the job object, you can use any Python functionality. The example shows that in Line 4. 
+
+If any of the functions throws an exception that is not catched by your validator code, it is automatically interpreted as negative validation result. The OpenSubmit executor code then ensures that a generic information is provided to the student. If you want to customize the reporting in those cases, catch the exception and use your own call of `send_fail_result` instead.
+
+To check if the validator is working correctly, you can run the command ``opensubmit-exec test <directory>``. It assumes the given directory to contain a validator script resp. archive and the student submission file resp. archive. The command simulates a complete validation run on a test machine and prints exhaustive debugging information. The last line contains the feedback sent to the web application after finalization.
+
+Job reference
+=============
+
+.. autoclass:: opensubmitexec.server.Job
+    :members: 
