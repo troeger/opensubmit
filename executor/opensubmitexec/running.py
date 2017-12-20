@@ -1,6 +1,7 @@
 import pexpect
 import os
 import time
+import tempfile
 
 from .exceptions import *
 
@@ -45,13 +46,14 @@ class RunningProgram(pexpect.spawn):
     job = None
     name = None
     arguments = None
+    _logfile = None
     _spawn = None
 
     def get_output(self):
-        if self._spawn and self._spawn.before:
-            return str(self._spawn.before, encoding='utf-8')
-        else:
-            return ""
+        # Open temporary file for reading, in text mode
+        # This makes sure that the file pointer for writing
+        # is not touched
+        return '\n'.join(open(self._logfile.name).readlines())
 
     def get_exitstatus(self):
         logger.debug("Exit status is {0}".format(self._spawn.exitstatus))
@@ -77,8 +79,12 @@ class RunningProgram(pexpect.spawn):
         if name.startswith('./'):
             name = name.replace('./', self.job.working_dir)
 
+        self._logfile = tempfile.NamedTemporaryFile()
+        logger.debug("Keeping console I/O in " + self._logfile.name)
+
         try:
             self._spawn = pexpect.spawn(name, arguments,
+                                        logfile=self._logfile,
                                         timeout=timeout,
                                         cwd=self.job.working_dir)
         except Exception as e:

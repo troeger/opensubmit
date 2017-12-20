@@ -176,10 +176,7 @@ def new(request, ass_id):
             if submission.state == Submission.SUBMITTED:
                 # Initial state is SUBMITTED,
                 # which means that there is no validation
-                if submission.assignment.gradingScheme:
-                    # Tell tutor to correct it
-                    submission.inform_course_owner(request)
-                else:
+                if not submission.assignment.is_graded():
                     # No validation, no grading. We are done.
                     submission.state = Submission.CLOSED
                     submission.save()
@@ -318,7 +315,7 @@ def gradingtable(request, course_id):
             if assignment.pk in ass2sub:
                 # Ok, we have a submission for this author in this assignment
                 submission = ass2sub[assignment.pk]
-                if assignment.gradingScheme:
+                if assignment.is_graded():
                     # is graded, make part of statistics
                     numgraded += 1
                     if submission.grading_means_passed():
@@ -448,7 +445,6 @@ def withdraw(request, subm_id):
         submission.state = Submission.WITHDRAWN
         submission.save()
         messages.info(request, 'Submission successfully withdrawn.')
-        submission.inform_course_owner(request)
         return redirect('dashboard')
     else:
         return render(request, 'withdraw.html', {'submission': submission})

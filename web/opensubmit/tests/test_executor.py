@@ -28,6 +28,7 @@ from .helpers.submission import create_validatable_submission
 from .helpers.submission import create_validated_submission
 from .helpers.assignment import create_validated_assignment
 from .helpers.assignment import create_pass_fail_grading
+from .helpers.assignment import create_validated_assignment_with_file
 from .helpers.djangofiles import create_submission_file
 from .helpers.user import create_user, get_student_dict
 from . import uccrap, rootdir
@@ -221,6 +222,9 @@ class Validation(TestCase):
     def test_b010tff(self):
         self._test_validation_case('b010tff')
 
+    def test_1000tfm(self):
+        self._test_validation_case('1000tfm')
+
 
 class Communication(SubmitStudentScenarioTestCase):
     '''
@@ -296,6 +300,8 @@ class Communication(SubmitStudentScenarioTestCase):
             self.assertNotEqual(0, len(results[0].result))
 
     def test_too_long_validation(self):
+        from django.core import mail
+
         grading = create_pass_fail_grading()
         assignment = create_validated_assignment(
             self.course, grading, "/submfiles/validation/d000fff/", "validator_run.py")
@@ -314,6 +320,56 @@ class Communication(SubmitStudentScenarioTestCase):
         self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
         text = sub.get_validation_result().result
         self.assertIn("took too long", text)
+        # Check mail outbox for student information
+        self.assertEqual(1, len(mail.outbox))
+        for email in mail.outbox:
+            self.assertIn("Validation failed", email.subject)
+            self.assertIn("failed", email.body)
+            self.assertIn("localhost", email.body)
+
+    def test_broken_validator_feedback(self):
+        from django.core import mail
+
+        grading = create_pass_fail_grading()
+        assignment = create_validated_assignment(
+            self.course, grading, "/submfiles/validation/1000tfm/", "validator.zip")
+        assignment.save()
+        sf = create_submission_file("/submfiles/validation/1000tfm/packed.zip")
+        sub = create_validatable_submission(
+            self.user, assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+
+        # Fire up the executor
+        self.assertEqual(False, self._run_executor())
+        sub.refresh_from_db()
+        self.assertEqual(sub.state, Submission.TEST_VALIDITY_FAILED)
+        text = sub.get_validation_result().result
+        self.assertIn("Internal error", text)
+        # Check mail outbox for student information
+        self.assertEqual(1, len(mail.outbox))
+        for email in mail.outbox:
+            self.assertIn("Validation failed", email.subject)
+            self.assertIn("failed", email.body)
+            self.assertIn("localhost", email.body)
+
+    def test_output_logging(self):
+        grading = create_pass_fail_grading()
+        assignment = create_validated_assignment(
+            self.course, grading, "/submfiles/validation/1000fff/", "validator.py")
+        assignment.save()
+        sf = create_submission_file("/submfiles/validation/1000fff/helloworld.c")
+        sub = create_validatable_submission(
+            self.user, assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+        # Fire up the executor
+        self.assertEqual(True, self._run_executor())
+        sub.refresh_from_db()
+        self.assertEqual(sub.state, Submission.SUBMITTED_TESTED)
+        text = sub.get_validation_result().result
+        self.assertIn("quick brown fox", text)
+        self.assertIn("provide your input", text)
 
     def test_too_long_full_test(self):
         grading = create_pass_fail_grading()
@@ -339,6 +395,8 @@ class Communication(SubmitStudentScenarioTestCase):
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_FULL_FAILED)
         assert("took too long" in sub.get_fulltest_result().result)
+        # Failed full tests shall not be reported
+        self.assertEqual(0, len(mail.outbox))
 
     def test_single_file_validator_test(self):
         sub = self._register_test_machine()
@@ -357,6 +415,32 @@ class Communication(SubmitStudentScenarioTestCase):
         )
         self.assertEqual(1, len(results))
         self.assertNotEqual(0, len(results[0].result))
+        # Graded assignment, so no mail at this stage
+        self.assertEqual(0, len(mail.outbox))
+
+    def test_ungraded_validation_email(self):
+        from django.core import mail
+
+        sf = create_submission_file()
+        assign = create_validated_assignment_with_file(self.course, None)
+        sub = create_validatable_submission(self.user, assign, sf)
+        test_machine = self._register_executor()
+        assign.test_machines.add(test_machine)
+        # has no grading scheme, so it is not graded
+        assert(not sub.assignment.is_graded())
+
+        # Fire up the executor for validation
+        self.assertEqual(True, self._run_executor())
+
+        # Fire up the executor for full test
+        self.assertEqual(True, self._run_executor())
+
+        # Check mail outbox for student information
+        self.assertEqual(1, len(mail.outbox))
+        for email in mail.outbox:
+            self.assertIn("Validation successful", email.subject)
+            self.assertIn("passed", email.body)
+            self.assertIn("localhost", email.body)
 
     def test_full_test(self):
         sub = self._register_test_machine()

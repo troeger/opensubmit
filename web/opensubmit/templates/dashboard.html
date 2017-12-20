@@ -56,7 +56,7 @@
     		                  	{% endif %}
     			            </td>
                             <td>{% if assignment.max_authors > 1%}Yes ({{assignment.max_authors}}){% else %}No{% endif %}</td>
-                            <td>{% if assignment.gradingScheme %}Yes{% else %}No{% endif %}</td>
+                            <td>{% if assignment.is_graded %}Yes{% else %}No{% endif %}</td>
                             <td>{% if assignment.soft_deadline %}
                                     {{assignment.soft_deadline}}
                                 {%else %}
@@ -160,7 +160,7 @@
         <h3>Test Machines</h3>
         <ul class="list">
         {% for machine in machines %}
-            <li><a href="{% url 'machine' machine.pk %}">Test machine {{ machine.pk }}</a></li>
+            <li><a href="{% url 'machine' machine.pk %}">{{ machine }}</a></li>
         {% endfor %}
     {% endif %}
 </ul>

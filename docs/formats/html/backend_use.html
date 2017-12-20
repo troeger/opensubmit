@@ -224,24 +224,30 @@
 <div class="section" id="submission-states">
 <h3>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h3>
 <p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend:</p>
-<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>
+<div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
+    <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span>
+
+        <span class="c1"># The submission is currently uploaded,</span>
+        <span class="c1"># some internal processing still takes place.</span>
+        <span class="p">(</span><span class="n">RECEIVED</span><span class="p">,</span> <span class="s1">&#39;Received&#39;</span><span class="p">),</span>
+
         <span class="c1"># The submission was withdrawn by the student</span>
         <span class="c1"># before the deadline. No further automated action</span>
         <span class="c1"># will take place with this submission.</span>
         <span class="p">(</span><span class="n">WITHDRAWN</span><span class="p">,</span> <span class="s1">&#39;Withdrawn&#39;</span><span class="p">),</span>
 
-        <span class="c1"># The submission is completely uploaded. </span>
-        <span class="c1"># If code validation is configured, the state will </span>
+        <span class="c1"># The submission is completely uploaded.</span>
+        <span class="c1"># If code validation is configured, the state will</span>
         <span class="c1"># directly change to TEST_VALIDITY_PENDING.</span>
         <span class="p">(</span><span class="n">SUBMITTED</span><span class="p">,</span> <span class="s1">&#39;Submitted&#39;</span><span class="p">),</span>
 
         <span class="c1"># The submission is waiting to be validated with the</span>
-        <span class="c1"># validation script on one of the test machines. </span>
+        <span class="c1"># validation script on one of the test machines.</span>
         <span class="c1"># The submission remains in this state until some</span>
         <span class="c1"># validation result was sent from the test machines.</span>
         <span class="p">(</span><span class="n">TEST_VALIDITY_PENDING</span><span class="p">,</span> <span class="s1">&#39;Validity test pending&#39;</span><span class="p">),</span>
 
-        <span class="c1"># The validation of the student sources on the </span>
+        <span class="c1"># The validation of the student sources on the</span>
         <span class="c1"># test machine failed. No further automated action will</span>
         <span class="c1"># take place with this submission.</span>
         <span class="c1"># The students get informed by email.</span>
@@ -249,7 +255,7 @@
 
         <span class="c1"># The submission is waiting to be checked with the</span>
         <span class="c1"># full test script on one of the test machines.</span>
-        <span class="c1"># The submission remains in this state until </span>
+        <span class="c1"># The submission remains in this state until</span>
         <span class="c1"># some result was sent from the test machines.</span>
         <span class="p">(</span><span class="n">TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Full test pending&#39;</span><span class="p">),</span>
 
@@ -265,38 +271,38 @@
         <span class="c1"># place with this submission.</span>
         <span class="p">(</span><span class="n">SUBMITTED_TESTED</span><span class="p">,</span> <span class="s1">&#39;All tests passed, grading pending&#39;</span><span class="p">),</span>
 
-        <span class="c1"># Some grading took place in the teacher backend, </span>
-        <span class="c1"># and the submission was explicitly marked with </span>
+        <span class="c1"># Some grading took place in the teacher backend,</span>
+        <span class="c1"># and the submission was explicitly marked with</span>
         <span class="c1"># &#39;grading not finished&#39;. This allows correctors to have</span>
-        <span class="c1"># multiple runs over the submissions and see which </span>
+        <span class="c1"># multiple runs over the submissions and see which</span>
         <span class="c1"># of the submissions were already investigated.</span>
         <span class="p">(</span><span class="n">GRADING_IN_PROGRESS</span><span class="p">,</span> <span class="s1">&#39;Grading not finished&#39;</span><span class="p">),</span>
 
-        <span class="c1"># Some grading took place in the teacher backend, </span>
-        <span class="c1"># and the submission was explicitly marked with </span>
-        <span class="c1"># &#39;grading not finished&#39;. This allows correctors </span>
+        <span class="c1"># Some grading took place in the teacher backend,</span>
+        <span class="c1"># and the submission was explicitly marked with</span>
+        <span class="c1"># &#39;grading not finished&#39;. This allows correctors</span>
         <span class="c1"># to have multiple runs over the submissions and</span>
         <span class="c1">#  see which of the submissions were already investigated.</span>
         <span class="p">(</span><span class="n">GRADED</span><span class="p">,</span> <span class="s1">&#39;Grading finished&#39;</span><span class="p">),</span>
 
-        <span class="c1"># The submission is closed, meaning that in the </span>
+        <span class="c1"># The submission is closed, meaning that in the</span>
         <span class="c1"># teacher backend, the submission was marked</span>
-        <span class="c1"># as closed to trigger the student notification </span>
+        <span class="c1"># as closed to trigger the student notification</span>
         <span class="c1"># for their final assignment grades.</span>
         <span class="c1"># Students are notified by email.</span>
         <span class="p">(</span><span class="n">CLOSED</span><span class="p">,</span> <span class="s1">&#39;Closed, student notified&#39;</span><span class="p">),</span>
 
-        <span class="c1"># The submission is closed, but marked for </span>
+        <span class="c1"># The submission is closed, but marked for</span>
         <span class="c1"># another full test run.</span>
-        <span class="c1"># This is typically used to have some post-assignment </span>
+        <span class="c1"># This is typically used to have some post-assignment</span>
         <span class="c1"># analysis of student submissions</span>
-        <span class="c1"># by the help of full test scripts. </span>
+        <span class="c1"># by the help of full test scripts.</span>
         <span class="c1"># Students never get any notification about this state.</span>
         <span class="p">(</span><span class="n">CLOSED_TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Closed, full test pending&#39;</span><span class="p">)</span>
     <span class="p">)</span>
 
     <span class="c1"># State description in student dashboard</span>
-    <span class="n">STUDENT_STATES</span> <span class="o">=</span> <span class="p">(</span> 
+    <span class="n">STUDENT_STATES</span> <span class="o">=</span> <span class="p">(</span>
         <span class="p">(</span><span class="n">RECEIVED</span><span class="p">,</span> <span class="s1">&#39;Received&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">WITHDRAWN</span><span class="p">,</span> <span class="s1">&#39;Withdrawn&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">SUBMITTED</span><span class="p">,</span> <span class="s1">&#39;Waiting for grading&#39;</span><span class="p">),</span>
@@ -310,27 +316,6 @@
         <span class="p">(</span><span class="n">CLOSED</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="n">CLOSED_TEST_FULL_PENDING</span><span class="p">,</span> <span class="s1">&#39;Done&#39;</span><span class="p">)</span>
     <span class="p">)</span>
-
-    <span class="n">assignment</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;Assignment&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submissions&#39;</span><span class="p">)</span>
-    <span class="n">submitter</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submitted&#39;</span><span class="p">)</span>
-    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;authored&#39;</span><span class="p">)</span> <span class="c1"># includes also submitter, see submission_post_save() handler</span>
-    <span class="n">notes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">file_upload</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;SubmissionFile&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;submissions&#39;</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="s1">&#39;New upload&#39;</span><span class="p">)</span>
-    <span class="n">created</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-    <span class="n">modified</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">grading</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;Grading&#39;</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">grading_notes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Specific notes about the grading for this submission.&quot;</span><span class="p">)</span>
-    <span class="n">grading_file</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FileField</span><span class="p">(</span><span class="n">upload_to</span><span class="o">=</span><span class="n">upload_path</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Additional information about the grading as file.&quot;</span><span class="p">)</span>
-    <span class="n">state</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">STATES</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">RECEIVED</span><span class="p">)</span>
-
-    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
-    <span class="n">pending_student_tests</span> <span class="o">=</span> <span class="n">PendingStudentTestsManager</span><span class="p">()</span>
-    <span class="n">pending_full_tests</span> <span class="o">=</span> <span class="n">PendingFullTestsManager</span><span class="p">()</span>
-    <span class="n">pending_tests</span> <span class="o">=</span> <span class="n">PendingTestsManager</span><span class="p">()</span>
-    <span class="n">valid_ones</span> <span class="o">=</span> <span class="n">ValidSubmissionsManager</span><span class="p">()</span>
-
-    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
-        <span class="n">app_label</span> <span class="o">=</span> <span class="s1">&#39;opensubmit&#39;</span>
 </pre></div>
 </div>
 </div>

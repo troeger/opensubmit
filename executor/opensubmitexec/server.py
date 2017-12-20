@@ -9,6 +9,7 @@ import shutil
 import os.path
 import glob
 import json
+import re
 
 from .compiler import compiler_cmdline, GCC
 from .config import read_config
@@ -97,7 +98,14 @@ class Job():
         old_path = sys.path
         sys.path = [self.working_dir] + old_path
         # logger.debug('Python search path is now {0}.'.format(sys.path))
-        module = importlib.import_module(self._validator_import_name)
+
+        try:
+            module = importlib.import_module(self._validator_import_name)
+        except Exception as e:
+            text_student = "Internal validation problem, please contact your course responsible."
+            text_tutor = "Exception while loading the validator: " + str(e)
+            self._send_result(text_student, text_tutor, UNSPECIFIC_ERROR)
+            return
 
         # Looped validator loading in the test suite demands this
         importlib.reload(module)
@@ -160,9 +168,8 @@ class Job():
                 exit(-1)
             else:
                 # Something really unexpected
-                text_student = "Internal problem while validating your submission. {0}".format(
-                    str(e))
-                text_tutor = "Unknown exception while running the validator. {0}".format(
+                text_student = "Internal problem while validating your submission. Please contact the course responsible."
+                text_tutor = "Unknown exception while running the validator: {0}".format(
                     str(e))
             # We got the text. Report the problem.
             self._send_result(text_student, text_tutor, UNSPECIFIC_ERROR)
@@ -284,14 +291,22 @@ class Job():
         prog = RunningProgram(self, name, arguments, timeout)
         return prog.expect_end()
 
-    def find_keywords(self, keywords, filepattern):
+    def grep(self, regex):
         '''
-        Searches self.working_dir for files containing specific keywords.
-        Expects a list of keywords to be searched for and the file pattern
-        (*.c) as parameters.
-        Returns the names of the files containing all of the keywords.
+        Searches the student files in self.working_dir for files
+        containing a specific regular expression.
+
+        Returns the names of the matching files as list.
         '''
-        raise NotImplementedError
+        matches = []
+        logger.debug("Searching student files for '{0}'".format(regex))
+        for fname in self.student_files:
+            if os.path.isfile(self.working_dir + fname):
+                for line in open(self.working_dir + fname, 'br'):
+                    if re.search(regex.encode(), line):
+                        logger.debug("{0} contains '{1}'".format(fname, regex))
+                        matches.append(fname)
+        return matches
 
     def ensure_files(self, filenames):
         '''
@@ -357,19 +372,25 @@ def compatible_api_version(server_version):
     try:
         semver = server_version.split('.')
         if semver[0] != '1':
-            logger.error('Server API version (%s) is too new for us. Please update the executor installation.'%server_version)
+            logger.error(
+                'Server API version (%s) is too new for us. Please update the executor installation.' % server_version)
             return False
         else:
             return True
     except Exception:
-        logger.error('Cannot understand the server API version (%s). Please update the executor installation.'%server_version)
+        logger.error(
+            'Cannot understand the server API version (%s). Please update the executor installation.' % server_version)
         return False
 
 
 def fetch_job(config):
     '''
     Fetch any available work from the OpenSubmit server and
-    return an according job object, or None.
+    return an according job object.
+
+    Returns None if no work is available.
+
+    Errors are reported by this function directly.
     '''
     url = "%s/jobs/?Secret=%s&UUID=%s" % (config.get("Server", "url"),
                                           config.get("Server", "secret"),
@@ -380,6 +401,8 @@ def fetch_job(config):
         result = urlopen(url)
         headers = result.info()
         if not compatible_api_version(headers["APIVersion"]):
+            # No proper reporting possible, so only logging.
+            logger.error("Incompatible API version. Please update OpenSubmit.")
             return None
 
         if headers["Action"] == "get_config":
@@ -420,12 +443,11 @@ def fetch_job(config):
 
         try:
             prepare_working_directory(job, submission_fname, validator_fname)
-        except JobException:
-            logger.error("Preparation of working directory failed.")
+        except JobException as e:
+            job.send_fail_result(e.info_student, e.info_tutor)
             return None
-        else:
-            logger.debug("Got job: " + str(job))
-            return job
+        logger.debug("Got job: " + str(job))
+        return job
     except HTTPError as e:
         if e.code == 404:
             logger.debug("Nothing to do.")
@@ -447,11 +469,11 @@ def fake_fetch_job(config, src_dir):
     logger.debug("Creating fake job from " + src_dir)
     job = Job(config, online=False)
     job.working_dir = create_working_dir(config, '42')
-    case_files = glob.glob(src_dir + os.sep + '*')
-    assert(len(case_files) == 2)
     for fname in glob.glob(src_dir + os.sep + '*'):
         logger.debug("Copying {0} to {1} ...".format(fname, job.working_dir))
         shutil.copy(fname, job.working_dir)
+    case_files = glob.glob(job.working_dir + os.sep + '*')
+    assert(len(case_files) == 2)
     if os.path.basename(case_files[0]) in ['validator.py', 'validator.zip']:
         validator = case_files[0]
         submission = case_files[1]
@@ -462,11 +484,10 @@ def fake_fetch_job(config, src_dir):
     logger.debug('{0} the submission.'.format(submission))
     try:
         prepare_working_directory(job,
-                                  submission_fname=submission,
-                                  validator_fname=validator)
-    except JobException:
+                                  submission_path=submission,
+                                  validator_path=validator)
+    except JobException as e:
+        job.send_fail_result(e.info_student, e.info_tutor)
         return None
-    else:
-        logger.debug("Got fake job: " + str(job))
-        return job
-
+    logger.debug("Got fake job: " + str(job))
+    return job

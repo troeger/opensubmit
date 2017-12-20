@@ -101,7 +101,7 @@ html_theme_options = {
     'navbar_links': [
         ("About", "about"),
     ],
-    'bootswatch_theme': "yeti"
+    'bootswatch_theme': "spacelab"
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
