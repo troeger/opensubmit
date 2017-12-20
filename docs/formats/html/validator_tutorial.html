@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Extending OpenSubmit &#8212; OpenSubmit  documentation</title>
+    <title>&lt;no title&gt; &#8212; OpenSubmit  documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -26,7 +26,6 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Installation and Configuration" href="admin_use.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -63,11 +62,11 @@
      href="index.html">Manuals <b class="caret"></b></a>
   <ul class="dropdown-menu globaltoc"
       role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
+      aria-labelledby="dLabelGlobalToc"><ul>
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student frontend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="admin_use.html">Installation and Configuration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Extending OpenSubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Extending OpenSubmit</a></li>
 </ul>
 </ul>
 </li>
@@ -80,8 +79,7 @@
      href="#">Jump to... <b class="caret"></b></a>
   <ul class="dropdown-menu localtoc"
       role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Extending OpenSubmit</a></li>
+      aria-labelledby="dLabelLocalToc"><ul class="simple">
 </ul>
 </ul>
 </li>
@@ -111,30 +109,7 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="extending-opensubmit">
-<h1>Extending OpenSubmit<a class="headerlink" href="#extending-opensubmit" title="Permalink to this headline">¶</a></h1>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This manual is work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
-</div>
-<p>The development of OpenSubmit is coordinated on <a class="reference external" href="https://github.com/troeger/opensubmit">GitHub</a>.
-We need help in everything. Feel free to join us.</p>
-<p>OpenSubmit runs with Python 3.4 or newer versions. For a development enviroment, please follow these steps:</p>
-<ul class="simple">
-<li>Install Python &gt;= 3.4.</li>
-<li>Clone the repository with <code class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/troeger/opensubmit.git</span></code>.</li>
-<li>Prepare a virtualenv with all neccessary python packages by calling <code class="docutils literal"><span class="pre">make</span> <span class="pre">venv</span></code>. It is stored in the <code class="docutils literal"><span class="pre">venv</span></code> folder.</li>
-<li><a class="reference external" href="https://virtualenv.pypa.io/en/stable/userguide/#activate-script">Activate</a> the virtualenv.</li>
-<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to run all tests.</li>
-<li>In the <em>web</em> folder:<ul>
-<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create the database.</li>
-<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> to run a development web server.</li>
-</ul>
-</li>
-</ul>
-<p>The central <a class="reference external" href="https://github.com/troeger/opensubmit/blob/master/Makefile">Makefile</a> is a good starting point.</p>
-</div>
-
+  
 
     </div>
       
