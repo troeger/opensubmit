@@ -26,7 +26,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Student manual" href="frontend_use.html" />
+    <link rel="next" title="Student frontend" href="frontend_use.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -64,10 +64,10 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul>
-<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Admin manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student frontend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Installation and Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Extending OpenSubmit</a></li>
 </ul>
 </ul>
 </li>
@@ -81,7 +81,10 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Welcome!</a></li>
+<li><a class="reference internal" href="#">Welcome!</a><ul>
+<li><a class="reference internal" href="#table-of-content">Table of content</a></li>
+</ul>
+</li>
 </ul>
 </ul>
 </li>
@@ -112,9 +115,9 @@
     <div class="col-md-12 content">
       
   <div class="section" id="welcome">
-<h1>Welcome!<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
+<span id="index"></span><h1>Welcome!<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
 <p>OpenSubmit is a small web application for managing assignment solutions in a university environment.</p>
-<p><a class="reference internal" href="_images/ui_student.png"><img alt="stud" src="_images/ui_student.png" style="width: 481.95px; height: 338.79999999999995px;" /></a></p>
+<p><a class="reference internal" href="_images/ui_student.png"><img alt="stud" src="_images/ui_student.png" style="width: 678.0px; height: 467.5px;" /></a></p>
 <p>Students use a trivial web page to <strong>submit their assignment solution</strong>. They are informed about their grading status by email or on the page.</p>
 <p>Teachers and tutors use a powerful backend interface to manage assignments, deadlines, and the gradings:</p>
 <table border="1" class="docutils">
@@ -151,7 +154,33 @@ student submission the determine grading-relevant information.</p>
 <p>Other tools, such as <a class="reference external" href="https://docs.moodle.org/33/en/About_Moodle">Moodle</a>, support not only
 assignments, but also the management of learning material, the sophisticated tracking of course
 progress and a fine-grained management of course access rights. If you want the all-inclusive solution, this is the wrong project.</p>
+<div class="section" id="table-of-content">
+<h2>Table of content<a class="headerlink" href="#table-of-content" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student frontend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="frontend_use.html#setting-your-user-details">Setting your user details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="frontend_use.html#choosing-your-courses">Choosing your courses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="frontend_use.html#open-assignments">Open assignments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="frontend_use.html#active-submissions">Active submissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="frontend_use.html#archive">Archive</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher backend</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="backend_use.html#managing-study-programs">Managing study programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backend_use.html#managing-courses">Managing courses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backend_use.html#managing-submissions">Managing submissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backend_use.html#automated-testing-of-submissions">Automated testing of submissions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Installation and Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="admin_use.html#web-server">Web server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="admin_use.html#test-machines">Test machines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Extending OpenSubmit</a></li>
+</ul>
+</div>
 </div>
 </div>
 

@@ -1,5 +1,5 @@
-Student manual
-##############
+Student frontend
+################
 
 .. warning::
 
@@ -13,8 +13,15 @@ After log-in with one of the offered authentication methods, you are redirected 
 * ... see the grading / code validation status for your solutions.
 * ... see the characteristics of the machines being used for automated validation.
 
+.. _userdetails:
+
 Setting your user details
 *************************
+
+.. _usercourses:
+
+Choosing your courses
+*********************
 
 Open assignments
 ****************

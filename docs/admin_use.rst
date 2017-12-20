@@ -1,5 +1,5 @@
-Admin manual
-############
+Installation and Configuration
+##############################
 
 Web server
 **********
@@ -108,6 +108,8 @@ If you want to allow users to login with an GitHub account, you need to configur
 The standard OpenSubmit installation already contains a key/secret pair for development purposes. It only works for OpenSubmit installations operating on *http://localhost:8000*, so in a production environment, you need a new pair of OAuth key/secret for your server.
 
 A new key / secret pair can be created in the `OAuth application registration <https://github.com/settings/applications/new>`_.  The authorized forwarding URL should be ``<base url of your installation>/complete/github/``.
+
+.. _useroverview:
 
 User management
 ===============

@@ -1,13 +1,14 @@
-Developer manual
-################
+Extending OpenSubmit
+####################
 
 .. warning::
 
    This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
 
-OpenSubmit runs with Python 3.4 or newer versions. 
+The development of OpenSubmit is coordinated on `GitHub <https://github.com/troeger/opensubmit>`_.
+We need help in everything. Feel free to join us.
 
-For an OpenSubmit development enviroment, please do the following steps:
+OpenSubmit runs with Python 3.4 or newer versions. For a development enviroment, please follow these steps:
 
 - Install Python >= 3.4.
 - Clone the repository with ``git clone https://github.com/troeger/opensubmit.git``.
@@ -18,3 +19,5 @@ For an OpenSubmit development enviroment, please do the following steps:
 
   - Run ``manage.py migrate`` to create the database.
   - Run ``manage.py runserver`` to run a development web server.
+
+The central `Makefile <https://github.com/troeger/opensubmit/blob/master/Makefile>`_ is a good starting point.

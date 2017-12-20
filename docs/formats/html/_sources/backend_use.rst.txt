@@ -1,19 +1,35 @@
-Teacher manual
-##############
+Teacher backend
+###############
 
 .. warning::
 
    This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
 
+OpenSubmit was invented for making assignments more fun for the students, and less work for the teachers. Before you start to read into details, we recommend to get into the basic :ref:`idea <index>` and general :ref:`principles <principles>`. 
+
+Student tutors, course owners and administrators (see also :ref:`permissions`) all operate in the teacher backend, which is reachable by a link at the end of the OpenSubmit student frontend, or directly via *<your OpenSubmit url>/teacher*.
+
 Managing study programs
 ***********************
+
+Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage study programs``
+
+This function is only available for users with according :ref:`permissions <permissions>`.
+
+Students register in OpenSubmit by themselves, simply by using one of the configured authentication methods (see :ref:`auth`). After the first login, there are asked to complete their user details (see also :ref:`userdetails`). 
+
+One part of the user details dialogue is the choice of the study program, e.g. *computer science (Bachelor)* or *Greek philosophy (Master)*. When more than one study program is configured in OpenSubmit, then this choice becomes mandatory. If only a single or no study program is configured, then the students are not forced to make that choice.
+
+The study program is shown in the :ref:`useroverview` and the :ref:`gradingtable`. Is has no further impact on the operation of OpenSubmit, but can help with the grading of mixed courses.
 
 Managing courses
 ****************
 
 Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage courses``
 
-Courses and grading schemes can be created, configured and deleted by users with :ref:`administrator <permissions>` or :ref:`course owner <permissions>` permissions. 
+This function is only available for users with according :ref:`permissions <permissions>`.
+
+Assignments for students belong to a course. The registered students can choose (see also :ref:`usercourses`) which course they participate in. This is different to many other learning management systems, which offer sophisticated registration mechanisms (see also :ref:`principles`). 
 
 Course creation 
 ===============
@@ -27,7 +43,7 @@ The following settings must be configured for a new course:
 Title
     The title of the course.
 Course owner 
-    A user how automatically gets :ref:`course owner <permissions>` permissions for this course. His email address is used as sender in student notifications. 
+    A user who automatically gets :ref:`course owner <permissions>` permissions for this course. His email address is used as sender in student notifications. 
 Tutors
     A set of users that get :ref:`student tutor <permissions>` permissions for this course. 
 Course description link
@@ -35,9 +51,9 @@ Course description link
 Active
    The flag decides if any assignments from this course are shown to the students, regardless of their deadlines. This allows to put courses in an 'archive' mode after the term is over. 
 LTI key / LTI passphrase
-   OpenSubmit supports the LTI protocol, so that you can integrate it into other learning management systems (LMSs) such as Moodle. 
+   OpenSubmit supports the LTI protocol, so that you can integrate it into other learning management systems (LMSs) such as `Moodle <https://docs.moodle.org/34/en/External_tool>`_. 
 
-   The LMS needs a key and a passphrase that you configure separately for each OpenSubmit course. This makes sure that the system knows automatically the course in which the external LMS user is interested in. Such users don't need to perform any authentication, OpenSubmit blindly believes in the identify information forwarded by the LMS. If a user already exists with the same email address, the LMS identity is added to his social login credentials. 
+   The LMS needs a consumer key and a shared secret resp. passphrase that you configure separately for each OpenSubmit course. This makes sure that the system knows automatically the course in which the external LMS user is interested in. Such users don't need to perform any authentication, OpenSubmit blindly believes in the identify information forwarded by the LMS. If a user already exists with the same email address, the LMS identity is added to his social login credentials. 
 
    Using LTI authentication can lead to duplicate accounts. You can :ref:`merge users <merge users>` to fix that.
 
@@ -50,16 +66,14 @@ After using an :ref:`authentication provider <auth>`, students get automatically
 
 If you want to make sure that students automatically see the assignments for your course, you need to tell OpenSubmit the course ID when entering the system. This can be done by linking to a course-specific OpenSubmit URL. It is shown in the course details on the teacher backend landing page.
 
+.. _gradingscheme:
+
 Grading scheme creation
 =======================
-.. _gradingscheme:
 
 Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage grading schemes``
 
 Before you can create assignments for students, you must think about the grading scheme. A grading scheme is an arbitrary collection of gradings, were each grading either means 'pass' or 'fail'. 
-
-.. image:: files/ui_backend_gradingscheme.png    
-   :scale: 50%
 
 Grading schemes can later be used in the creation of assignments.
 
@@ -131,12 +145,14 @@ The grading of student submissions follows the same workflow, regardless of the 
 Short version:
 
 - For each submission:
+
   - Open the submission in the teacher backend.
   - Use the preview function for inspecting uploaded student archives.
   - Check the output from validation test and full test.
   - Optional: Add grading notes and a grading file for the student as feedback.
   - Decide for a grading, based on the provided information.
   - Mark the submission as **grading finished** if you are done with it.
+
 - Close and notify all finished submissions as bulk action.
 
 Long version:
@@ -144,7 +160,6 @@ Long version:
 On the right side of the submissions overview page, different filtering options are available.
 
 .. image:: files/ui_backend_submissions.png    
-   :scale: 50%
 
 The most important thing is the distinguishing between **non-graded**, **graded** and **closed** submissions:
 
@@ -155,7 +170,6 @@ When all gradings are done, then the submissions can be **closed**. This is the 
 The submission details dialogue shows different information:
 
 .. image:: files/ui_backend_submission.png    
-   :scale: 50%
 
 The assignment may allow the students to define co-authors for their submission. You can edit this list manually, for example when students made a mistake during the submission. The according section is hidden by default, click on the `Authors` tab to see it.
 
@@ -174,6 +188,8 @@ The *grading file* is also offered after closing, and may - for example - contai
 The radio buttons at the bottom of the page allow to mark the submission as **non-graded** or **graded**.
 
 When all submissions are finally graded, it is time to release the information to the students. In order to do this, mark on the overview page all finished submissions. This can be easily done by using the filters on the right side and the 'mark all' checkbox in the upper left corner. The choose the action 'Close graded submissions + send notification'.
+
+.. _gradingtable:
 
 Grading table
 =============
