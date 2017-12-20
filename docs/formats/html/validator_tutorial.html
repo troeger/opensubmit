@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tutorial on creating validators for student submissions &#8212; OpenSubmit  documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          OpenSubmit</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="about.html">About</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Manuals <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Admin manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer manual</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Jump to... <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Tutorial on creating validators for student submissions</a><ul>
+<li><a class="reference internal" href="#setting-up-the-environment">Setting up the environment</a></li>
+<li><a class="reference internal" href="#creating-validators-and-using-opensubmit-exec">Creating validators and using opensubmit-exec</a></li>
+<li><a class="reference internal" href="#examples-and-explanations-for-validators">Examples and explanations for validators</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="tutorial-on-creating-validators-for-student-submissions">
+<h1>Tutorial on creating validators for student submissions<a class="headerlink" href="#tutorial-on-creating-validators-for-student-submissions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setting-up-the-environment">
+<h2>Setting up the environment<a class="headerlink" href="#setting-up-the-environment" title="Permalink to this headline">¶</a></h2>
+<p>Python version 3.4 or higher is required for opensubmit to work correctly.
+Validators should be written in the same version.
+The current version of Python 3 can be installed using the following command.</p>
+<p><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python3</span></code></p>
+<p>For testing the validator on our local machine the tool opensubmit-exec is required.
+It can be obtained by using pip3.
+To install pip3 use the following command.</p>
+<p><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python3-pip</span></code></p>
+<p>To keep our Python standard installation clean we use virtualenv for creating an virtual environment.</p>
+<p><code class="docutils literal"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">virtualenv</span></code></p>
+<p>The following command creates a new virtual environment in the desired directory (~/my_env in the following example).</p>
+<p><code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">virtualenv</span> <span class="pre">-p</span> <span class="pre">/usr/bin/python3</span> <span class="pre">~/my_env</span></code></p>
+<p>To activate the newly created environment use <code class="docutils literal"><span class="pre">source</span> <span class="pre">~/my_env/bin/activate</span></code> and to deactivate it use <code class="docutils literal"><span class="pre">deactivate</span></code>.</p>
+<p>When we activated the virtual environment we can install Python packages as usual by using pip3 but they will be installed in to our newly created directory, so our standard python installation stays clean.
+For installing opensubmit-exec the following command is used.</p>
+<p><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">opensubmit-exec</span></code></p>
+<p>For obtaining the beta version of the software use the following command (0.7b3 can be replaced by the desired version).</p>
+<p><code class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">opensubmit-exec==0.7b3</span></code></p>
+<p>opensubmit-exec can now be used whenever we activated the corresponding virtual environment.</p>
+</div>
+<div class="section" id="creating-validators-and-using-opensubmit-exec">
+<h2>Creating validators and using opensubmit-exec<a class="headerlink" href="#creating-validators-and-using-opensubmit-exec" title="Permalink to this headline">¶</a></h2>
+<p>The creation of a validator is illustrated by the following example.
+The students have to create a program in C that prints ‘hello world’ to the command prompt.
+They have to submit the corresponding c-file and the makefile, which creates a program called ‘hello’.</p>
+<p>The student files are located in an zip-archive.
+The directory for testing the newly created validator with the exemplary student submission should only contain the student submission archive (c-file and makefile) and the validator.py file.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#include &lt;stdio.h&gt;</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">(</span><span class="n">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">hello</span><span class="p">:</span> <span class="n">hello</span><span class="o">.</span><span class="n">c</span>
+	<span class="n">gcc</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">o</span> <span class="n">hello</span> <span class="n">hello</span><span class="o">.</span><span class="n">c</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">run_make</span><span class="p">(</span><span class="n">mandatory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">exit_code</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run_program</span><span class="p">(</span><span class="s1">&#39;./hello&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;hello world&quot;</span><span class="p">:</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">send_pass_result</span><span class="p">(</span><span class="s2">&quot;The world greets you! Everything worked fine!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Wrong output: &quot;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The validator.py file always consists of a validate-function, which is given an job-object as parameter.
+The job-object is used for interacting with the student submission.
+In the example above the delivered makefile is run and the created program ‘hello’ is executed.
+The output and exit code of the program are returned and can be used for checking the correctness of the student submission.
+According to the outcome a pass or fail result is sent to the student and the teacher.</p>
+<p>To check if the validator is working correctly you can run the command <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">test</span> <span class="pre">path/to/used/directory</span></code>.
+All the necessary output for checking if the validator is working correctly and for reviewing the student and teacher notifications is created.</p>
+<p>Sometimes it is necessary to use multiple files for validation.
+If that is the case an archive named validator.zip containing the according files has to be created.
+The directory for testing your validator should only contain the validator.zip archive and the student submission archive in this instance.</p>
+</div>
+<div class="section" id="examples-and-explanations-for-validators">
+<h2>Examples and explanations for validators<a class="headerlink" href="#examples-and-explanations-for-validators" title="Permalink to this headline">¶</a></h2>
+<p>…</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, Peter Tröger.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
