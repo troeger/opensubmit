@@ -36,12 +36,6 @@ For obtaining the beta version of the software use the following command (0.7b3 
 ``sudo pip3 install opensubmit-exec==0.7b3`` 
 
 opensubmit-exec can now be used whenever we activated the corresponding virtual environment.
-The next step is to configure opensubmit-exec.
-
-``sudo opensubmit-exec configure``
-
-On the first run a configuration file is created which can be changed accordingly.
-Run the before mentioned command again afterwards.
 
 Creating validators and using opensubmit-exec
 *********************************************
