@@ -53,7 +53,9 @@ They have to submit the corresponding c-file and the makefile, which creates a p
 The student files are located in an zip-archive.
 The directory for testing the newly created validator with the exemplary student submission should only contain the student submission archive (c-file and makefile) and the validator.py file.
 
-.. image:: files/validation_example_hello.png
+.. literalinclude:: files/validators/hello_example/hello.c
+.. literalinclude:: files/validators/hello_example/Makefile
+.. literalinclude:: files/validators/hello_example/validator.py
 
 The validator.py file always consists of a validate-function, which is given an job-object as parameter.
 The job-object is used for interacting with the student submission.
@@ -68,5 +70,7 @@ Sometimes it is necessary to use multiple files for validation.
 If that is the case an archive named validator.zip containing the according files has to be created.
 The directory for testing your validator should only contain the validator.zip archive and the student submission archive in this instance.
 
-Examples for validators
-***********************
+Examples and explanations for validators
+****************************************
+
+...
