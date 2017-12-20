@@ -32,12 +32,10 @@ For obtaining the beta version of the software use the following command (0.7b3 
 
 opensubmit-exec can now be used whenever we activated the corresponding virtual environment.
 
-///
 The next step is to configure opensubmit-exec.
 ``sudo opensubmit-exec configure``
 On the first run a config file is created which can be changed accordingly.
 Run ``sudo opensubmit-exec configure`` again afterwards.
-///
 
 Creating validators and using opensubmit-exec
 *********************************************
