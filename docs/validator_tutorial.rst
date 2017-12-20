@@ -24,8 +24,7 @@ The following command creates a new virtual environment in the desired directory
 
 ``python3 -m virtualenv -p /usr/bin/python3 ~/my_env``
 
-``source ~/my_env/bin/activate`` makes us switch to the newly created environment (activates it).
-``deactivate`` makes us leave it.
+To activate the newly created environment use ``source ~/my_env/bin/activate`` and to deactivate it use ``deactivate``.
 
 When we activated the virtual environment we can install Python packages as usual by using pip3 but they will be installed in to our newly created directory, so our standard python installation stays clean.
 For installing opensubmit-exec the following command is used.
