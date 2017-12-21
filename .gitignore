@@ -22,3 +22,8 @@ web/database.sqlite
 *.whl
 docs/formats/html/.buildinfo
 *htmlcov*
+docs/formats/html/_sources/modules.rst.txt
+docs/formats/html/modules.html
+docs/modules.rst
+
+
