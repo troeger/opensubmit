@@ -244,7 +244,7 @@ The students have to create a program in C that prints 'Hello World' on the term
 
 Your job, as the assignment creator, is now to develop the ``validator.py`` file that checks an arbitrary student submission. Create a fresh directory that only contains an example student upload and the validator file:
 
-.. literalinclude:: files/validators/hello_example/validator.py
+.. literalinclude:: files/validators/helloworld/validator.py
    :linenos:
 
 A ``validator.py`` file must contain a function ``validate(job)``, which is called when a student submission should be validated. In the example above, it performs the following steps:
@@ -261,6 +261,24 @@ Validator scripts are ordinary Python code, so beside the functionalities provid
 If any of the functions throws an exception that is not catched by your validator code, it is automatically interpreted as negative validation result. The OpenSubmit executor code then ensures that a generic information is provided to the student. If you want to customize the reporting in those cases, catch the exception and use your own call of `send_fail_result` instead.
 
 To check if the validator is working correctly, you can run the command ``opensubmit-exec test <directory>``. It assumes the given directory to contain a validator script resp. archive and the student submission file resp. archive. The command simulates a complete validation run on a test machine and prints exhaustive debugging information. The last line contains the feedback sent to the web application after finalization.
+
+Validator examples
+==================
+
+The first example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print `"Wrong number of arguments!"`. The student only has to submit the C-file.
+
+.. literalinclude:: files/validators/program_params/validator.py
+    :linenos:
+
+- Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C-file.
+- Line 3-10: The variable `test_cases` consists of the different test cases.
+- Line 13: The C-file can be compiled directly by using `job.run_compiler`. You can specify the used compiler as well as the names of the input and output files.
+- Line 14: The for-loop is used for traversing the `test_cases`-list. It consists of tuples which are composed of the arguments and the expected output.
+- Line 15: The arguments can be handed over to the program through the second parameter of the `job.run_program` method. The former method returns the exit_code as well as the output of the program.
+- Line 16: The if-statement checks if the created output equals the expected output.
+- Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.
+- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so we can leave the `validate`-function.
+- Line 19: After we traversed all test cases we can inform the student and teacher that everything went well. 
 
 Job reference
 =============
