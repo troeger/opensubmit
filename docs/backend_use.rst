@@ -271,7 +271,7 @@ The following example shows a validator for a program in C that prints the sum o
     :linenos:
 
 - Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C-file.
-- Line 3-10: The variable `test_cases` consists of the different test cases.
+- Line 3-10: The variable `test_cases` consists of the lists of inputs and the corresponding expected outputs.
 - Line 13: The C-file can be compiled directly by using `job.run_compiler`. You can specify the used compiler as well as the names of the input and output files.
 - Line 14: The for-loop is used for traversing the `test_cases`-list. It consists of tuples which are composed of the arguments and the expected output.
 - Line 15: The arguments can be handed over to the program through the second parameter of the `job.run_program` method. The former method returns the exit_code as well as the output of the program.
@@ -279,6 +279,23 @@ The following example shows a validator for a program in C that prints the sum o
 - Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.
 - Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so we can leave the `validate`-function.
 - Line 19: After we traversed all test cases we can inform the student and teacher that everything went well. 
+
+The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.
+
+.. literalinclude:: files/validators/std_input/validator.py
+    :linenos:
+
+- Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
+- Line 3-9: The test cases consist in this case of the input strings and the corresponding output strings.
+- Line 12: The method `run_build` is a combined call of `configure`, `make` and the compiler. The success of `make` and `configure` is optional. The default value for the compiler is GCC.
+- Line 13: The test cases are traversed like in the previous example.
+- Line 14: This time a program is spawned. This allows us to use standard input.
+- Line 15: Standard input is used through the `sendline`-method of the running object.
+- Line 17: We wait for the expected output. If the program calculates longer the the specified timeout, it is closed and a `TimeoutException` is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.
+- Line 19: If a `TimeoutException` is thrown the corresponding negative result is sent.
+- Line 20: The function can be left because there is no need for testing the other test cases.
+- Line 22: After the program created an output it is expected to end.
+- Line 23: When the loop finishes a positive result is sent to student and teacher.
 
 Job reference
 =============

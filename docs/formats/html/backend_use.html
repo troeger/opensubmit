@@ -437,7 +437,7 @@ these scripts must be written in the same language.</p>
 </div>
 <div class="section" id="validator-examples">
 <h3>Validator examples<a class="headerlink" href="#validator-examples" title="Permalink to this headline">¶</a></h3>
-<p>The first example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print <cite>“Wrong number of arguments!”</cite>. The student only has to submit the C-file.</p>
+<p>The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print <cite>“Wrong number of arguments!”</cite>. The student only has to submit the C-file.</p>
 <div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -479,7 +479,7 @@ these scripts must be written in the same language.</p>
 </td></tr></table></div>
 <ul class="simple">
 <li>Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C-file.</li>
-<li>Line 3-10: The variable <cite>test_cases</cite> consists of the different test cases.</li>
+<li>Line 3-10: The variable <cite>test_cases</cite> consists of the lists of inputs and the corresponding expected outputs.</li>
 <li>Line 13: The C-file can be compiled directly by using <cite>job.run_compiler</cite>. You can specify the used compiler as well as the names of the input and output files.</li>
 <li>Line 14: The for-loop is used for traversing the <cite>test_cases</cite>-list. It consists of tuples which are composed of the arguments and the expected output.</li>
 <li>Line 15: The arguments can be handed over to the program through the second parameter of the <cite>job.run_program</cite> method. The former method returns the exit_code as well as the output of the program.</li>
@@ -487,6 +487,67 @@ these scripts must be written in the same language.</p>
 <li>Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.</li>
 <li>Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so we can leave the <cite>validate</cite>-function.</li>
 <li>Line 19: After we traversed all test cases we can inform the student and teacher that everything went well.</li>
+</ul>
+<p>The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.</p>
+<div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opensubmitexec.exceptions</span> <span class="k">import</span> <span class="n">TimeoutException</span>
+
+<span class="n">test_cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;1000&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;9&#39;</span><span class="p">,</span> <span class="s1">&#39;1001&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;15&#39;</span><span class="p">,</span> <span class="s1">&#39;1111&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">run_build</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dec_to_bin.c&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;dec_to_bin&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">std_input</span><span class="p">,</span> <span class="n">expected_output</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">:</span>
+        <span class="n">running</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">spawn_program</span><span class="p">(</span><span class="s1">&#39;./dec_to_bin&#39;</span><span class="p">)</span>
+        <span class="n">running</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">std_input</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">running</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">expected_output</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TimeoutException</span><span class="p">:</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Your output took to long!&quot;</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">running</span><span class="o">.</span><span class="n">expect_end</span><span class="p">()</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">send_pass_result</span><span class="p">(</span><span class="s2">&quot;Everything worked fine!&quot;</span><span class="p">,</span> <span class="s2">&quot;Student seems to be capable.&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li>Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
+<li>Line 3-9: The test cases consist in this case of the input strings and the corresponding output strings.</li>
+<li>Line 12: The method <cite>run_build</cite> is a combined call of <cite>configure</cite>, <cite>make</cite> and the compiler. The success of <cite>make</cite> and <cite>configure</cite> is optional. The default value for the compiler is GCC.</li>
+<li>Line 13: The test cases are traversed like in the previous example.</li>
+<li>Line 14: This time a program is spawned. This allows us to use standard input.</li>
+<li>Line 15: Standard input is used through the <cite>sendline</cite>-method of the running object.</li>
+<li>Line 17: We wait for the expected output. If the program calculates longer the the specified timeout, it is closed and a <cite>TimeoutException</cite> is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.</li>
+<li>Line 19: If a <cite>TimeoutException</cite> is thrown the corresponding negative result is sent.</li>
+<li>Line 20: The function can be left because there is no need for testing the other test cases.</li>
+<li>Line 22: After the program created an output it is expected to end.</li>
+<li>Line 23: When the loop finishes a positive result is sent to student and teacher.</li>
 </ul>
 </div>
 <div class="section" id="job-reference">
