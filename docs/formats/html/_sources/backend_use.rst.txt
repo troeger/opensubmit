@@ -297,6 +297,22 @@ The following example shows a validator for a C program that reads an positive i
 - Line 22: After the program created an output it is expected to end.
 - Line 23: When the loop finishes a positive result is sent to student and teacher.
 
+The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task.
+
+.. literalinclude:: files/validators/grep/validator.py
+    :linenos:
+
+- Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
+- Line 2: A TerminationException is thrown when a program does not deliver the expected output.
+- Line 4-8: The test cases consist of the input strings and the corresponding reversed output strings.
+- Line 11: The `grep`-method searches the student files for the given pattern (e.g. a for-loop) and returns a list of the files containing it.
+- Line 12-14: If there are not enough elements in the list a negative result is sent and the validation is ended.
+- Line 16-24: In any other case the procedure is the same as in the previous example. 
+- Line 25: If the result is different from the expected output a `TerminationException` is raised.
+- Line 26-27: The corresponding negative result is sent and the validation is ended.
+- Line 28-29: If the program produced the expected output we wait until the spawned program ends.
+- Line 30: If every test case was solved correctly a positive result is sent. 
+
 Job reference
 =============
 
