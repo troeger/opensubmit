@@ -100,6 +100,7 @@
 </li>
 <li><a class="reference internal" href="#automated-testing-of-submissions">Automated testing of submissions</a><ul>
 <li><a class="reference internal" href="#how-to-write-a-validator">How to write a validator</a></li>
+<li><a class="reference internal" href="#validator-examples">Validator examples</a></li>
 <li><a class="reference internal" href="#job-reference">Job reference</a></li>
 </ul>
 </li>
@@ -433,6 +434,195 @@ these scripts must be written in the same language.</p>
 <p>Validator scripts are ordinary Python code, so beside the functionalities provided by the job object, you can use any Python functionality. The example shows that in Line 4.</p>
 <p>If any of the functions throws an exception that is not catched by your validator code, it is automatically interpreted as negative validation result. The OpenSubmit executor code then ensures that a generic information is provided to the student. If you want to customize the reporting in those cases, catch the exception and use your own call of <cite>send_fail_result</cite> instead.</p>
 <p>To check if the validator is working correctly, you can run the command <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">test</span> <span class="pre">&lt;directory&gt;</span></code>. It assumes the given directory to contain a validator script resp. archive and the student submission file resp. archive. The command simulates a complete validation run on a test machine and prints exhaustive debugging information. The last line contains the feedback sent to the web application after finalization.</p>
+</div>
+<div class="section" id="validator-examples">
+<h3>Validator examples<a class="headerlink" href="#validator-examples" title="Permalink to this headline">¶</a></h3>
+<p>The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print <cite>“Wrong number of arguments!”</cite>. The student only has to submit the C file.</p>
+<div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opensubmitexec.compiler</span> <span class="k">import</span> <span class="n">GCC</span>
+
+<span class="n">test_cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">],</span> <span class="s1">&#39;3&#39;</span><span class="p">],</span>
+    <span class="p">[[</span><span class="s1">&#39;-1&#39;</span><span class="p">,</span> <span class="s1">&#39;-2&#39;</span><span class="p">],</span> <span class="s1">&#39;-3&#39;</span><span class="p">],</span>
+    <span class="p">[[</span><span class="s1">&#39;-2&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">],</span> <span class="s1">&#39;0&#39;</span><span class="p">],</span>
+    <span class="p">[[</span><span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;-10&#39;</span><span class="p">],</span> <span class="s1">&#39;-6&#39;</span><span class="p">],</span>
+    <span class="p">[[</span><span class="s1">&#39;4&#39;</span><span class="p">],</span> <span class="s1">&#39;Wrong number of arguments!&#39;</span><span class="p">],</span>
+    <span class="p">[[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">],</span> <span class="s1">&#39;Wrong number of arguments!&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">run_compiler</span><span class="p">(</span><span class="n">compiler</span><span class="o">=</span><span class="n">GCC</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;sum.c&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">expected_output</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">:</span>
+        <span class="n">exit_code</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run_program</span><span class="p">(</span><span class="s1">&#39;./sum&#39;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="n">expected_output</span><span class="p">:</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Oops! That went wrong! Input: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, Output: &quot;</span> <span class="o">+</span> <span class="n">output</span><span class="p">,</span> <span class="s2">&quot;Student needs support.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">send_pass_result</span><span class="p">(</span><span class="s2">&quot;Good job! Your program worked as expected!&quot;</span><span class="p">,</span> <span class="s2">&quot;Student seems to be capable.&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li>Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C file.</li>
+<li>Line 3-10: The variable <cite>test_cases</cite> consists of the lists of inputs and the corresponding expected outputs.</li>
+<li>Line 13: The C file can be compiled directly by using <cite>job.run_compiler</cite>. You can specify the used compiler as well as the names of the input and output files.</li>
+<li>Line 14: The for-loop is used for traversing the <cite>test_cases</cite>-list. It consists of tuples which are composed of the arguments and the expected output.</li>
+<li>Line 15: The arguments can be handed over to the program through the second parameter of the <cite>job.run_program</cite> method. The former method returns the exit code as well as the output of the program.</li>
+<li>Line 16: It is checked if the created output equals the expected output.</li>
+<li>Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.</li>
+<li>Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the <cite>validate</cite>-function can be left.</li>
+<li>Line 19: After the traversion of all test cases the student and teacher are informed that everything went well.</li>
+</ul>
+<p>The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.</p>
+<div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opensubmitexec.exceptions</span> <span class="k">import</span> <span class="n">TimeoutException</span>
+
+<span class="n">test_cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;1000&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;9&#39;</span><span class="p">,</span> <span class="s1">&#39;1001&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;15&#39;</span><span class="p">,</span> <span class="s1">&#39;1111&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">run_build</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dec_to_bin.c&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;dec_to_bin&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">std_input</span><span class="p">,</span> <span class="n">expected_output</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">:</span>
+        <span class="n">running</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">spawn_program</span><span class="p">(</span><span class="s1">&#39;./dec_to_bin&#39;</span><span class="p">)</span>
+        <span class="n">running</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">std_input</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">running</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">expected_output</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TimeoutException</span><span class="p">:</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Your output took to long!&quot;</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">running</span><span class="o">.</span><span class="n">expect_end</span><span class="p">()</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">send_pass_result</span><span class="p">(</span><span class="s2">&quot;Everything worked fine!&quot;</span><span class="p">,</span> <span class="s2">&quot;Student seems to be capable.&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li>Line 1: A <cite>TimeoutException</cite> is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
+<li>Line 3-9: In this case the test cases consist of the input strings and the corresponding output strings.</li>
+<li>Line 12: The method <cite>run_build</cite> is a combined call of <cite>configure</cite>, <cite>make</cite> and the compiler. The success of <cite>make</cite> and <cite>configure</cite> is optional. The default value for the compiler is GCC.</li>
+<li>Line 13: The test cases are traversed like in the previous example.</li>
+<li>Line 14: This time a program is spawned. This allows the use of standard input.</li>
+<li>Line 15: Standard input is used through the <cite>sendline</cite>-method of the running object.</li>
+<li>Line 17: The validator waits for the expected output. If the program calculates longer then the specified timeout, it is closed and a <cite>TimeoutException</cite> is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.</li>
+<li>Line 19: If a <cite>TimeoutException</cite> is thrown the corresponding negative result is sent.</li>
+<li>Line 20: The function can be left because there is no need for testing the other test cases.</li>
+<li>Line 22: After the program created an output it is expected to end.</li>
+<li>Line 23: When the loop finishes a positive result is sent to the student and teacher.</li>
+</ul>
+<p>The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task. Only the C file has to be submitted.</p>
+<div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opensubmitexec.exceptions</span> <span class="k">import</span> <span class="n">TimeoutException</span>
+<span class="kn">from</span> <span class="nn">opensubmitexec.exceptions</span> <span class="k">import</span> <span class="n">TerminationException</span>
+
+<span class="n">test_cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="s1">&#39;hallo&#39;</span><span class="p">,</span> <span class="s1">&#39;ollah&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s1">&#39;1234&#39;</span><span class="p">,</span> <span class="s1">&#39;4321&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+    <span class="n">file_names</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;.*for[:space:]*(.*;.*;.*).*&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_names</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;You probably did not use a for-loop.&quot;</span><span class="p">,</span> <span class="s2">&quot;Student is not able to use a for-loop.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">job</span><span class="o">.</span><span class="n">run_build</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;reverse.c&#39;</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;reverse&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">std_input</span><span class="p">,</span> <span class="n">expected_output</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">:</span>
+        <span class="n">running</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">spawn_program</span><span class="p">(</span><span class="s1">&#39;./reverse&#39;</span><span class="p">)</span>
+        <span class="n">running</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">std_input</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">running</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">expected_output</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TimeoutException</span><span class="p">:</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Your output took to long!&quot;</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">except</span> <span class="n">TerminationException</span><span class="p">:</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;The string was not reversed correctly for the following input: &quot;</span> <span class="o">+</span> <span class="n">std_input</span><span class="p">,</span> <span class="s2">&quot;The student does not seem to be capable.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">running</span><span class="o">.</span><span class="n">expect_end</span><span class="p">()</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">send_pass_result</span><span class="p">(</span><span class="s2">&quot;Everything worked fine!&quot;</span><span class="p">,</span> <span class="s2">&quot;Student seems to be capable.&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li>Line 1: A <cite>TimeoutException</cite> is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
+<li>Line 2: A <cite>TerminationException</cite> is thrown when a program does not deliver the expected output.</li>
+<li>Line 4-8: The test cases consist of the input strings and the corresponding reversed output strings.</li>
+<li>Line 11: The <cite>grep</cite>-method searches the student files for the given pattern (e.g. a for-loop) and returns a list of the files containing it.</li>
+<li>Line 12-14: If there are not enough elements in the list a negative result is sent and the validation is ended.</li>
+<li>Line 16-24: For every test case a new program is spawned, which is given the input. The validator waits for the expected output. If the program is calculating for too long a negative result is sent.</li>
+<li>Line 25: If the result is different from the expected output a <cite>TerminationException</cite> is raised.</li>
+<li>Line 26-27: The corresponding negative result for a different output is sent and the validation is ended.</li>
+<li>Line 28-29: If the program produced the expected output the validator waits until the spawned program ends.</li>
+<li>Line 30: If every test case was solved correctly a positive result is sent.</li>
+</ul>
 </div>
 <div class="section" id="job-reference">
 <h3>Job reference<a class="headerlink" href="#job-reference" title="Permalink to this headline">¶</a></h3>
