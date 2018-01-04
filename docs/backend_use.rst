@@ -265,52 +265,52 @@ To check if the validator is working correctly, you can run the command ``opensu
 Validator examples
 ==================
 
-The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print `"Wrong number of arguments!"`. The student only has to submit the C-file.
+The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print `"Wrong number of arguments!"`. The student only has to submit the C file.
 
 .. literalinclude:: files/validators/program_params/validator.py
     :linenos:
 
-- Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C-file.
+- Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C file.
 - Line 3-10: The variable `test_cases` consists of the lists of inputs and the corresponding expected outputs.
-- Line 13: The C-file can be compiled directly by using `job.run_compiler`. You can specify the used compiler as well as the names of the input and output files.
+- Line 13: The C file can be compiled directly by using `job.run_compiler`. You can specify the used compiler as well as the names of the input and output files.
 - Line 14: The for-loop is used for traversing the `test_cases`-list. It consists of tuples which are composed of the arguments and the expected output.
-- Line 15: The arguments can be handed over to the program through the second parameter of the `job.run_program` method. The former method returns the exit_code as well as the output of the program.
-- Line 16: The if-statement checks if the created output equals the expected output.
+- Line 15: The arguments can be handed over to the program through the second parameter of the `job.run_program` method. The former method returns the exit code as well as the output of the program.
+- Line 16: It is checked if the created output equals the expected output.
 - Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.
-- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so we can leave the `validate`-function.
-- Line 19: After we traversed all test cases we can inform the student and teacher that everything went well. 
+- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the `validate`-function can be left.
+- Line 19: After the traversion of all test cases the student and teacher are informed that everything went well. 
 
 The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.
 
 .. literalinclude:: files/validators/std_input/validator.py
     :linenos:
 
-- Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
-- Line 3-9: The test cases consist in this case of the input strings and the corresponding output strings.
+- Line 1: A `TimeoutException` is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
+- Line 3-9: In this case the test cases consist of the input strings and the corresponding output strings.
 - Line 12: The method `run_build` is a combined call of `configure`, `make` and the compiler. The success of `make` and `configure` is optional. The default value for the compiler is GCC.
 - Line 13: The test cases are traversed like in the previous example.
-- Line 14: This time a program is spawned. This allows us to use standard input.
+- Line 14: This time a program is spawned. This allows the use of standard input.
 - Line 15: Standard input is used through the `sendline`-method of the running object.
-- Line 17: We wait for the expected output. If the program calculates longer the the specified timeout, it is closed and a `TimeoutException` is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.
+- Line 17: The validator waits for the expected output. If the program calculates longer then the specified timeout, it is closed and a `TimeoutException` is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.
 - Line 19: If a `TimeoutException` is thrown the corresponding negative result is sent.
 - Line 20: The function can be left because there is no need for testing the other test cases.
 - Line 22: After the program created an output it is expected to end.
-- Line 23: When the loop finishes a positive result is sent to student and teacher.
+- Line 23: When the loop finishes a positive result is sent to the student and teacher.
 
-The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task.
+The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task. Only the C file has to be submitted.
 
 .. literalinclude:: files/validators/grep/validator.py
     :linenos:
 
-- Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
-- Line 2: A TerminationException is thrown when a program does not deliver the expected output.
+- Line 1: A `TimeoutException` is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
+- Line 2: A `TerminationException` is thrown when a program does not deliver the expected output.
 - Line 4-8: The test cases consist of the input strings and the corresponding reversed output strings.
 - Line 11: The `grep`-method searches the student files for the given pattern (e.g. a for-loop) and returns a list of the files containing it.
 - Line 12-14: If there are not enough elements in the list a negative result is sent and the validation is ended.
-- Line 16-24: In any other case the procedure is the same as in the previous example. 
+- Line 16-24: For every test case a new program is spawned, which is given the input. The validator waits for the expected output. If the program is calculating for too long a negative result is sent.
 - Line 25: If the result is different from the expected output a `TerminationException` is raised.
-- Line 26-27: The corresponding negative result is sent and the validation is ended.
-- Line 28-29: If the program produced the expected output we wait until the spawned program ends.
+- Line 26-27: The corresponding negative result for a different output is sent and the validation is ended.
+- Line 28-29: If the program produced the expected output the validator waits until the spawned program ends.
 - Line 30: If every test case was solved correctly a positive result is sent. 
 
 Job reference

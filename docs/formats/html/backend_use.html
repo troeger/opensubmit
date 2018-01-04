@@ -437,7 +437,7 @@ these scripts must be written in the same language.</p>
 </div>
 <div class="section" id="validator-examples">
 <h3>Validator examples<a class="headerlink" href="#validator-examples" title="Permalink to this headline">¶</a></h3>
-<p>The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print <cite>“Wrong number of arguments!”</cite>. The student only has to submit the C-file.</p>
+<p>The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print <cite>“Wrong number of arguments!”</cite>. The student only has to submit the C file.</p>
 <div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -478,15 +478,15 @@ these scripts must be written in the same language.</p>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li>Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C-file.</li>
+<li>Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C file.</li>
 <li>Line 3-10: The variable <cite>test_cases</cite> consists of the lists of inputs and the corresponding expected outputs.</li>
-<li>Line 13: The C-file can be compiled directly by using <cite>job.run_compiler</cite>. You can specify the used compiler as well as the names of the input and output files.</li>
+<li>Line 13: The C file can be compiled directly by using <cite>job.run_compiler</cite>. You can specify the used compiler as well as the names of the input and output files.</li>
 <li>Line 14: The for-loop is used for traversing the <cite>test_cases</cite>-list. It consists of tuples which are composed of the arguments and the expected output.</li>
-<li>Line 15: The arguments can be handed over to the program through the second parameter of the <cite>job.run_program</cite> method. The former method returns the exit_code as well as the output of the program.</li>
-<li>Line 16: The if-statement checks if the created output equals the expected output.</li>
+<li>Line 15: The arguments can be handed over to the program through the second parameter of the <cite>job.run_program</cite> method. The former method returns the exit code as well as the output of the program.</li>
+<li>Line 16: It is checked if the created output equals the expected output.</li>
 <li>Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.</li>
-<li>Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so we can leave the <cite>validate</cite>-function.</li>
-<li>Line 19: After we traversed all test cases we can inform the student and teacher that everything went well.</li>
+<li>Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the <cite>validate</cite>-function can be left.</li>
+<li>Line 19: After the traversion of all test cases the student and teacher are informed that everything went well.</li>
 </ul>
 <p>The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.</p>
 <div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -537,19 +537,19 @@ these scripts must be written in the same language.</p>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li>Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
-<li>Line 3-9: The test cases consist in this case of the input strings and the corresponding output strings.</li>
+<li>Line 1: A <cite>TimeoutException</cite> is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
+<li>Line 3-9: In this case the test cases consist of the input strings and the corresponding output strings.</li>
 <li>Line 12: The method <cite>run_build</cite> is a combined call of <cite>configure</cite>, <cite>make</cite> and the compiler. The success of <cite>make</cite> and <cite>configure</cite> is optional. The default value for the compiler is GCC.</li>
 <li>Line 13: The test cases are traversed like in the previous example.</li>
-<li>Line 14: This time a program is spawned. This allows us to use standard input.</li>
+<li>Line 14: This time a program is spawned. This allows the use of standard input.</li>
 <li>Line 15: Standard input is used through the <cite>sendline</cite>-method of the running object.</li>
-<li>Line 17: We wait for the expected output. If the program calculates longer the the specified timeout, it is closed and a <cite>TimeoutException</cite> is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.</li>
+<li>Line 17: The validator waits for the expected output. If the program calculates longer then the specified timeout, it is closed and a <cite>TimeoutException</cite> is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.</li>
 <li>Line 19: If a <cite>TimeoutException</cite> is thrown the corresponding negative result is sent.</li>
 <li>Line 20: The function can be left because there is no need for testing the other test cases.</li>
 <li>Line 22: After the program created an output it is expected to end.</li>
-<li>Line 23: When the loop finishes a positive result is sent to student and teacher.</li>
+<li>Line 23: When the loop finishes a positive result is sent to the student and teacher.</li>
 </ul>
-<p>The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task.</p>
+<p>The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task. Only the C file has to be submitted.</p>
 <div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -612,15 +612,15 @@ these scripts must be written in the same language.</p>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li>Line 1: A TimeoutException is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
-<li>Line 2: A TerminationException is thrown when a program does not deliver the expected output.</li>
+<li>Line 1: A <cite>TimeoutException</cite> is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.</li>
+<li>Line 2: A <cite>TerminationException</cite> is thrown when a program does not deliver the expected output.</li>
 <li>Line 4-8: The test cases consist of the input strings and the corresponding reversed output strings.</li>
 <li>Line 11: The <cite>grep</cite>-method searches the student files for the given pattern (e.g. a for-loop) and returns a list of the files containing it.</li>
 <li>Line 12-14: If there are not enough elements in the list a negative result is sent and the validation is ended.</li>
-<li>Line 16-24: In any other case the procedure is the same as in the previous example.</li>
+<li>Line 16-24: For every test case a new program is spawned, which is given the input. The validator waits for the expected output. If the program is calculating for too long a negative result is sent.</li>
 <li>Line 25: If the result is different from the expected output a <cite>TerminationException</cite> is raised.</li>
-<li>Line 26-27: The corresponding negative result is sent and the validation is ended.</li>
-<li>Line 28-29: If the program produced the expected output we wait until the spawned program ends.</li>
+<li>Line 26-27: The corresponding negative result for a different output is sent and the validation is ended.</li>
+<li>Line 28-29: If the program produced the expected output the validator waits until the spawned program ends.</li>
 <li>Line 30: If every test case was solved correctly a positive result is sent.</li>
 </ul>
 </div>
