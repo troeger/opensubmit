@@ -51,24 +51,29 @@ def unpack_if_needed(destination_path, fpath):
         did_unpack = True
         with zipfile.ZipFile(fpath, "r") as zip:
             infolist = zip.infolist()
-            directories = [entry.filename for entry in infolist if entry.filename.endswith('/')]
-            logger.debug("List of directory entries: "+str(directories))
+            directories = [
+                entry.filename for entry in infolist if entry.filename.endswith('/')]
+            logger.debug("List of directory entries: " + str(directories))
 
             # Consider this case: ['subdir1/', 'subdir1/subdir2/']
             if len(directories) > 1:
                 redundant = []
                 for current in directories:
-                    starts_with_this = [el for el in directories if el.startswith(current)]
+                    starts_with_this = [
+                        el for el in directories if el.startswith(current)]
                     if len(starts_with_this) == len(directories):
                         # current is a partial directory name that is contained
                         # in all others
                         redundant.append(current)
-                logger.debug("Redundant directory entries: "+str(redundant))
-                directories = [entry for entry in directories if entry not in redundant]
-                logger.debug("Updated list of directory entries: "+str(directories))
+                logger.debug("Redundant directory entries: " + str(redundant))
+                directories = [
+                    entry for entry in directories if entry not in redundant]
+                logger.debug(
+                    "Updated list of directory entries: " + str(directories))
 
-            files = [entry.filename for entry in infolist if not entry.filename.endswith('/')]
-            logger.debug("List of files: "+str(files))
+            files = [
+                entry.filename for entry in infolist if not entry.filename.endswith('/')]
+            logger.debug("List of files: " + str(files))
             if len(directories) == 1:
                 d = directories[0]
                 in_this_dir = [entry for entry in files if entry.startswith(d)]
@@ -104,6 +109,11 @@ def unpack_if_needed(destination_path, fpath):
     logger.debug("Content of %s after unarchiving: %s" %
                  (destination_path, str(dircontent)))
     return single_dir, did_unpack
+
+
+def remove_working_directory(directory, config):
+    if config.getboolean("Execution", "cleanup") is True:
+        shutil.rmtree(directory, ignore_errors=True)
 
 
 def create_working_dir(config, prefix):
@@ -190,11 +200,14 @@ def prepare_working_directory(job, submission_path, validator_path):
             info_student = "Internal error with the validator. Please contact your course responsible."
             info_tutor = "Error: Missing validator.py in the validator archive."
             logger.error(info_tutor)
-            raise JobException(info_student=info_student, info_tutor=info_tutor)
+            raise JobException(info_student=info_student,
+                               info_tutor=info_tutor)
         else:
             # The download is already the script, but has the wrong name
-            logger.warning("Renaming {0} to {1}.".format(validator_path, job.validator_script_name))
+            logger.warning("Renaming {0} to {1}.".format(
+                validator_path, job.validator_script_name))
             shutil.move(validator_path, job.validator_script_name)
+
 
 def has_file(dir, fname):
     return os.path.exists(dir + os.sep + fname)

@@ -39,7 +39,6 @@ from opensubmitexec import config, cmdline, server, locking, compiler, exception
 logger = logging.getLogger('opensubmitexec')
 
 
-
 class CmdLine(TestCase):
     '''
     Test cases for the executor command-line script.
@@ -144,6 +143,29 @@ class Library(SubmitStudentScenarioTestCase):
         self.assertRaises(exceptions.ValidatorBrokenException, job.run_compiler, output='output')
         # Wrong file, determined by compiler
         self.assertRaises(exceptions.WrongExitStatusException, job.run_compiler, inputs=['foo.c'], output='output')
+
+    def test_cleanup(self):
+        '''
+        If configured, then the executor should remove all temporary
+        files after finishing.
+        '''
+        for do_cleanup in [False, True]:
+            sf = create_submission_file()
+            sub = create_validatable_submission(
+                self.user, self.validated_assignment, sf)
+            test_machine = self._register_executor()
+            sub.assignment.test_machines.add(test_machine)
+            job = server.fetch_job(self.config)
+            self.assertNotEquals(None, job)
+            working_dir = job.working_dir
+            job._config.set("Execution", "cleanup", str(do_cleanup))
+            job._run_validate()
+            if do_cleanup:
+                with self.assertRaises(FileNotFoundError):
+                    os.listdir(working_dir)
+            else:
+                self.assertNotEqual(os.listdir(working_dir), [])
+
 
 
 class Validation(TestCase):
