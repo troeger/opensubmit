@@ -36,7 +36,7 @@ class TeacherDashboard(Dashboard):
                 modules.LinkList(title="Actions",children=(general)),
                 modules.DashboardModule(title="Info",pre_content=
                     '<table style="border:0">'+
-                    '<tr><td>OpenSubmit release</td><td><a href="https://github.com/troeger/opensubmit/releases/tag/{0}">{0}</a></td></tr>'.format(settings.VERSION) +
+                    '<tr><td>OpenSubmit release</td><td><a href="https://github.com/troeger/opensubmit/releases/tag/v{0}">v{0}</a></td></tr>'.format(settings.VERSION) +
                     '<tr><td>Administrator</td><td><a href="mailto:%s">%s</a></td></tr>' % (settings.ADMINS[0][1], settings.ADMINS[0][0]) +
                     '<tr><td>Registered users</td><td>%u</td></tr>' % (User.objects.count()) +
                     '<tr><td>Submitted solutions</td><td>%u</td></tr>' % (Submission.objects.count()) +
