@@ -113,6 +113,27 @@ class Library(SubmitStudentScenarioTestCase):
         job = server.fetch_job(self.config)
         self.assertIn('helloworld.c', os.listdir(job.working_dir))
 
+    def test_grep(self):
+        sf = create_submission_file()
+        sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+        job = server.fetch_job(self.config)
+        self.assertNotEquals(None, job)
+        self.assertListEqual(job.grep("World"), ['helloworld.c'])
+        self.assertListEqual(job.grep("foobar"), [])
+
+    def test_ensure_files(self):
+        sf = create_submission_file()
+        sub = create_validatable_submission(
+            self.user, self.validated_assignment, sf)
+        test_machine = self._register_executor()
+        sub.assignment.test_machines.add(test_machine)
+        job = server.fetch_job(self.config)
+        self.assertNotEquals(None, job)
+        self.assertTrue(job.ensure_files(['helloworld.c']))
+
     def test_job_attributes(self):
         sf = create_submission_file()
         sub = create_validatable_submission(
