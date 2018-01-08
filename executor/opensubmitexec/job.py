@@ -8,6 +8,8 @@ from .exceptions import *
 from .compiler import GCC, compiler_cmdline
 from .running import RunningProgram
 
+import os
+import re
 import logging
 logger = logging.getLogger('opensubmitexec')
 
