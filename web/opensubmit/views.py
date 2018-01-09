@@ -142,11 +142,6 @@ def new(request, ass_id):
 
     # Analyze submission data
     if request.POST:
-        if 'authors' in request.POST:
-            authors = [User.objects.get(pk=int(s)) for s in request.POST['authors'].split(',')]
-            if not ass.authors_valid(authors):
-                raise PermissionDenied("The given list of co-authors is invalid!")
-
         # we need to fill all forms here,
         # so that they can be rendered on validation errors
         submissionForm = SubmissionForm(request.user,

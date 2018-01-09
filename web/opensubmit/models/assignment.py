@@ -10,6 +10,10 @@ from .submissiontestresult import SubmissionTestResult
 import os
 from itertools import groupby
 
+import logging
+logger = logging.getLogger('OpenSubmit')
+
+
 class Assignment(models.Model):
     '''
         An assignment for which students can submit their solution.
@@ -150,26 +154,23 @@ class Assignment(models.Model):
                 return True
             if self.course not in user.profile.user_courses():
                 # The user is not enrolled in this assignment's course.
+                logger.debug('Submission not possible, user not enrolled in the course.')
                 return False
 
             if user.authored.filter(assignment=self).exclude(state=Submission.WITHDRAWN).count() > 0:
                 # User already has a valid submission for this assignment.
+                logger.debug('Submission not possible, user already has one for this assignment.')
                 return False
 
         if self.hard_deadline and self.hard_deadline < timezone.now():
             # Hard deadline has been reached.
+            logger.debug('Submission not possible, hard deadline passed.')
             return False
 
         if self.publish_at > timezone.now() and not user.profile.can_see_future():
             # The assignment has not yet been published.
+            logger.debug('Submission not possible, assignment has not yet been published.')
             return False
-
-        return True
-
-    def authors_valid(self, authors=()):
-        for author in authors:
-            if not self.can_create_submission(author):
-                return False
 
         return True
 
