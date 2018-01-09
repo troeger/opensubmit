@@ -157,7 +157,8 @@ class Student(SubmitStudentScenarioTestCase):
                         assignment.""",
             'authors': str(second_guy.pk),
         })
-        self.assertEqual(403, response.status_code)
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "is not allowed to submit solutions for this assignment")
 
         # Add second guy to course, should work now
         self.course.participants.add(second_guy.profile)
@@ -185,7 +186,8 @@ class Student(SubmitStudentScenarioTestCase):
                         assignment.""",
             'authors': str(not_enrolled.pk),
         })
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(200, response.status_code)
+        self.assertContains(response, "is not allowed to submit solutions for this assignment")
 
         submission_count = Submission.objects.filter(
             submitter__exact=self.user,
