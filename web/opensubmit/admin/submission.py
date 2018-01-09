@@ -258,9 +258,12 @@ class SubmissionAdmin(ModelAdmin):
 
     def setFullPendingStateAction(self, request, queryset):
         # do not restart tests for withdrawn solutions
-        qs = queryset.exclude(state=Submission.WITHDRAWN)
+        queryset = queryset.exclude(state=Submission.WITHDRAWN)
+        # do not restart tests for queued things
+        queryset = queryset.exclude(state=Submission.TEST_VALIDITY_PENDING)
+        queryset = queryset.exclude(state=Submission.TEST_FULL_PENDING)
         numchanged = 0
-        for subm in qs:
+        for subm in queryset:
             if subm.assignment.has_full_test():
                 if subm.state == Submission.CLOSED:
                     subm.state = Submission.CLOSED_TEST_FULL_PENDING
