@@ -149,7 +149,7 @@ class RunningProgram(pexpect.spawn):
             TerminationException: The program terminated before / while / after sending the input.
             NestedException: An internal problem occured while waiting for the output.
         """
-        logger.debug("Sending input '{0}' to '{1}'".format(pattern, self.name))
+        logger.debug("Sending input '{0}' to '{1}'".format(text, self.name))
         try:
             return self._spawn.sendline(text)
         except pexpect.exceptions.EOF as e:
