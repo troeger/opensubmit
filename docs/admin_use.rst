@@ -182,7 +182,7 @@ Administrators can merge users in the teacher backend. Click on *Manage users*, 
 Test machines
 *************
 
-Test machines are used to run the validation scripts for student submission. These scripts use a specialized set of functions, the :ref:`validatorlibrary`. Pending validation jobs are fetched from the OpenSubmit web server in regular intervals and executed on a test machine.
+Test machines are used to run the validation scripts (see :ref:`testing`) for student submission. Pending validation jobs are fetched from the OpenSubmit web server in regular intervals and executed on a test machine.
 
 The creator of an assignment can chose which test machines are used for the validation. This enables a flexible setup with dedicated test machines for special assignments, e.g. GPU programming.
 

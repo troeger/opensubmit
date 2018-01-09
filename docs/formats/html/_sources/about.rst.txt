@@ -3,8 +3,9 @@
 About
 =====
 
-The development of OpenSubmit is coordinated on `GitHub <https://github.com/troeger/opensubmit>`_.
-We need help in everything. Feel free to join us.
+.. warning::
+
+   The manuals are work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
 
 .. _principles:
 
@@ -17,11 +18,12 @@ is a set of guiding principles for the design of OpenSubmit:
 Minimalism is good.
     OpenSubmit follows the philosophy that teachers know the best how their teaching works.
     This leads to the conclusion that teaching policies and workflows do not belong into
-    code or complicated configuration options. Assignment rules vary widely in different
+    our code or complicated configuration options. Assignment rules vary widely in different
     institutions and groups. Given that,
     it is a main philosophy of OpenSubmit to reduce the functionality 
     to the submission and validation of of student submissions. And nothing else. This
-    simplifies the student user interface and clarifies the teacher workflow.
+    simplifies the student user interface and clarifies the teacher workflow. Whenever some
+    design decision is restricting what teachers can do with the framework, it might be bad.
 
 Passwords are bad. 
     History has shown that `even the largest companies <https://haveibeenpwned.com/>`_
@@ -73,11 +75,13 @@ People who contributed to this project so far:
 -  Peter Tröger (project owner)
 
 -  Jafar Akhundov (testing)
+-  Omar Alhaffar (testing)
+-  Srikar Beechu (testing)
 -  Kai Fabian (code, testing)
 -  Frank Feinbube (patches, testing)
 -  Sven Köhler (patches, testing)
 -  Jens Pönisch (testing)
 -  Bernhard Rabe (patches, testing)
--  Martin Richter (patches, testing)
+-  Martin Richter (docs, patches, testing)
 -  Matthias Werner (testing)
 

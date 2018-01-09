@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Tutors and Course Owners Manual &#8212; OpenSubmit  documentation</title>
+    <title>Teacher Manual &#8212; OpenSubmit  documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -66,9 +66,9 @@
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Students Manual</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutors and Course Owners Manual</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Teacher Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="admin_use.html">Administrator Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">OpenSubmit Contributors Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer Manual</a></li>
 </ul>
 </ul>
 </li>
@@ -82,7 +82,7 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Tutors and Course Owners Manual</a><ul>
+<li><a class="reference internal" href="#">Teacher Manual</a><ul>
 <li><a class="reference internal" href="#managing-study-programs">Managing study programs</a></li>
 <li><a class="reference internal" href="#managing-courses">Managing courses</a><ul>
 <li><a class="reference internal" href="#course-creation">Course creation</a></li>
@@ -92,7 +92,6 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#managing-submissions">Managing submissions</a><ul>
-<li><a class="reference internal" href="#submission-states">Submission states</a></li>
 <li><a class="reference internal" href="#submission-grading">Submission grading</a></li>
 <li><a class="reference internal" href="#grading-table">Grading table</a></li>
 <li><a class="reference internal" href="#duplicate-report">Duplicate report</a></li>
@@ -135,12 +134,8 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="tutors-and-course-owners-manual">
-<h1>Tutors and Course Owners Manual<a class="headerlink" href="#tutors-and-course-owners-manual" title="Permalink to this headline">¶</a></h1>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This manual is work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
-</div>
+  <div class="section" id="teacher-manual">
+<h1>Teacher Manual<a class="headerlink" href="#teacher-manual" title="Permalink to this headline">¶</a></h1>
 <p>OpenSubmit was invented for making assignments more fun for the students, and less work for the teachers. Before you start to read into details, we recommend to get into the basic <a class="reference internal" href="index.html#index"><span class="std std-ref">idea</span></a> and general <a class="reference internal" href="about.html#principles"><span class="std std-ref">principles</span></a>.</p>
 <p>Student tutors, course owners and administrators (see also <a class="reference internal" href="admin_use.html#permissions"><span class="std std-ref">Permissions</span></a>) all operate in the teacher backend, which is reachable by a link at the bottom of the student dashboard page, or directly via <em>&lt;your OpenSubmit url&gt;/teacher</em>.</p>
 <div class="section" id="managing-study-programs">
@@ -155,7 +150,7 @@
 <h2>Managing courses<a class="headerlink" href="#managing-courses" title="Permalink to this headline">¶</a></h2>
 <p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">courses</span></code></p>
 <p>This function is only available for users with according <a class="reference internal" href="admin_use.html#permissions"><span class="std std-ref">permissions</span></a>.</p>
-<p>Assignments for students belong to a course. The registered students can choose (see also <a class="reference internal" href="frontend_use.html#usercourses"><span class="std std-ref">Choosing your courses</span></a>) which course they participate in. This is different to many other learning management systems, which offer sophisticated registration mechanisms (see also <a class="reference internal" href="about.html#principles"><span class="std std-ref">The Zen of OpenSubmit</span></a>).</p>
+<p>Assignments for students belong to a course. The registered students can choose (see also <a class="reference internal" href="frontend_use.html#usercourses"><span class="std std-ref">Choosing your courses</span></a>) which course they participate in. This is different to many other learning management systems, which offer dedicated course permission systems (see also <a class="reference internal" href="about.html#principles"><span class="std std-ref">The Zen of OpenSubmit</span></a>).</p>
 <div class="section" id="course-creation">
 <h3>Course creation<a class="headerlink" href="#course-creation" title="Permalink to this headline">¶</a></h3>
 <p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">System</span></code> - <code class="docutils literal"><span class="pre">Actions</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">courses</span></code> - <code class="docutils literal"><span class="pre">Add</span> <span class="pre">course</span></code></p>
@@ -233,8 +228,7 @@
 </div>
 <div class="section" id="managing-submissions">
 <h2>Managing submissions<a class="headerlink" href="#managing-submissions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="submission-states">
-<h3>Submission states<a class="headerlink" href="#submission-states" title="Permalink to this headline">¶</a></h3>
+<p>A submission is a single (archive) file + notes handed in by a student. Every submission belongs to a particular assignment and its according course in OpenSubmit.</p>
 <p>A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend:</p>
 <div class="highlight-python" id="states"><div class="highlight"><pre><span></span>    <span class="c1"># State description in teacher backend</span>
     <span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span>
@@ -330,15 +324,14 @@
     <span class="p">)</span>
 </pre></div>
 </div>
-</div>
 <div class="section" id="submission-grading">
 <h3>Submission grading<a class="headerlink" href="#submission-grading" title="Permalink to this headline">¶</a></h3>
 <p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">submissions</span></code></p>
 <p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">assignments</span></code>  - <code class="docutils literal"><span class="pre">Show</span> <span class="pre">submissions</span></code></p>
-<p>The grading of student submissions follows the same workflow, regardless of the fact if you have code evaluation activated or not.</p>
+<p>The grading of student submissions always follows the same workflow, regardless of the fact if you are using the automated testing facilities or not.</p>
 <p>Short version:</p>
 <ul class="simple">
-<li>For each submission:<ul>
+<li>For every submission:<ul>
 <li>Open the submission in the teacher backend.</li>
 <li>Use the preview function for inspecting uploaded student archives.</li>
 <li>Check the output from validation test and full test.</li>
@@ -375,11 +368,15 @@
 <div class="section" id="duplicate-report">
 <h3>Duplicate report<a class="headerlink" href="#duplicate-report" title="Permalink to this headline">¶</a></h3>
 <p>Location: <code class="docutils literal"><span class="pre">Teacher</span> <span class="pre">backend</span></code> - <code class="docutils literal"><span class="pre">Course</span></code> - <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">assignments</span></code>  - <code class="docutils literal"><span class="pre">Show</span> <span class="pre">duplicates</span></code></p>
+<p>A common task in assignment correction is the detection of cheating. In OpenSubmit terms, this leads to the question if different students have submitted identical, or at least very similar, solutions for an assignment.</p>
+<p>Checking arbitrary code for similarities is a complex topic by itself and is closely related to the type and amount of code being checked. OpenSubmit follows it general <a class="reference internal" href="about.html#principles"><span class="std std-ref">principles</span></a> here by not restricting the possible types of submission for a perfect duplicate detection. Instead, we encourage users with specific demands to use such services in their <a class="reference internal" href="#testing"><span class="std std-ref">testing scripts</span></a>.</p>
+<p>OpenSubmit provides a basic duplicate checking for submitted files based on weak hashing of the student archives content. This method works independently from the kind of data and can, at least, detect the most lazy attempts of re-using other peoples work.</p>
+<p>Based on the hashing results, the duplicate report shows groups of students that may have submitted the same result. This list must be treated as basic indication for further manual inspection. The report works independently from the course and the status of the submissions. Withdrawn solutions are skipped in the report.</p>
 </div>
 </div>
 <div class="section" id="automated-testing-of-submissions">
-<h2>Automated testing of submissions<a class="headerlink" href="#automated-testing-of-submissions" title="Permalink to this headline">¶</a></h2>
-<p id="testing">The automated testing of submissions is performed by a Python 3 script that you, the assignment creator, have to write. This script is executed by OpenSubmit on some configured <a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a>. You are completely free in what you want to do in this script - at the end, OpenSubmit just needs an indication about the result. Common tasks, such as code compilation and execution, are supported by helper functions you can use in this script.</p>
+<span id="testing"></span><h2>Automated testing of submissions<a class="headerlink" href="#automated-testing-of-submissions" title="Permalink to this headline">¶</a></h2>
+<p>The automated testing of submissions is performed by a Python 3 script that you, the assignment creator, have to write. This script is executed by OpenSubmit on some configured <a class="reference internal" href="admin_use.html#executors"><span class="std std-ref">test machines</span></a>. You are completely free in what you want to do in this script - at the end, OpenSubmit just needs an indication about the result. Common tasks, such as code compilation and execution, are supported by helper functions you can use in this script.</p>
 <p>You can upload such a script in two ways:</p>
 <ul class="simple">
 <li>As single Python file named <cite>validator.py</cite>.</li>
@@ -1061,7 +1058,7 @@ or a list of any of those types. Strings will be compiled into regular expressio
     </p>
     <p>
         &copy; Copyright 2017, Peter Tröger.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

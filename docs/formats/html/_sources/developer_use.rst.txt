@@ -1,9 +1,5 @@
-OpenSubmit Contributors Manual
-##############################
-
-.. warning::
-
-   This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
+Developer Manual
+################
 
 The development of OpenSubmit is coordinated on `GitHub <https://github.com/troeger/opensubmit>`_.
 We need help in everything. Feel free to join us.

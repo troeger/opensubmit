@@ -26,8 +26,8 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="OpenSubmit Contributors Manual" href="developer_use.html" />
-    <link rel="prev" title="Tutors and Course Owners Manual" href="backend_use.html" />
+    <link rel="next" title="Developer Manual" href="developer_use.html" />
+    <link rel="prev" title="Teacher Manual" href="backend_use.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -66,9 +66,9 @@
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Students Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Tutors and Course Owners Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher Manual</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Administrator Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">OpenSubmit Contributors Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer Manual</a></li>
 </ul>
 </ul>
 </li>
@@ -418,7 +418,7 @@
 </div>
 <div class="section" id="test-machines">
 <span id="executors"></span><h2>Test machines<a class="headerlink" href="#test-machines" title="Permalink to this headline">¶</a></h2>
-<p>Test machines are used to run the validation scripts for student submission. These scripts use a specialized set of functions, the <span class="xref std std-ref">validatorlibrary</span>. Pending validation jobs are fetched from the OpenSubmit web server in regular intervals and executed on a test machine.</p>
+<p>Test machines are used to run the validation scripts (see <a class="reference internal" href="backend_use.html#testing"><span class="std std-ref">Automated testing of submissions</span></a>) for student submission. Pending validation jobs are fetched from the OpenSubmit web server in regular intervals and executed on a test machine.</p>
 <p>The creator of an assignment can chose which test machines are used for the validation. This enables a flexible setup with dedicated test machines for special assignments, e.g. GPU programming.</p>
 <p>Both the validator library and the job fetching is implemented in a Python package called <code class="docutils literal"><span class="pre">opensubmit-exec</span></code> (the <em>executor</em>). It runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:</p>
 <ul class="simple">
@@ -455,7 +455,7 @@
     </p>
     <p>
         &copy; Copyright 2017, Peter Tröger.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

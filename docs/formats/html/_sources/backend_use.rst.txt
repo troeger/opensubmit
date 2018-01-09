@@ -1,9 +1,5 @@
-Tutors and Course Owners Manual
-###############################
-
-.. warning::
-
-   This manual is work in progress and therefore incomplete. Feel free to help us with a `pull request on GitHub <https://github.com/troeger/opensubmit>`_.
+Teacher Manual
+##############
 
 OpenSubmit was invented for making assignments more fun for the students, and less work for the teachers. Before you start to read into details, we recommend to get into the basic :ref:`idea <index>` and general :ref:`principles <principles>`. 
 
@@ -29,7 +25,7 @@ Location: ``Teacher backend`` - ``System`` - ``Actions`` - ``Manage courses``
 
 This function is only available for users with according :ref:`permissions <permissions>`.
 
-Assignments for students belong to a course. The registered students can choose (see also :ref:`usercourses`) which course they participate in. This is different to many other learning management systems, which offer sophisticated registration mechanisms (see also :ref:`principles`). 
+Assignments for students belong to a course. The registered students can choose (see also :ref:`usercourses`) which course they participate in. This is different to many other learning management systems, which offer dedicated course permission systems (see also :ref:`principles`). 
 
 Course creation 
 ===============
@@ -122,8 +118,7 @@ Test machines (mandatory in some cases)
 Managing submissions
 ********************
 
-Submission states
-=================
+A submission is a single (archive) file + notes handed in by a student. Every submission belongs to a particular assignment and its according course in OpenSubmit.
 
 A student submission can be in different states. Each of the states is represented in a different way in student frontend and the teacher backend: 
 
@@ -140,11 +135,11 @@ Location: ``Teacher backend`` - ``Course`` - ``Manage submissions``
 
 Location: ``Teacher backend`` - ``Course`` - ``Manage assignments``  - ``Show submissions``
 
-The grading of student submissions follows the same workflow, regardless of the fact if you have code evaluation activated or not. 
+The grading of student submissions always follows the same workflow, regardless of the fact if you are using the automated testing facilities or not.
 
 Short version:
 
-- For each submission:
+- For every submission:
 
   - Open the submission in the teacher backend.
   - Use the preview function for inspecting uploaded student archives.
@@ -203,10 +198,18 @@ Duplicate report
 
 Location: ``Teacher backend`` - ``Course`` - ``Manage assignments``  - ``Show duplicates``
 
+A common task in assignment correction is the detection of cheating. In OpenSubmit terms, this leads to the question if different students have submitted identical, or at least very similar, solutions for an assignment.
+
+Checking arbitrary code for similarities is a complex topic by itself and is closely related to the type and amount of code being checked. OpenSubmit follows it general :ref:`principles <principles>` here by not restricting the possible types of submission for a perfect duplicate detection. Instead, we encourage users with specific demands to use such services in their :ref:`testing scripts <testing>`. 
+
+OpenSubmit provides a basic duplicate checking for submitted files based on weak hashing of the student archives content. This method works independently from the kind of data and can, at least, detect the most lazy attempts of re-using other peoples work.
+
+Based on the hashing results, the duplicate report shows groups of students that may have submitted the same result. This list must be treated as basic indication for further manual inspection. The report works independently from the course and the status of the submissions. Withdrawn solutions are skipped in the report.
+
+.. _testing:
 
 Automated testing of submissions
 ********************************
-.. _testing:
 
 The automated testing of submissions is performed by a Python 3 script that you, the assignment creator, have to write. This script is executed by OpenSubmit on some configured :ref:`test machines <executors>`. You are completely free in what you want to do in this script - at the end, OpenSubmit just needs an indication about the result. Common tasks, such as code compilation and execution, are supported by helper functions you can use in this script.
 

@@ -63,10 +63,10 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul>
-<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student frontend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Installation and Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Extending OpenSubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Students Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Administrator Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer Manual</a></li>
 </ul>
 </ul>
 </li>
@@ -117,8 +117,10 @@
       
   <div class="section" id="about">
 <h1>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h1>
-<p>The development of OpenSubmit is coordinated on <a class="reference external" href="https://github.com/troeger/opensubmit">GitHub</a>.
-We need help in everything. Feel free to join us.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The manuals are work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
+</div>
 <div class="section" id="the-zen-of-opensubmit">
 <span id="principles"></span><h2>The Zen of OpenSubmit<a class="headerlink" href="#the-zen-of-opensubmit" title="Permalink to this headline">¶</a></h2>
 <p>Following an old <a class="reference external" href="https://www.python.org/dev/peps/pep-0020/">tradition</a>, there
@@ -127,11 +129,12 @@ is a set of guiding principles for the design of OpenSubmit:</p>
 <dt>Minimalism is good.</dt>
 <dd>OpenSubmit follows the philosophy that teachers know the best how their teaching works.
 This leads to the conclusion that teaching policies and workflows do not belong into
-code or complicated configuration options. Assignment rules vary widely in different
+our code or complicated configuration options. Assignment rules vary widely in different
 institutions and groups. Given that,
 it is a main philosophy of OpenSubmit to reduce the functionality
 to the submission and validation of of student submissions. And nothing else. This
-simplifies the student user interface and clarifies the teacher workflow.</dd>
+simplifies the student user interface and clarifies the teacher workflow. Whenever some
+design decision is restricting what teachers can do with the framework, it might be bad.</dd>
 <dt>Passwords are bad.</dt>
 <dd>History has shown that <a class="reference external" href="https://haveibeenpwned.com/">even the largest companies</a>
 fail at implementing a secure password
@@ -177,12 +180,14 @@ of OpenSubmit without publishing your changes. This does not relate to configura
 <ul class="simple">
 <li>Peter Tröger (project owner)</li>
 <li>Jafar Akhundov (testing)</li>
+<li>Omar Alhaffar (testing)</li>
+<li>Srikar Beechu (testing)</li>
 <li>Kai Fabian (code, testing)</li>
 <li>Frank Feinbube (patches, testing)</li>
 <li>Sven Köhler (patches, testing)</li>
 <li>Jens Pönisch (testing)</li>
 <li>Bernhard Rabe (patches, testing)</li>
-<li>Martin Richter (patches, testing)</li>
+<li>Martin Richter (docs, patches, testing)</li>
 <li>Matthias Werner (testing)</li>
 </ul>
 </div>
@@ -201,7 +206,7 @@ of OpenSubmit without publishing your changes. This does not relate to configura
     </p>
     <p>
         &copy; Copyright 2017, Peter Tröger.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>

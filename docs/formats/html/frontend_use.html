@@ -26,7 +26,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tutors and Course Owners Manual" href="backend_use.html" />
+    <link rel="next" title="Teacher Manual" href="backend_use.html" />
     <link rel="prev" title="Welcome!" href="index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -66,9 +66,9 @@
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Students Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Tutors and Course Owners Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="admin_use.html">Administrator Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">OpenSubmit Contributors Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Developer Manual</a></li>
 </ul>
 </ul>
 </li>
@@ -83,14 +83,12 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Students Manual</a><ul>
+<li><a class="reference internal" href="#login">Login</a></li>
 <li><a class="reference internal" href="#setting-your-user-details">Setting your user details</a></li>
 <li><a class="reference internal" href="#choosing-your-courses">Choosing your courses</a></li>
-<li><a class="reference internal" href="#open-assignments">Open assignments</a><ul>
-<li><a class="reference internal" href="#submitting-a-new-solution">Submitting a new solution</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#open-assignments">Open assignments</a></li>
 <li><a class="reference internal" href="#active-submissions">Active submissions</a></li>
-<li><a class="reference internal" href="#archive">Archive</a></li>
+<li><a class="reference internal" href="#test-machines">Test Machines</a></li>
 </ul>
 </li>
 </ul>
@@ -124,36 +122,85 @@
       
   <div class="section" id="students-manual">
 <h1>Students Manual<a class="headerlink" href="#students-manual" title="Permalink to this headline">¶</a></h1>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This manual is work in progress and therefore incomplete. Feel free to help us with a <a class="reference external" href="https://github.com/troeger/opensubmit">pull request on GitHub</a>.</p>
-</div>
-<p>After log-in with one of the offered authentication methods, you are redirected to the <em>dashboard</em>. It allows to …</p>
+<p>Welcome!</p>
+<p>Your course responsible decided that it might be a good idea for managing your assignment solutions in OpenSubmit. This manual gives you a short introduction into the system, although most parts should be self-explanatory.</p>
+<p>Your course responsible may have decided to offer an automated validation of assignment solutions you hand-in with OpenSubmit. The most common use case for this are programming assignments, where your submitted solution is compiled and initially validated on dedicated test machines. In the further manual, we refer to this feature as <cite>validation</cite>.</p>
+<p>The final grading of your solution is always done by humans. Validation just helps you and the correctors to have a working and gradable solution.</p>
+<div class="section" id="login">
+<h2>Login<a class="headerlink" href="#login" title="Permalink to this headline">¶</a></h2>
+<p>The URL of the OpenSubmit installation was provided by your course responsible. Depending on the configuration, you see one or more options for login. Pick the most appropriate to enter the Dashboard.</p>
+<a class="reference internal image-reference" href="_images/ui_student.png"><img alt="_images/ui_student.png" src="_images/ui_student.png" style="width: 678.0px; height: 467.5px;" /></a>
+<p>The dashboard is divided into three major sections:</p>
+<dl class="docutils">
+<dt>Open Assignments</dt>
+<dd>All assignments that you can submit solutions for.</dd>
+<dt>Active Submissions</dt>
+<dd>All solutions you already submitted.</dd>
+<dt>Archive</dt>
+<dd>All solutions you have withdrawn.</dd>
+</dl>
+<p>The menu on top further allows you to:</p>
 <ul class="simple">
-<li>… choose courses to participate in.</li>
-<li>… see the list of open assignments for these courses.</li>
-<li>… submit solutions for these assignments, either alone or as group of students.</li>
-<li>… see the grading / code validation status for your solutions.</li>
-<li>… see the characteristics of the machines being used for automated validation.</li>
+<li>Activate the courses you are interested in.</li>
+<li>Adjust your user settings.</li>
 </ul>
+</div>
 <div class="section" id="setting-your-user-details">
 <span id="userdetails"></span><h2>Setting your user details<a class="headerlink" href="#setting-your-user-details" title="Permalink to this headline">¶</a></h2>
+<p>Depending on the login method, some of your user details might be initially missing. This relates especially to your student ID and the study program you are in.</p>
+<p>Since you are hopefully interested in not getting the grade of another person, it is highly recommended to fill out the missing fields after the first login. Click on <cite>Settings</cite> in the upper right corner to see the user details stored in the system.</p>
+<p>The eMail address has a special relevance. When your submitted results are validated, you are informed by eMail about the finalization of this testing or the final grading. When your OpenSubmit installation offers multiple login methods, it is also used the match accounts to each other.</p>
 </div>
 <div class="section" id="choosing-your-courses">
 <span id="usercourses"></span><h2>Choosing your courses<a class="headerlink" href="#choosing-your-courses" title="Permalink to this headline">¶</a></h2>
+<p>After your first login into the system, you might not see any open assignments, although they are already announced and published. This is reasoned by the fact that you need to activate the according courses in OpenSubmit. Click on <cite>Courses</cite> in the upper right corner of the dashboard and choose them accordingly.</p>
+<p>Activating and deactivating courses does not impact the status of your past and current submissions into the system.</p>
+<p>Courses and the related assignments may disappear from your dashboard when the course owner disables them, f.e. at the end of the semester.</p>
 </div>
 <div class="section" id="open-assignments">
-<h2>Open assignments<a class="headerlink" href="#open-assignments" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="submitting-a-new-solution">
-<span id="newsubmission"></span><h3>Submitting a new solution<a class="headerlink" href="#submitting-a-new-solution" title="Permalink to this headline">¶</a></h3>
-</div>
+<span id="newsubmission"></span><h2>Open assignments<a class="headerlink" href="#open-assignments" title="Permalink to this headline">¶</a></h2>
+<p>The list of open assignments shows all relevant information that you need:</p>
+<dl class="docutils">
+<dt>Course</dt>
+<dd>A link to more information about the course where this assignment is offered.</dd>
+<dt>Assignment</dt>
+<dd>A link to the particular assignment description.</dd>
+<dt>Group Work</dt>
+<dd>The information if the submission of a single solution as group work is allowed, with the maximum number of authors in brackets. One student of the group is submitting the solution and specifies the other group members. OpenSubmit allows you to change your student group for every assignment, although this might not be allowed in your course. Check the assignment description. All group members have the same rights for the submission: Seing the status, getting notification mails, and withdrawing it before the deadline.</dd>
+<dt>Graded</dt>
+<dd>The information if this is a graded assignment.</dd>
+<dt>Deadline</dt>
+<dd>The deadline for this assignment. When the deadline has passed, you can no longer submit a new solution.</dd>
+<dt>Time Left</dt>
+<dd>The time left until the given deadline.</dd>
+</dl>
+<p>The <cite>New Submission</cite> button brings you to a separate screen where you can upload your assignment solution, either for yourself or your group of students.</p>
+<p>The <cite>Notes</cite> fields allows you to drop additional information that is not graded or validated, but still shown to the correctors.</p>
+<p>Your assignment description gives you all details about the kind of upload you have to provide. Normally, this should be a single file (source code, PDF file, DOCX file, image, …) or a ZIP / TGZ archive of multiple files.</p>
+<p>OpenSubmit assignments often have specific and detailed requirements for what files to submit and how they have to be named. Make sure you follow the course guidelines and the assignment description appropriately.</p>
 </div>
 <div class="section" id="active-submissions">
 <h2>Active submissions<a class="headerlink" href="#active-submissions" title="Permalink to this headline">¶</a></h2>
-<p>You are informed about the progress of the correction and the final grade via email and the frontend page.</p>
+<p>Every uploaded file or archive is shown in the list of active submissions. The related assignments are no longer shown in the list of open assignments.</p>
+<p>The state of every active submission is shown on the dashboard. It may be:</p>
+<dl class="docutils">
+<dt>Waiting for grading</dt>
+<dd>Your solution is waiting for being graded by a human.</dd>
+<dt>Waiting for validation test</dt>
+<dd>Your solution is queued for automated validation on a test machine.</dd>
+<dt>Validation failed</dt>
+<dd>The automated validation failed. You need to act before the deadline.</dd>
+<dt>Done</dt>
+<dd>All work for this submission is done. In case of graded assignments, the grade was given and stored in the system.</dd>
+</dl>
+<p>You get an eMail when the state of your active submission changes, so you don’t need to check the web pages manually.</p>
+<p>The ‘Details’ button brings you to a separate page with all the neccessary information about your submission. This includes all information visible for the correctors (notes, uploaded file, declared authors), the results of the automated validation on the test machine, and eventually your final grade for this assignment.</p>
+<p>When the assignment has a deadline, you are free to withdraw your submitted solution <em>as often as you want</em> before the deadline. The idea here is that you can use the automated validation in a trial-and-error fashion.</p>
+<p>Withdrawn submissions are not considered for grading. They are still listed in the <cite>Archive</cite> section of the Dashboard so that you can access your earlier solutions.</p>
 </div>
-<div class="section" id="archive">
-<h2>Archive<a class="headerlink" href="#archive" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="test-machines">
+<h2>Test Machines<a class="headerlink" href="#test-machines" title="Permalink to this headline">¶</a></h2>
+<p>The validation of student submissions is performed on dedicated test machines. For programming assignments, it is therefore sometimes needed to get specific details about the target machine. This information is summarized in the <cite>Test Machines</cite> section on the Dashboard.</p>
 </div>
 </div>
 
@@ -170,7 +217,7 @@
     </p>
     <p>
         &copy; Copyright 2017, Peter Tröger.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
     </p>
   </div>
 </footer>
