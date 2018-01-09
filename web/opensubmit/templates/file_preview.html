@@ -4,8 +4,15 @@
 
 {% block scripts %}
 {{ block.super }}
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}google-code-prettify/prettify.css">
+<script type="text/javascript" src="{{STATIC_URL}}google-code-prettify/prettify.js"></script>
 {% endblock %}
+
+{% block docready %}
+{{ block.super }}
+PR.prettyPrint();
+{% endblock %}
+
 
 {% block title %}
     {{ block.super }} - File Preview
@@ -27,6 +34,14 @@
 {% endblock %}
 
 {% block content %}
+
+<style>
+li.L0, li.L1, li.L2, li.L3, li.L4, li.L5, li.L6, li.L7, li.L8, li.L9 {
+  list-style-type: decimal !important;
+  list-style-position: inside;
+}
+</style>
+
 <div class="page-header">
     <h1>File Preview</h1>
 </div>
@@ -44,7 +59,7 @@
 			    </div>
 			    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
 			      <div class="panel-body">
-			        	<pre class="{% if not file.is_code %}nocode{% endif%} prettyprint linenums"><code>{{ file.preview }}</code></pre>
+			        	<pre class="prettyprint linenums{% if not file.is_code %} nocode{% endif%}">{{ file.preview }}</pre>
 			      </div>
 			    </div>
 			  </div>
