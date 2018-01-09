@@ -151,6 +151,15 @@ def prepare_working_directory(job, submission_path, validator_path):
     If unrecoverable errors happen, such as an empty student archive,
     a JobException is raised.
     '''
+    # Safeguard for fail-fast in disk full scenarios on the executor
+
+    dusage = shutil.disk_usage(job.working_dir)
+    if dusage.free < 1024 * 1024 * 50:   # 50 MB
+        info_student = "Internal error with the validator. Please contact your course responsible."
+        info_tutor = "Error: Execution cancelled, less then 50MB of disk space free on the executor."
+        logger.error(info_tutor)
+        raise JobException(info_student=info_student, info_tutor=info_tutor)
+
     submission_fname = os.path.basename(submission_path)
     validator_fname = os.path.basename(validator_path)
 
