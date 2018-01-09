@@ -1,5 +1,5 @@
-Teacher backend
-###############
+Tutors and Course Owners Manual
+###############################
 
 .. warning::
 
@@ -7,7 +7,7 @@ Teacher backend
 
 OpenSubmit was invented for making assignments more fun for the students, and less work for the teachers. Before you start to read into details, we recommend to get into the basic :ref:`idea <index>` and general :ref:`principles <principles>`. 
 
-Student tutors, course owners and administrators (see also :ref:`permissions`) all operate in the teacher backend, which is reachable by a link at the end of the OpenSubmit student frontend, or directly via *<your OpenSubmit url>/teacher*.
+Student tutors, course owners and administrators (see also :ref:`permissions`) all operate in the teacher backend, which is reachable by a link at the bottom of the student dashboard page, or directly via *<your OpenSubmit url>/teacher*.
 
 Managing study programs
 ***********************
@@ -208,22 +208,23 @@ Automated testing of submissions
 ********************************
 .. _testing:
 
-The automated testing of submissions is possible by writing a Python 3 script that is executed by OpenSubmit on the :ref:`test machines <executors>`. This script is developed by the assignment creator, in order to check the behavior or output of student code submissions for correctness. 
+The automated testing of submissions is performed by a Python 3 script that you, the assignment creator, have to write. This script is executed by OpenSubmit on some configured :ref:`test machines <executors>`. You are completely free in what you want to do in this script - at the end, OpenSubmit just needs an indication about the result. Common tasks, such as code compilation and execution, are supported by helper functions you can use in this script.
 
-Since OpenSubmit makes no assumption about your style of student code evaluation, these scripts are rather generic. You can upload a validation test or full test in two ways:
+You can upload such a script in two ways:
 
 - As single Python file named `validator.py`.
-- As ZIP / TGZ archive with an arbitrary name, which must contain a file `validator.py`. This allows you to deploy custom validator support code (e.g. profiling tools, libraries) to the test machine. 
+- As ZIP / TGZ archive with an arbitrary name, which must contain a file named `validator.py`.
 
-The test machine daemon makes sure that all test-related files are uncompressed in the same directory as the student code.
+The second option allows you to deploy additional files (e.g. profiling tools, libraries, code not written by students) to the test machine. OpenSubmit ensures that all these files are stored in the same directory as the student code and the Python script.
 
-How to write a validator
-========================
+How to write a test script
+==========================
 
-OpenSubmit is compatible to Python 3.4 or higher. Given the fact that :ref:`test machines <executors>` directly call the validator code,
-these scripts must be written in the same language.
+Test scripts are written in Python 3.4 and will be directly called by the OpenSubmit daemon running on test machines.
 
-It is possible to install the OpenSubmit executor standalone. Similar to the installation of :ref:`test machines <executors>`, the following procedure (for Debian / Ubuntu systems) helps to get a testing environment:
+You can install this daemon, which is also called *executor*, on your own computer easily. This gives you an offline development environment for test scripts while you are working on the assignment description.
+
+Similar to the installation of :ref:`test machines <executors>`, the following procedure (for Debian / Ubuntu systems) gives you a testing environment:
 
 - Install Python 3: ``sudo apt-get install python3 python3-pip``
 
@@ -233,52 +234,51 @@ To keep your Python installation clean, we recommend to use `Virtualenv <https:/
 - Create a new virtual environment, e.g. in ``~/my_env``: ``python3 -m virtualenv ~/my_env``
 - Activate it with ``source ~/my_env/bin/activate``
 - Install the OpenSubmit validator library / executor inside: ``pip3 install opensubmit-exec``
-- Do your work.
-- Deactivate it with ``deactivate``
+- Develop the `validator.py` for your assignment.
 
-With a working installation of the OpenSubmit executor, it is now possible to develop validation scripts. Working demonstrators for different aspects can be found `online <https://github.com/troeger/opensubmit/tree/master/examples>`_.
+Examples for test scripts can be found `online <https://github.com/troeger/opensubmit/tree/master/examples>`_.
 
-We illustrate the idea with the following example:
+We illustrate the idea with the following walk-through example:
 
-The students have to create a program in C that prints 'Hello World' on the terminal. The assignment demands that they submit a C-file and a matching *Makefile* that creates a program called *hello*. The assignment description explains the students that they have to `submit a ZIP archive <_newsubmission>`_ containing both files.
+Students get the assignment to create a C program that prints 'Hello World' on the terminal. The assignment description demands that they submit the C-file and a *Makefile* that creates a program called *hello*. The assignment description also explains that the students have to `submit a ZIP archive <_newsubmission>`_ containing both files.
 
 Your job, as the assignment creator, is now to develop the ``validator.py`` file that checks an arbitrary student submission. Create a fresh directory that only contains an example student upload and the validator file:
 
 .. literalinclude:: files/validators/helloworld/validator.py
    :linenos:
 
-A ``validator.py`` file must contain a function ``validate(job)``, which is called when a student submission should be validated. In the example above, it performs the following steps:
+The ``validator.py`` file *must contain a function ``validate(job)``* that is called by OpenSubmit when a student submission should be validated. In the example above, this function performs the following steps for testing:
 
 - Line 1: The validator function is called when all student files (and all files from the validator archive) are unpacked in a temporary working directory on the test machine. In case of name conflicts, the validator files always overwrite the student files.
-- Line 2: Run the *make* tool in the working directory. This step is declared to be mandatory, so `job.run_make` will throw an exception if *make* fails.
-- Line 3: Run a binary called *hello* in the working directory. The result is the exit code and the output of the running program.
-- Line 4: Check the generated output of the student program for some expected text.
-- Line 5: Send a positive validation result back to the OpenSubmit web application. The text is the one shown to students and tutors.
-- Line 6: Send a negative validation result back to the OpenSubmit web application. The text is the one shown to students and tutors.
+- Line 2: The *make* tool is executed in the working directory with :meth:`~opensubmitexec.job.run_make`. This step is declared to be mandatory, so the method will throw an exception if *make* fails.
+- Line 3: A binary called *hello* is executed in the working directory with the helper function :meth:`~opensubmitexec.job.Job.run_program`. The result is the exit code and the output of the running program.
+- Line 4: The generated output of the student program is checked for some expected text.
+- Line 5: A positive validation result is sent back to the OpenSubmit web application with :meth:`~opensubmitexec.job.Job.send_pass_result`. The text is shown to students in their dashboard.
+- Line 6: A negative validation result is sent back to the OpenSubmit web application with :meth:`~opensubmitexec.job.Job.send_fail_result`. The text is shown to students in their dashboard.
 
-Validator scripts are ordinary Python code, so beside the functionalities provided by the job object, you can use any Python functionality. The example shows that in Line 4. 
+Test scripts are ordinary Python code, so beside the functionalities provided by the job object, you can use any Python functionality. The example shows that in Line 4. 
 
-If any of the functions throws an exception that is not catched by your validator code, it is automatically interpreted as negative validation result. The OpenSubmit executor code then ensures that a generic information is provided to the student. If you want to customize the reporting in those cases, catch the exception and use your own call of `send_fail_result` instead.
+If any part of the code leads to an exception that is not catched inside ``validate(job)``, than this is automatically interpreted as negative validation result. The OpenSubmit executor code forwards the exception as generic information to the student. If you want to customize the error reporting, catch all potential exceptions and use your own call of :meth:`~opensubmitexec.job.Job.send_fail_result` instead.
 
-To check if the validator is working correctly, you can run the command ``opensubmit-exec test <directory>``. It assumes the given directory to contain a validator script resp. archive and the student submission file resp. archive. The command simulates a complete validation run on a test machine and prints exhaustive debugging information. The last line contains the feedback sent to the web application after finalization.
+To check if the validator is working correctly, you can run the command ``opensubmit-exec test <directory>`` in your VirtualEnv. It assumes the given directory to contain a validator script resp. archive and the student submission file resp. archive. The command simulates a complete validation run on a test machine and prints exhaustive debugging information. The last line contains the feedback sent to the web application after finalization.
 
-Validator examples
-==================
+Test script examples
+====================
 
-The following example shows a validator for a program in C that prints the sum of two integer values. Those values are given as command line arguments. If the wrong number of arguments is given it should print `"Wrong number of arguments!"`. The student only has to submit the C file.
+The following example shows a validator for a program in C that prints the sum of two integer values. The values are given as command line arguments. If the wrong number of arguments is given, the student code is expected to print `"Wrong number of arguments!"`. The student only has to submit the C file.
 
 .. literalinclude:: files/validators/program_params/validator.py
     :linenos:
 
-- Line 1: GCC specifies the compiler, which ist to be used for compiling the submitted C file.
+- Line 1: The `GCC` tuple constant is predefined by the OpenSubmit library and refers to the well-known GNU C compiler. You can also define your own set of command-line arguments for another compiler.
 - Line 3-10: The variable `test_cases` consists of the lists of inputs and the corresponding expected outputs.
-- Line 13: The C file can be compiled directly by using `job.run_compiler`. You can specify the used compiler as well as the names of the input and output files.
+- Line 13: The C file can be compiled directly by using :meth:`~opensubmitexec.job.Job.run_compiler`. You can specify the used compiler as well as the names of the input and output files.
 - Line 14: The for-loop is used for traversing the `test_cases`-list. It consists of tuples which are composed of the arguments and the expected output.
-- Line 15: The arguments can be handed over to the program through the second parameter of the `job.run_program` method. The former method returns the exit code as well as the output of the program.
+- Line 15: The arguments can be handed over to the program through the second parameter of the :meth:`~opensubmitexec.job.Job.run_program` method. The former method returns the exit code as well as the output of the program.
 - Line 16: It is checked if the created output equals the expected output.
-- Line 17: If this is not the case an appropriate negative result is sent to the student and teacher.
-- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the `validate`-function can be left.
-- Line 19: After the traversion of all test cases the student and teacher are informed that everything went well. 
+- Line 17: If this is not the case an appropriate negative result is sent to the student and teacher with :meth:`~opensubmitexec.job.Job.send_fail_result`
+- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the `validate(job)`-function can be left.
+- Line 19: After the traversion of all test cases the student and teacher are informed that everything went well with :meth:`~opensubmitexec.job.Job.send_pass_result` 
 
 The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.
 
@@ -287,15 +287,15 @@ The following example shows a validator for a C program that reads an positive i
 
 - Line 1: A `TimeoutException` is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
 - Line 3-9: In this case the test cases consist of the input strings and the corresponding output strings.
-- Line 12: The method `run_build` is a combined call of `configure`, `make` and the compiler. The success of `make` and `configure` is optional. The default value for the compiler is GCC.
+- Line 12: The method :meth:`~opensubmitexec.job.Job.run_build` is a combined call of `configure`, `make` and the compiler. The success of `make` and `configure` is optional. The default value for the compiler is GCC.
 - Line 13: The test cases are traversed like in the previous example.
-- Line 14: This time a program is spawned. This allows the use of standard input.
-- Line 15: Standard input is used through the `sendline`-method of the running object.
-- Line 17: The validator waits for the expected output. If the program calculates longer then the specified timeout, it is closed and a `TimeoutException` is thrown. If the program output is different from the expected output a message containing the negative result is sent automatically.
-- Line 19: If a `TimeoutException` is thrown the corresponding negative result is sent.
+- Line 14: This time a program is spawned with :meth:`~opensubmitexec.job.Job.spawn_program`. This allows the interaction with the running program.
+- Line 15: Standard input resp. keyboard input can be provided through the :meth:`~opensubmitexec.running.RunningProgram.sendline` method of the returned object from line 14.
+- Line 17: The validator waits for the expected output with :meth:`~opensubmitexec.running.RunningProgram.expect`. If the program calculates longer then the specified timeout, it is terminated and a `TimeoutException` is thrown. If the program output is different from the expected output and the exception is not catched, a `TerminationException` exception would be thrown.
+- Line 19: If a `TimeoutException` is thrown the corresponding negative result is sent explicitely.
 - Line 20: The function can be left because there is no need for testing the other test cases.
-- Line 22: After the program created an output it is expected to end.
-- Line 23: When the loop finishes a positive result is sent to the student and teacher.
+- Line 22: After the program created an output, it is expected to terminate. The test script waits for this with :meth:`~opensubmitexec.running.RunningProgram.expect_end`
+- Line 23: When the loop finishes, a positive result is sent to the student and teacher with :meth:`~opensubmitexec.job.Job.send_pass_result`.
 
 The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task. Only the C file has to be submitted.
 
@@ -303,18 +303,26 @@ The following example shows a validator for a C program that reads a string from
     :linenos:
 
 - Line 1: A `TimeoutException` is thrown when a program does not respond in the given time. The exception is needed for checking if the student program calculates fast enough.
-- Line 2: A `TerminationException` is thrown when a program does not deliver the expected output.
+- Line 2: A `TerminationException` is thrown when a program terminates before delivering the expected output.
 - Line 4-8: The test cases consist of the input strings and the corresponding reversed output strings.
-- Line 11: The `grep`-method searches the student files for the given pattern (e.g. a for-loop) and returns a list of the files containing it.
-- Line 12-14: If there are not enough elements in the list a negative result is sent and the validation is ended.
-- Line 16-24: For every test case a new program is spawned, which is given the input. The validator waits for the expected output. If the program is calculating for too long a negative result is sent.
+- Line 11: The :meth:`~opensubmitexec.job.Job.grep` method searches the student files for the given pattern (e.g. a for-loop) and returns a list of the files containing it.
+- Line 12-14: If there are not enough elements in the list, a negative result is sent with :meth:`~opensubmitexec.job.Job.send_fail_result` and the validation is ended.
+- Line 16-24: For every test case a new program is spawned with :meth:`~opensubmitexec.job.Job.spawn_program`. The test script provides the neccessary input with :meth:`~opensubmitexec.running.RunningProgram.sendline` and waits for the expected output with :meth:`~opensubmitexec.running.RunningProgram.expect`. If the program is calculating for too long, a negative result is sent with :meth:`~opensubmitexec.job.Job.send_fail_result`.
 - Line 25: If the result is different from the expected output a `TerminationException` is raised.
-- Line 26-27: The corresponding negative result for a different output is sent and the validation is ended.
-- Line 28-29: If the program produced the expected output the validator waits until the spawned program ends.
-- Line 30: If every test case was solved correctly a positive result is sent. 
+- Line 26-27: The corresponding negative result for a different output is sent with :meth:`~opensubmitexec.job.Job.send_fail_result` and the validation is cancelled.
+- Line 28-29: If the program produced the expected output the validator waits  with :meth:`~opensubmitexec.running.RunningProgram.expect_end` until the spawned program ends.
+- Line 30: If every test case was solved correctly, a positive result is sent with :meth:`~opensubmitexec.job.Job.send_pass_result`. 
 
-Job reference
-=============
+Developer reference
+*******************
 
-.. autoclass:: opensubmitexec.server.Job
+The Job class summarizes all information about the submission to be validated by the test script. It also offers a set of helper functions that can be directly used by the test script implementation.
+
+.. autoclass:: opensubmitexec.job.Job
     :members: 
+
+Test scripts can interact with a running student program, to send some simulated keyboard input and check the resulting output for expected text patterns.
+
+.. autoclass:: opensubmitexec.running.RunningProgram
+    :members: 
+

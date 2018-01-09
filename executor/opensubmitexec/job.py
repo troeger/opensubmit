@@ -15,21 +15,19 @@ logger = logging.getLogger('opensubmitexec')
 
 
 class Job(InternalJob):
-    """A OpenSubmit validation job to be done,
-       including helper functions for the
-       validation.
+    """A OpenSubmit validation job to be done.
 
     Attributes:
-        working_dir (str):            The working directory for this job.
-        timeout (str):                The timeout for execution, as demanded by the assignment.
-        submission_id (str):          The unique OpenSubmit submission ID.
-        file_id (str):                The unique OpenSubmit submission file ID.
-        submitter_name (str):         Name of the submitting student.
+        working_dir (str):            The working directory with all student and test script files.
+        timeout (str):                The timeout for execution, as configured in the assignment settings.
+        submission_id (str):          The OpenSubmit submission ID.
+        file_id (str):                The OpenSubmit submission file ID.
+        submitter_name (str):         Real name of the submitting student.
         submitter_student_id (str):   Student ID of the submitting student.
-        submitter_studyprogram (str): Name of the study program of the submitter.
-        author_names (str):           Names of the submission authors.
-        course (str):                 Name of the course where this submission happened.
-        assignment (str):             Name of the assignment for which this submission happened.
+        submitter_studyprogram (str): Study program of the submitting student.
+        author_names (str):           Real names of all authors.
+        course (str):                 Name of the course for this submission.
+        assignment (str):             Name of the assignment for this submission.
     """
 
     working_dir = None
@@ -166,7 +164,7 @@ class Job(InternalJob):
                                measurements for submitted code.
 
         Returns:
-            RunningProgram object
+            RunningProgram: An object representing the running program.
 
         """
         logger.debug("Spawning program for interaction ...")
@@ -176,12 +174,20 @@ class Job(InternalJob):
         return RunningProgram(self, name, arguments, timeout)
 
     def run_program(self, name, arguments=[], timeout=30, exclusive=False):
-        '''
-        Runs a program in the working directory.
-        The result is a tuple of exit code and output.
+        """Runs a program in the working directory to completion.
 
-        The caller can demand exclusive execution on this machine.
-        '''
+        Args:
+            name (str):        The name of the program to be executed.
+            arguments (tuple): Command-line arguments for the program.
+            timeout (int):     The timeout for execution.
+            exclusive (bool):  Prevent parallel validation runs on the
+                               test machines, e.g. when doing performance
+                               measurements for submitted code.
+
+        Returns:
+            tuple: A tuple of the exit code, as reported by the operating system,
+            and the output produced during the execution.
+        """
         logger.debug("Running program ...")
         if exclusive:
             kill_longrunning(self.config)
@@ -190,12 +196,14 @@ class Job(InternalJob):
         return prog.expect_end()
 
     def grep(self, regex):
-        '''
-        Searches the student files in self.working_dir for files
-        containing a specific regular expression.
+        """Scans the student files for text patterns.
 
-        Returns the names of the matching files as list.
-        '''
+        Args:
+            regex (str):       Regular expression used for scanning inside the files.
+
+        Returns:
+            tuple:     Names of the matching files in the working directory.
+        """
         matches = []
         logger.debug("Searching student files for '{0}'".format(regex))
         for fname in self.student_files:
@@ -207,10 +215,14 @@ class Job(InternalJob):
         return matches
 
     def ensure_files(self, filenames):
-        '''
-        Searches the student submission for specific files.
-        Expects a list of filenames. Returns a boolean indicator.
-        '''
+        """Checks the student submission for specific files.
+
+        Args:
+            filenames (tuple): The list of file names to be cjecked for.
+
+        Returns:
+            bool: Indicator if all files are found in the student archive.
+        """
         logger.debug("Testing {0} for the following files: {1}".format(
             self.working_dir, filenames))
         dircontent = os.listdir(self.working_dir)

@@ -1,5 +1,5 @@
-Student frontend
-################
+Students Manual
+###############
 
 .. warning::
 

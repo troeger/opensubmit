@@ -1,5 +1,5 @@
-Extending OpenSubmit
-####################
+OpenSubmit Contributors Manual
+##############################
 
 .. warning::
 

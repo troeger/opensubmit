@@ -1,5 +1,5 @@
-Installation and Configuration
-##############################
+Administrator Manual
+####################
 
 Web server
 **********

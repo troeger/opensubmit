@@ -64,10 +64,10 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul>
-<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Student frontend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Teacher backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Installation and Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="developer_use.html">Extending OpenSubmit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontend_use.html">Students Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend_use.html">Tutors and Course Owners Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin_use.html">Administrator Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_use.html">OpenSubmit Contributors Manual</a></li>
 </ul>
 </ul>
 </li>
@@ -119,6 +119,7 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#J"><strong>J</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -128,11 +129,13 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.assignment">assignment (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.arguments">arguments (opensubmitexec.running.RunningProgram attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.author_names">author_names (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.assignment">assignment (opensubmitexec.job.Job attribute)</a>
+</li>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.author_names">author_names (opensubmitexec.job.Job attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -140,7 +143,7 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.course">course (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.course">course (opensubmitexec.job.Job attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -148,7 +151,7 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.delete_binaries">delete_binaries() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.delete_binaries">delete_binaries() (opensubmitexec.job.Job method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -156,7 +159,15 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.ensure_files">ensure_files() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.ensure_files">ensure_files() (opensubmitexec.job.Job method)</a>
+</li>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.expect">expect() (opensubmitexec.running.RunningProgram method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.expect_end">expect_end() (opensubmitexec.running.RunningProgram method)</a>
+</li>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.expect_exit_status">expect_exit_status() (opensubmitexec.running.RunningProgram method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -164,7 +175,7 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.file_id">file_id (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.file_id">file_id (opensubmitexec.job.Job attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -172,7 +183,13 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.grep">grep() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.get_exitstatus">get_exitstatus() (opensubmitexec.running.RunningProgram method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.get_output">get_output() (opensubmitexec.running.RunningProgram method)</a>
+</li>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.grep">grep() (opensubmitexec.job.Job method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -180,7 +197,19 @@
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job">Job (class in opensubmitexec.server)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job">Job (class in opensubmitexec.job)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.job">job (opensubmitexec.running.RunningProgram attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.name">name (opensubmitexec.running.RunningProgram attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -188,17 +217,19 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.run_build">run_build() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.run_build">run_build() (opensubmitexec.job.Job method)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.run_compiler">run_compiler() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.run_compiler">run_compiler() (opensubmitexec.job.Job method)</a>
+</li>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.run_configure">run_configure() (opensubmitexec.job.Job method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.run_configure">run_configure() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.run_make">run_make() (opensubmitexec.job.Job method)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.run_make">run_make() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.run_program">run_program() (opensubmitexec.job.Job method)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.run_program">run_program() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram">RunningProgram (class in opensubmitexec.running)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -206,21 +237,23 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.send_fail_result">send_fail_result() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.send_fail_result">send_fail_result() (opensubmitexec.job.Job method)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.send_pass_result">send_pass_result() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.send_pass_result">send_pass_result() (opensubmitexec.job.Job method)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.spawn_program">spawn_program() (opensubmitexec.server.Job method)</a>
+      <li><a href="backend_use.html#opensubmitexec.running.RunningProgram.sendline">sendline() (opensubmitexec.running.RunningProgram method)</a>
+</li>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.spawn_program">spawn_program() (opensubmitexec.job.Job method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.submission_id">submission_id (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.submission_id">submission_id (opensubmitexec.job.Job attribute)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.submitter_name">submitter_name (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.submitter_name">submitter_name (opensubmitexec.job.Job attribute)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.submitter_student_id">submitter_student_id (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.submitter_student_id">submitter_student_id (opensubmitexec.job.Job attribute)</a>
 </li>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.submitter_studyprogram">submitter_studyprogram (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.submitter_studyprogram">submitter_studyprogram (opensubmitexec.job.Job attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -228,7 +261,7 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.timeout">timeout (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.timeout">timeout (opensubmitexec.job.Job attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -236,7 +269,7 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="backend_use.html#opensubmitexec.server.Job.working_dir">working_dir (opensubmitexec.server.Job attribute)</a>
+      <li><a href="backend_use.html#opensubmitexec.job.Job.working_dir">working_dir (opensubmitexec.job.Job attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -255,7 +288,7 @@
     </p>
     <p>
         &copy; Copyright 2017, Peter Tröger.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
     </p>
   </div>
 </footer>

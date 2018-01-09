@@ -37,12 +37,16 @@ def kill_longrunning(config):
 
 
 class RunningProgram(pexpect.spawn):
-    '''
-    A running program that can be interacted with.
+    """A running program that you can interact with.
 
     This class is a thin wrapper around the functionality
     of pexpect (http://pexpect.readthedocs.io/en/stable/overview.html).
-    '''
+
+    Attributes:
+        job (Job):            The original job for this program execution.
+        name (str):           The name of the binary that is executed.
+        arguments (tuple):    The command-line arguments being used for execution.
+    """
     job = None
     name = None
     arguments = None
@@ -50,12 +54,22 @@ class RunningProgram(pexpect.spawn):
     _spawn = None
 
     def get_output(self):
+        """Get the program output produced so far.
+
+        Returns:
+            str: Program output as text. May be incomplete.
+        """
         # Open temporary file for reading, in text mode
         # This makes sure that the file pointer for writing
         # is not touched
         return '\n'.join(open(self._logfile.name).readlines())
 
     def get_exitstatus(self):
+        """Get the exit status of the program execution.
+
+        Returns:
+            int: Exit status as reported by the operating system, or -1 if it is not available.
+        """
         logger.debug("Exit status is {0}".format(self._spawn.exitstatus))
         if self._spawn.exitstatus is None:
             logger.debug("Translating non-available exit code to -1.")
@@ -93,12 +107,23 @@ class RunningProgram(pexpect.spawn):
                 instance=self, real_exception=e, output=self.get_output())
 
     def expect(self, pattern, timeout=-1):
-        '''
-        Expect an output pattern from the running program.
+        """Wait for some output of the running program.
 
-        The default timeout is the one defined on object creation.
+        Args:
+            pattern:  The pattern the output should be checked for.
+            timeout (int):  How many seconds should be waited for the output.
 
-        '''
+        The pattern argument may be a string, a compiled regular expression,
+        or a list of any of those types. Strings will be compiled into regular expressions.
+
+        Returns:
+            int: The index into the pattern list. If the pattern was not a list, it returns 0 on a successful match.
+
+        Raises:
+            TimeoutException: The output did not match within the given time frame.
+            TerminationException: The program terminated before producing the output.
+            NestedException: An internal problem occured while waiting for the output.
+        """
         logger.debug("Expecting output '{0}' from '{1}'".format(
             pattern, self.name))
         try:
@@ -114,13 +139,19 @@ class RunningProgram(pexpect.spawn):
             raise NestedException(
                 instance=self, real_exception=e, output=self.get_output())
 
-    def sendline(self, pattern):
-        '''
-        Send input to the running program.
-        '''
+    def sendline(self, text):
+        """Sends an input line to the running program, including os.linesep.
+
+        Args:
+            text (str): The input text to be send. 
+
+        Raises:
+            TerminationException: The program terminated before / while / after sending the input.
+            NestedException: An internal problem occured while waiting for the output.
+        """
         logger.debug("Sending input '{0}' to '{1}'".format(pattern, self.name))
         try:
-            return self._spawn.sendline(pattern)
+            return self._spawn.sendline(text)
         except pexpect.exceptions.EOF as e:
             logger.debug("Raising termination exception.")
             raise TerminationException(instance=self, real_exception=e, output=self.get_output())
@@ -133,10 +164,11 @@ class RunningProgram(pexpect.spawn):
                 instance=self, real_exception=e, output=self.get_output())
 
     def expect_end(self):
-        '''
-        Wait for the program to finish.
-        Returns a tuple with the exit code and the output.
-        '''
+        """Wait for the running program to finish.
+
+        Returns:
+            A tuple with the exit code, as reported by the operating system, and the output produced.
+        """
         logger.debug("Waiting for termination of '{0}'".format(self.name))
         try:
             # Make sure we fetch the last output bytes.
@@ -158,10 +190,14 @@ class RunningProgram(pexpect.spawn):
                 instance=self, real_exception=e, output=self.get_output())
 
     def expect_exit_status(self, exit_status):
-        '''
-        Wait for the program to finish and expect some
-        exit status. Throws exception otherwise.
-        '''
+        """Wait for the running program to finish and expect some exit status.
+
+        Args:
+            exit_status (int):  The expected exit status.
+
+        Raises:
+            WrongExitStatusException: The produced exit status is not the expected one.
+        """
         self.expect_end()
         logger.debug("Checking exit status of '{0}', output so far: {1}".format(
             self.name, self.get_output()))
