@@ -250,7 +250,7 @@ Your job, as the assignment creator, is now to develop the ``validator.py`` file
 .. literalinclude:: files/validators/helloworld/validator.py
    :linenos:
 
-The ``validator.py`` file *must contain a function ``validate(job)``* that is called by OpenSubmit when a student submission should be validated. In the example above, this function performs the following steps for testing:
+The ``validator.py`` file must contain a function ``validate(job)`` that is called by OpenSubmit when a student submission should be validated. In the example above, this function performs the following steps for testing:
 
 - Line 1: The validator function is called when all student files (and all files from the validator archive) are unpacked in a temporary working directory on the test machine. In case of name conflicts, the validator files always overwrite the student files.
 - Line 2: The *make* tool is executed in the working directory with :meth:`~opensubmitexec.job.run_make`. This step is declared to be mandatory, so the method will throw an exception if *make* fails.
@@ -280,8 +280,8 @@ The following example shows a validator for a program in C that prints the sum o
 - Line 15: The arguments can be handed over to the program through the second parameter of the :meth:`~opensubmitexec.job.Job.run_program` method. The former method returns the exit code as well as the output of the program.
 - Line 16: It is checked if the created output equals the expected output.
 - Line 17: If this is not the case an appropriate negative result is sent to the student and teacher with :meth:`~opensubmitexec.job.Job.send_fail_result`
-- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the `validate(job)`-function can be left.
-- Line 19: After the traversion of all test cases the student and teacher are informed that everything went well with :meth:`~opensubmitexec.job.Job.send_pass_result` 
+- Line 18: After a negative result is sent there is no need for traversing the rest of the test cases, so the `validate(job)` function can be left.
+- Line 19: After the traversal of all test cases, the student and teacher are informed that everything went well with :meth:`~opensubmitexec.job.Job.send_pass_result` 
 
 The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.
 
@@ -294,11 +294,13 @@ The following example shows a validator for a C program that reads an positive i
 - Line 13: The test cases are traversed like in the previous example.
 - Line 14: This time a program is spawned with :meth:`~opensubmitexec.job.Job.spawn_program`. This allows the interaction with the running program.
 - Line 15: Standard input resp. keyboard input can be provided through the :meth:`~opensubmitexec.running.RunningProgram.sendline` method of the returned object from line 14.
-- Line 17: The validator waits for the expected output with :meth:`~opensubmitexec.running.RunningProgram.expect`. If the program calculates longer then the specified timeout, it is terminated and a `TimeoutException` is thrown. If the program output is different from the expected output and the exception is not catched, a `TerminationException` exception would be thrown.
-- Line 19: If a `TimeoutException` is thrown the corresponding negative result is sent explicitely.
-- Line 20: The function can be left because there is no need for testing the other test cases.
-- Line 22: After the program created an output, it is expected to terminate. The test script waits for this with :meth:`~opensubmitexec.running.RunningProgram.expect_end`
+- Line 17-20: The validator waits for the expected output with :meth:`~opensubmitexec.running.RunningProgram.expect`. If the program terminates without producing this output, a `TerminationException` exception is thrown. 
+- Line 22: After the program successfully produced the output, it is expected to terminate. The test script waits for this with :meth:`~opensubmitexec.running.RunningProgram.expect_end`
 - Line 23: When the loop finishes, a positive result is sent to the student and teacher with :meth:`~opensubmitexec.job.Job.send_pass_result`.
+
+.. warning::
+
+   When using :meth:`~opensubmitexec.running.RunningProgram.expect`, it is important to explicitely catch a  `TerminationException` and make an explicit fail report in your validation script. Otherwise, the student is only informed about an unexpected termination without further explanation.
 
 The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task. Only the C file has to be submitted.
 

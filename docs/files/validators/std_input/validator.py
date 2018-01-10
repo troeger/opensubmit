@@ -1,4 +1,4 @@
-from opensubmitexec.exceptions import TimeoutException
+from opensubmitexec.exceptions import TerminationException
 
 test_cases = [
     ['0', '0'],
@@ -15,8 +15,8 @@ def validate(job):
         running.sendline(std_input)
         try:
             running.expect(expected_output, timeout=1)
-        except TimeoutException:
-            job.send_fail_result("Your output took to long!", "timeout")
+        except TerminationException:
+            job.send_fail_result("Arrgh, a problem: We expected {0} as output for the input {1}.".format(expected_output, std_input), "wrong output")
             return
         else:
             running.expect_end()
