@@ -107,7 +107,7 @@ class RunningProgram(pexpect.spawn):
                 instance=self, real_exception=e, output=self.get_output())
 
     def expect(self, pattern, timeout=-1):
-        """Wait for some output of the running program.
+        """Wait until the running program performs some given output, or terminates.
 
         Args:
             pattern:  The pattern the output should be checked for.
