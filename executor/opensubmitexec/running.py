@@ -62,7 +62,7 @@ class RunningProgram(pexpect.spawn):
         # Open temporary file for reading, in text mode
         # This makes sure that the file pointer for writing
         # is not touched
-        return '\n'.join(open(self._logfile.name).readlines())
+        return ''.join(open(self._logfile.name).readlines())
 
     def get_exitstatus(self):
         """Get the exit status of the program execution.
