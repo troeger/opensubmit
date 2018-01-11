@@ -27,12 +27,16 @@
         {% endblock %}
     });
     </script>
+
+    {% include "favicon.inc" %}
+
 </head>
 
 <body>
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
+                <img class="pull-left" src="{{ STATIC_URL }}images/favicon-32x32.png"/>
                 <a class="navbar-brand" href="#">OpenSubmit</a>
             </div>
 
