@@ -4,9 +4,9 @@
     <tr>
         <td>Submission ID</td><td>{{ submission.pk }}</td>
     </tr><tr>
-        <td>Course</td><td><a href="{{ assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+        <td>Course</td><td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
     </tr><tr>
-        <td>Assignment</td><td><a href="{{ assignment.download }}">{{ submission.assignment }}</a></td>
+        <td>Assignment</td><td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
     </tr><tr>
         <td>Submitter</td><td>{{ submission.submitter }}</td>
     </tr><tr>
