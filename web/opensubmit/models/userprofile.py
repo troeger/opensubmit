@@ -81,15 +81,15 @@ class UserProfile(models.Model):
 
     def gone_assignments(self):
         '''
-            Returns the list of gone assignments the user did not submit for.
+            Returns the list of past assignments the user did not submit for
+            before the hard deadline.
         '''
         # Include only assignments with past hard deadline
         qs = Assignment.objects.filter(hard_deadline__lt=timezone.now())
-        # Include only assignments from courses that you are registered for
+        # Include only assignments from courses this user is registered for
         qs = qs.filter(course__in=self.user_courses())
         # Include only assignments this user has no submission for
-        qs = qs.filter(submissions=None)
-        return qs
+        return qs.order_by('-hard_deadline')
 
 
 def db_fixes(user):
