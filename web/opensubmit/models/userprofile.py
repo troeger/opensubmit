@@ -79,6 +79,18 @@ class UserProfile(models.Model):
         ).exclude(state=Submission.WITHDRAWN)]
         return [ass for ass in qs if ass not in waiting_for_action]
 
+    def gone_assignments(self):
+        '''
+            Returns the list of gone assignments the user did not submit for.
+        '''
+        # Include only assignments with past hard deadline
+        qs = Assignment.objects.filter(hard_deadline__lt=timezone.now())
+        # Include only assignments from courses that you are registered for
+        qs = qs.filter(course__in=self.user_courses())
+        # Include only assignments this user has no submission for
+        qs = qs.filter(submissions=None)
+        return qs
+
 
 def db_fixes(user):
     '''

@@ -5,8 +5,6 @@
     {{ block.super }} - Dashboard
 {% endblock %}
 
-{%block navigation_home %}hidden{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <h1>Dashboard</h1>
@@ -14,7 +12,7 @@
 </div>
 
 <section>
-    <h3>Open Assignments</h3>
+    <h3>Open</h3>
     {% if not courses %}
         Seems like you don't have any courses configured. You should <a href="{% url 'courses' %}">change that</a>.
     {% else %}
@@ -80,28 +78,23 @@
 </section>
 
 <section>
-    <h3>Active Submissions</h3>
+    <h3>In Progress</h3>
+    {% if subs_in_progress %}
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Course</th>
                 <th>Assignment</th>
-                <th>Submitted by</th>
-                <th>Authors</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
 
         <tbody>
-            {% for submission in authored %} 
+            {% for submission in subs_in_progress %} 
                 <tr {% if submission.passed or submission.failed %}style="font-style: italic"{%endif%}>
-                    <td>{{ submission.pk }}</td>
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
                     <td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
-                    <td>{{ submission.submitter.get_full_name }}</td>
-                    <td>{{ submission.authors.all|join:"<br/>" }}</td>
                     <td>
                         <span class="{{ submission|state_label_css }}">{{ submission.state_for_students }}</span>
                     </td>
@@ -110,11 +103,9 @@
                         {% if submission.can_reupload or submission.can_withdraw %}
                         {% endif %}
                         {% if submission.can_reupload %}
-                            <p></p>
                             <a href="{% url 'update' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-upload"></span> Re-upload</a>
                         {% endif %}
                         {% if submission.can_withdraw %}
-                            <p></p>
                             <a href="{% url 'withdraw' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span> Withdraw</a>
                         {% endif %}
                     </td>
@@ -122,37 +113,52 @@
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        Nothing at the moment.
+    {% endif %}
 </section>
 
 <section>
-    <h3>Archive</h3>
-    <table class="table table-condensed">
+    <h3>Finished</h3>
+    {% if subs_finished%}
+    <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Course</th>
                 <th>Assignment</th>
-                <th>Created</th>
-                <th>Authors</th>
-                <th>Status</th>
-                <th></th>
+                <th>Submitted at</th>
+                <th>Grading</th>
+                <th>Action</th>
             </tr>
         </thead>
 
         <tbody>
-            {% for submission in archived %}
-                <tr>
-                    <td>{{ submission.pk }}</td>
+            {% for submission in subs_finished %} 
+                <tr {% if submission.passed or submission.failed %}style="font-style: italic"{%endif%}>
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
                     <td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
                     <td>{{ submission.created }}</td>
-                    <td>{{ submission.authors.all|join:"<br/>" }}</td>
-                    <td>{{ submission.state_for_students }}</td>
-                    <td><a href="{% url 'details' submission.pk %}">Details</a></td>
+                    <td>
+                        {% if submission.grading_means_passed %}<span class="glyphicon glyphicon-ok"></span>{% else %}<span class="glyphicon glyphicon-remove"></span>{% endif %}&nbsp;{{ submission.grading_value_text }}
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <a href="{% url 'details' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-th-list"></span> Details</a>
+                        {% if submission.can_reupload or submission.can_withdraw %}
+                        {% endif %}
+                        {% if submission.can_reupload %}
+                            <a href="{% url 'update' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-upload"></span> Re-upload</a>
+                        {% endif %}
+                        {% if submission.can_withdraw %}
+                            <a href="{% url 'withdraw' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span> Withdraw</a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        Nothing at the moment.
+    {% endif %}
 </section>
 
 <section>
@@ -165,6 +171,5 @@
     {% endif %}
 </ul>
 </section>
-
 
 {% endblock %}
