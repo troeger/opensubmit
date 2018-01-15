@@ -2,7 +2,7 @@
     v{{opensubmit_version}}
     &nbsp;&nbsp;<a href="http://open-submit.org/formats/html/frontend_use.html">Docs</a>
     &nbsp;&nbsp;<a href="mailto:{{opensubmit_admin}}">Feedback</a>
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and user.is_staff %}
     &nbsp;&nbsp; <a href="{{main_url}}/teacher/">Teacher backend</a>
     {% endif %}
 </footer>
