@@ -28,14 +28,19 @@ class Command(BaseCommand):
             user=User.objects.filter(username=name).delete()
             user = User.objects.create_user( username=name,
                                              email='demo@example.org',
-                                             password=name)
+                                             password=name,
+                                             first_name=name,
+                                             last_name=name)
             users[name]=user
 
         # create demo grading
-        passGrade = Grading(title='passed', means_passed=True)
+        Grading.objects.filter(title='passed (demo)').delete()
+        passGrade = Grading(title='passed (demo)', means_passed=True)
         passGrade.save()
-        failGrade = Grading(title='failed', means_passed=False)
+        Grading.objects.filter(title='failed (demo)').delete()
+        failGrade = Grading(title='failed (demo)', means_passed=False)
         failGrade.save()
+        GradingScheme.objects.filter(title='Pass/Fail Grading Scheme (Demo)').delete()
         passFailGrading = GradingScheme(title='Pass/Fail Grading Scheme (Demo)')
         passFailGrading.save()
         passFailGrading.gradings.add(passGrade)
@@ -43,26 +48,17 @@ class Command(BaseCommand):
         passFailGrading.save()
 
         # create demo course
+        Course.objects.filter(title='Demo Course').delete()
         course = Course(
-            title='Demo Course 1',
+            title='Demo Course',
             active=True,
-            owner=users['demo_owner']
+            owner=users['demo_owner'],
+            homepage="http://www.open-submit.org"
         )
         course.save()
         course.tutors.add(users['demo_tutor'])
         course.participants.add(users['demo_student'].profile)
         course.participants.add(users['demo_cheater'].profile)
-
-        course2 = Course(
-            title='Demo Course 2',
-            active=True,
-            owner=users['demo_owner']
-        )
-        course2.save()
-        course2.tutors.add(users['demo_tutor'])
-        course2.participants.add(users['demo_student'].profile)
-        course2.participants.add(users['demo_cheater'].profile)
-
 
         today = timezone.now()
         last_week = today - datetime.timedelta(weeks=1)
@@ -70,8 +66,8 @@ class Command(BaseCommand):
         next_week = today + datetime.timedelta(weeks=1)
 
         # create demo assignment
-        ass = Assignment(
-            title='Demo Assignment 1',
+        ass1 = Assignment(
+            title='Demo A1: Graded group work with deadline',
             course=course,
             download='http://example.org/assignments1.pdf',
             gradingScheme=passFailGrading,
@@ -81,58 +77,67 @@ class Command(BaseCommand):
             has_attachment=True,
             max_authors=3
         )
-        ass.save()
+        ass1.save()
 
         # create demo assignment without grading
         ass2 = Assignment(
-            title='Demo Assignment 2',
-            course=course2,
-            download='http://example.org/assignments1.pdf',
+            title='Demo A2: Non-graded group work with deadline',
+            course=course,
+            download='http://example.org/assignments2.pdf',
             gradingScheme=None,
             publish_at=last_week,
             soft_deadline=tomorrow,
             hard_deadline=next_week,
-            has_attachment=True
+            has_attachment=True,
+            max_authors=3
         )
         ass2.save()
 
         # create demo assignment without deadlines
         ass3 = Assignment(
-            title='Demo Assignment 3',
+            title='Demo A3: Graded group work without deadline, only notes',
             course=course,
             download='http://example.org/assignments1.pdf',
             gradingScheme=passFailGrading,
             publish_at=last_week,
             soft_deadline=None,
             hard_deadline=None,
-            has_attachment=False
+            has_attachment=False,
+            max_authors=3
         )
         ass3.save()
 
+
+        # create demo assignment without deadlines
+        ass4 = Assignment(
+            title='Demo A4: Graded group work with deadline being over',
+            course=course,
+            download='http://example.org/assignments1.pdf',
+            gradingScheme=passFailGrading,
+            publish_at=last_week,
+            soft_deadline=last_week,
+            hard_deadline=last_week,
+            has_attachment=False,
+            max_authors=3
+        )
+        ass4.save()
+
         # create demo submission
         Submission(
-            assignment=ass,
+            assignment=ass1,
             submitter=users['demo_student'],
-            notes="This is a demo submission.",
+            notes="Demo submission for A1.",
             state=Submission.SUBMITTED_TESTED,
             file_upload=createSubmissionFile()
         ).save()
 
         # create cheater submission in course 1
         Submission(
-            assignment=ass,
+            assignment=ass1,
             submitter=users['demo_cheater'],
-            notes="This is a demo cheating attempt.",
+            notes="Demo duplicate submission for A1.",
             state=Submission.SUBMITTED_TESTED,
             file_upload=createSubmissionFile()
         ).save()
 
-        # create cheater submission in course 2
-        Submission(
-            assignment=ass2,
-            submitter=users['demo_cheater'],
-            notes="This is a demo cheating attempt in another course.",
-            state=Submission.SUBMITTED_TESTED,
-            file_upload=createSubmissionFile()
-        ).save()
 
