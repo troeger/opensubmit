@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load projecttags %}
+
+{% block title %}
+    {{ block.super }} - Archive
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Archive</h1>
+    <h6>{{ username }}</h6>
+</div>
+
+<section>
+    <table class="table table-condensed">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Course</th>
+                <th>Assignment</th>
+                <th>Created</th>
+                <th>Authors</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for submission in archived %}
+                <tr>
+                    <td>{{ submission.pk }}</td>
+                    <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+                    <td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
+                    <td>{{ submission.created }}</td>
+                    <td>{{ submission.authors.all|join:"<br/>" }}</td>
+                    <td>{{ submission.state_for_students }}</td>
+                    <td><a href="{% url 'details' submission.pk %}">Details</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% endblock %}

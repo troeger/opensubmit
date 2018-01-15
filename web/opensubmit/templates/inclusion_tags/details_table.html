@@ -4,9 +4,13 @@
     <tr>
         <td>Submission ID</td><td>{{ submission.pk }}</td>
     </tr><tr>
+        <td>Submitted</td><td>{{ submission.created }}</td>
+    </tr><tr>
         <td>Course</td><td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
     </tr><tr>
         <td>Assignment</td><td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
+    </tr><tr>
+        <td>Assignment deadline</td><td>{% deadline_timeout submission.assignment %}</td>
     </tr><tr>
         <td>Submitter</td><td>{{ submission.submitter }}</td>
     </tr><tr>
@@ -35,7 +39,7 @@
         <td>State</td><td>{{ submission.state_for_students }}</td>
     {% if submission.show_grading %}
         </tr><tr>
-            <td>Grading</td><td>{{ submission.grading }}</td>
+            <td>Grading</td><td>{% grading submission %}</td>
         </tr><tr>
             <td>Grading Notes</td><td>{{ submission.grading_notes|linebreaks }}</td>
         {% if submission.grading_file %}

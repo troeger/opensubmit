@@ -1,0 +1,11 @@
+{% if assignment.soft_deadline %}
+	{{ assignment.soft_deadline }}
+	{% if show_timeout %}<br/>({{ assignment.soft_deadline|timeuntil }} left){% endif %}
+{% else %}
+	{% if assignment.hard_deadline %}
+		{{ assignment.hard_deadline }}
+		{% if show_timeout %}<br/>({{ assignment.hard_deadline|timeuntil }} left){% endif %}
+	{% else %}
+		No
+	{% endif %}
+{% endif %}

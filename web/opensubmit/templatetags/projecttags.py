@@ -1,7 +1,8 @@
 from django import template
+from django.conf import settings
 from django.template.defaultfilters import stringfilter
 import os
-import opensubmit
+
 
 register = template.Library()
 
@@ -36,9 +37,23 @@ def state_label_css(subm):
 
 @register.assignment_tag
 def setting(name):
-    return getattr(opensubmit.settings, name, "")
+    return getattr(settings, name, "")
 
 
 @register.inclusion_tag('inclusion_tags/details_table.html')
 def details_table(submission):
     return {'submission': submission}
+
+@register.inclusion_tag('inclusion_tags/deadline.html')
+def deadline_timeout(assignment):
+    return {'assignment': assignment, 'show_timeout': True}
+
+@register.inclusion_tag('inclusion_tags/deadline.html')
+def deadline(assignment):
+    return {'assignment': assignment, 'show_timeout': False}
+
+@register.inclusion_tag('inclusion_tags/grading.html')
+def grading(submission):
+    return {'submission': submission}
+
+

@@ -45,6 +45,9 @@
                     <li  class="{% block navigation_home %}{% endblock %}">
                         <a href="{% url 'index' %}"><span class="glyphicon glyphicon-home"></span> Dashboard</a>
                     </li>
+                    <li  class="{% block navigation_archive %}{% endblock %}">
+                        <a href="{% url 'archive' %}"><span class="glyphicon glyphicon-time"></span> Archive</a>
+                    </li>
                     <li  class="{% block navigation_courses %}{% endblock %}">
                         <a href="{% url 'courses' %}"><span class="glyphicon glyphicon-filter"></span> Courses</a>
                     </li>
