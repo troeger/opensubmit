@@ -10,14 +10,23 @@
 
 {% block docready %}
 {{ block.super }}
-var table=$('#gradings').DataTable( {
-	paging: false,
-    buttons: [{extend: 'colvis', columns: ':not(.noVis)'},
-    		  {extend: 'excel', text: 'Excel export'},
-              {extend: 'csv', text: 'CSV export'},
+var table=$('#gradings').DataTable( {paging: false});
+new $.fn.dataTable.Buttons( table, {
+	name:'visibility',
+    buttons: [{extend: 'colvis', text: 'Select assignments...', columns: '.assign'},
+			  {extend: 'colvisGroup', text: 'Show all', show: ':hidden'},
+			  {extend: 'colvisGroup', text: 'Hide all', hide: ':visible .assign'},
               ]
-    });
-table.buttons().container().prependTo( $('div.col-sm-12', table.table().container() ) );
+});
+new $.fn.dataTable.Buttons( table, {
+	name:'export',
+    buttons: [{extend: 'excel', text: 'Export as Excel...'},
+              {extend: 'csv', text: 'Export as CSV...'},
+              ]
+});
+
+table.buttons('visibility', 0).container().prependTo( 'div.col-sm-12' );
+table.buttons('export', 0).container().appendTo( '#lower_buttons');
 {% endblock %}
 
 {% setting "MAIN_URL" as main_url %}
@@ -44,7 +53,7 @@ table.buttons().container().prependTo( $('div.col-sm-12', table.table().containe
 			<th>Student ID</th>
 			<th>Study Program</th>
 			{% for assignment in assignments %}
-				<th>{{ assignment.title }}</th>
+				<th class="assign">{{ assignment.title }}</th>
 			{% endfor %}
 			<th>Passed graded assignments</th>
 			<th>Sum of grades</th>
@@ -69,5 +78,7 @@ table.buttons().container().prependTo( $('div.col-sm-12', table.table().containe
 	{% endfor %}
 	</tbody>
 </table>
+
+<div id="lower_buttons" style="margin-top: 20px"></div>
 
 {% endblock %}
