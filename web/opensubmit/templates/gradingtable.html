@@ -12,9 +12,11 @@
 {{ block.super }}
 var table=$('#gradings').DataTable( {
 	paging: false,
-    buttons: [{extend: 'excel', text: 'Download Excel file'},
-              {extend: 'csv', text: 'Download CSV file'}]
-});
+    buttons: [{extend: 'colvis', columns: ':not(.noVis)'},
+    		  {extend: 'excel', text: 'Excel export'},
+              {extend: 'csv', text: 'CSV export'},
+              ]
+    });
 table.buttons().container().prependTo( $('div.col-sm-12', table.table().container() ) );
 {% endblock %}
 
