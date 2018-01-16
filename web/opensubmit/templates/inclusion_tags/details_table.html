@@ -8,9 +8,13 @@
     </tr><tr>
         <td>Course</td><td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
     </tr><tr>
-        <td>Assignment</td><td><a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a></td>
-    </tr><tr>
-        <td>Assignment deadline</td><td>{% deadline_timeout submission.assignment %}</td>
+        <td>Assignment</td>
+        <td>
+            <a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a><br/>
+            Deadline: {% deadline submission.assignment %}<br/>
+            Group work: {% if submission.assignment.max_authors > 1%}Yes ({{submission.assignment.max_authors}} students){% else %}No{% endif %}<br/>
+            Graded: {% if submission.assignment.is_graded %}Yes{% else %}No{% endif %}</td>
+        </td>
     </tr><tr>
         <td>Submitter</td><td>{{ submission.submitter }}</td>
     </tr><tr>
