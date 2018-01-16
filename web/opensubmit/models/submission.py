@@ -468,7 +468,7 @@ class Submission(models.Model):
         return self.state in [self.GRADED, self.CLOSED, self.CLOSED_TEST_FULL_PENDING]
 
     def show_grading(self):
-        return self.is_closed()
+        return self.assignment.gradingScheme != None and self.is_closed()
 
     def get_initial_state(self):
         '''
