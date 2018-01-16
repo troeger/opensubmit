@@ -74,7 +74,7 @@ class SubmissionAssignmentFilter(SimpleListFilter):
     parameter_name = 'assignmentfilter'
 
     def lookups(self, request, model_admin):
-        tutor_assignments = Assignment.objects.filter(course__in=list(request.user.profile.tutor_courses()))
+        tutor_assignments = Assignment.objects.filter(course__in=list(request.user.profile.tutor_courses())).order_by('title')
         return ((ass.pk, ass.title) for ass in tutor_assignments)
 
     def queryset(self, request, qs):
