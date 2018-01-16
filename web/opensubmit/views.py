@@ -13,7 +13,6 @@ from django.core.mail import send_mass_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
@@ -502,12 +501,15 @@ def lti(request, post_params, consumer_key, *args, **kwargs):
     '''
         Entry point for LTI consumers.
 
-        This view is protected by the BLTI package decorator, which performs all the relevant OAuth signature checking. It also makes
-        sure that the LTI consumer key and secret were ok. The latter ones are supposed to be configured in the admin interface.
+        This view is protected by the BLTI package decorator,
+        which performs all the relevant OAuth signature checking.
+        It also makes sure that the LTI consumer key and secret were ok.
+        The latter ones are supposed to be configured in the admin interface.
 
         We can now trust on the provided data to be from the LTI provider.
 
-        If everything worked out, we store the information the session for the Python Social passthrough provider, which is performing
+        If everything worked out, we store the information the session for
+        the Python Social passthrough provider, which is performing
         user creation and database storage.
     '''
     data = {}
