@@ -20,9 +20,10 @@ urlpatterns = [
     url(r'^withdraw/(?P<subm_id>\d+)/$', views.withdraw, name='withdraw'),
     url(r'^preview/(?P<subm_id>\d+)/$', views.preview, name='preview'),
     url(r'^update/(?P<subm_id>\d+)/$', views.update, name='update'),
+    url(r'^mail/course=(?P<course_id>\d+)$', views.mail_course, name='mailcourse'),
+    url(r'^mail/students=(?P<student_ids>\d+)$', views.mail_students, name='mailstudents'),
     url(r'^course/(?P<course_id>\d+)/gradingtable/$', views.gradingtable, name='gradingtable'),
     url(r'^course/(?P<course_id>\d+)/archive/$', views.coursearchive, name='coursearchive'),
-    url(r'^course/(?P<course_id>\d+)/mail2all/$', views.mail2all, name='mail2all'),
     url(r'^jobs/$', api.jobs, name='jobs'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', api.download, name='download_secret'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', api.download, name='download'),
@@ -51,4 +52,4 @@ def show_urls(urllist, depth=0): # pragma: no cover
         print("  " * depth, entry.regex.pattern)
         if hasattr(entry, 'url_patterns'):
             show_urls(entry.url_patterns, depth + 1)
-#show_urls(urls.urlpatterns)
+#show_urls(urlpatterns)

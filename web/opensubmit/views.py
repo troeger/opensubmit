@@ -377,29 +377,86 @@ def _replace_placeholders(text, user, course):
 
 @login_required
 @staff_member_required
-def mail2all(request, course_id):
+def mail_course(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
-    # Re-compute list of recipients on every request, for latest updates
-    students = User.objects.filter(profile__courses__pk=course_id)
+    addresses = User.objects.filter(profile__courses__pk=course_id).values_list('email', flat=True)
+    return mail_form(request, addresses)
+
+@login_required
+@staff_member_required
+def mail_form(request, addresses):
+    return render(request, 'mail_form.html', {'maillist': addresses, 'mailform': MailForm()})
+
+@login_required
+@staff_member_required
+def mail_preview(request):
+    if request.method == "POST" and 'subject' in request.POST and 'message' in request.POST:
+        preview_subject = _replace_placeholders(
+            request.POST['subject'], students[0], course)
+                preview_message = _replace_placeholders(
+                    request.POST['message'], students[0], course)
+                return render(request, 'mail_preview.html',
+                              {'preview_subject': preview_subject,
+                               'preview_message': preview_message,
+                               'preview_from': request.user.email,
+                               'recv_count': students.count(),
+                               'course': course})
+
+
+
+
+
+    return render(request, 'mail_form.html', {'maillist': addresses, 'mailform': MailForm()})
+
+
+
+    request.session['students'] = ','.join(str(s) for s in students)
+
+
     maillist = ','.join(students.values_list('email', flat=True))
 
-    if request.method == "POST":
+
+
+
+
+    if request.method == "GET":
+        if course_id and not students:
+            course = get_object_or_404(Course, pk=course_id)
+            students = User.objects.filter(profile__courses__pk=course_id).values_list('pk', flat=True)
+        elif not course_id and students:
+
+
+
+@login_required
+@staff_member_required
+def mail(request, course_id=None, students=None):
+
+    if request.method == "GET":
+        if course_id and not students:
+            course = get_object_or_404(Course, pk=course_id)
+            students = User.objects.filter(profile__courses__pk=course_id).values_list('pk', flat=True)
+        elif not course_id and students:
+
+        request.session['students'] = ','.join(str(s) for s in students)
+
+    if request.method == "POST" and "students" in request.session:
+        students = User.objects.filter(pk__in=request.session['students'].split(','))
         if 'subject' in request.POST and 'message' in request.POST:
-            # Initial form submission, render preview
-            request.session['subject'] = request.POST['subject']
-            request.session['message'] = request.POST['message']
-            student = students[0]
-            preview_subject = _replace_placeholders(
-                request.POST['subject'], student, course)
-            preview_message = _replace_placeholders(
-                request.POST['message'], student, course)
-            return render(request, 'mail_preview.html',
-                          {'preview_subject': preview_subject,
-                           'preview_message': preview_message,
-                           'preview_from': request.user.email,
-                           'course': course})
+                # Initial form submission, render preview
+                request.session['subject'] = request.POST['subject']
+                request.session['message'] = request.POST['message']
+                preview_subject = _replace_placeholders(
+                    request.POST['subject'], students[0], course)
+                preview_message = _replace_placeholders(
+                    request.POST['message'], students[0], course)
+                return render(request, 'mail_preview.html',
+                              {'preview_subject': preview_subject,
+                               'preview_message': preview_message,
+                               'preview_from': request.user.email,
+                               'recv_count': students.count(),
+                               'course': course})
         elif 'subject' in request.session and 'message' in request.session:
-            # Positive preview, send it
+                # Positive preview, send it
             data = [(_replace_placeholders(request.session['subject'], s, course),
                      _replace_placeholders(
                          request.session['message'], s, course),
@@ -412,6 +469,7 @@ def mail2all(request, course_id):
 
     # show empty form in all other cases
     mailform = MailForm()
+    maillist = ','.join(students.values_list('email', flat=True))
     return render(request, 'mail_form.html', {'maillist': maillist, 'course': course, 'mailform': mailform})
 
 

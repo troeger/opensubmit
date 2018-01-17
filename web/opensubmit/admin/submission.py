@@ -4,6 +4,7 @@ from django.contrib.admin import SimpleListFilter, ModelAdmin
 from django.utils.translation import ugettext_lazy as _
 from django import forms
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
@@ -109,7 +110,7 @@ class SubmissionAdmin(ModelAdmin):
     list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', 'grading_status_text', 'has_grading_notes']
     list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    actions = ['downloadArchiveAction', 'setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'notifyAction', 'getPerformanceResultsAction']
+    actions = ['downloadArchiveAction', 'setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'sendMailAction', 'notifyAction', 'getPerformanceResultsAction']
     search_fields = ['=id', '=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
@@ -293,6 +294,13 @@ class SubmissionAdmin(ModelAdmin):
         else:
             self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
     closeAndNotifyAction.short_description = "Close + send student notification for selected submissions"
+
+    def sendMailAction(self, request, queryset):
+        receivers = []
+        for subm in queryset:
+            receivers += [author.pk for author in subm.authors.all()]
+        return redirect('mail2students', course_id=None, students=receivers)
+    sendMailAction.short_description = "Send eMail to authors of selected submissions"
 
     def downloadArchiveAction(self, request, queryset):
         '''

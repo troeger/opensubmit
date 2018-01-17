@@ -21,7 +21,7 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>eMail - {{ course }}</h1>
+    <h1>eMail Preview</h1>
 </div>
 
 <p>Example:</p>
@@ -47,7 +47,7 @@
 
 <form class="form" role="form" action="." method="post">
 	{% csrf_token %}
-	<input type="submit" href="." value="Send"></input>
+	<input type="submit" href="." value="Send to {{ recv_count }} recipients"></input>
 
 </form>
 
