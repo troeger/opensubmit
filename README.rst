@@ -8,6 +8,10 @@
      :target: https://pyup.io/repos/github/troeger/opensubmit/
      :alt: Updates
 
+.. image:: https://pyup.io/repos/github/troeger/opensubmit/python-3-shield.svg
+     :target: https://pyup.io/repos/github/troeger/opensubmit/
+     :alt: Python 3
+
 The OpenSubmit project
 ======================
 
