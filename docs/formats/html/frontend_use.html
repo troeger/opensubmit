@@ -87,7 +87,8 @@
 <li><a class="reference internal" href="#setting-your-user-details">Setting your user details</a></li>
 <li><a class="reference internal" href="#choosing-your-courses">Choosing your courses</a></li>
 <li><a class="reference internal" href="#open-assignments">Open assignments</a></li>
-<li><a class="reference internal" href="#active-submissions">Active submissions</a></li>
+<li><a class="reference internal" href="#in-progress">In Progress</a></li>
+<li><a class="reference internal" href="#finished">Finished</a></li>
 <li><a class="reference internal" href="#test-machines">Test Machines</a></li>
 </ul>
 </li>
@@ -129,18 +130,18 @@
 <div class="section" id="login">
 <h2>Login<a class="headerlink" href="#login" title="Permalink to this headline">¶</a></h2>
 <p>The URL of the OpenSubmit installation was provided by your course responsible. Depending on the configuration, you see one or more options for login. Pick the most appropriate to enter the Dashboard.</p>
-<a class="reference internal image-reference" href="_images/ui_student.png"><img alt="_images/ui_student.png" src="_images/ui_student.png" style="width: 678.0px; height: 467.5px;" /></a>
 <p>The dashboard is divided into three major sections:</p>
 <dl class="docutils">
-<dt>Open Assignments</dt>
-<dd>All assignments that you can submit solutions for.</dd>
-<dt>Active Submissions</dt>
-<dd>All solutions you already submitted.</dd>
-<dt>Archive</dt>
-<dd>All solutions you have withdrawn.</dd>
+<dt>Open</dt>
+<dd>Assignments that you can submit solutions for.</dd>
+<dt>In progress</dt>
+<dd>Solutions that are currently validated or graded.</dd>
+<dt>Finished</dt>
+<dd>Past solutions and assignments.</dd>
 </dl>
 <p>The menu on top further allows you to:</p>
 <ul class="simple">
+<li>See a list of withdrawn solutions in the archive.</li>
 <li>Activate the courses you are interested in.</li>
 <li>Adjust your user settings.</li>
 </ul>
@@ -165,22 +166,20 @@
 <dd>A link to more information about the course where this assignment is offered.</dd>
 <dt>Assignment</dt>
 <dd>A link to the particular assignment description.</dd>
+<dt>Deadline</dt>
+<dd>The deadline for this assignment. When the deadline has passed, you can no longer submit a new solution.</dd>
 <dt>Group Work</dt>
 <dd>The information if the submission of a single solution as group work is allowed, with the maximum number of authors in brackets. One student of the group is submitting the solution and specifies the other group members. OpenSubmit allows you to change your student group for every assignment, although this might not be allowed in your course. Check the assignment description. All group members have the same rights for the submission: Seing the status, getting notification mails, and withdrawing it before the deadline.</dd>
 <dt>Graded</dt>
 <dd>The information if this is a graded assignment.</dd>
-<dt>Deadline</dt>
-<dd>The deadline for this assignment. When the deadline has passed, you can no longer submit a new solution.</dd>
-<dt>Time Left</dt>
-<dd>The time left until the given deadline.</dd>
 </dl>
 <p>The <cite>New Submission</cite> button brings you to a separate screen where you can upload your assignment solution, either for yourself or your group of students.</p>
 <p>The <cite>Notes</cite> fields allows you to drop additional information that is not graded or validated, but still shown to the correctors.</p>
 <p>Your assignment description gives you all details about the kind of upload you have to provide. Normally, this should be a single file (source code, PDF file, DOCX file, image, …) or a ZIP / TGZ archive of multiple files.</p>
 <p>OpenSubmit assignments often have specific and detailed requirements for what files to submit and how they have to be named. Make sure you follow the course guidelines and the assignment description appropriately.</p>
 </div>
-<div class="section" id="active-submissions">
-<h2>Active submissions<a class="headerlink" href="#active-submissions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="in-progress">
+<h2>In Progress<a class="headerlink" href="#in-progress" title="Permalink to this headline">¶</a></h2>
 <p>Every uploaded file or archive is shown in the list of active submissions. The related assignments are no longer shown in the list of open assignments.</p>
 <p>The state of every active submission is shown on the dashboard. It may be:</p>
 <dl class="docutils">
@@ -190,13 +189,20 @@
 <dd>Your solution is queued for automated validation on a test machine.</dd>
 <dt>Validation failed</dt>
 <dd>The automated validation failed. You need to act before the deadline.</dd>
-<dt>Done</dt>
-<dd>All work for this submission is done. In case of graded assignments, the grade was given and stored in the system.</dd>
 </dl>
 <p>You get an eMail when the state of your active submission changes, so you don’t need to check the web pages manually.</p>
 <p>The ‘Details’ button brings you to a separate page with all the neccessary information about your submission. This includes all information visible for the correctors (notes, uploaded file, declared authors), the results of the automated validation on the test machine, and eventually your final grade for this assignment.</p>
 <p>When the assignment has a deadline, you are free to withdraw your submitted solution <em>as often as you want</em> before the deadline. The idea here is that you can use the automated validation in a trial-and-error fashion.</p>
-<p>Withdrawn submissions are not considered for grading. They are still listed in the <cite>Archive</cite> section of the Dashboard so that you can access your earlier solutions.</p>
+<p>Withdrawn submissions are not considered for grading. They are still listed on the <cite>Archive</cite> page so that you can access your earlier solutions.</p>
+</div>
+<div class="section" id="finished">
+<h2>Finished<a class="headerlink" href="#finished" title="Permalink to this headline">¶</a></h2>
+<p>This section shows you finished work that no longer needs your active participation. This includes:</p>
+<ul class="simple">
+<li>Submission that were successfully validated and graded.</li>
+<li>Submissions for non-graded assignments that were successfully validated.</li>
+<li>Assignments for which you never submitted a valid solution.</li>
+</ul>
 </div>
 <div class="section" id="test-machines">
 <h2>Test Machines<a class="headerlink" href="#test-machines" title="Permalink to this headline">¶</a></h2>

@@ -131,7 +131,7 @@ class InternalJob():
             return
         # no unhandled exception during the execution of the validator
         if not self.result_sent:
-            logger.debug("Validation script forgot result sending.")
+            logger.debug("Validation script forgot result sending, assuming success.")
             self.send_pass_result()
         # roll back
         sys.path = old_path

@@ -13,7 +13,6 @@ from django.core.mail import send_mass_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelform_factory
@@ -73,6 +72,13 @@ def courses(request):
 
 
 @login_required
+def archive(request):
+    archived = request.user.authored.all().exclude(assignment__course__active=False).filter(
+        state=Submission.WITHDRAWN).order_by('-created')
+    return render(request, 'archive.html', {'archived': archived})
+
+
+@login_required
 def dashboard(request):
     # Fix database on lower levels for the current user
     db_fixes(request.user)
@@ -96,24 +102,42 @@ def dashboard(request):
                 # so we should not crash the app if that goes wrong
                 pass
 
-    # This is the first view than can check if the user information is complete.
+    # This is the first view than can check
+    # if the user information is complete.
     # If not, then we drop annyoing popups until he gives up.
-    settingsform=SettingsForm(model_to_dict(request.user), instance=request.user)
+    settingsform = SettingsForm(model_to_dict(
+        request.user), instance=request.user)
     if not settingsform.is_valid():
         messages.error(request, "Your user settings are incomplete.")
 
-    # render dashboard
-    authored = request.user.authored.all().exclude(assignment__course__active=False).exclude(state=Submission.WITHDRAWN).order_by('-created')
-    archived = request.user.authored.all().exclude(assignment__course__active=False).filter(state=Submission.WITHDRAWN).order_by('-created')
+    # Student submissions under validation / grading
+    subs_in_progress = request.user.authored.all(). \
+        exclude(assignment__course__active=False). \
+        exclude(state=Submission.RECEIVED). \
+        exclude(state=Submission.WITHDRAWN). \
+        exclude(state=Submission.CLOSED). \
+        exclude(state=Submission.CLOSED_TEST_FULL_PENDING). \
+        order_by('-created')
+
+    # Closed student submissions, graded ones first
+    subs_finished = request.user.authored.all(). \
+        exclude(assignment__course__active=False). \
+        filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING]). \
+        order_by('-assignment__gradingScheme', '-created')
+
+    # Assignments the student missed
+    assign_missed = request.user.profile.gone_assignments()
+
     username = request.user.get_full_name() + " <" + request.user.email + ">"
     assignments = request.user.profile.open_assignments()
     return render(request, 'dashboard.html', {
-        'authored': authored,
-        'archived': archived,
+        'subs_in_progress': subs_in_progress,
+        'subs_finished': subs_finished,
         'user': request.user,
         'username': username,
-        'courses' : request.user.profile.user_courses(),
+        'courses': request.user.profile.user_courses(),
         'assignments': assignments,
+        'assign_missed': assign_missed,
         'machines': TestMachine.objects.filter(enabled=True),
         'today': datetime.now()}
     )
@@ -122,7 +146,8 @@ def dashboard(request):
 @login_required
 def details(request, subm_id):
     subm = get_object_or_404(Submission, pk=subm_id)
-    if not (request.user in subm.authors.all() or request.user.is_staff):               # only authors should be able to look into submission details
+    # only authors should be able to look into submission details
+    if not (request.user in subm.authors.all() or request.user.is_staff):
         raise PermissionDenied()
     return render(request, 'details.html', {
         'submission': subm}
@@ -135,7 +160,8 @@ def new(request, ass_id):
 
     # Check whether submissions are allowed.
     if not ass.can_create_submission(user=request.user):
-        raise PermissionDenied("You are not allowed to create a submission for this assignment")
+        raise PermissionDenied(
+            "You are not allowed to create a submission for this assignment")
 
     # get submission form according to the assignment type
     SubmissionForm = getSubmissionForm(ass)
@@ -177,7 +203,8 @@ def new(request, ass_id):
                     submission.save()
             return redirect('dashboard')
         else:
-            messages.error(request, "Please correct your submission information.")
+            messages.error(
+                request, "Please correct your submission information.")
     else:
         submissionForm = SubmissionForm(request.user, ass)
     return render(request, 'new.html', {'submissionForm': submissionForm,
@@ -221,6 +248,7 @@ def update(request, subm_id):
     return render(request, 'update.html', {'submissionFileUpdateForm': updateForm,
                                            'submission': submission})
 
+
 @login_required
 @staff_member_required
 def mergeusers(request):
@@ -228,21 +256,24 @@ def mergeusers(request):
         Offers an intermediate admin view to merge existing users.
     '''
     if request.method == 'POST':
-        primary=get_object_or_404(User, pk=request.POST['primary_id'])
-        secondary=get_object_or_404(User, pk=request.POST['secondary_id'])
+        primary = get_object_or_404(User, pk=request.POST['primary_id'])
+        secondary = get_object_or_404(User, pk=request.POST['secondary_id'])
         try:
             move_user_data(primary, secondary)
-            messages.info(request, 'Submissions moved to user %u.'%(primary.pk))
+            messages.info(request, 'Submissions moved to user %u.' %
+                          (primary.pk))
         except:
-            messages.error(request, 'Error during data migration, nothing changed.')
+            messages.error(
+                request, 'Error during data migration, nothing changed.')
             return redirect('admin:index')
-        messages.info(request, 'User %u deleted.'%(secondary.pk))
+        messages.info(request, 'User %u deleted.' % (secondary.pk))
         secondary.delete()
         return redirect('admin:index')
-    primary=get_object_or_404(User, pk=request.GET['primary_id'])
-    secondary=get_object_or_404(User, pk=request.GET['secondary_id'])
+    primary = get_object_or_404(User, pk=request.GET['primary_id'])
+    secondary = get_object_or_404(User, pk=request.GET['secondary_id'])
     # Determine data to be migrated
     return render(request, 'mergeusers.html', {'primary': primary, 'secondary': secondary})
+
 
 @login_required
 @staff_member_required
@@ -252,22 +283,26 @@ def preview(request, subm_id):
         This is only intended for the grading procedure, so staff status is needed.
     '''
     submission = get_object_or_404(Submission, pk=subm_id)
-    return render(request, 'file_preview.html', {'submission': submission} )
+    return render(request, 'file_preview.html', {'submission': submission})
+
 
 @login_required
 @staff_member_required
 def perftable(request, ass_id):
     assignment = get_object_or_404(Assignment, pk=ass_id)
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="perf_assignment%u.csv"'%assignment.pk
+    response['Content-Disposition'] = 'attachment; filename="perf_assignment%u.csv"' % assignment.pk
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Assignment','Submission ID','Authors','Performance Data'])
+    writer.writerow(['Assignment', 'Submission ID',
+                     'Authors', 'Performance Data'])
     for sub in assignment.submissions.all():
         result = sub.get_fulltest_result()
         if result:
-            row=[str(sub.assignment), str(sub.pk), ", ".join(sub.authors.values_list('username', flat=True).order_by('username')), str(result.perf_data)]
+            row = [str(sub.assignment), str(sub.pk), ", ".join(sub.authors.values_list(
+                'username', flat=True).order_by('username')), str(result.perf_data)]
             writer.writerow(row)
     return response
+
 
 @login_required
 @staff_member_required
@@ -277,6 +312,7 @@ def duplicates(request, ass_id):
         'duplicates': ass.duplicate_files(),
         'assignment': ass
     })
+
 
 @login_required
 @staff_member_required
@@ -296,15 +332,17 @@ def gradingtable(request, course_id):
                 else:
                     author_submissions[author][assignment.pk] = submission
     resulttable = []
-    for author, ass2sub in list(author_submissions.items()): 
+    for author, ass2sub in list(author_submissions.items()):
         columns = []
         numpassed = 0
         numgraded = 0
         pointsum = 0
         columns.append(author.last_name if author.last_name else '')
         columns.append(author.first_name if author.first_name else '')
-        columns.append(author.profile.student_id if author.profile.student_id else '')
-        columns.append(author.profile.study_program if author.profile.study_program else '')
+        columns.append(
+            author.profile.student_id if author.profile.student_id else '')
+        columns.append(
+            author.profile.study_program if author.profile.study_program else '')
         # Process all assignments in the table order, once per author (loop above)
         for assignment in assignments:
             if assignment.pk in ass2sub:
@@ -330,17 +368,19 @@ def gradingtable(request, course_id):
         resulttable.append(columns)
     return render(request, 'gradingtable.html', {'course': course, 'assignments': assignments, 'resulttable': sorted(resulttable)})
 
+
 def _replace_placeholders(text, user, course):
     return text.replace("#FIRSTNAME#", user.first_name.strip()) \
                .replace("#LASTNAME#", user.last_name.strip())   \
                .replace("#COURSENAME#", course.title.strip())
+
 
 @login_required
 @staff_member_required
 def mail2all(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     # Re-compute list of recipients on every request, for latest updates
-    students = User.objects.filter(profile__courses__pk = course_id)
+    students = User.objects.filter(profile__courses__pk=course_id)
     maillist = ','.join(students.values_list('email', flat=True))
 
     if request.method == "POST":
@@ -349,26 +389,31 @@ def mail2all(request, course_id):
             request.session['subject'] = request.POST['subject']
             request.session['message'] = request.POST['message']
             student = students[0]
-            preview_subject = _replace_placeholders(request.POST['subject'], student, course)
-            preview_message = _replace_placeholders(request.POST['message'], student, course)
+            preview_subject = _replace_placeholders(
+                request.POST['subject'], student, course)
+            preview_message = _replace_placeholders(
+                request.POST['message'], student, course)
             return render(request, 'mail_preview.html',
-                            {'preview_subject': preview_subject,
-                             'preview_message': preview_message,
-                             'preview_from': request.user.email,
-                             'course': course})
+                          {'preview_subject': preview_subject,
+                           'preview_message': preview_message,
+                           'preview_from': request.user.email,
+                           'course': course})
         elif 'subject' in request.session and 'message' in request.session:
             # Positive preview, send it
             data = [(_replace_placeholders(request.session['subject'], s, course),
-                     _replace_placeholders(request.session['message'], s, course),
+                     _replace_placeholders(
+                         request.session['message'], s, course),
                      request.user.email,
                      [s.email]) for s in students]
             sent = send_mass_mail(data, fail_silently=True)
-            messages.add_message(request, messages.INFO, '%u message(s) sent.'%sent)
+            messages.add_message(request, messages.INFO,
+                                 '%u message(s) sent.' % sent)
             return redirect('teacher:index')
 
     # show empty form in all other cases
     mailform = MailForm()
-    return render(request, 'mail_form.html', {'maillist': maillist, 'course': course, 'mailform': mailform })
+    return render(request, 'mail_form.html', {'maillist': maillist, 'course': course, 'mailform': mailform})
+
 
 @login_required
 @staff_member_required
@@ -384,14 +429,15 @@ def coursearchive(request, course_id):
     assignments = course.assignments.order_by('title')
     for ass in assignments:
         ass.add_to_zipfile(z)
-        subs=ass.submissions.all().order_by('submitter')
+        subs = ass.submissions.all().order_by('submitter')
         for sub in subs:
             sub.add_to_zipfile(z)
 
     z.close()
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
-    response = HttpResponse(output, content_type="application/x-zip-compressed")
+    response = HttpResponse(
+        output, content_type="application/x-zip-compressed")
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % course.directory_name()
     return response
 
@@ -415,27 +461,31 @@ def assarchive(request, ass_id):
     z.close()
     # go back to start in ZIP file so that Django can deliver it
     output.seek(0)
-    response = HttpResponse(output, content_type="application/x-zip-compressed")
+    response = HttpResponse(
+        output, content_type="application/x-zip-compressed")
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass.directory_name()
     return response
+
 
 @login_required
 def machine(request, machine_id):
     machine = get_object_or_404(TestMachine, pk=machine_id)
     try:
-        config=json.loads(machine.config)
+        config = json.loads(machine.config)
     except:
         config = []
     queue = Submission.pending_student_tests.all()
     additional = len(Submission.pending_full_tests.all())
     return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
 
+
 @login_required
 def withdraw(request, subm_id):
     # submission should only be deletable by their creators
     submission = get_object_or_404(Submission, pk=subm_id)
     if not submission.can_withdraw(user=request.user):
-        raise PermissionDenied("Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
+        raise PermissionDenied(
+            "Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
     if "confirm" in request.POST:
         submission.state = Submission.WITHDRAWN
         submission.save()
@@ -444,28 +494,31 @@ def withdraw(request, subm_id):
     else:
         return render(request, 'withdraw.html', {'submission': submission})
 
+
 @lti_provider(consumer_lookup=lti_secret, site_url=MAIN_URL)
 @require_POST
 def lti(request, post_params, consumer_key, *args, **kwargs):
     '''
         Entry point for LTI consumers.
 
-        This view is protected by the BLTI package decorator, which performs all the relevant OAuth signature checking. It also makes
-        sure that the LTI consumer key and secret were ok. The latter ones are supposed to be configured in the admin interface.
+        This view is protected by the BLTI package decorator,
+        which performs all the relevant OAuth signature checking.
+        It also makes sure that the LTI consumer key and secret were ok.
+        The latter ones are supposed to be configured in the admin interface.
 
         We can now trust on the provided data to be from the LTI provider.
 
-        If everything worked out, we store the information the session for the Python Social passthrough provider, which is performing
+        If everything worked out, we store the information the session for
+        the Python Social passthrough provider, which is performing
         user creation and database storage.
     '''
-    data={}
-    data['ltikey']=post_params.get('oauth_consumer_key')
+    data = {}
+    data['ltikey'] = post_params.get('oauth_consumer_key')
     # None of them is mandatory
-    data['id']=post_params.get('user_id', None)
-    data['username']=post_params.get('custom_username', None)
-    data['last_name']=post_params.get('lis_person_name_family', None)
-    data['email']=post_params.get('lis_person_contact_email_primary', None)
-    data['first_name']=post_params.get('lis_person_name_given', None)
-    request.session[passthrough.SESSION_VAR]=data
-    return redirect(reverse('social:begin',args=['lti']))
-
+    data['id'] = post_params.get('user_id', None)
+    data['username'] = post_params.get('custom_username', None)
+    data['last_name'] = post_params.get('lis_person_name_family', None)
+    data['email'] = post_params.get('lis_person_contact_email_primary', None)
+    data['first_name'] = post_params.get('lis_person_name_given', None)
+    request.session[passthrough.SESSION_VAR] = data
+    return redirect(reverse('social:begin', args=['lti']))

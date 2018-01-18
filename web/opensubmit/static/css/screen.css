@@ -2,14 +2,15 @@ section {
     padding-top: 40px;
 }
 
-.brand {
-    color: white !important;
-}
-
 .center-vertical {
     text-align: center;
     vertical-align: middle;
 }
+
+.navbar-header>img {
+    padding: 6px 5px;
+}
+
 
 .vertical-text {
     transform: rotate(90deg);

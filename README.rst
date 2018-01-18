@@ -4,6 +4,10 @@
 .. image:: https://scrutinizer-ci.com/g/troeger/opensubmit/badges/quality-score.png?b=master
     :target: https://scrutinizer-ci.com/g/troeger/opensubmit/?branch=master
 
+.. image:: https://pyup.io/repos/github/troeger/opensubmit/shield.svg
+     :target: https://pyup.io/repos/github/troeger/opensubmit/
+     :alt: Updates
+
 The OpenSubmit project
 ======================
 

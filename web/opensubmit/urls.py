@@ -10,6 +10,7 @@ from opensubmit import views, admin, api
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^logout/$', views.logout, name='logout'),
+    url(r'^archive/$', views.archive, name='archive'),
     url(r'^dashboard/$', views.dashboard, name='dashboard'),
     url(r'^details/(?P<subm_id>\d+)/$', views.details, name='details'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', views.new, name='new'),

@@ -14,22 +14,20 @@ Login
 
 The URL of the OpenSubmit installation was provided by your course responsible. Depending on the configuration, you see one or more options for login. Pick the most appropriate to enter the Dashboard.
 
-.. image:: files/ui_student.png    
-   :scale: 50%
-
 The dashboard is divided into three major sections:
 
-Open Assignments
-    All assignments that you can submit solutions for.
+Open
+    Assignments that you can submit solutions for.
 
-Active Submissions
-    All solutions you already submitted.
+In progress
+    Solutions that are currently validated or graded.
 
-Archive
-    All solutions you have withdrawn.
+Finished
+    Past solutions and assignments.
 
 The menu on top further allows you to:
 
+* See a list of withdrawn solutions in the archive.
 * Activate the courses you are interested in.
 * Adjust your user settings.
 
@@ -68,17 +66,14 @@ Course
 Assignment
     A link to the particular assignment description.
 
+Deadline
+    The deadline for this assignment. When the deadline has passed, you can no longer submit a new solution.
+
 Group Work
     The information if the submission of a single solution as group work is allowed, with the maximum number of authors in brackets. One student of the group is submitting the solution and specifies the other group members. OpenSubmit allows you to change your student group for every assignment, although this might not be allowed in your course. Check the assignment description. All group members have the same rights for the submission: Seing the status, getting notification mails, and withdrawing it before the deadline.
 
 Graded
     The information if this is a graded assignment.
-
-Deadline
-    The deadline for this assignment. When the deadline has passed, you can no longer submit a new solution.
-
-Time Left
-    The time left until the given deadline.
 
 The `New Submission` button brings you to a separate screen where you can upload your assignment solution, either for yourself or your group of students.
 
@@ -88,8 +83,8 @@ Your assignment description gives you all details about the kind of upload you h
 
 OpenSubmit assignments often have specific and detailed requirements for what files to submit and how they have to be named. Make sure you follow the course guidelines and the assignment description appropriately.
 
-Active submissions
-******************
+In Progress
+***********
 
 Every uploaded file or archive is shown in the list of active submissions. The related assignments are no longer shown in the list of open assignments.
 
@@ -104,16 +99,23 @@ Waiting for validation test
 Validation failed
     The automated validation failed. You need to act before the deadline.
 
-Done
-    All work for this submission is done. In case of graded assignments, the grade was given and stored in the system. 
-
 You get an eMail when the state of your active submission changes, so you don't need to check the web pages manually.
 
 The 'Details' button brings you to a separate page with all the neccessary information about your submission. This includes all information visible for the correctors (notes, uploaded file, declared authors), the results of the automated validation on the test machine, and eventually your final grade for this assignment.
 
 When the assignment has a deadline, you are free to withdraw your submitted solution *as often as you want* before the deadline. The idea here is that you can use the automated validation in a trial-and-error fashion. 
 
-Withdrawn submissions are not considered for grading. They are still listed in the `Archive` section of the Dashboard so that you can access your earlier solutions.
+Withdrawn submissions are not considered for grading. They are still listed on the `Archive` page so that you can access your earlier solutions.
+
+Finished
+********
+
+This section shows you finished work that no longer needs your active participation. This includes:
+
+* Submission that were successfully validated and graded.
+* Submissions for non-graded assignments that were successfully validated.
+* Assignments for which you never submitted a valid solution.
+
 
 Test Machines
 *************

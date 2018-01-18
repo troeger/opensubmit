@@ -68,14 +68,11 @@ class RunningProgram(pexpect.spawn):
         """Get the exit status of the program execution.
 
         Returns:
-            int: Exit status as reported by the operating system, or -1 if it is not available.
+            int: Exit status as reported by the operating system,
+                 or None if it is not available.
         """
         logger.debug("Exit status is {0}".format(self._spawn.exitstatus))
-        if self._spawn.exitstatus is None:
-            logger.debug("Translating non-available exit code to -1.")
-            return -1
-        else:
-            return self._spawn.exitstatus
+        return self._spawn.exitstatus
 
     def __init__(self, job, name, arguments=[], timeout=30):
         self.job = job
@@ -106,7 +103,7 @@ class RunningProgram(pexpect.spawn):
             raise NestedException(
                 instance=self, real_exception=e, output=self.get_output())
 
-    def expect(self, pattern, timeout=-1):
+    def expect_output(self, pattern, timeout=-1):
         """Wait until the running program performs some given output, or terminates.
 
         Args:
@@ -189,7 +186,7 @@ class RunningProgram(pexpect.spawn):
             raise NestedException(
                 instance=self, real_exception=e, output=self.get_output())
 
-    def expect_exit_status(self, exit_status):
+    def expect_exitstatus(self, exit_status):
         """Wait for the running program to finish and expect some exit status.
 
         Args:
@@ -211,3 +208,15 @@ class RunningProgram(pexpect.spawn):
                 expected=exit_status,
                 got=self._spawn.exitstatus,
                 output=self.get_output())
+
+    def expect_exit_status(self, exit_status):
+        """
+        Deprecated. Use expect_exitstatus() instead.
+        """
+        return self.expect_exitstatus(exit_status)
+
+    def expect(self, pattern, timeout=-1):
+        """
+        Deprecated. Use expect_output() instead.
+        """
+        return self.expect_output(pattern, timeout)
