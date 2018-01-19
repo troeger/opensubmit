@@ -92,16 +92,15 @@ class RunningProgram(pexpect.spawn):
 
         self._logfile = tempfile.NamedTemporaryFile()
         logger.debug("Keeping console I/O in " + self._logfile.name)
-
         try:
             self._spawn = pexpect.spawn(name, arguments,
                                         logfile=self._logfile,
                                         timeout=timeout,
-                                        cwd=self.job.working_dir)
+                                        cwd=self.job.working_dir,
+                                        echo=False)
         except Exception as e:
             logger.debug("Spawning failed: " + str(e))
-            raise NestedException(
-                instance=self, real_exception=e, output=self.get_output())
+            raise NestedException(instance=self, real_exception=e, output=self.get_output())
 
     def expect_output(self, pattern, timeout=-1):
         """Wait until the running program performs some given output, or terminates.
@@ -121,8 +120,7 @@ class RunningProgram(pexpect.spawn):
             TerminationException: The program terminated before producing the output.
             NestedException: An internal problem occured while waiting for the output.
         """
-        logger.debug("Expecting output '{0}' from '{1}'".format(
-            pattern, self.name))
+        logger.debug("Expecting output '{0}' from '{1}'".format(pattern, self.name))
         try:
             return self._spawn.expect(pattern, timeout)
         except pexpect.exceptions.EOF as e:
@@ -133,8 +131,7 @@ class RunningProgram(pexpect.spawn):
             raise TimeoutException(instance=self, real_exception=e, output=self.get_output())
         except Exception as e:
             logger.debug("Expecting output failed: " + str(e))
-            raise NestedException(
-                instance=self, real_exception=e, output=self.get_output())
+            raise NestedException(instance=self, real_exception=e, output=self.get_output())
 
     def sendline(self, text):
         """Sends an input line to the running program, including os.linesep.
@@ -157,8 +154,7 @@ class RunningProgram(pexpect.spawn):
             raise TimeoutException(instance=self, real_exception=e, output=self.get_output())
         except Exception as e:
             logger.debug("Sending input failed: " + str(e))
-            raise NestedException(
-                instance=self, real_exception=e, output=self.get_output())
+            raise NestedException(instance=self, real_exception=e, output=self.get_output())
 
     def expect_end(self):
         """Wait for the running program to finish.
@@ -183,8 +179,7 @@ class RunningProgram(pexpect.spawn):
             raise TimeoutException(instance=self, real_exception=e, output=self.get_output())
         except Exception as e:
             logger.debug("Waiting for expected program end failed.")
-            raise NestedException(
-                instance=self, real_exception=e, output=self.get_output())
+            raise NestedException(instance=self, real_exception=e, output=self.get_output())
 
     def expect_exitstatus(self, exit_status):
         """Wait for the running program to finish and expect some exit status.
