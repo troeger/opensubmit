@@ -418,7 +418,7 @@
         <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Wrong output: &quot;</span> <span class="o">+</span> <span class="n">output</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
-<p>The <code class="docutils literal"><span class="pre">validator.py</span></code> file <em>must contain a function ``validate(job)``</em> that is called by OpenSubmit when a student submission should be validated. In the example above, this function performs the following steps for testing:</p>
+<p>The <code class="docutils literal"><span class="pre">validator.py</span></code> file must contain a function <code class="docutils literal"><span class="pre">validate(job)</span></code> that is called by OpenSubmit when a student submission should be validated. In the example above, this function performs the following steps for testing:</p>
 <ul class="simple">
 <li>Line 1: The validator function is called when all student files (and all files from the validator archive) are unpacked in a temporary working directory on the test machine. In case of name conflicts, the validator files always overwrite the student files.</li>
 <li>Line 2: The <em>make</em> tool is executed in the working directory with <code class="xref py py-meth docutils literal"><span class="pre">run_make()</span></code>. This step is declared to be mandatory, so the method will throw an exception if <em>make</em> fails.</li>
@@ -481,8 +481,8 @@
 <li>Line 15: The arguments can be handed over to the program through the second parameter of the <a class="reference internal" href="#opensubmitexec.job.Job.run_program" title="opensubmitexec.job.Job.run_program"><code class="xref py py-meth docutils literal"><span class="pre">run_program()</span></code></a> method. The former method returns the exit code as well as the output of the program.</li>
 <li>Line 16: It is checked if the created output equals the expected output.</li>
 <li>Line 17: If this is not the case an appropriate negative result is sent to the student and teacher with <a class="reference internal" href="#opensubmitexec.job.Job.send_fail_result" title="opensubmitexec.job.Job.send_fail_result"><code class="xref py py-meth docutils literal"><span class="pre">send_fail_result()</span></code></a></li>
-<li>Line 18: After a negative result is sent there is no need for traversing the rest of the test cases so the <cite>validate(job)</cite>-function can be left.</li>
-<li>Line 19: After the traversion of all test cases the student and teacher are informed that everything went well with <a class="reference internal" href="#opensubmitexec.job.Job.send_pass_result" title="opensubmitexec.job.Job.send_pass_result"><code class="xref py py-meth docutils literal"><span class="pre">send_pass_result()</span></code></a></li>
+<li>Line 18: After a negative result is sent there is no need for traversing the rest of the test cases, so the <cite>validate(job)</cite> function can be left.</li>
+<li>Line 19: After the traversal of all test cases, the student and teacher are informed that everything went well with <a class="reference internal" href="#opensubmitexec.job.Job.send_pass_result" title="opensubmitexec.job.Job.send_pass_result"><code class="xref py py-meth docutils literal"><span class="pre">send_pass_result()</span></code></a></li>
 </ul>
 <p>The following example shows a validator for a C program that reads an positive integer from standard input und prints the corresponding binary number.</p>
 <div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -507,7 +507,7 @@
 20
 21
 22
-23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opensubmitexec.exceptions</span> <span class="k">import</span> <span class="n">TimeoutException</span>
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opensubmitexec.exceptions</span> <span class="k">import</span> <span class="n">TerminationException</span>
 
 <span class="n">test_cases</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">],</span>
@@ -524,8 +524,8 @@
         <span class="n">running</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">std_input</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">running</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">expected_output</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">TimeoutException</span><span class="p">:</span>
-            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Your output took to long!&quot;</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TerminationException</span><span class="p">:</span>
+            <span class="n">job</span><span class="o">.</span><span class="n">send_fail_result</span><span class="p">(</span><span class="s2">&quot;Arrgh, a problem: We expected </span><span class="si">{0}</span><span class="s2"> as output for the input </span><span class="si">{1}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected_output</span><span class="p">,</span> <span class="n">std_input</span><span class="p">),</span> <span class="s2">&quot;wrong output&quot;</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">running</span><span class="o">.</span><span class="n">expect_end</span><span class="p">()</span>
@@ -539,12 +539,14 @@
 <li>Line 13: The test cases are traversed like in the previous example.</li>
 <li>Line 14: This time a program is spawned with <a class="reference internal" href="#opensubmitexec.job.Job.spawn_program" title="opensubmitexec.job.Job.spawn_program"><code class="xref py py-meth docutils literal"><span class="pre">spawn_program()</span></code></a>. This allows the interaction with the running program.</li>
 <li>Line 15: Standard input resp. keyboard input can be provided through the <a class="reference internal" href="#opensubmitexec.running.RunningProgram.sendline" title="opensubmitexec.running.RunningProgram.sendline"><code class="xref py py-meth docutils literal"><span class="pre">sendline()</span></code></a> method of the returned object from line 14.</li>
-<li>Line 17: The validator waits for the expected output with <a class="reference internal" href="#opensubmitexec.running.RunningProgram.expect" title="opensubmitexec.running.RunningProgram.expect"><code class="xref py py-meth docutils literal"><span class="pre">expect()</span></code></a>. If the program calculates longer then the specified timeout, it is terminated and a <cite>TimeoutException</cite> is thrown. If the program output is different from the expected output and the exception is not catched, a <cite>TerminationException</cite> exception would be thrown.</li>
-<li>Line 19: If a <cite>TimeoutException</cite> is thrown the corresponding negative result is sent explicitely.</li>
-<li>Line 20: The function can be left because there is no need for testing the other test cases.</li>
-<li>Line 22: After the program created an output, it is expected to terminate. The test script waits for this with <a class="reference internal" href="#opensubmitexec.running.RunningProgram.expect_end" title="opensubmitexec.running.RunningProgram.expect_end"><code class="xref py py-meth docutils literal"><span class="pre">expect_end()</span></code></a></li>
+<li>Line 17-20: The validator waits for the expected output with <a class="reference internal" href="#opensubmitexec.running.RunningProgram.expect" title="opensubmitexec.running.RunningProgram.expect"><code class="xref py py-meth docutils literal"><span class="pre">expect()</span></code></a>. If the program terminates without producing this output, a <cite>TerminationException</cite> exception is thrown.</li>
+<li>Line 22: After the program successfully produced the output, it is expected to terminate. The test script waits for this with <a class="reference internal" href="#opensubmitexec.running.RunningProgram.expect_end" title="opensubmitexec.running.RunningProgram.expect_end"><code class="xref py py-meth docutils literal"><span class="pre">expect_end()</span></code></a></li>
 <li>Line 23: When the loop finishes, a positive result is sent to the student and teacher with <a class="reference internal" href="#opensubmitexec.job.Job.send_pass_result" title="opensubmitexec.job.Job.send_pass_result"><code class="xref py py-meth docutils literal"><span class="pre">send_pass_result()</span></code></a>.</li>
 </ul>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">When using <a class="reference internal" href="#opensubmitexec.running.RunningProgram.expect" title="opensubmitexec.running.RunningProgram.expect"><code class="xref py py-meth docutils literal"><span class="pre">expect()</span></code></a>, it is important to explicitely catch a  <cite>TerminationException</cite> and make an explicit fail report in your validation script. Otherwise, the student is only informed about an unexpected termination without further explanation.</p>
+</div>
 <p>The following example shows a validator for a C program that reads a string from standard input and prints it reversed. The students have to use for-loops for solving the task. Only the C file has to be submitted.</p>
 <div class="highlight-default"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -827,7 +829,7 @@ and the output produced during the execution.</p>
 
 <dl class="method">
 <dt id="opensubmitexec.job.Job.send_fail_result">
-<code class="descname">send_fail_result</code><span class="sig-paren">(</span><em>info_student</em>, <em>info_tutor</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.job.Job.send_fail_result" title="Permalink to this definition">¶</a></dt>
+<code class="descname">send_fail_result</code><span class="sig-paren">(</span><em>info_student</em>, <em>info_tutor='Test failed.'</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.job.Job.send_fail_result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reports a negative result for this validation job.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -921,7 +923,7 @@ of pexpect (<a class="reference external" href="http://pexpect.readthedocs.io/en
 <dl class="method">
 <dt id="opensubmitexec.running.RunningProgram.expect">
 <code class="descname">expect</code><span class="sig-paren">(</span><em>pattern</em>, <em>timeout=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wait for some output of the running program.</p>
+<dd><p>Wait until the running program performs some given output, or terminates.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1058,7 +1060,7 @@ or a list of any of those types. Strings will be compiled into regular expressio
     </p>
     <p>
         &copy; Copyright 2017, Peter Tröger.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
     </p>
   </div>
 </footer>

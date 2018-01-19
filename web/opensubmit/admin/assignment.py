@@ -141,10 +141,9 @@ class AssignmentAdmin(ModelAdmin):
     def get_queryset(self, request):
         ''' Restrict the listed assignments for the current user.'''
         qs = super(AssignmentAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        else:
-            return qs.filter(course__active=True).filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
+        if not request.user.is_superuser:
+            qs = qs.filter(course__active=True).filter(Q(course__tutors__pk=request.user.pk) | Q(course__owner=request.user)).distinct()
+        return qs.order_by('title')
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "course":

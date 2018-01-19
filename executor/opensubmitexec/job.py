@@ -47,7 +47,7 @@ class Job(InternalJob):
     def validator_script_name(self):
         return self.working_dir + self._validator_import_name + '.py'
 
-    def send_fail_result(self, info_student, info_tutor):
+    def send_fail_result(self, info_student, info_tutor="Test failed."):
         """Reports a negative result for this validation job.
 
         Args:

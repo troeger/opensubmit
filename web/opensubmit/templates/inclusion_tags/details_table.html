@@ -4,9 +4,17 @@
     <tr>
         <td>Submission ID</td><td>{{ submission.pk }}</td>
     </tr><tr>
-        <td>Course</td><td><a href="{{ assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+        <td>Submitted</td><td>{{ submission.created }}</td>
     </tr><tr>
-        <td>Assignment</td><td><a href="{{ assignment.download }}">{{ submission.assignment }}</a></td>
+        <td>Course</td><td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
+    </tr><tr>
+        <td>Assignment</td>
+        <td>
+            <a href="{{ submission.assignment.url }}">{{ submission.assignment }}</a><br/>
+            Deadline: {% deadline submission.assignment %}<br/>
+            Group work: {% if submission.assignment.max_authors > 1%}Yes ({{submission.assignment.max_authors}} students){% else %}No{% endif %}<br/>
+            Graded: {% if submission.assignment.is_graded %}Yes{% else %}No{% endif %}</td>
+        </td>
     </tr><tr>
         <td>Submitter</td><td>{{ submission.submitter }}</td>
     </tr><tr>
@@ -35,7 +43,7 @@
         <td>State</td><td>{{ submission.state_for_students }}</td>
     {% if submission.show_grading %}
         </tr><tr>
-            <td>Grading</td><td>{{ submission.grading }}</td>
+            <td>Grading</td><td>{% grading submission %}</td>
         </tr><tr>
             <td>Grading Notes</td><td>{{ submission.grading_notes|linebreaks }}</td>
         {% if submission.grading_file %}

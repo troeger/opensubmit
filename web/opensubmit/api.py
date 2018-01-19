@@ -191,7 +191,7 @@ def jobs(request):
         response['SubmissionId'] = str(sub.pk)
         response['SubmitterName'] = sub.submitter.get_full_name()
         response['SubmitterStudentId'] = sub.submitter.profile.student_id
-        response['AuthorNames'] = sub.author_list()
+        response['AuthorNames'] = sub.authors.all()
         response['SubmitterStudyProgram'] = str(sub.submitter.profile.study_program)
         response['Course'] = str(sub.assignment.course)
         response['Assignment'] = str(sub.assignment)
