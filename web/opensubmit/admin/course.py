@@ -12,7 +12,7 @@ def actions(course):
     allow_tags=True
     result  = format_html('<a href="%s" style="white-space: nowrap">Download course archive</a><br/>'%reverse('coursearchive', args=(course.pk,)))
     result += format_html('<a href="%s" style="white-space: nowrap">Show grading table</a><br/>'%reverse('gradingtable', args=(course.pk,)))
-    result += format_html('<a href="%s" style="white-space: nowrap">eMail to students</a>'%reverse('mail2all', args=(course.pk,)))
+    result += format_html('<a href="%s" style="white-space: nowrap">eMail to students</a>'%reverse('mailcourse', args=(course.pk,)))
     return result
 
 class CourseAdmin(django.contrib.admin.ModelAdmin):
