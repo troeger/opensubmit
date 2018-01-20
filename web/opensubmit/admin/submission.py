@@ -2,19 +2,17 @@
 
 from django.contrib.admin import SimpleListFilter, ModelAdmin
 from django.utils.translation import ugettext_lazy as _
-from django import forms
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.http import HttpResponse
 from django.utils.html import format_html
-from opensubmit.models import Assignment, Submission, SubmissionFile, SubmissionTestResult, Grading
-from django.template.loader import render_to_string
-from django.core.urlresolvers import reverse
-from django.contrib import messages
+from opensubmit.models import Assignment, Submission, Grading
 from django.utils import timesince
 
-import io, zipfile
+import io
+import zipfile
+
 
 def grading_file(submission):
     ''' Determines if the submission has a grading file,
@@ -26,8 +24,10 @@ def grading_file(submission):
         return False
 grading_file.boolean = True            # show nice little icon
 
+
 def test_results(submission):
     return "Foo"
+
 
 class SubmissionStateFilter(SimpleListFilter):
 
@@ -296,10 +296,12 @@ class SubmissionAdmin(ModelAdmin):
     closeAndNotifyAction.short_description = "Close + send student notification for selected submissions"
 
     def sendMailAction(self, request, queryset):
-        receivers = []
-        for subm in queryset:
-            receivers += [author.pk for author in subm.authors.all()]
-        return redirect('mail2students', course_id=None, students=receivers)
+        receiver_list = []
+        for submission in queryset:
+            for author in submission.authors.all():
+                if author.pk not in receiver_list:
+                    receiver_list.append(author.pk)
+        return redirect('mailstudents', student_ids=','.join([str(pk) for pk in receiver_list]))
     sendMailAction.short_description = "Send eMail to authors of selected submissions"
 
     def downloadArchiveAction(self, request, queryset):

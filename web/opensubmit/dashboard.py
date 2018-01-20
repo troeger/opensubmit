@@ -65,7 +65,7 @@ class TeacherDashboard(Dashboard):
             if context.request.user.has_perm('opensubmit.change_assignment'):
                 links.append(['Manage assignments',ass_url, False])
             links.append(['Show grading table',reverse('gradingtable', args=[course.pk]), False])
-            links.append(['Create eMail for students',reverse('mail2all', args=[course.pk]), False])
+            links.append(['Create eMail for students',reverse('mailcourse', args=[course.pk]), False])
             if context.request.user.has_perm('opensubmit.change_course'):
                 links.append(['Edit course details',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
             links.append(['Download course archive',reverse('coursearchive', args=[course.pk]), False])
