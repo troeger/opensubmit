@@ -5,7 +5,7 @@ import csv
 
 from datetime import datetime
 
-from django.contrib import auth, messages
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -15,7 +15,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
-from django.forms.models import modelform_factory
 from django.forms.models import model_to_dict
 from blti import lti_provider
 
@@ -28,47 +27,6 @@ from .social import passthrough
 
 import logging
 logger = logging.getLogger('OpenSubmit')
-
-
-def index(request):
-    if request.user.is_authenticated():
-        return redirect('dashboard')
-
-    return render(request, 'index.html', {})
-
-
-@login_required
-def logout(request):
-    auth.logout(request)
-    return redirect('index')
-
-
-@login_required
-def settings(request):
-    if request.POST:
-        settingsForm = SettingsForm(request.POST, instance=request.user)
-        if settingsForm.is_valid():
-            settingsForm.save()
-            messages.info(request, 'User settings saved.')
-            return redirect('dashboard')
-    else:
-        settingsForm = SettingsForm(instance=request.user)
-    return render(request, 'settings.html', {'settingsForm': settingsForm})
-
-
-@login_required
-def courses(request):
-    UserProfileForm = modelform_factory(UserProfile, fields=['courses'])
-    profile = UserProfile.objects.get(user=request.user)
-    if request.POST:
-        coursesForm = UserProfileForm(request.POST, instance=profile)
-        if coursesForm.is_valid():
-            coursesForm.save()
-            messages.info(request, 'You choice was saved.')
-            return redirect('dashboard')
-    else:
-        coursesForm = UserProfileForm(instance=profile)
-    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': request.user.profile.user_courses()})
 
 
 @login_required

@@ -6,10 +6,13 @@ from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 
 from opensubmit import views, admin, api
+from opensubmit.cbv import frontend
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
-    url(r'^logout/$', views.logout, name='logout'),
+    url(r'^$', frontend.IndexView.as_view(), name='index'),
+    url(r'^logout/$', frontend.LogoutView.as_view(), name='logout'),
+    url(r'^settings/$', frontend.SettingsView.as_view(), name='settings'),
+    url(r'^courses/$', frontend.CoursesView.as_view(), name='courses'),
     url(r'^archive/$', views.archive, name='archive'),
     url(r'^dashboard/$', views.dashboard, name='dashboard'),
     url(r'^details/(?P<subm_id>\d+)/$', views.details, name='details'),
@@ -31,8 +34,6 @@ urlpatterns = [
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', api.download, name='download'),
     url(r'^machine/(?P<machine_id>\d+)/$', views.machine, name='machine'),
     url(r'^machines/$', api.machines, name='machines'),
-    url(r'^settings/$', views.settings, name='settings'),
-    url(r'^courses/$', views.courses, name='courses'),
     url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
 
     url('', include('social_django.urls', namespace='social')),
