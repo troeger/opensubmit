@@ -21,3 +21,5 @@ is the following:
   - 'f': Not zipped (validator.py)
   - 'm': Zipped (validator.zip), but missing validator.py file inside
 
+Folders that start with 'regression_' do not follow the pattern above,
+but represent single cases for regressions to be tested.
