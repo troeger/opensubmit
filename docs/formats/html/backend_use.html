@@ -923,6 +923,48 @@ of pexpect (<a class="reference external" href="http://pexpect.readthedocs.io/en
 <dl class="method">
 <dt id="opensubmitexec.running.RunningProgram.expect">
 <code class="descname">expect</code><span class="sig-paren">(</span><em>pattern</em>, <em>timeout=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deprecated. Use expect_output() instead.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.running.RunningProgram.expect_end">
+<code class="descname">expect_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for the running program to finish.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple with the exit code, as reported by the operating system, and the output produced.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.running.RunningProgram.expect_exit_status">
+<code class="descname">expect_exit_status</code><span class="sig-paren">(</span><em>exit_status</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect_exit_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deprecated. Use expect_exitstatus() instead.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.running.RunningProgram.expect_exitstatus">
+<code class="descname">expect_exitstatus</code><span class="sig-paren">(</span><em>exit_status</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect_exitstatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for the running program to finish and expect some exit status.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>exit_status</strong> (<em>int</em>) – The expected exit status.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">WrongExitStatusException</span></code> – The produced exit status is not the expected one.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="opensubmitexec.running.RunningProgram.expect_output">
+<code class="descname">expect_output</code><span class="sig-paren">(</span><em>pattern</em>, <em>timeout=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect_output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wait until the running program performs some given output, or terminates.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -960,36 +1002,6 @@ or a list of any of those types. Strings will be compiled into regular expressio
 </dd></dl>
 
 <dl class="method">
-<dt id="opensubmitexec.running.RunningProgram.expect_end">
-<code class="descname">expect_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wait for the running program to finish.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple with the exit code, as reported by the operating system, and the output produced.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="opensubmitexec.running.RunningProgram.expect_exit_status">
-<code class="descname">expect_exit_status</code><span class="sig-paren">(</span><em>exit_status</em><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.expect_exit_status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wait for the running program to finish and expect some exit status.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>exit_status</strong> (<em>int</em>) – The expected exit status.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">WrongExitStatusException</span></code> – The produced exit status is not the expected one.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="opensubmitexec.running.RunningProgram.get_exitstatus">
 <code class="descname">get_exitstatus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#opensubmitexec.running.RunningProgram.get_exitstatus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the exit status of the program execution.</p>
@@ -997,7 +1009,11 @@ or a list of any of those types. Strings will be compiled into regular expressio
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Exit status as reported by the operating system, or -1 if it is not available.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Exit status as reported by the operating system,</dt>
+<dd>or None if it is not available.</dd>
+</dl>
+</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
 </tr>
