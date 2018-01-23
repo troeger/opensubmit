@@ -42,7 +42,7 @@ HOST_DIR: submit
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
 # Make sure that the path starts and ends with a slash.
-MEDIA_ROOT: ***not configured***
+MEDIA_ROOT: {server-mediaroot}
 
 # This is the logging file. The web server must be allowed to write into it.
 LOG_FILE: /var/log/opensubmit.log
@@ -278,7 +278,7 @@ def check_web_config(config_fname):
         config.readfp(open(config_fname))
         return config
     except IOError:
-        print("ERROR: Seems like the config file does not exist. Please call 'opensubmit-web configcreate'.")
+        print("ERROR: Seems like the config file does not exist. Please call 'opensubmit-web configcreate' first.")
         return None
 
 
@@ -319,11 +319,11 @@ def configtest(config_path, config_fname):
         return
     print("Preparing static files for web server...")
     django_admin(["collectstatic", "--noinput", "--clear", "-v 0"])
-    apache_config(config, config_path + 'apache24.conf')
 
 
 def print_help():
     print("configcreate:        Create initial config files for the OpenSubmit web server.")
+    print("apachecreate:        Create config file snippet for Apache 2.4.")
     print("configtest:          Check config files and database for correct installation of the OpenSubmit web server.")
     print("democreate:          Install some test data (courses, assignments, users).")
     print("fixperms:            Check and fix student and tutor permissions")
@@ -350,11 +350,18 @@ def console_script(fsroot='/'):
     if sys.argv[1] == "createdemo":
         sys.argv[1] = 'democreate'
 
+    if sys.argv[1] == 'apachecreate':
+        config = check_web_config(fsroot + 'etc/opensubmit/' + 'settings.ini')
+        if config:
+            apache_config(config, fsroot + 'etc/opensubmit/' + 'apache24.conf')
+        return
+
     if sys.argv[1] == 'configcreate':
         # TODO: Hack, do the arg handling with a proper library
 
         # Config name, default value, character pos of argument
-        poss_options = [['server-host', '***not configured***']]
+        poss_options = [['server-host', '***not configured***'],
+                        ['server-mediaroot', '***not configured***']]
         options = {}
 
         for optionname, default in poss_options:

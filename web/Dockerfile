@@ -22,9 +22,9 @@ COPY dist/*.whl /install
 RUN pip3 install /install/*.whl
 
 # Run initial configuration of OpenSubmit
-RUN mkdir -p /etc/opensubmit
-COPY opensubmit/settings_template.ini /etc/opensubmit/settings.ini
-RUN opensubmit-web configcreate --server-host=http://localhost:8000
+RUN opensubmit-web configcreate --server-host=http://localhost:8000 --server-mediaroot=/tmp/
+RUN opensubmit-web configtest
+RUN opensubmit-web apachecreate
 
 # Enable django-admin in interactive mode
 # (docker run -it --entrypoint /bin/bash <id>)
