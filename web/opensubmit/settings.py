@@ -56,8 +56,6 @@ class Config():
         else:
             logtext = "Environment variable %s has the value '%s'" % (env_name, text)
 
-        print(logtext)
-
         if mandatory and text == NOT_CONFIGURED_VALUE:
             raise ImproperlyConfigured(logtext + ', but must be set.')
 
