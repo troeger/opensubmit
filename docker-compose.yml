@@ -1,0 +1,15 @@
+# Note: Use "docker run -it --entrypoint /bin/bash opensubmit_web" for entering the container for debugging
+
+version: '3'
+
+services:
+#  db:
+#    image: postgres
+  web:
+    build: ./web/
+    tty: true
+    container_name: opensubmit_web
+    ports:
+      - "8000:80"
+#     depends_on:
+#      - db
