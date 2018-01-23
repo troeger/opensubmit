@@ -1,12 +1,24 @@
 '''
-    This module contains administrative functionality that is available as command-line tool "opensubmit-web".
+    This module contains administrative functionality
+    that is available as command-line tool "opensubmit-web".
+
+    All functions that demand a working Django ORM are implemented
+    as Django management command and just called from here.
+
+    Everything else is implemented here, so this file works without
+    any of the install dependencies.
 '''
 
-import os, pwd, grp, urllib.request, urllib.parse, urllib.error, sys, shutil
+import os
+import pwd
+import grp
+import urllib.request
+import urllib.parse
+import urllib.error
+import sys
 from configparser import RawConfigParser
-from pkg_resources import Requirement, resource_filename
 
-DEFAULT_CONFIG='''
+DEFAULT_CONFIG = '''
 # This is the configuration file for the OpenSubmit tool.
 # https://github.com/troeger/opensubmit
 #
@@ -24,7 +36,7 @@ DEBUG: False
 # This is the root host url were the OpenSubmit tool is offered by your web server.
 # If you serve the content from a subdirectory, please specify it too, without leading or trailing slashes,
 # otherwise leave it empty.
-HOST: ***not configured***
+HOST: {server-host}
 HOST_DIR: submit
 
 # This is the local directory were the uploaded assignment attachments are stored.
@@ -122,6 +134,7 @@ LOGIN_SHIB: False
 LOGIN_SHIB_DESCRIPTION: Shibboleth
 '''
 
+
 def django_admin(args):
     '''
         Run something like it would be done through Django's manage.py.
@@ -130,33 +143,36 @@ def django_admin(args):
     from django.core.exceptions import ImproperlyConfigured
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "opensubmit.settings")
     try:
-        execute_from_command_line([sys.argv[0]]+args)
+        execute_from_command_line([sys.argv[0]] + args)
     except ImproperlyConfigured as e:
         print(str(e))
         exit(-1)
+
 
 def apache_config(config, outputfile):
     '''
         Generate a valid Apache configuration file, based on the given settings.
     '''
     if os.path.exists(outputfile):
-        os.rename(outputfile, outputfile+".old")
-        print("Renamed existing Apache config file to "+outputfile+".old")
+        os.rename(outputfile, outputfile + ".old")
+        print("Renamed existing Apache config file to " + outputfile + ".old")
 
     from opensubmit import settings
-    f = open(outputfile,'w')
-    print("Generating Apache configuration in "+outputfile)
-    subdir = (len(settings.HOST_DIR)>0)
+    f = open(outputfile, 'w')
+    print("Generating Apache configuration in " + outputfile)
+    subdir = (len(settings.HOST_DIR) > 0)
     text = """
     # OpenSubmit Configuration for Apache 2.4
     # These directives are expected to live in some <VirtualHost> block
     """
     if subdir:
-        text += "Alias /%s/static/ %s\n"%(settings.HOST_DIR, settings.STATIC_ROOT)
-        text += "    WSGIScriptAlias /%s %s/wsgi.py\n"%(settings.HOST_DIR, settings.SCRIPT_ROOT)
+        text += "Alias /%s/static/ %s\n" % (settings.HOST_DIR,
+                                            settings.STATIC_ROOT)
+        text += "    WSGIScriptAlias /%s %s/wsgi.py\n" % (
+            settings.HOST_DIR, settings.SCRIPT_ROOT)
     else:
-        text += "Alias /static/ %s\n"%(settings.STATIC_ROOT)
-        text += "    WSGIScriptAlias / %s/wsgi.py"%(settings.SCRIPT_ROOT)
+        text += "Alias /static/ %s\n" % (settings.STATIC_ROOT)
+        text += "    WSGIScriptAlias / %s/wsgi.py" % (settings.SCRIPT_ROOT)
     text += """
     WSGIPassAuthorization On
     <Directory {static_path}>
@@ -172,16 +188,15 @@ def apache_config(config, outputfile):
     f.write(text)
     f.close()
 
+
 def check_path(directory):
     '''
         Checks if the directories for this path exist, and creates them in case.
     '''
-    try:
-        if directory != '':
-            if not os.path.exists(directory):
-                os.makedirs(directory, 0o775)   # rwxrwxr-x
-    except:
-        print("ERROR: Could not create {0}. Please use sudo or become root.".format(directory))
+    if directory != '':
+        if not os.path.exists(directory):
+            os.makedirs(directory, 0o775)   # rwxrwxr-x
+
 
 def check_file(filepath):
     '''
@@ -193,25 +208,26 @@ def check_file(filepath):
     '''
     check_path(os.path.dirname(filepath))
     if not os.path.exists(filepath):
-        print("WARNING: File does not exist. Creating it: %s"%filepath)
+        print("WARNING: File does not exist. Creating it: %s" % filepath)
         open(filepath, 'a').close()
     try:
-        print("Setting access rights for %s for www-data user"%(filepath))
+        print("Setting access rights for %s for www-data user" % (filepath))
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
-        os.chmod(filepath, 0o660) # rw-rw---
+        os.chmod(filepath, 0o660)  # rw-rw---
     except:
-        print("WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it."%filepath)
+        print("WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it." % filepath)
+
 
 def check_web_config_consistency(config):
     '''
         Check the web application config file for consistency.
     '''
     login_conf_deps = {
-        'LOGIN_TWITTER': ['LOGIN_TWITTER_OAUTH_KEY','LOGIN_TWITTER_OAUTH_SECRET'],
-        'LOGIN_GOOGLE':  ['LOGIN_GOOGLE_OAUTH_KEY', 'LOGIN_GOOGLE_OAUTH_SECRET'],
-        'LOGIN_GITHUB':  ['LOGIN_GITHUB_OAUTH_KEY', 'LOGIN_GITHUB_OAUTH_SECRET']
+        'LOGIN_TWITTER': ['LOGIN_TWITTER_OAUTH_KEY', 'LOGIN_TWITTER_OAUTH_SECRET'],
+        'LOGIN_GOOGLE': ['LOGIN_GOOGLE_OAUTH_KEY', 'LOGIN_GOOGLE_OAUTH_SECRET'],
+        'LOGIN_GITHUB': ['LOGIN_GITHUB_OAUTH_KEY', 'LOGIN_GITHUB_OAUTH_SECRET']
     }
 
     print("Checking configuration of the OpenSubmit web application...")
@@ -222,55 +238,49 @@ def check_web_config_consistency(config):
         urllib.request.urlopen(config.get("server", "HOST"))
     except Exception as e:
         # This may be ok, when the admin is still setting up to server
-        print("The configured HOST seems to be invalid at the moment: "+str(e))
+        print("The configured HOST seems to be invalid at the moment: " + str(e))
     # Check configuration dependencies
     for k, v in list(login_conf_deps.items()):
         if config.getboolean('login', k):
             for needed in v:
                 if len(config.get('login', needed)) < 1:
-                    print("ERROR: You have enabled %s in settings.ini, but %s is not set."%(k, needed))
+                    print(
+                        "ERROR: You have enabled %s in settings.ini, but %s is not set." % (k, needed))
                     return False
     # Check media path
     check_path(config.get('server', 'MEDIA_ROOT'))
     # Prepare empty log file, in case the web server has no creation rights
     log_file = config.get('server', 'LOG_FILE')
-    print("Preparing log file at "+log_file)
+    print("Preparing log file at " + log_file)
     check_file(log_file)
     # If SQLite database, adjust file system permissions for the web server
-    if config.get('database','DATABASE_ENGINE') == 'sqlite3':
-        name = config.get('database','DATABASE_NAME')
+    if config.get('database', 'DATABASE_ENGINE') == 'sqlite3':
+        name = config.get('database', 'DATABASE_NAME')
         if not os.path.isabs(name):
             print("ERROR: Your SQLite database name must be an absolute path. The web server must have directory access permissions for this path.")
             return False
-        check_file(config.get('database','DATABASE_NAME'))
+        check_file(config.get('database', 'DATABASE_NAME'))
     # everything ok
     return True
 
-def check_web_config(config_path):
+
+def check_web_config(config_fname):
     '''
         Try to load the Django settings.
         If this does not work, than settings file does not exist.
+
+        Returns:
+            Loaded configuration, or None.
     '''
-    WEB_CONFIG_FILE = config_path+'/settings.ini'
-    print("Looking for config file at {0} ...".format(WEB_CONFIG_FILE))
+    print("Looking for config file at {0} ...".format(config_fname))
     config = RawConfigParser()
     try:
-        config.readfp(open(WEB_CONFIG_FILE))
+        config.readfp(open(config_fname))
         return config
     except IOError:
-        print("ERROR: Seems like the config file does not exist.")
-        print("       I am creating a new one. Please edit it and re-run this command.")
-    # Create fresh config file
-    try:
-        check_path(config_path)
-        f=open(WEB_CONFIG_FILE,'wt')
-        f.write(DEFAULT_CONFIG)
-        f.close()
-        check_file(WEB_CONFIG_FILE)
-        return None    # Manual editing is needed before further proceeding with the fresh file
-    except FileNotFoundError:
-        print("ERROR: Could not create config file at {0}. Please use sudo or become root.".format(WEB_CONFIG_FILE))
+        print("ERROR: Seems like the config file does not exist. Please call 'opensubmit-web configcreate'.")
         return None
+
 
 def check_web_db():
     '''
@@ -279,12 +289,28 @@ def check_web_db():
     print("Testing for neccessary database migrations...")
     django_admin(["migrate"])             # apply schema migrations
     print("Checking the OpenSubmit permission system...")
-    django_admin(["fixperms"])            # configure permission system, of needed
+    # configure permission system, of needed
+    django_admin(["fixperms"])
     return True
 
-def configure(fsroot='/'):
+
+def configcreate(config_path, config_fname, open_options):
+    content = DEFAULT_CONFIG.format(**open_options)
+
+    try:
+        check_path(config_path)
+        f = open(config_path + config_fname, 'wt')
+        f.write(content)
+        f.close()
+        print("Config file %s generated at %s. Please edit it." % (config_fname. config_path))
+    except Exception:
+        print("ERROR: Could not create config file at {0}. Please use sudo or become root.".format(
+            config_path + config_fname))
+
+
+def configtest(config_path, config_fname):
     print("Inspecting OpenSubmit configuration ...")
-    config = check_web_config(fsroot+'etc/opensubmit')
+    config = check_web_config(config_path + config_fname)
     if not config:
         return          # Let them first fix the config file before trying a DB access
     if not check_web_config_consistency(config):
@@ -292,13 +318,14 @@ def configure(fsroot='/'):
     if not check_web_db():
         return
     print("Preparing static files for web server...")
-    django_admin(["collectstatic","--noinput","--clear","-v 0"])
-    apache_config(config, fsroot+'etc/opensubmit/apache24.conf')
+    django_admin(["collectstatic", "--noinput", "--clear", "-v 0"])
+    apache_config(config, config_path + 'apache24.conf')
 
 
 def print_help():
-    print("configure:           Check config files and database for correct installation of the OpenSubmit web server.")
-    print("createdemo:          Install some test data (courses, assignments, users).")
+    print("configcreate:        Create initial config files for the OpenSubmit web server.")
+    print("configtest:          Check config files and database for correct installation of the OpenSubmit web server.")
+    print("democreate:          Install some test data (courses, assignments, users).")
     print("fixperms:            Check and fix student and tutor permissions")
     print("fixchecksums:        Re-create all student file checksums (for duplicate detection)")
     print("makeadmin   <email>: Make this user an admin with backend rights.")
@@ -306,23 +333,52 @@ def print_help():
     print("maketutor   <email>: Make this user a course tutor with backend rights.")
     print("makestudent <email>: Make this user a student without backend rights.")
 
+
 def console_script(fsroot='/'):
     '''
-        The main entry point for the production administration script 'opensubmit-web', installed by setuptools.
+        The main entry point for the production administration script 'opensubmit-web'.
         The argument allows the test suite to override the root of all paths used in here.
     '''
 
-    if len(sys.argv) == 2 and "configure" in sys.argv[1]:
-        configure(fsroot)
-
-    elif len(sys.argv) == 2 and sys.argv[1] in ['fixperms', 'fixchecksums', 'createdemo']:
-        django_admin([sys.argv[1]])
-
-    elif len(sys.argv) == 3 and  sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
-        django_admin([sys.argv[1], sys.argv[2]])
-
-    else:
+    if len(sys.argv) == 1:
         print_help()
+        return
+
+    # Translate legacy commands
+    if sys.argv[1] == "configure":
+        sys.argv[1] = 'configtest'
+    if sys.argv[1] == "createdemo":
+        sys.argv[1] = 'democreate'
+
+    if sys.argv[1] == 'configcreate':
+        # TODO: Hack, do the arg handling with a proper library
+
+        # Config name, default value, character pos of argument
+        poss_options = [['server-host', '***not configured***']]
+        options = {}
+
+        for optionname, default in poss_options:
+            options[optionname] = default
+            for index, text in enumerate(sys.argv[2:]):
+                if text.startswith('--' + optionname + '='):
+                    options[optionname] = text[len(optionname) + 3:]
+        configcreate(fsroot + 'etc/opensubmit/', 'settings.ini', options)
+        return
+
+    if sys.argv[1] == 'configtest':
+        configtest(fsroot + 'etc/opensubmit/', 'settings.ini')
+        return
+
+    if sys.argv[1] in ['fixperms', 'fixchecksums', 'democreate']:
+        django_admin([sys.argv[1]])
+        return
+
+    if sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
+        django_admin([sys.argv[1], sys.argv[2]])
+        return
+
+    print_help()
+
 
 if __name__ == "__main__":
     console_script()

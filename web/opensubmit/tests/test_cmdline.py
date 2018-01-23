@@ -31,7 +31,7 @@ class CmdLine(TestCase):
         - This should lead to the creation of a fresh settings file,
           which then must be adjusted by the user. We mock that accordingly.
         '''
-        sys.argv = ['opensubmit-web', 'configure']
+        sys.argv = ['opensubmit-web', 'configcreate']
         cmdline.console_script(fsroot=self.tmpdir)
         conf_name = self.tmpdir + 'etc/opensubmit/settings.ini'
         self.assertEqual(True, os.path.isfile(conf_name))
