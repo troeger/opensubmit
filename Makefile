@@ -11,9 +11,13 @@ docs: venv
 	# Build the HTML documentation from the sources.
 	source venv/bin/activate; pushd docs; make html; popd; deactivate
 
-docker: build
-	# Create and run docker images
+docker:
+	# Run docker images
 	docker-compose up
+
+docker-build: build
+	# Re-create docker images
+	docker-compose build
 
 venv: venv/bin/activate
 
