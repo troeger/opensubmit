@@ -9,9 +9,11 @@ FROM ubuntu
 ENV PYTHONUNBUFFERED 1
 
 # Prepare Apache environment
-RUN apt-get update; apt-get install -y apache2 apache2-utils python3 python3-pip libapache2-mod-wsgi-py3
+RUN apt-get update \
+    && apt-get install -y apache2 apache2-utils python3 python3-pip libapache2-mod-wsgi-py3 \
+    && rm -rf /var/lib/apt/lists/*
 RUN rm /etc/apache2/sites-enabled/000-default.conf
-COPY dist/httpd.conf /etc/apache2/sites-enabled/httpd.conf
+COPY ./httpd.conf /etc/apache2/sites-enabled/httpd.conf
 EXPOSE 80
 
 # Install existing wheel
