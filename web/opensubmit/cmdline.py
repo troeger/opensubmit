@@ -37,7 +37,7 @@ DEBUG: False
 # If you serve the content from a subdirectory, please specify it too, without leading or trailing slashes,
 # otherwise leave it empty.
 HOST: {server-host}
-HOST_DIR: submit
+HOST_DIR:
 
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
@@ -67,7 +67,7 @@ DATABASE_ENGINE: sqlite3
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: database.sqlite
+DATABASE_NAME: /tmp/database.sqlite
 
 # The user name for accessing the database. Not needed for SQLite.
 DATABASE_USER:
@@ -116,11 +116,11 @@ LOGIN_TWITTER_OAUTH_KEY:
 LOGIN_TWITTER_OAUTH_SECRET:
 
 # Enables or disables login with Google
-LOGIN_GOOGLE: False
+LOGIN_GOOGLE: True
 
 # OAuth application credentials for Google
-LOGIN_GOOGLE_OAUTH_KEY:
-LOGIN_GOOGLE_OAUTH_SECRET:
+LOGIN_GOOGLE_OAUTH_KEY: 631787075842-1e14uvstrno29bl9b684194lcq435p93.apps.googleusercontent.com 
+LOGIN_GOOGLE_OAUTH_SECRET: o4_b20ieVruAr_-U-N6fFwEm 
 
 # Enables or disables login with GitHub
 LOGIN_GITHUB: False
