@@ -63,25 +63,25 @@ SECRET_KEY: uzfp=4gv1u((#hb*#o3*4^v#u#g9k8-)us2nw^)@rz0-$2-23)
 # - mysql
 # - sqlite3
 # - oracle
-DATABASE_ENGINE: sqlite3
+DATABASE_ENGINE: {database-engine}
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: /tmp/database.sqlite
+DATABASE_NAME: {database-name}
 
 # The user name for accessing the database. Not needed for SQLite.
-DATABASE_USER:
+DATABASE_USER: {database-user}
 
 # The user password for accessing the database. Not needed for SQLite.
-DATABASE_PASSWORD:
+DATABASE_PASSWORD: {database-password}
 
 # The host name for accessing the database. Not needed for SQLite.
 # An empty settings means that the database is on the same host as the web server.
-DATABASE_HOST:
+DATABASE_HOST: {database-host}
 
 # The port number for accessing the database. Not needed for SQLite.
 # An empty settings means that the database default use used.
-DATABASE_PORT:
+DATABASE_PORT: {database-port}
 
 [executor]
 # The shared secret with the job executor. This ensures that only authorized
@@ -361,7 +361,14 @@ def console_script(fsroot='/'):
 
         # Config name, default value, character pos of argument
         poss_options = [['server-host', '***not configured***'],
-                        ['server-mediaroot', '***not configured***']]
+                        ['server-mediaroot', '***not configured***'],
+                        ['database-name', '/tmp/database.sqlite'],
+                        ['database-engine', 'sqlite3'],
+                        ['database-user', ''],
+                        ['database-password', ''],
+                        ['database-host', ''],
+                        ['database-port', ''],
+                        ]
         options = {}
 
         for optionname, default in poss_options:

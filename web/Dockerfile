@@ -7,27 +7,34 @@
 
 FROM ubuntu
 ENV PYTHONUNBUFFERED 1
+# Enable django-admin in interactive mode
+ENV DJANGO_SETTINGS_MODULE opensubmit.settings
 
 # Prepare Apache environment
 RUN apt-get update \
-    && apt-get install -y apache2 apache2-utils python3 python3-pip libapache2-mod-wsgi-py3 \
-    && rm -rf /var/lib/apt/lists/*
-RUN rm /etc/apache2/sites-enabled/000-default.conf
-COPY ./httpd.conf /etc/apache2/sites-enabled/httpd.conf
-EXPOSE 80
+    && apt-get install -y apache2 apache2-utils python3 python3-pip libapache2-mod-wsgi-py3 netcat \
+    && rm -rf /var/lib/apt/lists/* \
+    rm /etc/apache2/sites-enabled/000-default.conf
+COPY ./docker/httpd.conf /etc/apache2/sites-enabled/httpd.conf
+
+# Additionally install Postgres drivers
+RUN pip3 install psycopg2
 
 # Install existing wheel
 RUN mkdir /install
 COPY dist/*.whl /install
 RUN pip3 install /install/*.whl
 
-# Run initial configuration of OpenSubmit
-RUN opensubmit-web configcreate --server-host=http://localhost:8000 --server-mediaroot=/tmp/
-RUN opensubmit-web configtest
-RUN opensubmit-web apachecreate
+# Create OpenSubmit and Apache configuration file
+RUN opensubmit-web configcreate --server-host=http://localhost:8000 \
+                                --server-mediaroot=/data/media/ \
+                                --database-name=opensubmit \
+                                --database-user=opensubmit \
+                                --database-password=opensubmit \
+                                --database-host=db \
+                                --database-engine=postgresql_psycopg2 \
+ && opensubmit-web apachecreate
 
-# Enable django-admin in interactive mode
-# (docker run -it --entrypoint /bin/bash <id>)
-ENV DJANGO_SETTINGS_MODULE opensubmit.settings
-
-ENTRYPOINT ["apache2ctl", "-D", "FOREGROUND"]
+COPY ./docker/docker-entry.sh /docker-entry.sh
+EXPOSE 80
+ENTRYPOINT ["/docker-entry.sh"]
