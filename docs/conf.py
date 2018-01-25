@@ -91,6 +91,10 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 #html_static_path = ['static']
 
+
+html_favicon = '../web/opensubmit/static/images/favicon.ico'
+html_logo = '../web/opensubmit/static/images/favicon-32x32.png'
+
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
@@ -98,8 +102,6 @@ html_theme_options = {
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
 }
-
-
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
