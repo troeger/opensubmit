@@ -366,17 +366,6 @@ def assarchive(request, ass_id):
     return response
 
 
-@login_required
-def machine(request, machine_id):
-    machine = get_object_or_404(TestMachine, pk=machine_id)
-    try:
-        config = json.loads(machine.config)
-    except:
-        config = []
-    queue = Submission.pending_student_tests.all()
-    additional = len(Submission.pending_full_tests.all())
-    return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
-
 
 @login_required
 def withdraw(request, subm_id):

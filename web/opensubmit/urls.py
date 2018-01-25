@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^archive/$', frontend.ArchiveView.as_view(), name='archive'),
     url(r'^dashboard/$', frontend.DashboardView.as_view(), name='dashboard'),
     url(r'^details/(?P<pk>\d+)/$', frontend.SubmissionDetailsView.as_view(), name='details'),
+    url(r'^machine/(?P<pk>\d+)/$', frontend.MachineDetailsView.as_view(), name='machine'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', views.new, name='new'),
     url(r'^assignments/(?P<ass_id>\d+)/perftable/$', views.perftable, name='perftable'),
     url(r'^assignments/(?P<ass_id>\d+)/duplicates/$', views.duplicates, name='duplicates'),
@@ -29,7 +30,6 @@ urlpatterns = [
     url(r'^jobs/$', api.jobs, name='jobs'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', api.download, name='download_secret'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', api.download, name='download'),
-    url(r'^machine/(?P<machine_id>\d+)/$', views.machine, name='machine'),
     url(r'^machines/$', api.machines, name='machines'),
     url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
 

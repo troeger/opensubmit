@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from django.views.generic import TemplateView, RedirectView, ListView, DetailView
 from django.views.generic.edit import UpdateView
@@ -151,3 +152,18 @@ class SubmissionDetailsView(DetailView):
         if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
             raise PermissionDenied()
         return subm
+
+
+@method_decorator(login_required, name='dispatch')
+class MachineDetailsView(DetailView):
+    template_name = 'machine.html'
+    model = TestMachine
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            context['config'] = json.loads(self.object.config)
+        except Exception:
+            context['config'] = []
+        context['queue'] = Submission.pending_student_tests.all()
+        context['additional'] = len(Submission.pending_full_tests.all())
