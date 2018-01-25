@@ -30,17 +30,6 @@ logger = logging.getLogger('OpenSubmit')
 
 
 @login_required
-def details(request, subm_id):
-    subm = get_object_or_404(Submission, pk=subm_id)
-    # only authors should be able to look into submission details
-    if not (request.user in subm.authors.all() or request.user.is_staff):
-        raise PermissionDenied()
-    return render(request, 'details.html', {
-        'submission': subm}
-    )
-
-
-@login_required
 def new(request, ass_id):
     ass = get_object_or_404(Assignment, pk=ass_id)
 

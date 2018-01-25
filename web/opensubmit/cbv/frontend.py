@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.views.generic import TemplateView, RedirectView, ListView
+from django.views.generic import TemplateView, RedirectView, ListView, DetailView
 from django.views.generic.edit import UpdateView
 from django.shortcuts import redirect
 from django.contrib import auth, messages
@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.core.urlresolvers import reverse_lazy
 from django.forms.models import modelform_factory, model_to_dict
+from django.core.exceptions import PermissionDenied
 
 from opensubmit.forms import SettingsForm
 from opensubmit.models import UserProfile, Submission, TestMachine, Course
@@ -137,3 +138,16 @@ class DashboardView(TemplateView):
             messages.error(request, "Your user settings are incomplete.")
 
         return super().get(request)
+
+
+@method_decorator(login_required, name='dispatch')
+class SubmissionDetailsView(DetailView):
+    template_name = 'details.html'
+    model = Submission
+
+    def get_object(self, queryset=None):
+        subm = super().get_object(queryset)
+        # only authors should be able to look into submission details
+        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
+            raise PermissionDenied()
+        return subm
