@@ -5,7 +5,7 @@ import csv
 
 from datetime import datetime
 
-from django.contrib import auth, messages
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -15,7 +15,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
-from django.forms.models import modelform_factory
 from django.forms.models import model_to_dict
 from blti import lti_provider
 
@@ -28,130 +27,6 @@ from .social import passthrough
 
 import logging
 logger = logging.getLogger('OpenSubmit')
-
-
-def index(request):
-    if request.user.is_authenticated():
-        return redirect('dashboard')
-
-    return render(request, 'index.html', {})
-
-
-@login_required
-def logout(request):
-    auth.logout(request)
-    return redirect('index')
-
-
-@login_required
-def settings(request):
-    if request.POST:
-        settingsForm = SettingsForm(request.POST, instance=request.user)
-        if settingsForm.is_valid():
-            settingsForm.save()
-            messages.info(request, 'User settings saved.')
-            return redirect('dashboard')
-    else:
-        settingsForm = SettingsForm(instance=request.user)
-    return render(request, 'settings.html', {'settingsForm': settingsForm})
-
-
-@login_required
-def courses(request):
-    UserProfileForm = modelform_factory(UserProfile, fields=['courses'])
-    profile = UserProfile.objects.get(user=request.user)
-    if request.POST:
-        coursesForm = UserProfileForm(request.POST, instance=profile)
-        if coursesForm.is_valid():
-            coursesForm.save()
-            messages.info(request, 'You choice was saved.')
-            return redirect('dashboard')
-    else:
-        coursesForm = UserProfileForm(instance=profile)
-    return render(request, 'courses.html', {'coursesForm': coursesForm, 'courses': request.user.profile.user_courses()})
-
-
-@login_required
-def archive(request):
-    archived = request.user.authored.all().exclude(assignment__course__active=False).filter(
-        state=Submission.WITHDRAWN).order_by('-created')
-    return render(request, 'archive.html', {'archived': archived})
-
-
-@login_required
-def dashboard(request):
-    # Fix database on lower levels for the current user
-    db_fixes(request.user)
-    profile = request.user.profile
-
-    # If this is pass-through authentication,
-    # we can determine additional information
-    if 'passthroughauth' in request.session:
-        if 'ltikey' in request.session['passthroughauth']:
-            # User coming through LTI.
-            # Check the course having this LTI key and
-            # enable it for the user.
-            try:
-                ltikey = request.session['passthroughauth']['ltikey']
-                request.session['ui_disable_logout'] = True
-                course = Course.objects.get(lti_key=ltikey)
-                profile.courses.add(course)
-                profile.save()
-            except Exception:
-                # This is only a comfort function,
-                # so we should not crash the app if that goes wrong
-                pass
-
-    # This is the first view than can check
-    # if the user information is complete.
-    # If not, then we drop annyoing popups until he gives up.
-    settingsform = SettingsForm(model_to_dict(
-        request.user), instance=request.user)
-    if not settingsform.is_valid():
-        messages.error(request, "Your user settings are incomplete.")
-
-    # Student submissions under validation / grading
-    subs_in_progress = request.user.authored.all(). \
-        exclude(assignment__course__active=False). \
-        exclude(state=Submission.RECEIVED). \
-        exclude(state=Submission.WITHDRAWN). \
-        exclude(state=Submission.CLOSED). \
-        exclude(state=Submission.CLOSED_TEST_FULL_PENDING). \
-        order_by('-created')
-
-    # Closed student submissions, graded ones first
-    subs_finished = request.user.authored.all(). \
-        exclude(assignment__course__active=False). \
-        filter(state__in=[Submission.CLOSED, Submission.CLOSED_TEST_FULL_PENDING]). \
-        order_by('-assignment__gradingScheme', '-created')
-
-    # Assignments the student missed
-    assign_missed = request.user.profile.gone_assignments()
-
-    username = request.user.get_full_name() + " <" + request.user.email + ">"
-    assignments = request.user.profile.open_assignments()
-    return render(request, 'dashboard.html', {
-        'subs_in_progress': subs_in_progress,
-        'subs_finished': subs_finished,
-        'user': request.user,
-        'username': username,
-        'courses': request.user.profile.user_courses(),
-        'assignments': assignments,
-        'assign_missed': assign_missed,
-        'machines': TestMachine.objects.filter(enabled=True),
-        'today': datetime.now()}
-    )
-
-
-@login_required
-def details(request, subm_id):
-    subm = get_object_or_404(Submission, pk=subm_id)
-    # only authors should be able to look into submission details
-    if not (request.user in subm.authors.all() or request.user.is_staff):
-        raise PermissionDenied()
-    return render(request, 'details.html', {
-        'submission': subm}
-    )
 
 
 @login_required
@@ -490,17 +365,6 @@ def assarchive(request, ass_id):
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass.directory_name()
     return response
 
-
-@login_required
-def machine(request, machine_id):
-    machine = get_object_or_404(TestMachine, pk=machine_id)
-    try:
-        config = json.loads(machine.config)
-    except:
-        config = []
-    queue = Submission.pending_student_tests.all()
-    additional = len(Submission.pending_full_tests.all())
-    return render(request, 'machine.html', {'machine': machine, 'queue': queue, 'additional': additional, 'config': config})
 
 
 @login_required

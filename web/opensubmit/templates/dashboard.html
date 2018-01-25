@@ -8,12 +8,14 @@
 {% block content %}
 <div class="page-header">
     <h1>Dashboard</h1>
-    <h6>{{ username }}</h6>
+    <h6>{{ user.get_full_name }} &lt;{{ user.email }}&gt; </h6>
 </div>
+
+{%with assign_missed=user.profile.gone_assignments assignments=user.profile.open_assignments%}
 
 <section>
     <h3>Open</h3>
-    {% if not courses %}
+    {% if not user.profile.user_courses %}
         Seems like you don't have any courses configured. You should <a href="{% url 'courses' %}">change that</a>.
     {% else %}
         {% if assignments %}
@@ -162,6 +164,8 @@
         Nothing at the moment.
     {% endif %}
 </section>
+
+{% endwith %}
 
 <section>
     {% if machines %}

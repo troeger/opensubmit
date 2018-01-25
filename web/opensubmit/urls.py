@@ -1,18 +1,19 @@
 from django.conf.urls import include, url
-from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 
 from opensubmit import views, admin, api
+from opensubmit.cbv import frontend
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
-    url(r'^logout/$', views.logout, name='logout'),
-    url(r'^archive/$', views.archive, name='archive'),
-    url(r'^dashboard/$', views.dashboard, name='dashboard'),
-    url(r'^details/(?P<subm_id>\d+)/$', views.details, name='details'),
+    url(r'^$', frontend.IndexView.as_view(), name='index'),
+    url(r'^logout/$', frontend.LogoutView.as_view(), name='logout'),
+    url(r'^settings/$', frontend.SettingsView.as_view(), name='settings'),
+    url(r'^courses/$', frontend.CoursesView.as_view(), name='courses'),
+    url(r'^archive/$', frontend.ArchiveView.as_view(), name='archive'),
+    url(r'^dashboard/$', frontend.DashboardView.as_view(), name='dashboard'),
+    url(r'^details/(?P<pk>\d+)/$', frontend.SubmissionDetailsView.as_view(), name='details'),
+    url(r'^machine/(?P<pk>\d+)/$', frontend.MachineDetailsView.as_view(), name='machine'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', views.new, name='new'),
     url(r'^assignments/(?P<ass_id>\d+)/perftable/$', views.perftable, name='perftable'),
     url(r'^assignments/(?P<ass_id>\d+)/duplicates/$', views.duplicates, name='duplicates'),
@@ -29,10 +30,7 @@ urlpatterns = [
     url(r'^jobs/$', api.jobs, name='jobs'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', api.download, name='download_secret'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', api.download, name='download'),
-    url(r'^machine/(?P<machine_id>\d+)/$', views.machine, name='machine'),
     url(r'^machines/$', api.machines, name='machines'),
-    url(r'^settings/$', views.settings, name='settings'),
-    url(r'^courses/$', views.courses, name='courses'),
     url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
 
     url('', include('social_django.urls', namespace='social')),
