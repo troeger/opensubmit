@@ -26,7 +26,7 @@
         </thead>
 
         <tbody>
-            {% for submission in archived %}
+            {% for submission in object_list %}
                 <tr>
                     <td>{{ submission.pk }}</td>
                     <td><a href="{{ submission.assignment.course.homepage }}">{{ submission.assignment.course }}</a></td>
