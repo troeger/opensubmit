@@ -151,12 +151,12 @@ def jobs(request):
                 sub.clean_fetch_date()
                 if sub.state == Submission.TEST_VALIDITY_PENDING:
                     sub.save_validation_result(
-                        machine, "Killed due to non-reaction on timeout signals. Please check your application for deadlocks or keyboard input.", None)
+                        machine, "Killed due to non-reaction. Please check your application for deadlocks or keyboard input.", "Killed due to non-reaction on timeout signals.")
                     sub.state = Submission.TEST_VALIDITY_FAILED
                     sub.inform_student(sub.state)
                 if sub.state == Submission.TEST_FULL_PENDING:
                     sub.save_fulltest_result(
-                        machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.", None)
+                        machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.")
                     sub.state = Submission.TEST_FULL_FAILED
                 sub.save()
 
@@ -228,7 +228,7 @@ def jobs(request):
         # Possible with + without grading
         if request.POST['Action'] == 'test_validity' and sub.state == Submission.TEST_VALIDITY_PENDING:
             sub.save_validation_result(
-                machine, request.POST['Message'], None)
+                machine, request.POST['Message'], request.POST['MessageTutor'])
             if error_code == 0:
                 # We have a full test
                 if sub.assignment.attachment_test_full:
@@ -253,7 +253,7 @@ def jobs(request):
         # Possible with + without grading
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
             sub.save_fulltest_result(
-                machine, request.POST['Message'], None)
+                machine, request.POST['MessageTutor'])
             if error_code == 0:
                 if sub.assignment.is_graded():
                     logger.debug("Full test working, setting state to tested (since graded)")
@@ -273,7 +273,7 @@ def jobs(request):
             logger.debug(
                 "Closed full test done, setting state to closed again")
             sub.save_fulltest_result(
-                machine, request.POST['Message'], None)
+                machine, request.POST['MessageTutor'])
             sub.state = Submission.CLOSED
             # full tests may be performed several times and are meant to be a silent activity
             # therefore, we send no mail to the student here

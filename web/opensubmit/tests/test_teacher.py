@@ -74,18 +74,28 @@ class Teacher(SubmitTeacherTestCase):
         response = self.c.get('/teacher/opensubmit/submissionfile/')
         self.assertEqual(response.status_code, 200)
 
-    def test_mail_view(self):
-        response = self.c.get('/course/%u/mail2all/' % self.course.pk)
+    def test_mail_view_course(self):
+        response = self.c.get('/mail/course=%u' % self.course.pk)
+        self.assertEqual(response.status_code, 200)
+
+    def test_mail_view_students(self):
+        response = self.c.get('/mail/students=%u' % self.student.pk)
         self.assertEqual(response.status_code, 200)
 
     def test_mail_sending(self):
-        # POST with parameters leads to preview, which stores relevant information in session
-        response = self.c.post('/course/%u/mail2all/' %
-                               self.course.pk, {'subject': 'Foo', 'message': 'bar'})
+        # Mail form rendering stores the receiver data in the session
+        s = self.c.session
+        s['mail_receivers'] = [{'first_name': self.student.first_name,
+                                'last_name': self.student.last_name,
+                                'email': self.student.email}]
+        s.save()
+        # Submitted mail form adds subject and text as POST data
+        # Leads to preview screen, where we start here
+        response = self.c.post('/mail/preview/', {'subject': 'Foo', 'message': 'bar'})
         self.assertEqual(response.status_code, 200)
         # POST without parameters leads to sending of data stored in session
         # Expect redirect to overview
-        response = self.c.post('/course/%u/mail2all/' % self.course.pk)
+        response = self.c.post('/mail/send/')
         self.assertEqual(response.status_code, 302)
 
     def test_perf_data_view(self):

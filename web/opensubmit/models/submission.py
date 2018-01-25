@@ -504,9 +504,10 @@ class Submission(models.Model):
         # this implies that the Apache media serving is disabled
         return reverse('download', args=(self.pk, 'grading_file', ))
 
-    def _save_test_result(self, machine, text, kind, perf_data):
+    def _save_test_result(self, machine, text_student, text_tutor, kind, perf_data):
         result = SubmissionTestResult(
-            result=text,
+            result=text_student,
+            result_tutor=text_tutor,
             machine=machine,
             kind=kind,
             perf_data=perf_data,
@@ -530,13 +531,13 @@ class Submission(models.Model):
         SubmissionFile.objects.filter(
             pk=self.file_upload.pk).update(fetched=None)
 
-    def save_validation_result(self, machine, text, perf_data):
+    def save_validation_result(self, machine, text_student, text_tutor, perf_data=None):
         self._save_test_result(
-            machine, text, SubmissionTestResult.VALIDITY_TEST, perf_data)
+            machine, text_student, text_tutor, SubmissionTestResult.VALIDITY_TEST, perf_data)
 
-    def save_fulltest_result(self, machine, text, perf_data):
+    def save_fulltest_result(self, machine, text_tutor, perf_data=None):
         self._save_test_result(
-            machine, text, SubmissionTestResult.FULL_TEST, perf_data)
+            machine, None, text_tutor, SubmissionTestResult.FULL_TEST, perf_data)
 
     def get_validation_result(self):
         '''

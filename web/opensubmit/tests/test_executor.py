@@ -268,6 +268,9 @@ class Validation(TestCase):
     def test_1000tfm(self):
         self._test_validation_case('1000tfm')
 
+    def test_regressions(self):
+        self._test_validation_case('regression_001')
+
 
 class Communication(SubmitStudentScenarioTestCase):
     '''
@@ -437,7 +440,7 @@ class Communication(SubmitStudentScenarioTestCase):
         # Check if timeout marking took place
         sub.refresh_from_db()
         self.assertEqual(sub.state, Submission.TEST_FULL_FAILED)
-        assert("took too long" in sub.get_fulltest_result().result)
+        assert("timeout" in sub.get_fulltest_result().result_tutor)
         # Failed full tests shall not be reported
         self.assertEqual(0, len(mail.outbox))
 
@@ -496,7 +499,8 @@ class Communication(SubmitStudentScenarioTestCase):
             kind=SubmissionTestResult.FULL_TEST
         )
         self.assertEqual(1, len(results))
-        self.assertNotEqual(0, len(results[0].result))
+        self.assertNotEqual(0, len(results[0].result_tutor))
+        self.assertEqual(None, results[0].result)
 
     def test_inconsistent_state_email(self):
         '''

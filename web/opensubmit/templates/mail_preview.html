@@ -21,34 +21,24 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>eMail - {{ course }}</h1>
+    <h1>eMail Preview</h1>
 </div>
 
-<p>Example:</p>
-
-<fieldset class="module grp-module">
-<div class="form-row grp-row">
-	<div class="field-box">
-		From:<br/>{{ preview_from }}
-	</div>
-</div>
-<div class="form-row grp-row">
-	<div class="field-box">
-		Subject:<br/>{{ preview_subject }}
-	</div>
-</div>
-<div class="form-row grp-row">
-	<div class="field-box">
-		Message:<br/>{{ preview_message|linebreaksbr }}
-	</div>
-</div>
-</fieldset>
-
-
-<form class="form" role="form" action="." method="post">
+<form class="form" role="form" action="{% url 'mailsend' %}" method="post">
 	{% csrf_token %}
-	<input type="submit" href="." value="Send"></input>
+	<input type="submit" value="Send {{ data|length }} eMails"></input>
 
 </form>
+
+{% for receiver in data %}
+<hr/>
+<p>To: {{ receiver.to }}</p>
+<p>From: {{ receiver.from }}</p>
+<p>Subject: {{ receiver.subject }}</p>
+<br/>
+<p>{{ receiver.message|linebreaksbr }}</p>
+{% endfor %}
+<hr/>
+
 
 {% endblock %}
