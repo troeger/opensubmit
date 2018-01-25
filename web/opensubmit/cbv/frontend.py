@@ -167,3 +167,4 @@ class MachineDetailsView(DetailView):
             context['config'] = []
         context['queue'] = Submission.pending_student_tests.all()
         context['additional'] = len(Submission.pending_full_tests.all())
+        return context
