@@ -15,6 +15,7 @@ class SubmissionTestResult(models.Model):
     machine = models.ForeignKey('TestMachine', related_name="test_results")
     created = models.DateTimeField(auto_now_add=True, editable=False)
     result = models.TextField(null=True, blank=True)
+    result_tutor = models.TextField(null=True, blank=True)
     kind = models.CharField(max_length=2, choices=JOB_TYPES)
     perf_data = models.TextField(null=True, blank=True)
 

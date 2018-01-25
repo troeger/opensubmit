@@ -22,6 +22,8 @@ def grading_file(submission):
         return True
     else:
         return False
+
+
 grading_file.boolean = True            # show nice little icon
 
 
@@ -48,8 +50,9 @@ class SubmissionStateFilter(SimpleListFilter):
         )
 
     def queryset(self, request, qs):
-        qs = qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
-        if   self.value() == 'notwithdrawn':
+        qs = qs.filter(assignment__course__in=list(
+            request.user.profile.tutor_courses()))
+        if self.value() == 'notwithdrawn':
             return Submission.qs_notwithdrawn(qs)
         elif self.value() == 'valid':
             return Submission.qs_valid(qs)
@@ -75,7 +78,8 @@ class SubmissionAssignmentFilter(SimpleListFilter):
     parameter_name = 'assignmentfilter'
 
     def lookups(self, request, model_admin):
-        tutor_assignments = Assignment.objects.filter(course__in=list(request.user.profile.tutor_courses())).order_by('title')
+        tutor_assignments = Assignment.objects.filter(course__in=list(
+            request.user.profile.tutor_courses())).order_by('title')
         return ((ass.pk, ass.title) for ass in tutor_assignments)
 
     def queryset(self, request, qs):
@@ -103,38 +107,44 @@ class SubmissionCourseFilter(SimpleListFilter):
         else:
             return qs.filter(assignment__course__in=list(request.user.profile.tutor_courses()))
 
+
 class SubmissionAdmin(ModelAdmin):
 
     ''' This is our version of the admin view for a single submission.
     '''
-    list_display = ['__str__', 'created', 'modified', 'author_list', 'course', 'assignment', 'state', 'grading_status_text', 'has_grading_notes']
-    list_filter = (SubmissionStateFilter, SubmissionCourseFilter, SubmissionAssignmentFilter)
+    list_display = ['__str__', 'created', 'modified', 'author_list', 'course',
+                    'assignment', 'state', 'grading_status_text', 'has_grading_notes']
+    list_filter = (SubmissionStateFilter, SubmissionCourseFilter,
+                   SubmissionAssignmentFilter)
     filter_horizontal = ('authors',)
-    actions = ['downloadArchiveAction', 'setInitialStateAction', 'setFullPendingStateAction','setGradingNotFinishedStateAction', 'setGradingFinishedStateAction', 'closeAndNotifyAction', 'sendMailAction', 'notifyAction', 'getPerformanceResultsAction']
-    search_fields = ['=id', '=authors__email', '=authors__first_name', '=authors__last_name', '=authors__username', '=notes']
+    actions = ['downloadArchiveAction', 'setInitialStateAction', 'setFullPendingStateAction', 'setGradingNotFinishedStateAction',
+               'setGradingFinishedStateAction', 'closeAndNotifyAction', 'sendMailAction', 'notifyAction', 'getPerformanceResultsAction']
+    search_fields = ['=id', '=authors__email', '=authors__first_name',
+                     '=authors__last_name', '=authors__username', '=notes']
     change_list_template = "admin/change_list_filter_sidebar.html"
 
     class Media:
         css = {'all': ('css/teacher.css',)}
 
-
     fieldsets = (
-            ('General',
-                {'fields': ('assignment', 'assignment_info', ('submitter','modified')),}),
-            ('Authors',
-                {   'fields': ('authors',),
-                    'classes': ('grp-collapse grp-closed',)
-                }),
-            ('Submission and test results',
-                {   'fields': (('file_link', 'file_upload', 'notes') ,'validation_result','fulltest_result'),
-                }),
-            ('Grading',
-                {'fields': (('grading', 'grading_status'), 'grading_notes', 'grading_file',),}),
+        ('General',
+         {'fields': ('assignment', 'assignment_info', ('submitter', 'modified')), }),
+        ('Authors',
+         {'fields': ('authors',),
+          'classes': ('grp-collapse grp-closed',)
+          }),
+        ('Student submission', {'fields': (('file_link', 'file_upload'), 'notes')}),
+        ('Test results',
+         {'fields': (('validationtest_result_student', 'validationtest_result_tutor'), 'fulltest_result'),
+          }),
+        ('Grading',
+         {'fields': (('grading', 'grading_status'), 'grading_notes', 'grading_file',), }),
     )
 
     def assignment_info(self, instance):
-        message = 'Course: %s<br/>'%instance.assignment.course
-        message += 'Deadline: %s (%s ago)'%(instance.assignment.hard_deadline, timesince.timesince(instance.assignment.hard_deadline))
+        message = 'Course: %s<br/>' % instance.assignment.course
+        message += 'Deadline: %s (%s ago)' % (instance.assignment.hard_deadline,
+                                              timesince.timesince(instance.assignment.hard_deadline))
         if instance.can_modify(instance.submitter):
             message += '''<p style="color: red">Warning: Assignment is still open. Saving grading information will disable withdrawal and re-upload for the authors.</p>'''
         return mark_safe(message)
@@ -151,25 +161,35 @@ class SubmissionAdmin(ModelAdmin):
             return mark_safe('<a href="%s">%s</a><br/>(<a href="%s" target="_new">Preview</a>)' % (sfile.get_absolute_url(), sfile.basename(), sfile.get_preview_url()))
     file_link.short_description = "Stored upload"
 
-    def _render_test_result(self, result_obj, enabled):
+    def _render_test_result(self, result_obj, enabled, show_student_data):
         if not result_obj:
             if enabled:
                 return mark_safe('Enabled, no results.')
             else:
-                return mark_safe('Not enabled.')
+                return mark_safe('Not enabled, no results.')
         else:
-            return format_html("Test output from {0}:<br/><pre>{1}</pre>", result_obj.machine, result_obj.result)
+            if show_student_data:
+                text = result_obj.result
+            else:
+                text = result_obj.result_tutor
+            return format_html("{1}<div style='font-size:80%'><br/>(Generated by {0})</div>", result_obj.machine, text)
 
-    def validation_result(self, instance):
+    def validationtest_result_student(self, instance):
         result_obj = instance.get_validation_result()
-        return self._render_test_result(result_obj, instance.assignment.attachment_test_validity)
-    validation_result.short_description = "Validation test"
-    validation_result.allow_tags = True
+        return self._render_test_result(result_obj, instance.assignment.attachment_test_validity, True)
+    validationtest_result_student.short_description = "Validation test"
+    validationtest_result_student.allow_tags = True
+
+    def validationtest_result_tutor(self, instance):
+        result_obj = instance.get_validation_result()
+        return self._render_test_result(result_obj, instance.assignment.attachment_test_validity, False)
+    validationtest_result_tutor.short_description = "Validation test (tutor only)"
+    validationtest_result_tutor.allow_tags = True
 
     def fulltest_result(self, instance):
         result_obj = instance.get_fulltest_result()
-        return self._render_test_result(result_obj, instance.assignment.attachment_test_full)
-    fulltest_result.short_description = "Full test"
+        return self._render_test_result(result_obj, instance.assignment.attachment_test_full, False)
+    fulltest_result.short_description = "Full test (tutor only)"
     fulltest_result.allow_tags = True
 
     def grading_status(self, instance):
@@ -178,7 +198,6 @@ class SubmissionAdmin(ModelAdmin):
         '''
         return mark_safe(message)
     grading_status.short_description = "Status"
-
 
     def get_queryset(self, request):
         ''' Restrict the listed submission for the current user.'''
@@ -194,9 +213,10 @@ class SubmissionAdmin(ModelAdmin):
             is the documented way to do that.
         '''
         # Pseudo-fields generated by functions always must show up in the readonly list
-        pseudo_fields = ('file_link', 'validation_result','fulltest_result', 'grading_status', 'assignment_info', 'modified')
+        pseudo_fields = ('file_link', 'validationtest_result_student', 'validationtest_result_tutor', 'fulltest_result',
+                         'grading_status', 'assignment_info', 'modified')
         if obj:
-            return ('assignment', 'submitter', 'notes')+pseudo_fields
+            return ('assignment', 'submitter', 'notes') + pseudo_fields
         else:
             # New manual submission
             return pseudo_fields
@@ -210,8 +230,9 @@ class SubmissionAdmin(ModelAdmin):
             submurl = kwargs['request'].path
             try:
                 # Does not work on new submission action by admin or with a change of URLs. The former is expectable.
-                submid = [int(s) for s in submurl.split('/') if s.isdigit()][0] 
-                kwargs["queryset"] = Submission.objects.get(pk=submid).assignment.gradingScheme.gradings
+                submid = [int(s) for s in submurl.split('/') if s.isdigit()][0]
+                kwargs["queryset"] = Submission.objects.get(
+                    pk=submid).assignment.gradingScheme.gradings
             except:
                 kwargs["queryset"] = Grading.objects.none()
         return super(SubmissionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
@@ -273,9 +294,11 @@ class SubmissionAdmin(ModelAdmin):
                 subm.save()
                 numchanged += 1
         if numchanged == 0:
-            self.message_user(request, "Nothing changed, no testable submission found.")
+            self.message_user(
+                request, "Nothing changed, no testable submission found.")
         else:
-            self.message_user(request, "Changed status of %u submissions." % numchanged)
+            self.message_user(
+                request, "Changed status of %u submissions." % numchanged)
     setFullPendingStateAction.short_description = "Re-run full test for selected submissions (student invisible)"
 
     def closeAndNotifyAction(self, request, queryset):
@@ -288,11 +311,13 @@ class SubmissionAdmin(ModelAdmin):
         for subm in qs:
             subm.inform_student(Submission.CLOSED)
             mails.append(str(subm.pk))
-        qs.update(state=Submission.CLOSED)      # works in bulk because inform_student never fails
+        # works in bulk because inform_student never fails
+        qs.update(state=Submission.CLOSED)
         if len(mails) == 0:
             self.message_user(request, "Nothing closed, no mails sent.")
         else:
-            self.message_user(request, "Mail sent for submissions: " + ",".join(mails))
+            self.message_user(
+                request, "Mail sent for submissions: " + ",".join(mails))
     closeAndNotifyAction.short_description = "Close + send student notification for selected submissions"
 
     def sendMailAction(self, request, queryset):
@@ -317,13 +342,11 @@ class SubmissionAdmin(ModelAdmin):
         z.close()
         # go back to start in ZIP file so that Django can deliver it
         output.seek(0)
-        response = HttpResponse(output, content_type="application/x-zip-compressed")
+        response = HttpResponse(
+            output, content_type="application/x-zip-compressed")
         response['Content-Disposition'] = 'attachment; filename=submissions.zip'
         return response
     downloadArchiveAction.short_description = "Download selected submissions as ZIP archive"
-
-
-
 
     # ToDo: Must be refactored to consider new performance data storage model
     # def getPerformanceResultsAction(self, request, queryset):
@@ -338,4 +361,3 @@ class SubmissionAdmin(ModelAdmin):
     #             response.write("\n")
     #     return response
     # getPerformanceResultsAction.short_description = "Download performance data as CSV"
-

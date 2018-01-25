@@ -16,7 +16,6 @@ machine = TestMachine(
     config=json.dumps([["Operating system", "Plan 9"], ]))
 machine.save()
 
-
 def createSubmissionFile():
     with NamedTemporaryFile(mode="wt", delete=False, prefix=settings.MEDIA_ROOT) as tmpfile:
         # Submission file
