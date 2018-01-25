@@ -8,7 +8,7 @@
 {% block content %}
 <div class="page-header">
     <h1>Dashboard</h1>
-    <h6>{{ user.get_full_name }}<{{ user.email }}></h6>
+    <h6>{{ user.get_full_name }} &lt;{{ user.email }}&gt; </h6>
 </div>
 
 {%with assign_missed=user.profile.gone_assignments assignments=user.profile.open_assignments%}
