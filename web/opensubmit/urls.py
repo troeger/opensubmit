@@ -1,8 +1,5 @@
 from django.conf.urls import include, url
-from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 
 from opensubmit import views, admin, api
@@ -13,8 +10,8 @@ urlpatterns = [
     url(r'^logout/$', frontend.LogoutView.as_view(), name='logout'),
     url(r'^settings/$', frontend.SettingsView.as_view(), name='settings'),
     url(r'^courses/$', frontend.CoursesView.as_view(), name='courses'),
-    url(r'^archive/$', views.archive, name='archive'),
-    url(r'^dashboard/$', views.dashboard, name='dashboard'),
+    url(r'^archive/$', frontend.ArchiveView.as_view(), name='archive'),
+    url(r'^dashboard/$', frontend.DashboardView.as_view(), name='dashboard'),
     url(r'^details/(?P<subm_id>\d+)/$', views.details, name='details'),
     url(r'^assignments/(?P<ass_id>\d+)/new/$', views.new, name='new'),
     url(r'^assignments/(?P<ass_id>\d+)/perftable/$', views.perftable, name='perftable'),
