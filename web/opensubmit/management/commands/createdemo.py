@@ -1,3 +1,6 @@
+import datetime
+import json
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from opensubmit.models import Course, Assignment, Grading, GradingScheme, Submission, SubmissionFile, SubmissionTestResult, TestMachine
@@ -5,7 +8,13 @@ from opensubmit import settings
 from django.utils import timezone
 from django.core.files import File as DjangoFile
 from tempfile import NamedTemporaryFile
-import datetime
+
+# test machine
+machine = TestMachine(
+    last_contact=datetime.datetime.now(),
+    host='UUID4711',
+    config=json.dumps([["Operating system", "Plan 9"], ]))
+machine.save()
 
 
 def createSubmissionFile():
@@ -16,10 +25,6 @@ def createSubmissionFile():
         sf = SubmissionFile(attachment=DjangoFile(tmpfile.name))
         sf.save()
         # os.remove(tmpfile.name)
-        # test machine
-        machine = TestMachine()
-        machine.name = "Demo Test Machine"
-        machine.save()
         # Test results
         val_result = SubmissionTestResult()
         val_result.submission_file = sf
