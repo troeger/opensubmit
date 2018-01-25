@@ -47,9 +47,6 @@ class SettingsView(UpdateView):
 
 @method_decorator(login_required, name='dispatch')
 class CoursesView(UpdateView):
-    '''
-    TODO: Weitermachen.
-    '''
     template_name = 'courses.html'
     form_class = modelform_factory(UserProfile, fields=['courses'])
     success_url = reverse_lazy('dashboard')
@@ -59,7 +56,7 @@ class CoursesView(UpdateView):
         return super().form_valid(form)
 
     def get_object(self, queryset=None):
-        return self.request.user
+        return self.request.user.profile
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
