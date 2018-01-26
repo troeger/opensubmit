@@ -18,4 +18,5 @@ echo "Database is up."
 opensubmit-web configtest
 
 # Start Apache
+rm -f /var/run/apache2/apache2.pid
 apache2ctl -D FOREGROUND

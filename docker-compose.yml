@@ -4,17 +4,27 @@ version: '3'
 
 services:
   db:
-    image: postgres
+    image: postgres:9
     environment:
       POSTGRES_PASSWORD: opensubmit
       POSTGRES_USER: opensubmit
       POSTGRES_DB: opensubmit
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data  
   web:
-    build: ./web/
+    build: 
+      context: ./web/
+      args:
+        - OPENSUBMIT_SERVER_HOST=http://localhost:8000
+        - OPENSUBMIT_SERVER_MEDIAROOT=/data/media/ 
+        - OPENSUBMIT_DATABASE_NAME=opensubmit 
+        - OPENSUBMIT_DATABASE_USER=opensubmit 
+        - OPENSUBMIT_DATABASE_PASSWORD=opensubmit 
+        - OPENSUBMIT_DATABASE_HOST=db 
+        - OPENSUBMIT_DATABASE_ENGINE=postgresql 
+        - OPENSUBMIT_DATABASE_DRIVER=psycopg2
     tty: true
     container_name: opensubmit_web
-    environment:
-      - OPENSUBMIT_SERVER_HOST=http://localhost:8000
     ports:
       - "8000:80"
     depends_on:
@@ -24,3 +34,4 @@ services:
 
 volumes:
   data-volume:
+  postgres-volume:
