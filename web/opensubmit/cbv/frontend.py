@@ -10,9 +10,10 @@ from django.utils.decorators import method_decorator
 from django.core.urlresolvers import reverse_lazy
 from django.forms.models import modelform_factory, model_to_dict
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, render
 
-from opensubmit.forms import SettingsForm
-from opensubmit.models import UserProfile, Submission, TestMachine, Course
+from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
+from opensubmit.models import UserProfile, Submission, TestMachine, Course, Assignment, SubmissionFile
 from opensubmit.models.userprofile import db_fixes
 
 
@@ -168,3 +169,123 @@ class MachineDetailsView(DetailView):
         context['queue'] = Submission.pending_student_tests.all()
         context['additional'] = len(Submission.pending_full_tests.all())
         return context
+
+
+@method_decorator(login_required, name='dispatch')
+class SubmissionNewView(TemplateView):
+    '''
+    TODO: Currently an ugly direct conversion of the old view
+    function implementation. Using something like CreateView
+    demands tailoring of the double-form setup here.
+    '''
+    template_name = 'new.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.ass = get_object_or_404(Assignment, pk=kwargs['pk'])
+
+        # Check whether submissions are allowed.
+        if not self.ass.can_create_submission(user=request.user):
+            raise PermissionDenied(
+                "You are not allowed to create a submission for this assignment")
+
+        # get submission form according to the assignment type
+        self.SubmissionForm = getSubmissionForm(self.ass)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        # we need to fill all forms here,
+        # so that they can be rendered on validation errors
+        submissionForm = self.SubmissionForm(request.user,
+                                             self.ass,
+                                             request.POST,
+                                             request.FILES)
+        if submissionForm.is_valid():
+            # commit=False to set submitter in the instance
+            submission = submissionForm.save(commit=False)
+            submission.submitter = request.user
+            submission.assignment = self.ass
+            submission.state = submission.get_initial_state()
+            # take uploaded file from extra field
+            if self.ass.has_attachment:
+                upload_file = request.FILES['attachment']
+                submissionFile = SubmissionFile(
+                    attachment=submissionForm.cleaned_data['attachment'],
+                    original_filename=upload_file.name)
+                submissionFile.save()
+                submission.file_upload = submissionFile
+            submission.save()
+            # because of commit=False, we first need to add
+            # the form-given authors
+            submissionForm.save_m2m()
+            submission.save()
+            messages.info(request, "New submission saved.")
+            if submission.state == Submission.SUBMITTED:
+                # Initial state is SUBMITTED,
+                # which means that there is no validation
+                if not submission.assignment.is_graded():
+                    # No validation, no grading. We are done.
+                    submission.state = Submission.CLOSED
+                    submission.save()
+            return redirect('dashboard')
+        else:
+            messages.error(request, "Please correct your submission information.")
+            return render(request, 'new.html', {'submissionForm': submissionForm, 'assignment': self.ass})
+
+    def get(self, request, *args, **kwargs):
+        submissionForm = self.SubmissionForm(request.user, self.ass)
+        return render(request, 'new.html', {'submissionForm': submissionForm, 'assignment': self.ass})
+
+
+@method_decorator(login_required, name='dispatch')
+class SubmissionWithdrawView(UpdateView):
+    template_name = 'withdraw.html'
+    model = Submission
+    form_class = modelform_factory(Submission, fields=[])  # make form_valid() work
+    success_url = reverse_lazy('dashboard')
+
+    def get_object(self, queryset=None):
+        submission = super().get_object(queryset)
+        if not submission.can_withdraw(user=self.request.user):
+            raise PermissionDenied(
+                "Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
+        return submission
+
+    def form_valid(self, form):
+        messages.info(self.request, 'Submission successfully withdrawn.')
+        self.object.state = Submission.WITHDRAWN
+        self.object.save()
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class SubmissionUpdateView(UpdateView):
+    template_name = 'update.html'
+    model = Submission
+    form_class = SubmissionFileUpdateForm
+    success_url = reverse_lazy('dashboard')
+
+    def get_object(self, queryset=None):
+        submission = super().get_object(queryset)
+        if not submission.can_reupload():
+            raise PermissionDenied("Update of submission not / no longer possible.")
+        if self.request.user not in submission.authors.all():
+            raise PermissionDenied("Update of submission is only allowed for authors.")
+        return submission
+
+    def form_valid(self, form):
+        upload_file = self.request.FILES['attachment']
+        new_file = SubmissionFile(
+            attachment=form.files['attachment'],
+            original_filename=upload_file.name)
+        new_file.save()
+        # fix status of old uploaded file
+        self.object.file_upload.replaced_by = new_file
+        self.object.file_upload.save()
+        # store new file for submissions
+        self.object.file_upload = new_file
+        self.object.state = self.object.get_initial_state()
+        self.object.notes = form.data['notes']
+        self.object.save()
+        messages.info(self.request, 'Submission files successfully updated.')
+        return super().form_valid(form)

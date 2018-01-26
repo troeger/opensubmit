@@ -30,101 +30,6 @@ logger = logging.getLogger('OpenSubmit')
 
 
 @login_required
-def new(request, ass_id):
-    ass = get_object_or_404(Assignment, pk=ass_id)
-
-    # Check whether submissions are allowed.
-    if not ass.can_create_submission(user=request.user):
-        raise PermissionDenied(
-            "You are not allowed to create a submission for this assignment")
-
-    # get submission form according to the assignment type
-    SubmissionForm = getSubmissionForm(ass)
-
-    # Analyze submission data
-    if request.POST:
-        # we need to fill all forms here,
-        # so that they can be rendered on validation errors
-        submissionForm = SubmissionForm(request.user,
-                                        ass,
-                                        request.POST,
-                                        request.FILES)
-        if submissionForm.is_valid():
-            # commit=False to set submitter in the instance
-            submission = submissionForm.save(commit=False)
-            submission.submitter = request.user
-            submission.assignment = ass
-            submission.state = submission.get_initial_state()
-            # take uploaded file from extra field
-            if ass.has_attachment:
-                upload_file = request.FILES['attachment']
-                submissionFile = SubmissionFile(
-                    attachment=submissionForm.cleaned_data['attachment'],
-                    original_filename=upload_file.name)
-                submissionFile.save()
-                submission.file_upload = submissionFile
-            submission.save()
-            # because of commit=False, we first need to add
-            # the form-given authors
-            submissionForm.save_m2m()
-            submission.save()
-            messages.info(request, "New submission saved.")
-            if submission.state == Submission.SUBMITTED:
-                # Initial state is SUBMITTED,
-                # which means that there is no validation
-                if not submission.assignment.is_graded():
-                    # No validation, no grading. We are done.
-                    submission.state = Submission.CLOSED
-                    submission.save()
-            return redirect('dashboard')
-        else:
-            messages.error(
-                request, "Please correct your submission information.")
-    else:
-        submissionForm = SubmissionForm(request.user, ass)
-    return render(request, 'new.html', {'submissionForm': submissionForm,
-                                        'assignment': ass})
-
-
-@login_required
-def update(request, subm_id):
-    # Submission should only be editable by their creators
-    submission = get_object_or_404(Submission, pk=subm_id)
-    # Somebody may bypass the template check by sending direct POST form data.
-    # This check also fails when the student performs a simple reload on the /update page
-    # without form submission after the deadline.
-    # In practice, the latter happens all the time, so we skip the Exception raising here,
-    # which lead to endless mails for the admin user in the past.
-    if not submission.can_reupload():
-        return redirect('dashboard')
-        #raise SuspiciousOperation("Update of submission %s is not allowed at this time." % str(subm_id))
-    if request.user not in submission.authors.all():
-        return redirect('dashboard')
-    if request.POST:
-        updateForm = SubmissionFileUpdateForm(request.POST, request.FILES)
-        if updateForm.is_valid():
-            upload_file = request.FILES['attachment']
-            new_file = SubmissionFile(
-                attachment=updateForm.files['attachment'],
-                original_filename=upload_file.name)
-            new_file.save()
-            # fix status of old uploaded file
-            submission.file_upload.replaced_by = new_file
-            submission.file_upload.save()
-            # store new file for submissions
-            submission.file_upload = new_file
-            submission.state = submission.get_initial_state()
-            submission.notes = updateForm.data['notes']
-            submission.save()
-            messages.info(request, 'Submission files successfully updated.')
-            return redirect('dashboard')
-    else:
-        updateForm = SubmissionFileUpdateForm(instance=submission)
-    return render(request, 'update.html', {'submissionFileUpdateForm': updateForm,
-                                           'submission': submission})
-
-
-@login_required
 @staff_member_required
 def mergeusers(request):
     '''
@@ -365,22 +270,6 @@ def assarchive(request, ass_id):
     response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass.directory_name()
     return response
 
-
-
-@login_required
-def withdraw(request, subm_id):
-    # submission should only be deletable by their creators
-    submission = get_object_or_404(Submission, pk=subm_id)
-    if not submission.can_withdraw(user=request.user):
-        raise PermissionDenied(
-            "Withdrawal for this assignment is no longer possible, or you are unauthorized to access that submission.")
-    if "confirm" in request.POST:
-        submission.state = Submission.WITHDRAWN
-        submission.save()
-        messages.info(request, 'Submission successfully withdrawn.')
-        return redirect('dashboard')
-    else:
-        return render(request, 'withdraw.html', {'submission': submission})
 
 
 @lti_provider(consumer_lookup=lti_secret, site_url=MAIN_URL)
