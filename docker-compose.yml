@@ -1,5 +1,3 @@
-# Note: Use "docker run -it --entrypoint /bin/bash opensubmit_web" for entering the container for debugging
-
 version: '3'
 
 services:
