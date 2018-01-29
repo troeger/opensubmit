@@ -54,6 +54,10 @@ clean-docs:
 	# Clean HTML version of the documentation
 	rm -rf docs/formats
 
+clean-docker:
+	docker container prune
+	docker volume prune
+
 pypi_web: venv
 	# Upload built package for web application to PyPI.
 	# Assumes valid credentials in ~/.pypirc

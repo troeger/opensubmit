@@ -17,9 +17,11 @@ FROM ubuntu
 
 # Prepare Apache environment
 RUN apt-get update \
-    && apt-get install -y apache2 apache2-utils python3 python3-pip libapache2-mod-wsgi-py3 netcat \
+    && apt-get install -y locales apache2 apache2-utils python3 python3-pip libapache2-mod-wsgi-py3 netcat \
     && rm -rf /var/lib/apt/lists/* \
-    rm /etc/apache2/sites-enabled/000-default.conf
+    && rm /etc/apache2/sites-enabled/000-default.conf \
+    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+ENV LANG en_US.utf8
 COPY ./docker/httpd.conf /etc/apache2/sites-enabled/httpd.conf
 
 # Install existing wheel of OpenSubmit
