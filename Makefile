@@ -15,7 +15,7 @@ docker:
 	# Run docker images
 	docker-compose up
 
-docker-build:
+docker-build: build
 	# Re-create docker images
 	docker-compose build
 
