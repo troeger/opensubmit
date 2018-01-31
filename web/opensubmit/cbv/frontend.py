@@ -5,8 +5,7 @@ from django.views.generic import TemplateView, RedirectView, ListView, DetailVie
 from django.views.generic.edit import UpdateView
 from django.shortcuts import redirect
 from django.contrib import auth, messages
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse_lazy
 from django.forms.models import modelform_factory, model_to_dict
 from django.core.exceptions import PermissionDenied
@@ -27,8 +26,7 @@ class IndexView(TemplateView):
             return super(IndexView, self).get(request)
 
 
-@method_decorator(login_required, name='dispatch')
-class LogoutView(RedirectView):
+class LogoutView(LoginRequiredMixin, RedirectView):
     '''
     TODO: Not needed with Django 1.11, which has own LogoutView.
     '''
@@ -40,8 +38,7 @@ class LogoutView(RedirectView):
         return super().get(request)
 
 
-@method_decorator(login_required, name='dispatch')
-class SettingsView(UpdateView):
+class SettingsView(LoginRequiredMixin, UpdateView):
     template_name = 'settings.html'
     form_class = SettingsForm
     success_url = reverse_lazy('dashboard')
@@ -54,8 +51,7 @@ class SettingsView(UpdateView):
         return self.request.user
 
 
-@method_decorator(login_required, name='dispatch')
-class CoursesView(UpdateView):
+class CoursesView(LoginRequiredMixin, UpdateView):
     template_name = 'courses.html'
     form_class = modelform_factory(UserProfile, fields=['courses'])
     success_url = reverse_lazy('dashboard')
@@ -73,8 +69,7 @@ class CoursesView(UpdateView):
         return context
 
 
-@method_decorator(login_required, name='dispatch')
-class ArchiveView(ListView):
+class ArchiveView(LoginRequiredMixin, ListView):
     template_name = 'archive.html'
 
     def get_queryset(self):
@@ -82,8 +77,7 @@ class ArchiveView(ListView):
         return archived
 
 
-@method_decorator(login_required, name='dispatch')
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
 
     def get_context_data(self, **kwargs):
@@ -142,8 +136,7 @@ class DashboardView(TemplateView):
         return super().get(request)
 
 
-@method_decorator(login_required, name='dispatch')
-class SubmissionDetailsView(DetailView):
+class SubmissionDetailsView(LoginRequiredMixin, DetailView):
     template_name = 'details.html'
     model = Submission
 
@@ -155,8 +148,7 @@ class SubmissionDetailsView(DetailView):
         return subm
 
 
-@method_decorator(login_required, name='dispatch')
-class MachineDetailsView(DetailView):
+class MachineDetailsView(LoginRequiredMixin, DetailView):
     template_name = 'machine.html'
     model = TestMachine
 
@@ -171,8 +163,7 @@ class MachineDetailsView(DetailView):
         return context
 
 
-@method_decorator(login_required, name='dispatch')
-class SubmissionNewView(TemplateView):
+class SubmissionNewView(LoginRequiredMixin, TemplateView):
     '''
     TODO: Currently an ugly direct conversion of the old view
     function implementation. Using something like CreateView
@@ -237,8 +228,7 @@ class SubmissionNewView(TemplateView):
         return render(request, 'new.html', {'submissionForm': submissionForm, 'assignment': self.ass})
 
 
-@method_decorator(login_required, name='dispatch')
-class SubmissionWithdrawView(UpdateView):
+class SubmissionWithdrawView(LoginRequiredMixin, UpdateView):
     template_name = 'withdraw.html'
     model = Submission
     form_class = modelform_factory(Submission, fields=[])  # make form_valid() work
@@ -258,8 +248,7 @@ class SubmissionWithdrawView(UpdateView):
         return super().form_valid(form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SubmissionUpdateView(UpdateView):
+class SubmissionUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'update.html'
     model = Submission
     form_class = SubmissionFileUpdateForm
