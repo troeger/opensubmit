@@ -17,7 +17,7 @@
             {% csrf_token %}
             <table class="table">
                 <thead>
-                    <tr><th>Role <a href="./?primary_id={{secondary.pk}}&secondary_id={{primary.pk}}">(Flip)</a></th><th>User</th><th>ID</th><th>Exists since</th></tr>
+                    <tr><th>Role <a href="{% url 'mergeusers' primary_pk=secondary.pk secondary_pk=primary.pk%}">(Flip)</a></th><th>User</th><th>ID</th><th>Exists since</th></tr>
                 </thead>
                 <tbody>
                     <tr style="color: green;"><td>Surviving user</td><td>{{ primary }}</td><td> {{ primary.pk }}</td><td>{{ primary.date_joined}}</td></tr>

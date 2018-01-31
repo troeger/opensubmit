@@ -16,43 +16,16 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import model_to_dict
-from blti import lti_provider
 
 from .forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm, MailForm
 from .models import SubmissionFile, Submission, Assignment, TestMachine, Course, UserProfile
 from .models.userprofile import db_fixes, move_user_data
-from .models.course import lti_secret
 from .settings import MAIN_URL
-from .social import passthrough
 
 import logging
 logger = logging.getLogger('OpenSubmit')
 
 
-@login_required
-@staff_member_required
-def mergeusers(request):
-    '''
-        Offers an intermediate admin view to merge existing users.
-    '''
-    if request.method == 'POST':
-        primary = get_object_or_404(User, pk=request.POST['primary_id'])
-        secondary = get_object_or_404(User, pk=request.POST['secondary_id'])
-        try:
-            move_user_data(primary, secondary)
-            messages.info(request, 'Submissions moved to user %u.' %
-                          (primary.pk))
-        except:
-            messages.error(
-                request, 'Error during data migration, nothing changed.')
-            return redirect('admin:index')
-        messages.info(request, 'User %u deleted.' % (secondary.pk))
-        secondary.delete()
-        return redirect('admin:index')
-    primary = get_object_or_404(User, pk=request.GET['primary_id'])
-    secondary = get_object_or_404(User, pk=request.GET['secondary_id'])
-    # Determine data to be migrated
-    return render(request, 'mergeusers.html', {'primary': primary, 'secondary': secondary})
 
 
 @login_required
@@ -272,30 +245,3 @@ def assarchive(request, ass_id):
 
 
 
-@lti_provider(consumer_lookup=lti_secret, site_url=MAIN_URL)
-@require_POST
-def lti(request, post_params, consumer_key, *args, **kwargs):
-    '''
-        Entry point for LTI consumers.
-
-        This view is protected by the BLTI package decorator,
-        which performs all the relevant OAuth signature checking.
-        It also makes sure that the LTI consumer key and secret were ok.
-        The latter ones are supposed to be configured in the admin interface.
-
-        We can now trust on the provided data to be from the LTI provider.
-
-        If everything worked out, we store the information the session for
-        the Python Social passthrough provider, which is performing
-        user creation and database storage.
-    '''
-    data = {}
-    data['ltikey'] = post_params.get('oauth_consumer_key')
-    # None of them is mandatory
-    data['id'] = post_params.get('user_id', None)
-    data['username'] = post_params.get('custom_username', None)
-    data['last_name'] = post_params.get('lis_person_name_family', None)
-    data['email'] = post_params.get('lis_person_contact_email_primary', None)
-    data['first_name'] = post_params.get('lis_person_name_given', None)
-    request.session[passthrough.SESSION_VAR] = data
-    return redirect(reverse('social:begin', args=['lti']))

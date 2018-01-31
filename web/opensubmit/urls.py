@@ -3,7 +3,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 
 from opensubmit import views, admin, api
-from opensubmit.cbv import frontend
+from opensubmit.cbv import frontend, backend, lti
 
 urlpatterns = [
     url(r'^$', frontend.IndexView.as_view(), name='index'),
@@ -31,12 +31,12 @@ urlpatterns = [
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', api.download, name='download_secret'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/$', api.download, name='download'),
     url(r'^machines/$', api.machines, name='machines'),
-    url(r'^mergeusers/$', views.mergeusers, name='mergeusers'),
+    url(r'^mergeusers/(?P<primary_pk>\d+)/(?P<secondary_pk>\d+)/$', backend.MergeUsersView.as_view(), name='mergeusers'),
 
+    url(r'^lti/$', lti.login, name='lti'),
     url('', include('social_django.urls', namespace='social')),
-    url(r'^lti/$', views.lti, name='lti'),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
-    url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
+    url(r'^grappelli/', include('grappelli.urls')),
 
     url(r'^403/$', TemplateView.as_view(template_name='403.html')),
     url(r'^404/$', TemplateView.as_view(template_name='404.html')),
@@ -47,9 +47,10 @@ urlpatterns = [
 # on production systems, static files are served directly by Apache
 urlpatterns += staticfiles_urlpatterns()
 
-def show_urls(urllist, depth=0): # pragma: no cover
+
+def show_urls(urllist, depth=0):  # pragma: no cover
     for entry in urllist:
         print("  " * depth, entry.regex.pattern)
         if hasattr(entry, 'url_patterns'):
             show_urls(entry.url_patterns, depth + 1)
-#show_urls(urlpatterns)
+# show_urls(urlpatterns)

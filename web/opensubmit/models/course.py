@@ -87,11 +87,3 @@ class Course(models.Model):
         qs = Submission.objects.filter(assignment__course=self).exclude(state=Submission.WITHDRAWN)
         return qs
 
-def lti_secret(key):
-    '''
-        Consumer function as expected by blti package.
-    '''
-    try:
-        return Course.objects.get(lti_key=key).lti_secret
-    except:
-        return None

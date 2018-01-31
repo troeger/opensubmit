@@ -107,9 +107,14 @@ class UserAdmin(DjangoUserAdmin):
             return reverse('admin:index')
         # In most cases, we want to keep the user logged in recently, so we query accordingly
         primary, secondary = queryset.order_by('-date_joined')
-        if primary.profile.tutor_courses().count() > 0 or secondary.profile.tutor_courses().count() > 0:
-            # Since the user is deleted, this is more complicated (course ownership, gradings given etc.)
-            modeladmin.message_user(request, "Merging course owners or tutors is not support at the moment.", level=messages.WARNING)
+        # Since the user is deleted, merging staff users is more complicated
+        # (course ownership, gradings given etc.)
+        # We therefore only support the merging of real students
+        if primary.profile.tutor_courses().count() > 0:
+            modeladmin.message_user(request, "{0} is a course owner or tutor, which cannot be merged.".format(primary), level=messages.WARNING)
             return reverse('admin:index')
-        return HttpResponseRedirect('%s?primary_id=%u&secondary_id=%s'%(reverse('mergeusers'), primary.pk, secondary.pk))
+        if secondary.profile.tutor_courses().count() > 0:
+            modeladmin.message_user(request, "{0} is a course owner or tutor, which cannot be merged.".format(secondary), level=messages.WARNING)
+            return reverse('admin:index')
+        return HttpResponseRedirect(reverse('mergeusers', kwargs={'primary_pk': primary.pk, 'secondary_pk': secondary.pk}))
     mergeusers.short_description = "Merge selected users"
