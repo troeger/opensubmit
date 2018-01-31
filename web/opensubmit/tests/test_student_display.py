@@ -229,6 +229,10 @@ class Student(SubmitStudentScenarioTestCase):
         # 403: can never access the app label
         self.assertEqual(response.status_code, 302)
 
+    def test_lti_config_info(self):
+        response = self.c.get('/lti/config/')
+        self.assertEqual(response.status_code, 200)
+
     def test_working_lti_credentials(self):
 
         self.course.lti_key = 'foo'

@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^mergeusers/(?P<primary_pk>\d+)/(?P<secondary_pk>\d+)/$', backend.MergeUsersView.as_view(), name='mergeusers'),
 
     url(r'^lti/$', lti.login, name='lti'),
+    url(r'^lti/config/$', lti.config, name='lticonfig'),
     url('', include('social_django.urls', namespace='social')),
     url(r'^teacher/', include(admin.teacher_backend.urls)),
     url(r'^grappelli/', include('grappelli.urls')),

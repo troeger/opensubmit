@@ -75,11 +75,11 @@ def login(request):
 
 
 def config(request):
-    app_title = 'OpenSubmit'
     launch_url = request.build_absolute_uri(reverse('lti'))
 
     lti_tool_config = ToolConfig(
-        title=app_title,
+        title='OpenSubmit',
+        description='Assignment Management and Submission System',
         launch_url=launch_url,
         secure_launch_url=launch_url)
 
