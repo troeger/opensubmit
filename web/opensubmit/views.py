@@ -179,29 +179,6 @@ def coursearchive(request, course_id):
     return response
 
 
-@login_required
-@staff_member_required
-def assarchive(request, ass_id):
-    '''
-        Provides all non-withdrawn submissions for an assignment as download.
-        Intented for supporting offline correction.
-    '''
-    output = io.BytesIO()
-    z = zipfile.ZipFile(output, 'w')
-
-    ass = get_object_or_404(Assignment, pk=ass_id)
-    ass.add_to_zipfile(z)
-    subs = Submission.valid_ones.filter(assignment=ass).order_by('submitter')
-    for sub in subs:
-        sub.add_to_zipfile(z)
-
-    z.close()
-    # go back to start in ZIP file so that Django can deliver it
-    output.seek(0)
-    response = HttpResponse(
-        output, content_type="application/x-zip-compressed")
-    response['Content-Disposition'] = 'attachment; filename=%s.zip' % ass.directory_name()
-    return response
 
 
 

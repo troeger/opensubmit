@@ -19,7 +19,7 @@ urlpatterns = [
     url(r'^update/(?P<pk>\d+)/$', frontend.SubmissionUpdateView.as_view(), name='update'),
     url(r'^preview/(?P<pk>\d+)/$', backend.PreviewView.as_view(), name='preview'),
     url(r'^assignments/(?P<pk>\d+)/duplicates/$', backend.DuplicatesView.as_view(), name='duplicates'),
-    url(r'^assignments/(?P<ass_id>\d+)/archive/$', views.assarchive, name='assarchive'),
+    url(r'^assignments/(?P<pk>\d+)/archive/$', backend.AssignmentArchiveView.as_view(), name='assarchive'),
     url(r'^mail/course=(?P<course_id>\d+)$', views.mail_course, name='mailcourse'),
     url(r'^mail/students=(?P<student_ids>.*)$', views.mail_students, name='mailstudents'),
     url(r'^mail/preview/$', views.mail_preview, name='mailpreview'),
