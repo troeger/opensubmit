@@ -107,8 +107,6 @@ def view_links(obj):
     ''' Link to performance data and duplicate overview.'''
     result=format_html('')
     result+=format_html('<a href="%s" style="white-space: nowrap">Show duplicates</a><br/>'%reverse('duplicates', args=(obj.pk,)))
-    if obj.has_perf_results():
-        result+=format_html('<a href="%s" style="white-space: nowrap">Performance data</a><br/>'%reverse('perftable', args=(obj.pk,)))
     result+=format_html('<a href="%s" style="white-space: nowrap">Show submissions</a><br/>'%obj.grading_url())
     result+=format_html('<a href="%s" style="white-space: nowrap">Download submissions</a>'%reverse('assarchive', args=(obj.pk,)))
     return result

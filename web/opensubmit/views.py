@@ -26,28 +26,6 @@ import logging
 logger = logging.getLogger('OpenSubmit')
 
 
-
-
-
-
-@login_required
-@staff_member_required
-def perftable(request, ass_id):
-    assignment = get_object_or_404(Assignment, pk=ass_id)
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="perf_assignment%u.csv"' % assignment.pk
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Assignment', 'Submission ID',
-                     'Authors', 'Performance Data'])
-    for sub in assignment.submissions.all():
-        result = sub.get_fulltest_result()
-        if result:
-            row = [str(sub.assignment), str(sub.pk), ", ".join(sub.authors.values_list(
-                'username', flat=True).order_by('username')), str(result.perf_data)]
-            writer.writerow(row)
-    return response
-
-
 @login_required
 @staff_member_required
 def duplicates(request, ass_id):

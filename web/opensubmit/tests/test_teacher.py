@@ -98,18 +98,6 @@ class Teacher(SubmitTeacherTestCase):
         response = self.c.post('/mail/send/')
         self.assertEqual(response.status_code, 302)
 
-    def test_perf_data_view(self):
-        sub1 = create_validated_submission(self.user, self.assignment)
-        sub2 = create_validated_submission(self.user, self.assignment)
-        response = self.c.get('/assignments/%u/perftable/' %
-                              sub1.assignment.pk)
-        # Resulting CSV should have header line + 2 result lines + empty final line
-        csv = response.content.decode(response.charset)
-        self.assertEqual(response.status_code, 200)
-        # content type
-        self.assertIn('text/csv', response['Content-Type'])
-        self.assertEqual(len(csv.split('\n')), 3 + 1)
-
     def test_course_archive_view(self):
         # add some student upload to be stored in the archive
         create_validated_submission(self.user, self.assignment)
