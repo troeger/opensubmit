@@ -8,6 +8,11 @@ import zipfile
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import DetailView
 from django.http import FileResponse
+from django.views.generic.edit import FormView
+from django.contrib import messages
+from django.shortcuts import redirect
+
+from opensubmit.forms import MailForm
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):

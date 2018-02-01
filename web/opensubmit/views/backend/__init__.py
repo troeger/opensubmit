@@ -10,7 +10,9 @@ from django.shortcuts import redirect
 
 from opensubmit.models import Submission, Assignment, Course
 from opensubmit.models.userprofile import move_user_data
-from opensubmit.models.views.helpers import StaffRequiredMixin, ZipDownloadDetailView
+from opensubmit.views.helpers import StaffRequiredMixin, ZipDownloadDetailView
+
+from . import mail
 
 
 class AssignmentArchiveView(StaffRequiredMixin, ZipDownloadDetailView):

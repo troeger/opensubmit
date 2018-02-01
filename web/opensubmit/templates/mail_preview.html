@@ -26,6 +26,7 @@
 
 <form class="form" role="form" action="{% url 'mailsend' %}" method="post">
 	{% csrf_token %}
+	{{ form }}
 	<input type="submit" value="Send {{ data|length }} eMails"></input>
 
 </form>

@@ -28,11 +28,6 @@ logger = logging.getLogger('OpenSubmit')
 
 
 
-def _mail_form(request, users_qs):
-    receivers_qs = users_qs.order_by('email').distinct().values('first_name', 'last_name', 'email')
-    receivers = [receiver for receiver in receivers_qs]
-    request.session['mail_receivers'] = receivers
-    return render(request, 'mail_form.html', {'receivers': receivers, 'mailform': MailForm()})
 
 
 @login_required
