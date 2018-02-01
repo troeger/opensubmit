@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 
-from opensubmit.models import Submission
+from opensubmit.models import Submission, Assignment
 from opensubmit.models.userprofile import move_user_data
 
 
@@ -18,6 +18,11 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 class PreviewView(StaffRequiredMixin, DetailView):
     template_name = 'file_preview.html'
     model = Submission
+
+
+class DuplicatesView(StaffRequiredMixin, DetailView):
+    template_name = 'duplicates.html'
+    model = Assignment
 
 
 class MergeUsersView(StaffRequiredMixin, TemplateView):

@@ -63,7 +63,7 @@ var table=$('#duplicates').DataTable(
 	</tr>
 </thead>
 <tbody>
-{% for key, file_list in duplicates %}
+{% for key, file_list in assignment.duplicate_files %}
 	{% for dupfile in file_list %}
 		{% with dupfile.submissions.all.0 as submission %}
 		<tr {% if submission.assignment.pk != assignment.pk %} style="font-style: italic"{%endif%}>

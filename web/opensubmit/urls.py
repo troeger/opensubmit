@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^withdraw/(?P<pk>\d+)/$', frontend.SubmissionWithdrawView.as_view(), name='withdraw'),
     url(r'^update/(?P<pk>\d+)/$', frontend.SubmissionUpdateView.as_view(), name='update'),
     url(r'^preview/(?P<pk>\d+)/$', backend.PreviewView.as_view(), name='preview'),
-    url(r'^assignments/(?P<ass_id>\d+)/duplicates/$', views.duplicates, name='duplicates'),
+    url(r'^assignments/(?P<pk>\d+)/duplicates/$', backend.DuplicatesView.as_view(), name='duplicates'),
     url(r'^assignments/(?P<ass_id>\d+)/archive/$', views.assarchive, name='assarchive'),
     url(r'^mail/course=(?P<course_id>\d+)$', views.mail_course, name='mailcourse'),
     url(r'^mail/students=(?P<student_ids>.*)$', views.mail_students, name='mailstudents'),

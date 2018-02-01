@@ -26,15 +26,6 @@ import logging
 logger = logging.getLogger('OpenSubmit')
 
 
-@login_required
-@staff_member_required
-def duplicates(request, ass_id):
-    ass = get_object_or_404(Assignment, pk=ass_id)
-    return render(request, 'duplicates.html', {
-        'duplicates': ass.duplicate_files(),
-        'assignment': ass
-    })
-
 
 @login_required
 @staff_member_required
