@@ -9,7 +9,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import FileResponse
 
-from opensubmit.models import Submission, Assignment
+from opensubmit.models import Submission, Assignment, Course
 from opensubmit.models.userprofile import move_user_data
 
 
@@ -21,25 +21,62 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_staff
 
 
-class AssignmentArchiveView(StaffRequiredMixin, DetailView):
-    model = Assignment
+class ZipDownloadDetailView(DetailView):
+    '''
+    Specialized DetailView base class for ZIP downloads.
 
+    Only intended as base class.
+    '''
     def get(self, request, *args, **kwargs):
         super().get(request, *args, **kwargs)
         output = io.BytesIO()
         z = zipfile.ZipFile(output, 'w')
-        assignment = self.object
-        assignment.add_to_zipfile(z)
-        subs = Submission.valid_ones.filter(assignment=assignment).order_by('submitter')
-        for sub in subs:
-            sub.add_to_zipfile(z)
+        file_name = self.fill_zip_file(z)
         z.close()
         # go back to start in ZIP file so that Django can deliver it
         output.seek(0)
         response = FileResponse(
             output, content_type="application/x-zip-compressed")
-        response['Content-Disposition'] = 'attachment; filename=%s.zip' % assignment.directory_name()
+        response['Content-Disposition'] = 'attachment; filename=%s.zip' % file_name
         return response
+
+    def fill_zip_file(self, z):
+        '''
+        Function that fills the given ZIP file instance with data.
+        To be implemented by derived class.
+
+        Parameters:
+            z:  ZIP file instance
+
+        Returns:   File name for the download
+        '''
+        raise NotImplementedError
+
+
+class AssignmentArchiveView(StaffRequiredMixin, ZipDownloadDetailView):
+    model = Assignment
+
+    def fill_zip_file(self, z):
+        assignment = self.object
+        assignment.add_to_zipfile(z)
+        subs = Submission.valid_ones.filter(assignment=assignment).order_by('submitter')
+        for sub in subs:
+            sub.add_to_zipfile(z)
+        return assignment.directory_name()
+
+
+class CourseArchiveView(StaffRequiredMixin, ZipDownloadDetailView):
+    model = Course
+
+    def fill_zip_file(self, z):
+        course = self.object
+        assignments = course.assignments.order_by('title')
+        for ass in assignments:
+            ass.add_to_zipfile(z)
+            subs = ass.submissions.all().order_by('submitter')
+            for sub in subs:
+                sub.add_to_zipfile(z)
+        return course.directory_name()
 
 
 class PreviewView(StaffRequiredMixin, DetailView):
