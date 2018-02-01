@@ -1,4 +1,4 @@
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -6,12 +6,18 @@ from django.shortcuts import redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 
+from opensubmit.models import Submission
 from opensubmit.models.userprofile import move_user_data
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_staff
+
+
+class PreviewView(StaffRequiredMixin, DetailView):
+    template_name = 'file_preview.html'
+    model = Submission
 
 
 class MergeUsersView(StaffRequiredMixin, TemplateView):

@@ -28,15 +28,6 @@ logger = logging.getLogger('OpenSubmit')
 
 
 
-@login_required
-@staff_member_required
-def preview(request, subm_id):
-    '''
-        Renders a preview of the uploaded student file.
-        This is only intended for the grading procedure, so staff status is needed.
-    '''
-    submission = get_object_or_404(Submission, pk=subm_id)
-    return render(request, 'file_preview.html', {'submission': submission})
 
 
 @login_required
