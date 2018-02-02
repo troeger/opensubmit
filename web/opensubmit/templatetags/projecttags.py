@@ -13,6 +13,13 @@ def basename(value):
     return os.path.basename(value)
 
 
+@register.filter(name='replace_macros')
+@stringfilter
+def replace_macros(value, user_dict):
+    return value.replace("#FIRSTNAME#", user_dict['first_name'].strip()) \
+                .replace("#LASTNAME#", user_dict['last_name'].strip())
+
+
 @register.filter(name='state_label_css')
 def state_label_css(subm):
     green_label = "badge label label-success"
@@ -44,13 +51,16 @@ def setting(name):
 def details_table(submission):
     return {'submission': submission}
 
+
 @register.inclusion_tag('inclusion_tags/deadline.html')
 def deadline_timeout(assignment):
     return {'assignment': assignment, 'show_timeout': True}
 
+
 @register.inclusion_tag('inclusion_tags/deadline.html')
 def deadline(assignment):
     return {'assignment': assignment, 'show_timeout': False}
+
 
 @register.inclusion_tag('inclusion_tags/grading.html')
 def grading(submission):

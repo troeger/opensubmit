@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 
 from opensubmit import admin, api
 from opensubmit.views import frontend, backend, lti
+from opensubmit.forms import MailForm
 
 urlpatterns = [
     url(r'^$', frontend.IndexView.as_view(), name='index'),
@@ -26,10 +27,8 @@ urlpatterns = [
     url(r'^course/(?P<pk>\d+)/archive/$', backend.CourseArchiveView.as_view(), name='coursearchive'),
     url(r'^course/(?P<pk>\d+)/gradingtable/$', backend.GradingTableView.as_view(), name='gradingtable'),
     url(r'^mergeusers/(?P<primary_pk>\d+)/(?P<secondary_pk>\d+)/$', backend.MergeUsersView.as_view(), name='mergeusers'),
-    url(r'^course/(?P<pk>\d+)/mail/$', backend.mail.MailCourseView.as_view(), name='mailcourse'),
-    url(r'^mail/receivers=(?P<pk_list>.*)$', backend.mail.MailStudentsView.as_view(), name='mailstudents'),
-    url(r'^mail/preview/$', backend.mail.MailPreviewView.as_view(), name='mailpreview'),
-#    url(r'^mail/send/$', views.mail_send, name='mailsend'),
+    url(r'^mail/receivers=(?P<user_list>.*)$', backend.MailFormPreview(MailForm), name='mailstudents'),
+    url(r'^mail/course=(?P<course_id>\d+)$', backend.MailFormPreview(MailForm), name='mailcourse'),
 
     url(r'^jobs/$', api.jobs, name='jobs'),
     url(r'^download/(?P<obj_id>\d+)/(?P<filetype>\w+)/secret=(?P<secret>\w+)$', api.download, name='download_secret'),

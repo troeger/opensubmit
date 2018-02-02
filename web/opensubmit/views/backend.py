@@ -7,12 +7,14 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.core.mail import send_mass_mail
+from django.core.exceptions import ViewDoesNotExist
+
+from formtools.preview import FormPreview
 
 from opensubmit.models import Submission, Assignment, Course
 from opensubmit.models.userprofile import move_user_data
 from opensubmit.views.helpers import StaffRequiredMixin, ZipDownloadDetailView
-
-from . import mail
 
 
 class AssignmentArchiveView(StaffRequiredMixin, ZipDownloadDetailView):
@@ -136,3 +138,38 @@ class MergeUsersView(StaffRequiredMixin, TemplateView):
         messages.info(request, 'User %u updated, user %u deleted.' % (primary.pk, secondary.pk))
         secondary.delete()
         return redirect('admin:index')
+
+
+class MailFormPreview(StaffRequiredMixin, FormPreview):
+    form_template = 'mail_form.html'
+    preview_template = 'mail_preview.html'
+
+    def get_context(self, request, form):
+        context = super().get_context(request, form)
+        mailadrs_qs = self.state['receivers'].order_by('email').distinct().values('first_name', 'last_name', 'email')
+        mailadrs = [mailadr for mailadr in mailadrs_qs]
+        context['receivers'] = mailadrs
+        context['sender'] = request.user
+        return context
+
+    def parse_params(self, request, *args, **kwargs):
+        if 'user_list' in kwargs:
+            id_list = [int(val) for val in kwargs['user_list'].split(',')]
+            self.state['receivers'] = User.objects.filter(pk__in=id_list).distinct()
+        elif 'course_id' in kwargs:
+            course = get_object_or_404(Course, pk=kwargs['course_id'])
+            self.state['receivers'] = User.objects.filter(profile__courses__pk=course.pk)
+        else:
+            raise ViewDoesNotExist
+
+    def done(self, request, cleaned_data):
+        from opensubmit.templatetags.projecttags import replace_macros
+
+        tosend = [[replace_macros(cleaned_data['subject'], {'first_name': recv.first_name, 'last_name': recv.last_name}),
+                   replace_macros(cleaned_data['message'], {'first_name': recv.first_name, 'last_name': recv.last_name}),
+                   request.user.email,
+                   [recv.email]] for recv in self.state['receivers']]
+        sent = send_mass_mail(tosend, fail_silently=True)
+        messages.add_message(request, messages.INFO, '%u message(s) sent.' % sent)
+        return redirect('teacher:index')
+
