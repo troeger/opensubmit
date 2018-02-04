@@ -79,7 +79,7 @@ class Teacher(SubmitTeacherTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_mail_view_students(self):
-        response = self.c.get('mail/receivers=%u' % self.student.pk)
+        response = self.c.get('/mail/receivers=%u' % self.student.pk)
         self.assertEqual(response.status_code, 200)
 
     def test_course_archive_view(self):
