@@ -124,7 +124,7 @@ class SubmissionFile(models.Model):
         # we implement our own download method here.
         # This implies that the Apache media serving (MEDIA_URL) is disabled.
         assert(len(self.submissions.all()) > 0)
-        return reverse('download', args=(self.submissions.all()[0].pk, 'attachment'))
+        return reverse('submission_attachment_file', args=(self.submissions.all()[0].pk,))
 
     def get_preview_url(self):
         if self.submissions.all():

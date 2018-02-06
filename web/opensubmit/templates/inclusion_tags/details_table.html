@@ -34,7 +34,7 @@
                     <h5>Validity test result:</h5>
                     <code>{{ submission.get_validation_result.result|linebreaks }}</code>
                     {% if submission.assignment.validity_script_download %}
-                        <br/>(<a href="{% url 'download' submission.assignment.pk 'validity_testscript' %}">Download</a> the validation script)
+                        <br/>(<a href="{% url 'validity_script' submission.assignment.pk %}">Download</a> the validation script)
                     {% endif %}
                 {% endif %}
             </td>

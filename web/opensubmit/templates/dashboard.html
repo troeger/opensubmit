@@ -51,7 +51,7 @@
                     
                     			{% if assignment.attachment_test_validity and assignment.validity_script_download %}
                 			 	   <br/>
-                                   <a href="{% url 'download' assignment.pk 'validity_testscript' %}">(Validation script)</a>
+                                   <a href="{% url 'validity_script' assignment.pk %}">(Validation script)</a>
     		                  	{% endif %}
     			            </td>
                             <td>{% deadline_timeout assignment %}</td>

@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, render
 from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from opensubmit.models import UserProfile, Submission, TestMachine, Course, Assignment, SubmissionFile
 from opensubmit.models.userprofile import db_fixes
+from opensubmit.views.helpers import BinaryDownloadMixin
 
 
 class IndexView(TemplateView):
@@ -49,6 +50,26 @@ class SettingsView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+class ValidityScriptView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Assignment
+
+    def get_object(self, queryset=None):
+        ass = super().get_object(queryset)
+        self.f = ass.attachment_test_validity
+        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
+        return ass
+
+
+class FullScriptView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Assignment
+
+    def get_object(self, queryset=None):
+        ass = super().get_object(queryset)
+        self.f = ass.attachment_test_full
+        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
+        return ass
 
 
 class CoursesView(LoginRequiredMixin, UpdateView):
@@ -278,3 +299,5 @@ class SubmissionUpdateView(LoginRequiredMixin, UpdateView):
         self.object.save()
         messages.info(self.request, 'Submission files successfully updated.')
         return super().form_valid(form)
+
+

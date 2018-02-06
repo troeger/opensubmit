@@ -3,70 +3,92 @@
     They typically have a different
     security model in comparison to the ordinary views.
 '''
+
 from datetime import datetime, timedelta
 import os
 
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_managers
-from django.http import HttpResponseForbidden, Http404, HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import DetailView
 
 from opensubmit import settings
 from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
 from opensubmit.mails import inform_student
+from opensubmit.views.helpers import BinaryDownloadMixin
 
 import logging
 logger = logging.getLogger('OpenSubmit')
 
 
-def download(request, obj_id, filetype, secret=None):
+class AttachmentFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Submission
+
+    def get_object(self, queryset=None):
+        subm = super().get_object(queryset)
+        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
+            raise PermissionDenied()
+        self.f = subm.file_upload.attachment
+        self.fname = subm.file_upload.basename()
+        return subm
+
+
+class GradingFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Submission
+
+    def get_object(self, queryset=None):
+        subm = super().get_object(queryset)
+        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
+            raise PermissionDenied()
+        self.f = subm.grading_file
+        self.fname = os.path.basename(subm.grading_file.name)
+        return subm
+
+
+class DescriptionFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Assignment
+
+    def get_object(self, queryset=None):
+        ass = super().get_object(queryset)
+        self.f = ass.description
+        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
+        return ass
+
+
+class ValidityScriptView(BinaryDownloadMixin, DetailView):
     '''
-        Download facilility for files on the server.
-        This view is intentionally not login-protected, since the
-        security happens on a more fine-grained level:
-        - A requestor who wants a submission attachment or grading notes must be author
-         (student front page) or staff (correctors).
-        - A requestor who wants a validation script gets it with a secret (executor script)
-          or if public download is enabled for it.
+    Login not required, since secret is used.
     '''
-    if filetype == "attachment":
-        subm = get_object_or_404(Submission, pk=obj_id)
-        if not (request.user in subm.authors.all() or request.user.is_staff):
-            return HttpResponseForbidden()
-        f = subm.file_upload.attachment
-        fname = subm.file_upload.basename()
-    elif filetype == "grading_file":
-        subm = get_object_or_404(Submission, pk=obj_id)
-        if not (request.user in subm.authors.all() or request.user.is_staff):
-            return HttpResponseForbidden()
-        f = subm.grading_file
-        fname = os.path.basename(subm.grading_file.name)
-    elif filetype == "validity_testscript":
-        ass = get_object_or_404(Assignment, pk=obj_id)
-        if secret:
-            if secret != settings.JOB_EXECUTOR_SECRET:
-                raise PermissionDenied
+    model = Assignment
+
+    def get_object(self, queryset=None):
+        ass = super().get_object(queryset)
+        if self.kwargs['secret'] != settings.JOB_EXECUTOR_SECRET:
+            raise PermissionDenied
         else:
             if not ass.validity_script_download:
                 raise PermissionDenied
-        f = ass.attachment_test_validity
-        fname = f.name[f.name.rfind('/') + 1:]
-    elif filetype == "full_testscript":
-        if secret != settings.JOB_EXECUTOR_SECRET:
+        self.f = ass.attachment_test_validity
+        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
+        return ass
+
+
+class FullScriptView(BinaryDownloadMixin, DetailView):
+    '''
+    Login not required, since secret is used.
+    '''
+    model = Assignment
+
+    def get_object(self, queryset=None):
+        ass = super().get_object(queryset)
+        if self.kwargs['secret'] != settings.JOB_EXECUTOR_SECRET:
             raise PermissionDenied
-        ass = get_object_or_404(Assignment, pk=obj_id)
-        f = ass.attachment_test_full
-        fname = f.name[f.name.rfind('/') + 1:]
-    elif filetype == "description":
-        ass = get_object_or_404(Assignment, pk=obj_id)
-        f = ass.description
-        fname = f.name[f.name.rfind('/') + 1:]
-    else:
-        raise Http404
-    response = HttpResponse(f, content_type='application/binary')
-    response['Content-Disposition'] = 'attachment; filename="%s"' % fname
-    return response
+        self.f = ass.attachment_test_full
+        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
+        return ass
 
 
 @csrf_exempt
@@ -337,7 +359,7 @@ def machines(request):
             machine = TestMachine.objects.get(host=uuid)
             machine.last_contact = datetime.now()
             machine.save()
-        except:
+        except Exception:
             # Machine is not known so far, create new record
             machine = TestMachine(host=uuid, last_contact=datetime.now())
             machine.save()

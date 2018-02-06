@@ -7,12 +7,7 @@ import zipfile
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import DetailView
-from django.http import FileResponse
-from django.views.generic.edit import FormView
-from django.contrib import messages
-from django.shortcuts import redirect
-
-from opensubmit.forms import MailForm
+from django.http import FileResponse, HttpResponse
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -21,6 +16,19 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     '''
     def test_func(self):
         return self.request.user.is_staff
+
+
+class BinaryDownloadMixin(object):
+    f = None
+    fname = None
+
+    def get(self, request, *args, **kwargs):
+        super().get(request, *args, **kwargs)
+        assert(self.f is not None)
+        assert(self.fname is not None)
+        response = HttpResponse(self.f, content_type='application/binary')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % self.fname
+        return response
 
 
 class ZipDownloadDetailView(DetailView):
