@@ -23,8 +23,11 @@ urlpatterns = [
     url(r'^assignments/(?P<pk>\d+)/new/$', frontend.SubmissionNewView.as_view(), name='new'),
     url(r'^assignments/(?P<pk>\d+)/validity_testscript/$', frontend.ValidityScriptView.as_view(), name='validity_script'),
     url(r'^assignments/(?P<pk>\d+)/full_testscript/$', frontend.FullScriptView.as_view(), name='full_testscript'),
+    url(r'^assignments/(?P<pk>\d+)/description_file/$', frontend.DescriptionFileView.as_view(), name='assignment_description_file'),
     url(r'^withdraw/(?P<pk>\d+)/$', frontend.SubmissionWithdrawView.as_view(), name='withdraw'),
     url(r'^update/(?P<pk>\d+)/$', frontend.SubmissionUpdateView.as_view(), name='update'),
+    url(r'^submission/(?P<pk>\d+)/attachment_file/$', frontend.AttachmentFileView.as_view(), name='submission_attachment_file'),
+    url(r'^submission/(?P<pk>\d+)/grading_file/$', frontend.GradingFileView.as_view(), name='submission_grading_file'),
     # Backend
     url(r'^teacher/', include(admin.teacher_backend.urls)),
     url(r'^grappelli/', include('grappelli.urls')),
@@ -36,15 +39,11 @@ urlpatterns = [
     url(r'^mergeusers/(?P<primary_pk>\d+)/(?P<secondary_pk>\d+)/$', backend.MergeUsersView.as_view(), name='mergeusers'),
     url(r'^mail/receivers=(?P<user_list>.*)$', backend.MailFormPreview(MailForm), name='mailstudents'),
     url(r'^mail/course=(?P<course_id>\d+)$', backend.MailFormPreview(MailForm), name='mailcourse'),
-    # Download
-    url(r'^submission/(?P<pk>\d+)/attachment_file/$', api.AttachmentFileView.as_view(), name='submission_attachment_file'),
-    url(r'^submission/(?P<pk>\d+)/grading_file/$', api.GradingFileView.as_view(), name='submission_grading_file'),
-    url(r'^assignments/(?P<pk>\d+)/description_file/$', api.DescriptionFileView.as_view(), name='assignment_description_file'),
     # Executor URLs
     url(r'^download/(?P<pk>\d+)/validity_testscript/secret=(?P<secret>\w+)$', api.ValidityScriptView.as_view()),
     url(r'^download/(?P<pk>\d+)/full_testscript/secret=(?P<secret>\w+)$', api.FullScriptView.as_view()),
     url(r'^jobs/$', api.jobs, name='jobs'),
-    url(r'^machines/$', api.machines, name='machines'),
+    url(r'^machines/$', api.MachinesView.as_view(), name='machines'),
     # Error pages
     url(r'^403/$', TemplateView.as_view(template_name='403.html')),
     url(r'^404/$', TemplateView.as_view(template_name='404.html')),

@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 
 from django.views.generic import TemplateView, RedirectView, ListView, DetailView
 from django.views.generic.edit import UpdateView
@@ -300,4 +301,37 @@ class SubmissionUpdateView(LoginRequiredMixin, UpdateView):
         messages.info(self.request, 'Submission files successfully updated.')
         return super().form_valid(form)
 
+
+class AttachmentFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Submission
+
+    def get_object(self, queryset=None):
+        subm = super().get_object(queryset)
+        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
+            raise PermissionDenied()
+        self.f = subm.file_upload.attachment
+        self.fname = subm.file_upload.basename()
+        return subm
+
+
+class GradingFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Submission
+
+    def get_object(self, queryset=None):
+        subm = super().get_object(queryset)
+        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
+            raise PermissionDenied()
+        self.f = subm.grading_file
+        self.fname = os.path.basename(subm.grading_file.name)
+        return subm
+
+
+class DescriptionFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
+    model = Assignment
+
+    def get_object(self, queryset=None):
+        ass = super().get_object(queryset)
+        self.f = ass.description
+        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
+        return ass
 

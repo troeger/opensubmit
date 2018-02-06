@@ -1,7 +1,8 @@
 '''
     These are the views being called by the executor.
-    They typically have a different
-    security model in comparison to the ordinary views.
+    They security currently relies on a provided shared secret.
+
+    We therefore assume that executors come from a trusted network.
 '''
 
 from datetime import datetime, timedelta
@@ -12,8 +13,8 @@ from django.core.mail import mail_managers
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import DetailView
+from django.views.generic import DetailView, View
+from django.utils.decorators import method_decorator
 
 from opensubmit import settings
 from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
@@ -24,43 +25,9 @@ import logging
 logger = logging.getLogger('OpenSubmit')
 
 
-class AttachmentFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
-    model = Submission
-
-    def get_object(self, queryset=None):
-        subm = super().get_object(queryset)
-        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
-            raise PermissionDenied()
-        self.f = subm.file_upload.attachment
-        self.fname = subm.file_upload.basename()
-        return subm
-
-
-class GradingFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
-    model = Submission
-
-    def get_object(self, queryset=None):
-        subm = super().get_object(queryset)
-        if not (self.request.user in subm.authors.all() or self.request.user.is_staff):
-            raise PermissionDenied()
-        self.f = subm.grading_file
-        self.fname = os.path.basename(subm.grading_file.name)
-        return subm
-
-
-class DescriptionFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
-    model = Assignment
-
-    def get_object(self, queryset=None):
-        ass = super().get_object(queryset)
-        self.f = ass.description
-        self.fname = self.f.name[self.f.name.rfind('/') + 1:]
-        return ass
-
-
 class ValidityScriptView(BinaryDownloadMixin, DetailView):
     '''
-    Login not required, since secret is used.
+    Download of validity test script for an assignment.
     '''
     model = Assignment
 
@@ -78,7 +45,7 @@ class ValidityScriptView(BinaryDownloadMixin, DetailView):
 
 class FullScriptView(BinaryDownloadMixin, DetailView):
     '''
-    Login not required, since secret is used.
+    Download of full test script for an assignment.
     '''
     model = Assignment
 
@@ -89,6 +56,31 @@ class FullScriptView(BinaryDownloadMixin, DetailView):
         self.f = ass.attachment_test_full
         self.fname = self.f.name[self.f.name.rfind('/') + 1:]
         return ass
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MachinesView(View):
+    '''
+    View for sending details about an executor machine,
+
+    POST requests are expected to contain the following parameters:
+                'Config',
+                'Secret',
+                'UUID'
+
+    TODO: Change to a DetailView would demand to have the uuid
+    in the URL as pk. Demands an incompatible change in the executor protocol.
+    '''
+    http_method_names = ['post']
+
+    def post(self, request):
+        if self.request.POST['Secret'] != settings.JOB_EXECUTOR_SECRET:
+            raise PermissionDenied
+        machine, created = TestMachine.objects.get_or_create(host=request.POST['UUID'])
+        machine.last_contact = datetime.now()
+        machine.config = request.POST['Config']
+        machine.save()
+        return HttpResponse(status=201)
 
 
 @csrf_exempt
@@ -331,41 +323,3 @@ def jobs(request):
         sub.clean_fetch_date()
         return HttpResponse(status=201)
 
-
-@csrf_exempt
-def machines(request):
-    ''' This is the view used by the executor.py scripts for sending machine details.
-        A visible shared secret in the request is no problem, since the executors come
-        from trusted networks. The secret only protects this view from outside foreigners.
-
-        POST requests are expected to contain the following parameters:
-                    'Config',
-                    'Secret',
-                    'UUID'
-    '''
-    if request.method == "POST":
-        try:
-            secret = request.POST['Secret']
-            uuid = request.POST['UUID']
-        except Exception as e:
-            logger.error(
-                "Error finding the neccessary data in the executor request: " + str(e))
-            raise PermissionDenied
-
-        if secret != settings.JOB_EXECUTOR_SECRET:
-            raise PermissionDenied
-        try:
-            # Find machine database entry for this host
-            machine = TestMachine.objects.get(host=uuid)
-            machine.last_contact = datetime.now()
-            machine.save()
-        except Exception:
-            # Machine is not known so far, create new record
-            machine = TestMachine(host=uuid, last_contact=datetime.now())
-            machine.save()
-        # POST request contains all relevant machine information
-        machine.config = request.POST['Config']
-        machine.save()
-        return HttpResponse(status=201)
-    else:
-        return HttpResponse(status=500)
