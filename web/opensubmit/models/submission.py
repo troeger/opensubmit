@@ -502,7 +502,7 @@ class Submission(models.Model):
     def grading_file_url(self):
         # to implement access protection, we implement our own download
         # this implies that the Apache media serving is disabled
-        return reverse('download', args=(self.pk, 'grading_file', ))
+        return reverse('submission_grading_file', args=(self.pk,))
 
     def _save_test_result(self, machine, text_student, text_tutor, kind, perf_data):
         result = SubmissionTestResult(

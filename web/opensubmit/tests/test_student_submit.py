@@ -92,13 +92,13 @@ class Student(SubmitStudentScenarioTestCase):
             self.user, self.open_file_assignment, f)
         response = self.c.post('/update/%u/' % sub.pk)
         # expect dashboard redirect
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)
 
         # test successful, update not allowed
         sub = create_validated_submission(self.user, self.open_file_assignment)
         response = self.c.post('/update/%u/' % sub.pk)
         # expect dashboard redirect
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)
 
     def test_can_update_invalid_data(self):
         # Move submission into valid state for re-upload

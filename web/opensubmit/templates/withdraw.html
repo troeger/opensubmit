@@ -37,8 +37,8 @@
 
 <form action="." method="post" enctype="multipart/form-data">
 {% csrf_token %}
-<input type="hidden" name="confirm"/>
-<button type="submit" href="/withdraw/{{submission.pk}}" class="btn btn-danger"><i class="icon-white icon-trash"></i> Yes, withdraw it.</button>
+<input class="btn btn-danger" type="submit" value="Yes, withdraw it." />
+{{ form }}
 </form>
 
 {% endblock %}

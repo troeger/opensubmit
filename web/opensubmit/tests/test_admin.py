@@ -12,17 +12,13 @@ class Admin(SubmitAdminTestCase):
     def test_merge_users_view(self):
         user1 = create_user(get_student_dict(1))
         user2 = create_user(get_student_dict(2))
-        response = self.c.get('/mergeusers/?primary_id=%u&secondary_id=%u' %
-                              (user1.pk,
-                               user2.pk))
+        response = self.c.get('/mergeusers/{0}/{1}/'.format(user1.pk, user2.pk))
         self.assertEqual(response.status_code, 200)
 
     def test_merge_users_action(self):
         user1 = create_user(get_student_dict(1))
         user2 = create_user(get_student_dict(2))
-        response = self.c.post('/mergeusers/', {
-            'primary_id': user1.pk,
-            'secondary_id': user2.pk})
+        response = self.c.post('/mergeusers/{0}/{1}/'.format(user1.pk, user2.pk))
         self.assertEqual(response.status_code, 302)
 
     def test_test_machine_list_view(self):

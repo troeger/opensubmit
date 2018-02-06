@@ -79,36 +79,8 @@ class Teacher(SubmitTeacherTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_mail_view_students(self):
-        response = self.c.get('/mail/students=%u' % self.student.pk)
+        response = self.c.get('/mail/receivers=%u' % self.student.pk)
         self.assertEqual(response.status_code, 200)
-
-    def test_mail_sending(self):
-        # Mail form rendering stores the receiver data in the session
-        s = self.c.session
-        s['mail_receivers'] = [{'first_name': self.student.first_name,
-                                'last_name': self.student.last_name,
-                                'email': self.student.email}]
-        s.save()
-        # Submitted mail form adds subject and text as POST data
-        # Leads to preview screen, where we start here
-        response = self.c.post('/mail/preview/', {'subject': 'Foo', 'message': 'bar'})
-        self.assertEqual(response.status_code, 200)
-        # POST without parameters leads to sending of data stored in session
-        # Expect redirect to overview
-        response = self.c.post('/mail/send/')
-        self.assertEqual(response.status_code, 302)
-
-    def test_perf_data_view(self):
-        sub1 = create_validated_submission(self.user, self.assignment)
-        sub2 = create_validated_submission(self.user, self.assignment)
-        response = self.c.get('/assignments/%u/perftable/' %
-                              sub1.assignment.pk)
-        # Resulting CSV should have header line + 2 result lines + empty final line
-        csv = response.content.decode(response.charset)
-        self.assertEqual(response.status_code, 200)
-        # content type
-        self.assertIn('text/csv', response['Content-Type'])
-        self.assertEqual(len(csv.split('\n')), 3 + 1)
 
     def test_course_archive_view(self):
         # add some student upload to be stored in the archive
@@ -116,7 +88,7 @@ class Teacher(SubmitTeacherTestCase):
         response = self.c.get('/course/%u/archive/' % self.course.pk)
         self.assertEqual(response.status_code, 200)
         # Test if the download is really a ZIP file
-        f = io.BytesIO(response.content)
+        f = io.BytesIO(response.getvalue())
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity
@@ -151,7 +123,7 @@ class Teacher(SubmitTeacherTestCase):
                               self.assignment.pk)
         self.assertEqual(response.status_code, 200)
         # Test if the download is really a ZIP file
-        f = io.BytesIO(response.content)
+        f = io.BytesIO(response.getvalue())
         zipped_file = zipfile.ZipFile(f, 'r')
         try:
             # Check ZIP file validity

@@ -24,19 +24,21 @@
     <h1>eMail Preview</h1>
 </div>
 
-<form class="form" role="form" action="{% url 'mailsend' %}" method="post">
+<form class="form" role="form" action="" method="post">
 	{% csrf_token %}
-	<input type="submit" value="Send {{ data|length }} eMails"></input>
-
+    {% for field in form %}{{ field.as_hidden }}{% endfor %}
+    <input type="hidden" name="{{ stage_field }}" value="2" />
+    <input type="hidden" name="{{ hash_field }}" value="{{ hash_value }}" />
+	<input type="submit" value="Send {{ receivers|length }} eMails"></input>
 </form>
 
-{% for receiver in data %}
+{% for receiver in receivers %}
 <hr/>
-<p>To: {{ receiver.to }}</p>
-<p>From: {{ receiver.from }}</p>
-<p>Subject: {{ receiver.subject }}</p>
+<p>To: {{ receiver.first_name }} {{ receiver.last_name }} &lt;{{receiver.email}}&gt;</p>
+<p>From: {{ sender.first_name }} {{ sender.last_name }} &lt;{{sender.email}}&gt;</p>
+<p>Subject: {{ form.subject.value|replace_macros:receiver }}</p>
 <br/>
-<p>{{ receiver.message|linebreaksbr }}</p>
+<p>{{ form.message.value|replace_macros:receiver|linebreaksbr }}</p>
 {% endfor %}
 <hr/>
 

@@ -326,7 +326,7 @@ class SubmissionAdmin(ModelAdmin):
             for author in submission.authors.all():
                 if author.pk not in receiver_list:
                     receiver_list.append(author.pk)
-        return redirect('mailstudents', student_ids=','.join([str(pk) for pk in receiver_list]))
+        return redirect('mailstudents', user_list=','.join([str(pk) for pk in receiver_list]))
     sendMailAction.short_description = "Send eMail to authors of selected submissions"
 
     def downloadArchiveAction(self, request, queryset):
