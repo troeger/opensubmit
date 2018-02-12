@@ -42,7 +42,7 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     install_requires=required,
-    packages = ['opensubmit', 'opensubmit.admin', 'opensubmit.management.commands', 'opensubmit.migrations', 'opensubmit.models', 'opensubmit.social'],     # Just add Python packages
+    packages = ['opensubmit', 'opensubmit.cbv', 'opensubmit.admin', 'opensubmit.management.commands', 'opensubmit.migrations', 'opensubmit.models', 'opensubmit.social'],     # Just add Python packages
     package_data = {'opensubmit': data_files},
     entry_points={
         'console_scripts': [

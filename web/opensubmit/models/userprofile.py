@@ -2,7 +2,6 @@ from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from django.db.models.functions import Length
 
 from .assignment import Assignment
 from .course import Course
@@ -72,12 +71,17 @@ class UserProfile(models.Model):
         # Include only assignments from courses that you are registered for
         qs = qs.filter(course__in=self.user_courses())
         # Ordering of resulting list
-        qs = qs.annotate(deadline_isnull=Length('soft_deadline'))
-        qs = qs.order_by('-deadline_isnull', 'soft_deadline',
-                         '-gradingScheme', 'title')
+        qs = qs.order_by('soft_deadline', '-gradingScheme', 'title')
         waiting_for_action = [subm.assignment for subm in self.user.authored.all(
         ).exclude(state=Submission.WITHDRAWN)]
-        return [ass for ass in qs if ass not in waiting_for_action]
+        # Emulate is_null sorting for soft_deadline
+        qs_without_soft_deadline = qs.filter(soft_deadline__isnull=True)
+        qs_with_soft_deadline = qs.filter(soft_deadline__isnull=False)
+        ass_list = [
+            ass for ass in qs_without_soft_deadline if ass not in waiting_for_action]
+        ass_list += [
+            ass for ass in qs_with_soft_deadline if ass not in waiting_for_action]
+        return ass_list
 
     def gone_assignments(self):
         '''

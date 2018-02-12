@@ -1,4 +1,3 @@
-import sys
 import os
 from configparser import SafeConfigParser
 
@@ -9,139 +8,135 @@ VERSION = open(os.path.join(script_dir, 'VERSION')).read()
 
 NOT_CONFIGURED_VALUE = '***not configured***'
 
-# Some helper functions
 
-def find_config_info():
+class Config():
     '''
-        Determine which configuration file to load.
-        Returns path to config file and boolean flag for production system status.
-
-        Precedence rules are as follows:
-        - Developer configuration overrides production configuration on developer machine.
-        - Linux production system are more likely to happen than Windows developer machines.
-
-        Throws exception if no config file is found. This terminates the application loading.
+    Custom implementation of INI-file reading with ENV variable
+    pverride.
     '''
-    config_info = (
-        ('/etc/opensubmit/settings.ini',                            True),  # Linux production system
-        (os.path.dirname(__file__)+'/settings_dev.ini',            False),  # Linux / Mac development system
-        (os.path.expandvars('$APPDATA')+'opensubmit/settings.ini', False),  # Windows development system
-    )
+    config_file = None
+    config = None
+    is_production = None
 
-    for config_file, production in config_info:
-        if os.path.isfile(config_file):
-            return (config_file, production, )
+    def __init__(self, config_files):
+        '''
+        Creates a new config object.
 
-    raise IOError("No configuration file found.")
+        Parameters:
+        config_files: Dictionary with file_name: is_production setting
+        '''
+        for config_file, is_production in config_files:
+            if os.path.isfile(config_file):
+                self.config_file = config_file
+                self.is_production = is_production
+                self.config = SafeConfigParser()
+                self.config.read([self.config_file], encoding='utf-8')
+                return
 
-def ensure_configured(text):
-    '''
-        Ensure that the configuration variable value does not have the default setting.
-    '''
-    if text == NOT_CONFIGURED_VALUE:
-        raise ImproperlyConfigured("It is not configured.")
-    return text
+        raise IOError("No configuration file found.")
 
-def ensure_slash(leading, trailing, text):
-    '''
-        Slashes are the main source of joy in Django path and URL setups.
-        Using this method in the rest of the script should make problems and expectations
-        way more explicit.
+    def has_option(self, name, category):
+        return self.config.has_option(name, category)
 
-        The 'leading' parameter defines if a leading slash is expected.
-        The 'trailing' parameter defines if a trailing slash is expected.
+    def get_bool(self, name, category):
+        text = self.get(name, category)
+        return text.lower() in ['true', 't', 'yes', 'active', 'enabled']
 
-        It is too early for logging here, so we use the appropriate Django exception.
-    '''
-    text = ensure_configured(text)
-    if len(text)==0:
-        if leading:
-            raise ImproperlyConfigured("'%s' should have a leading slash, but it is empty."%text)
-        if trailing:
-            raise ImproperlyConfigured("'%s' should have a trailing slash, but it is empty."%text)
+    def get(self, name, category, mandatory=False, expect_leading_slash=None, expect_trailing_slash=None):
+        '''
+        Get the value for the config variable.
+        '''
+
+        # Check environment variables for overrides, otherwise use INI file
+        env_name = 'OPENSUBMIT_%s_%s'.format(category.upper(), name.upper())
+        text = os.getenv(env_name)
+        if text is None:
+            text = self.config.get(name, category)
+            logtext = "Setting '[%s] %s' in %s has the value '%s'" % (category, name, self.config_file, text)
+        else:
+            logtext = "Environment variable %s has the value '%s'" % (env_name, text)
+
+        if mandatory and text == NOT_CONFIGURED_VALUE:
+            raise ImproperlyConfigured(logtext + ', but must be set.')
+
+        if len(text) == 0:
+            if expect_leading_slash or expect_trailing_slash:
+                raise ImproperlyConfigured(logtext + ", but should not be empty.")
+        else:
+            if not text[0] == '/' and expect_leading_slash is True:
+                raise ImproperlyConfigured(logtext + ", but should have a leading slash.")
+            if not text[-1] == '/' and expect_trailing_slash is True:
+                raise ImproperlyConfigured(logtext + ", but should have a trailing slash.")
+            if text[0] == '/' and expect_leading_slash is False:
+                raise ImproperlyConfigured(logtext + ", but shouldn't have a leading slash.")
+            if text[-1] == '/' and expect_trailing_slash is False:
+                raise ImproperlyConfigured(logtext + ", but shouldn't have a trailing slash.")
         return text
-    if not text[0]=='/' and leading:
-        raise ImproperlyConfigured("'%s' should have a leading slash."%text)
-    if not text[-1]=='/' and trailing:
-        raise ImproperlyConfigured("'%s' should have a trailing slash."%text)
-    if text[0]=='/' and not leading:
-        raise ImproperlyConfigured("'%s' shouldn't have a leading slash."%text)
-    if text[-1]=='/' and not trailing:
-        raise ImproperlyConfigured("'%s' shouldn't have a trailing slash."%text)
-    return text
 
-def ensure_slash_from_config(config, leading, trailing, configvar):
-    '''
-        Read configuration file variable and make sure that leading and trailing slashes are correct.
-        This indirection allows to add the config variable name to the exception details.
-    '''
-    try:
-        return ensure_slash(leading, trailing, config.get(*configvar))
-    except ImproperlyConfigured as e:
-        # The message attribute is deprecated since Python 2.7, so this is the better way to change the text
-        raise ImproperlyConfigured("The value of configuration variable %s did not pass the sanity check. %s"%(str(configvar),e.message))
 
-# Find configuration file and open it.
-try:
-    config_file_path, is_production = find_config_info()
-except:
-    print("Configuration file not found. Please run 'opensubmit-web configure' first.")
-    exit(0)
+# Precedence rules are as follows:
+# - Developer configuration overrides production configuration on developer machine.
+# - Linux production system are more likely to happen than Windows developer machines.
+config = Config((
+    ('/etc/opensubmit/settings.ini', True),  # Linux production system
+    (os.path.dirname(__file__) + '/settings_dev.ini', False),  # Linux / Mac development system
+    (os.path.expandvars('$APPDATA') + 'opensubmit/settings.ini', False),  # Windows development system
+    ))
 
-print("Using "+config_file_path)
-config = SafeConfigParser()
-config.read([config_file_path], encoding='utf-8')
+################################################################################################################
+################################################################################################################
+################################################################################################################
 
 # Global settings
 DATABASES = {
     'default': {
-        'ENGINE':   'django.db.backends.' + config.get('database', 'DATABASE_ENGINE'),
-        'NAME':     ensure_configured(config.get('database', 'DATABASE_NAME')),
-        'USER':     config.get('database', 'DATABASE_USER'),
+        'ENGINE': 'django.db.backends.' + config.get('database', 'DATABASE_ENGINE'),
+        'NAME': config.get('database', 'DATABASE_NAME', True),
+        'USER': config.get('database', 'DATABASE_USER'),
         'PASSWORD': config.get('database', 'DATABASE_PASSWORD'),
-        'HOST':     config.get('database', 'DATABASE_HOST'),
-        'PORT':     config.get('database', 'DATABASE_PORT'),
+        'HOST': config.get('database', 'DATABASE_HOST'),
+        'PORT': config.get('database', 'DATABASE_PORT'),
     }
 }
 
 # We have the is_production indicator from above, which could also determine this value.
 # But sometimes, you need Django stack traces in your production system for debugging.
-DEBUG = config.getboolean('general', 'DEBUG')
+DEBUG = config.get_bool('general', 'DEBUG')
 
 # Determine MAIN_URL / FORCE_SCRIPT option
-HOST =     ensure_slash_from_config(config, False, False, ('server', 'HOST'))
-HOST_DIR = ensure_slash_from_config(config, False, False, ('server', 'HOST_DIR'))
+HOST = config.get('server', 'HOST')
+HOST_DIR = config.get('server', 'HOST_DIR')
 if len(HOST_DIR) > 0:
-    MAIN_URL          = HOST + '/' + HOST_DIR
+    MAIN_URL = HOST + '/' + HOST_DIR
     FORCE_SCRIPT_NAME = '/' + HOST_DIR
 else:
     MAIN_URL = HOST
-    FORCE_SCRIPT_NAME = ensure_slash(False, False, '')
+    FORCE_SCRIPT_NAME = ''
 
 # Determine some settings based on the MAIN_URL
 LOGIN_URL = MAIN_URL
 LOGIN_ERROR_URL = MAIN_URL
-LOGIN_REDIRECT_URL = ensure_slash(False, True, MAIN_URL+'/dashboard/')
+LOGIN_REDIRECT_URL = MAIN_URL + '/dashboard/'
 
 # Local file system storage for uploads.
 # Please note that MEDIA_URL is intentionally not set, since all media
 # downloads have to use our download API URL for checking permissions.
-MEDIA_ROOT = ensure_slash_from_config(config, True, True, ('server', 'MEDIA_ROOT'))
+MEDIA_ROOT = config.get('server', 'MEDIA_ROOT', True, True, True)
 
 # Root of the installation
 # This is normally detected automatically, so the settings.ini template does
 # not contain the value. For the test suite, however, we need the override option.
 if config.has_option('general', 'SCRIPT_ROOT'):
-    SCRIPT_ROOT = ensure_slash(True, False,config.get('general', 'SCRIPT_ROOT'))
+    SCRIPT_ROOT = config.get('general', 'SCRIPT_ROOT', True, True, False)
 else:
-    SCRIPT_ROOT = ensure_slash(True, False, os.path.dirname(os.path.abspath(__file__)))
+    SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-if is_production:
+if config.is_production:
     # Root folder for static files
-    STATIC_ROOT = ensure_slash(True, True, SCRIPT_ROOT + '/static-production/')
+    STATIC_ROOT = SCRIPT_ROOT + '/static-production/'
     STATICFILES_DIRS = (SCRIPT_ROOT + '/static/', )
     # Absolute URL for static files, directly served by Apache on production systems
-    STATIC_URL = ensure_slash(False, True, MAIN_URL + '/static/')
+    STATIC_URL = MAIN_URL + '/static/'
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
     if ':' in ALLOWED_HOSTS[0]:
@@ -149,11 +144,11 @@ if is_production:
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
     # Root folder for static files
-    STATIC_ROOT = ensure_slash(True, True, SCRIPT_ROOT+'/static/')
+    STATIC_ROOT = SCRIPT_ROOT + '/static/'
     # Relative URL for static files
-    STATIC_URL = ensure_slash(True, True,'/static/')
+    STATIC_URL = '/static/'
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    ALLOWED_HOSTS = ['localhost','127.0.0.1']
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 ADMINS = (
     (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),
@@ -174,20 +169,19 @@ SECRET_KEY = config.get("server", "SECRET_KEY")
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'OPTIONS': {'debug': DEBUG, 
+        'OPTIONS': {'debug': DEBUG,
                     'context_processors':
-                                            ("django.contrib.auth.context_processors.auth",
-                                             "django.template.context_processors.debug",
-                                             "django.template.context_processors.i18n",
-                                             "django.template.context_processors.media",
-                                             "django.template.context_processors.static",
-                                             "django.template.context_processors.tz",
-                                             "django.contrib.messages.context_processors.messages",
-                                             "opensubmit.contextprocessors.footer",
-                                             "django.template.context_processors.request",
-                                             "social_django.context_processors.backends",
-                                             "social_django.context_processors.login_redirect"
-                                            )
+                        ("django.contrib.auth.context_processors.auth",
+                         "django.template.context_processors.debug",
+                         "django.template.context_processors.i18n",
+                         "django.template.context_processors.media",
+                         "django.template.context_processors.static",
+                         "django.template.context_processors.tz",
+                         "django.contrib.messages.context_processors.messages",
+                         "opensubmit.contextprocessors.footer",
+                         "django.template.context_processors.request",
+                         "social_django.context_processors.backends",
+                         "social_django.context_processors.login_redirect")
                     },
         'APP_DIRS': True,
     },
@@ -238,12 +232,12 @@ LOGGING = {
     },
     'formatters': {
         'verbose': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
         },
         'simple': {
             'format': '%(levelname)s %(message)s'
         },
-     },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
@@ -251,15 +245,15 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level':   'DEBUG',
+            'level': 'DEBUG',
             'filters': ['require_debug_true'],
-            'class':   'logging.StreamHandler'
+            'class': 'logging.StreamHandler'
         },
-    'file': {
-        'level':   'DEBUG',
-        'class':   'logging.FileHandler',
-        'formatter': 'verbose',
-        'filename':   LOG_FILE
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': LOG_FILE
         }
     },
     'loggers': {
@@ -269,23 +263,23 @@ LOGGING = {
             'propagate': True,
         },
         'OpenSubmit': {
-            'handlers':  ['console', 'file'],
-            'level':     'DEBUG',
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
             'propagate': True,
         },
         'social': {
-            'handlers':  ['console', 'file'],
-            'level':     'DEBUG',
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
             'propagate': True,
         },
     }
 }
 
-LOGIN_GOOGLE =  config.getboolean('login', 'LOGIN_GOOGLE')
-LOGIN_OPENID =  config.getboolean('login', 'LOGIN_OPENID')
-LOGIN_GITHUB =  config.getboolean('login', 'LOGIN_GITHUB')
-LOGIN_TWITTER = config.getboolean('login', 'LOGIN_TWITTER')
-LOGIN_SHIB = config.getboolean('login', 'LOGIN_SHIB')
+LOGIN_GOOGLE = config.get_bool('login', 'LOGIN_GOOGLE')
+LOGIN_OPENID = config.get_bool('login', 'LOGIN_OPENID')
+LOGIN_GITHUB = config.get_bool('login', 'LOGIN_GITHUB')
+LOGIN_TWITTER = config.get_bool('login', 'LOGIN_TWITTER')
+LOGIN_SHIB = config.get_bool('login', 'LOGIN_SHIB')
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -293,18 +287,18 @@ AUTHENTICATION_BACKENDS = (
 
 if LOGIN_GOOGLE:
     AUTHENTICATION_BACKENDS += ('social_core.backends.google.GoogleOAuth2',)
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY =    config.get("login", "LOGIN_GOOGLE_OAUTH_KEY")
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config.get("login", "LOGIN_GOOGLE_OAUTH_KEY")
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config.get("login", "LOGIN_GOOGLE_OAUTH_SECRET")
 
 if LOGIN_TWITTER:
     AUTHENTICATION_BACKENDS += ('social_core.backends.twitter.TwitterOAuth',)
-    SOCIAL_AUTH_TWITTER_KEY =          config.get("login", "LOGIN_TWITTER_OAUTH_KEY")
-    SOCIAL_AUTH_TWITTER_SECRET =       config.get("login", "LOGIN_TWITTER_OAUTH_SECRET")
+    SOCIAL_AUTH_TWITTER_KEY = config.get("login", "LOGIN_TWITTER_OAUTH_KEY")
+    SOCIAL_AUTH_TWITTER_SECRET = config.get("login", "LOGIN_TWITTER_OAUTH_SECRET")
 
 if LOGIN_GITHUB:
     AUTHENTICATION_BACKENDS += ('social_core.backends.github.GithubOAuth2',)
-    SOCIAL_AUTH_GITHUB_KEY =           config.get("login", "LOGIN_GITHUB_OAUTH_KEY")
-    SOCIAL_AUTH_GITHUB_SECRET =        config.get("login", "LOGIN_GITHUB_OAUTH_SECRET")
+    SOCIAL_AUTH_GITHUB_KEY = config.get("login", "LOGIN_GITHUB_OAUTH_KEY")
+    SOCIAL_AUTH_GITHUB_SECRET = config.get("login", "LOGIN_GITHUB_OAUTH_SECRET")
 
 if LOGIN_OPENID:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.open_id.OpenIdAuth',)
@@ -318,7 +312,7 @@ if LOGIN_SHIB:
 AUTHENTICATION_BACKENDS += ('opensubmit.social.lti.LtiAuth',)
 
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
-SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next',]
+SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next', ]
 SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
@@ -340,5 +334,3 @@ GRAPPELLI_SWITCH_USER = True
 GRAPPELLI_INDEX_DASHBOARD = {
     'opensubmit.admin.teacher_backend': 'opensubmit.dashboard.TeacherDashboard'
 }
-
-assert(not config.has_section('overrides'))     # factored out
