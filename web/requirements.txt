@@ -1,10 +1,11 @@
-Django>=1.10,<1.11
+Django>=1.11,<1.12
 django-bootstrap-form
 djangorestframework>=2.4
 django-grappelli>=2.8.1
+django-formtools
 requests>=2.5.1
 social-auth-app-django
 python3-openid
 python-oauth2
 oauthlib>=0.6.2
-blti
+lti

@@ -20,7 +20,7 @@
     <div class="col-md-12">
         <form class="form" role="form" action="." method="post" enctype="multipart/form-data">
             {% csrf_token %} 
-            {{ submissionFileUpdateForm|bootstrap }}
+            {{ form|bootstrap }}
             <button type="submit" href="/update/{{submission.pk}}" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span> Save</button>
         </form>
     </div>

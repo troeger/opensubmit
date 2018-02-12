@@ -137,7 +137,7 @@ class SettingsForm(forms.ModelForm):
 
 
 class MailForm(forms.Form):
-    subject = forms.CharField(
-        max_length=50, required=True)
+    subject = forms.CharField(max_length=50, required=True)
     message = forms.CharField(
         widget=forms.Textarea, required=True, initial="Dear #FIRSTNAME# #LASTNAME#, ")
+
