@@ -113,5 +113,5 @@ class CmdLine(TestCase):
             sys.argv = ['opensubmit-web', 'configure']
             cmdline.console_script(fsroot=self.tmpdir)
             self.assertEqual(True, os.path.isfile(
-                self.tmpdir + 'etc/opensubmit/apache24.conf'))
+                self.tmpdir + 'database.sqlite'))
             self.assertEqual(True, os.path.isdir(self.tmpdir + 'static/grappelli'))
