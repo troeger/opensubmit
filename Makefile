@@ -12,7 +12,7 @@ docs: venv
 	source venv/bin/activate; pushd docs; make html; popd; deactivate
 
 docker:
-	# Run docker images
+	# Run docker images locally
 	docker-compose up
 
 docker-build: build
