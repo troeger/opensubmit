@@ -302,7 +302,7 @@ def configcreate(config_path, config_fname, open_options):
         f = open(config_path + config_fname, 'wt')
         f.write(content)
         f.close()
-        print("Config file %s generated at %s. Please edit it." % (config_fname. config_path))
+        print("Config file %s generated at %s. Please edit it." % (config_fname, config_path))
     except Exception:
         print("ERROR: Could not create config file at {0}. Please use sudo or become root.".format(
             config_path + config_fname))
