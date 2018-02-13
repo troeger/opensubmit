@@ -25,5 +25,7 @@ docs/formats/html/.buildinfo
 docs/formats/html/_sources/modules.rst.txt
 docs/formats/html/modules.html
 docs/modules.rst
-
-
+google_account.json
+terraform.tfstate
+terraform.tfstate.backup
+.terraform*
