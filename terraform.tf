@@ -14,6 +14,30 @@ provider "google" {
   credentials = "${file("google_account.json")}"
 }
 
+# Create database instance
+resource "google_sql_database_instance" "opensubmit" {
+  name = "opensubmit"
+  region      = "${var.region}"
+  database_version = "POSTGRES_9_6"
+
+  settings {
+    tier = "db-f1-micro"
+  }
+}
+
+# Create database
+resource "google_sql_database" "opensubmit" {
+  name      = "opensubmit"
+  instance  = "${google_sql_database_instance.opensubmit.name}"
+}
+resource "google_sql_user" "users" {
+  name     = "opensubmit"
+  instance = "${google_sql_database_instance.opensubmit.name}"
+  host     = "%"
+  password = "opensubmit"
+}
+
+
 # Generate SSH key for further access
 resource "tls_private_key" "vmkey" {
     algorithm = "RSA"
@@ -66,7 +90,13 @@ EOT
   provisioner "remote-exec" {
     inline = [
       "(docker images google/cloud-sdk || docker pull google/cloud-sdk) > /dev/null",
-      "docker run -v /var/run/docker.sock:/var/run/docker.sock google/cloud-sdk gcloud docker -- pull ${var.image}",
+      "(docker run -v /var/run/docker.sock:/var/run/docker.sock google/cloud-sdk gcloud docker -- pull ${var.image}) > /dev/null",
+      "export OPENSUBMIT_SERVER_HOST=http://${google_compute_instance.opensubmit-web.network_interface.0.access_config.0.assigned_nat_ip}",
+      "export OPENSUBMIT_SERVER_MEDIAROOT=/tmp",
+      "export OPENSUBMIT_DATABASE_NAME=opensubmit",
+      "export OPENSUBMIT_DATABASE_USER=opensubmit",
+      "export OPENSUBMIT_DATABASE_PASSWORD=opensubmit",
+      "export OPENSUBMIT_DATABASE_HOST=${google_sql_database_instance.opensubmit.ip_address.0.ip_address}",
       "docker run ${var.image}"
     ]
     connection {
