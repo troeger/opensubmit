@@ -131,6 +131,16 @@ if config.has_option('general', 'SCRIPT_ROOT'):
 else:
     SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+# Determine list of allowed hosts
+host_list = [MAIN_URL.split('/')[2]]
+if ':' in host_list[0]:
+    # Strip port number
+    host_list = [host_list[0].split(':')[0]]
+if config.has_option('server', 'HOST_ALIASES'):
+    add_hosts = config.get('server', 'HOST_ALIASES', True, False, False).split(',')
+    host_list += add_hosts
+ALLOWED_HOSTS = host_list
+
 if config.is_production:
     # Root folder for static files
     STATIC_ROOT = SCRIPT_ROOT + '/static-production/'
@@ -138,9 +148,6 @@ if config.is_production:
     # Absolute URL for static files, directly served by Apache on production systems
     STATIC_URL = MAIN_URL + '/static/'
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    ALLOWED_HOSTS = [MAIN_URL.split('/')[2]]
-    if ':' in ALLOWED_HOSTS[0]:
-        ALLOWED_HOSTS = [ALLOWED_HOSTS[0].split(':')[0]]
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
     # Root folder for static files
@@ -148,7 +155,6 @@ else:
     # Relative URL for static files
     STATIC_URL = '/static/'
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 ADMINS = (
     (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),

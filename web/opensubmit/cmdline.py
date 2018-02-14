@@ -38,6 +38,7 @@ DEBUG: False
 # otherwise leave it empty.
 HOST: {server-host}
 HOST_DIR:
+HOST_ALIASES: {server-hostaliases}
 
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
@@ -362,6 +363,7 @@ def console_script(fsroot='/'):
         # Config name, default value, character pos of argument
         poss_options = [['server-host', '***not configured***'],
                         ['server-mediaroot', '***not configured***'],
+                        ['server-hostaliases', ''],
                         ['database-name', '/tmp/database.sqlite'],
                         ['database-engine', 'sqlite3'],
                         ['database-user', ''],
