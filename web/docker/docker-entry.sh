@@ -16,6 +16,7 @@ set -e
 # Create OpenSubmit and Apache configuration file
 opensubmit-web configcreate --server-host=$OPENSUBMIT_SERVER_HOST \
                             --server-mediaroot=$OPENSUBMIT_SERVER_MEDIAROOT \
+                            --server-hostaliases=$OPENSUBMIT_SERVER_HOST_ALIASES \
                             --database-name=$OPENSUBMIT_DATABASE_NAME \
                             --database-user=$OPENSUBMIT_DATABASE_USER \
                             --database-password=$OPENSUBMIT_DATABASE_PASSWORD \
