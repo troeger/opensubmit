@@ -2,9 +2,18 @@ from django.conf.urls import include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 
+from django.conf import settings
+from django.conf.urls.static import static
+
+from rest_framework import routers
+
 from opensubmit import admin
 from opensubmit.views import frontend, backend, lti, api
 from opensubmit.forms import MailForm
+
+router = routers.DefaultRouter()
+router.register(r'assignments', api.AssignmentViewSet)
+
 
 urlpatterns = [
     # Frontend Login
@@ -40,15 +49,17 @@ urlpatterns = [
     url(r'^mail/receivers=(?P<user_list>.*)$', backend.MailFormPreview(MailForm), name='mailstudents'),
     url(r'^mail/course=(?P<course_id>\d+)$', backend.MailFormPreview(MailForm), name='mailcourse'),
     # Executor URLs
-    url(r'^download/(?P<pk>\d+)/validity_testscript/secret=(?P<secret>\w+)$', api.ValidityScriptView.as_view()),
-    url(r'^download/(?P<pk>\d+)/full_testscript/secret=(?P<secret>\w+)$', api.FullScriptView.as_view()),
-    url(r'^jobs/$', api.jobs, name='jobs'),
-    url(r'^machines/$', api.MachinesView.as_view(), name='machines'),
+#    url(r'^download/(?P<pk>\d+)/validity_testscript/secret=(?P<secret>\w+)$', api.ValidityScriptView.as_view()),
+#    url(r'^download/(?P<pk>\d+)/full_testscript/secret=(?P<secret>\w+)$', api.FullScriptView.as_view()),
+#    url(r'^jobs/$', api.JobsView.as_view(), name='jobs'),
+#    url(r'^machines/$', api.MachinesView.as_view(), name='machines'),
     # Error pages
     url(r'^403/$', TemplateView.as_view(template_name='403.html')),
     url(r'^404/$', TemplateView.as_view(template_name='404.html')),
     url(r'^500/$', TemplateView.as_view(template_name='500.html')),
-]
+    # API
+    url(r'^api/', include(router.urls)),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # only working when DEBUG==FALSE
 # on production systems, static files are served directly by Apache

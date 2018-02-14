@@ -122,6 +122,7 @@ LOGIN_REDIRECT_URL = MAIN_URL + '/dashboard/'
 # Please note that MEDIA_URL is intentionally not set, since all media
 # downloads have to use our download API URL for checking permissions.
 MEDIA_ROOT = config.get('server', 'MEDIA_ROOT', True, True, True)
+MEDIA_URL = '/uploads/'
 
 # Root of the installation
 # This is normally detected automatically, so the settings.ini template does
@@ -213,8 +214,9 @@ INSTALLED_APPS = (
     'grappelli.dashboard',
     'grappelli',
     'django.contrib.admin',
-#    'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit.app.OpenSubmitConfig',
+    'rest_framework',
+    'rest_framework.authtoken'
 )
 
 LOG_FILE = config.get('server', 'LOG_FILE')
@@ -333,4 +335,14 @@ GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
 GRAPPELLI_SWITCH_USER = True
 GRAPPELLI_INDEX_DASHBOARD = {
     'opensubmit.admin.teacher_backend': 'opensubmit.dashboard.TeacherDashboard'
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissions',
+    ]
 }

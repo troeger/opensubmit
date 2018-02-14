@@ -70,7 +70,7 @@ def compatible_api_version(server_version):
     '''
     try:
         semver = server_version.split('.')
-        if semver[0] != '1':
+        if semver[0] != '2':
             logger.error(
                 'Server API version (%s) is too new for us. Please update the executor installation.' % server_version)
             return False

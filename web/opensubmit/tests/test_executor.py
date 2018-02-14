@@ -34,7 +34,7 @@ from .helpers.user import create_user, get_student_dict
 from . import uccrap, rootdir
 
 sys.path.insert(0, os.path.dirname(__file__) + '/../../../executor/')
-from opensubmitexec import config, cmdline, server, locking, compiler, exceptions  # NOQA
+from opensubmitexec import config, cmdline, server, locking, exceptions  # NOQA
 
 logger = logging.getLogger('opensubmitexec')
 

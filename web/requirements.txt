@@ -1,6 +1,6 @@
 Django>=1.11,<1.12
 django-bootstrap-form
-djangorestframework>=2.4
+djangorestframework
 django-grappelli>=2.8.1
 django-formtools
 requests>=2.5.1

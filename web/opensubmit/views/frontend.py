@@ -334,4 +334,3 @@ class DescriptionFileView(LoginRequiredMixin, BinaryDownloadMixin, DetailView):
         self.f = ass.description
         self.fname = self.f.name[self.f.name.rfind('/') + 1:]
         return ass
-
