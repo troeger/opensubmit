@@ -85,27 +85,26 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Administrator Manual</a><ul>
 <li><a class="reference internal" href="#web-server">Web server</a><ul>
+<li><a class="reference internal" href="#docker-based-installation">Docker-based installation</a></li>
+<li><a class="reference internal" href="#manual-installation">Manual installation</a><ul>
 <li><a class="reference internal" href="#updating-your-installation">Updating your installation</a></li>
-<li><a class="reference internal" href="#authentication-methods">Authentication methods</a><ul>
+<li><a class="reference internal" href="#authentication-methods">Authentication methods</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#login-with-openid">Login with OpenID</a></li>
 <li><a class="reference internal" href="#login-with-shibboleth">Login with Shibboleth</a></li>
 <li><a class="reference internal" href="#login-with-google-account">Login with Google account</a></li>
 <li><a class="reference internal" href="#login-with-twitter-account">Login with Twitter account</a></li>
-<li><a class="reference internal" href="#login-with-github-account">Login with GitHub account</a></li>
+<li><a class="reference internal" href="#login-with-github-account">Login with GitHub account</a><ul>
+<li><a class="reference internal" href="#user-management">User management</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#user-management">User management</a><ul>
 <li><a class="reference internal" href="#permissions">Permissions</a></li>
 <li><a class="reference internal" href="#assigning-users-to-groups">Assigning users to groups</a></li>
 <li><a class="reference internal" href="#merging-accounts">Merging accounts</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a class="reference internal" href="#test-machines">Test machines</a><ul>
-<li><a class="reference internal" href="#id12">Updating your installation</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#test-machines">Test machines</a></li>
 </ul>
 </li>
 </ul>
@@ -141,39 +140,57 @@
 <h1>Administrator Manual<a class="headerlink" href="#administrator-manual" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="web-server">
 <h2>Web server<a class="headerlink" href="#web-server" title="Permalink to this headline">¶</a></h2>
-<p>OpenSubmit runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:</p>
+<p>OpenSubmit runs with Python 3.4 or newer versions. There are two options for installation:</p>
+<div class="section" id="docker-based-installation">
+<h3>Docker-based installation<a class="headerlink" href="#docker-based-installation" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Clone the GitHub repository.</li>
+<li>Call <code class="docutils literal"><span class="pre">make</span></code> to build the Python packages.</li>
+<li>Call <code class="docutils literal"><span class="pre">make</span> <span class="pre">docker-build</span></code> to build the Docker images that run the Python packages.</li>
+<li>Call <code class="docutils literal"><span class="pre">make</span> <span class="pre">docker</span></code> to run the Docker images with Docker Compose.</li>
+<li>Got to the OpenSubmit start page and use one of the configured authentication methods.</li>
+<li>Call <code class="docutils literal"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">opensubmit_web</span> <span class="pre">opensubmit-web</span> <span class="pre">makeadmin</span> <span class="pre">&lt;email&gt;</span></code> to make the created user an administrator in the system.</li>
+</ul>
+<p>The images will soon be provided in Docker Hub, so that you can skip the manual build.</p>
+</div>
+<div class="section" id="manual-installation">
+<h3>Manual installation<a class="headerlink" href="#manual-installation" title="Permalink to this headline">¶</a></h3>
+<p>For a manual installation, you need to follow these steps:</p>
 <ul class="simple">
 <li>Prepare a Python 3 web hosting environment.<ul>
 <li>Debian / Ubuntu: <code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libapache2-mod-wsgi-py3</span> <span class="pre">apache2</span> <span class="pre">sqlite</span> <span class="pre">python3</span></code>.</li>
 </ul>
 </li>
 <li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">opensubmit-web</span></code> as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">opensubmit-web</span></code>. PIP should come as part of your Python installation.</li>
-<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configure</span></code> to create an OpenSubmit configuration file template. Edit the generated file (<code class="docutils literal"><span class="pre">/etc/opensubmit/settings.ini</span></code>):<ul>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configcreate</span></code> to create an OpenSubmit configuration file template. Edit the generated file (<code class="docutils literal"><span class="pre">/etc/opensubmit/settings.ini</span></code>):<ul>
 <li>The default database is SQLite. You can use an empty MySQL, PostgreSQL or Oracle database instead.</li>
 <li>OpenSubmit does not support password-based logins. You need to choose one of the supported <a class="reference internal" href="#auth"><span class="std std-ref">authentication methods</span></a>.</li>
 <li>Configure a MEDIA_ROOT folder that stores all the student uploads.</li>
 </ul>
 </li>
-<li>Re-run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configure</span></code> to check your configuration. If everything looks good, then a default Apache 2.4 configuration for mod_wsgi is generated in <code class="docutils literal"><span class="pre">/etc/opensubmit/apache24.config</span></code>.  You can <a class="reference external" href="http://httpd.apache.org/docs/2.4/en/mod/core.html#include">include</a> this file in some <a class="reference external" href="http://httpd.apache.org/docs/2.4/vhosts/examples.html">virtual host configuration</a>.</li>
+<li>Re-run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configtest</span></code> to check your configuration.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">apachecreate</span></code> to generate a default Apache 2.4 configuration for mod_wsgi, which is stored in <code class="docutils literal"><span class="pre">/etc/opensubmit/apache24.config</span></code>.  You can <a class="reference external" href="http://httpd.apache.org/docs/2.4/en/mod/core.html#include">include</a> this file in some <a class="reference external" href="http://httpd.apache.org/docs/2.4/vhosts/examples.html">virtual host configuration</a>.</li>
 <li>Restart your web server.</li>
 <li>Got to the OpenSubmit start page and use your configured authentication method.</li>
 <li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">makeadmin</span> <span class="pre">&lt;email&gt;</span></code> to make the created user an administrator in the system.</li>
 </ul>
 <div class="section" id="updating-your-installation">
-<h3>Updating your installation<a class="headerlink" href="#updating-your-installation" title="Permalink to this headline">¶</a></h3>
+<h4>Updating your installation<a class="headerlink" href="#updating-your-installation" title="Permalink to this headline">¶</a></h4>
 <p>Updating an existing OpenSubmit web installation consists of the following steps:</p>
 <ul class="simple">
 <li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">opensubmit-web</span></code> as root or in a virtualenv environment.</li>
-<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configure</span></code> to perform neccessary database updates.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-web</span> <span class="pre">configtest</span></code> to perform neccessary database updates.</li>
 <li>Restart your web server.</li>
 </ul>
 </div>
 <div class="section" id="authentication-methods">
-<span id="auth"></span><h3>Authentication methods<a class="headerlink" href="#authentication-methods" title="Permalink to this headline">¶</a></h3>
+<span id="auth"></span><h4>Authentication methods<a class="headerlink" href="#authentication-methods" title="Permalink to this headline">¶</a></h4>
 <p>OpenSubmit supports different authentication methods, as described in the following sections. There is <strong>no password login</strong> support in OpenSubmit - authentication is always supposed to be handled by some third-party service.</p>
 <p>If you need another authentication method for your institution, please <a class="reference external" href="https://github.com/troeger/opensubmit/issues/new">open an according issue</a>.</p>
+</div>
+</div>
 <div class="section" id="login-with-openid">
-<h4>Login with OpenID<a class="headerlink" href="#login-with-openid" title="Permalink to this headline">¶</a></h4>
+<h3>Login with OpenID<a class="headerlink" href="#login-with-openid" title="Permalink to this headline">¶</a></h3>
 <p>If you want to allow users to login with OpenID, you need to configure the following settings:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">LOGIN_OPENID:</span> <span class="pre">True</span></code></li>
@@ -183,7 +200,7 @@
 <p>The standard OpenSubmit installation already contains an example setting for using StackExchange as OpenID provider.</p>
 </div>
 <div class="section" id="login-with-shibboleth">
-<h4>Login with Shibboleth<a class="headerlink" href="#login-with-shibboleth" title="Permalink to this headline">¶</a></h4>
+<h3>Login with Shibboleth<a class="headerlink" href="#login-with-shibboleth" title="Permalink to this headline">¶</a></h3>
 <p>If you want to allow users to login with Shibboleth, you need to configure the following settings:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">LOGIN_SHIB:</span> <span class="pre">True</span></code></li>
@@ -199,7 +216,7 @@
 <p>Note: If you are using Apache 2.4 with <em>mod_wsgi</em>, make sure to set <code class="docutils literal"><span class="pre">WSGIPassAuthorization</span> <span class="pre">On</span></code>. Otherwise, these environment variables may not pass through.</p>
 </div>
 <div class="section" id="login-with-google-account">
-<h4>Login with Google account<a class="headerlink" href="#login-with-google-account" title="Permalink to this headline">¶</a></h4>
+<h3>Login with Google account<a class="headerlink" href="#login-with-google-account" title="Permalink to this headline">¶</a></h3>
 <p>If you want to allow users to login with an Google account, you need to configure the following settings:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">LOGIN_GOOGLE:</span> <span class="pre">True</span></code></li>
@@ -211,7 +228,7 @@
 <p>You also need to <a class="reference external" href="https://console.developers.google.com/apis/api/plus.googleapis.com/overview">activate the Google+ API</a>, so that OpenSubmit is able to fetch basic user information from Google.</p>
 </div>
 <div class="section" id="login-with-twitter-account">
-<h4>Login with Twitter account<a class="headerlink" href="#login-with-twitter-account" title="Permalink to this headline">¶</a></h4>
+<h3>Login with Twitter account<a class="headerlink" href="#login-with-twitter-account" title="Permalink to this headline">¶</a></h3>
 <p>If you want to allow users to login with an Twitter account, you need to configure the following settings:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">LOGIN_TWITTER:</span> <span class="pre">True</span></code></li>
@@ -222,7 +239,7 @@
 <p>A new key / secret pair can be created in the <a class="reference external" href="https://apps.twitter.com/">Twitter Application Management</a>.  The authorized forwarding URL should be <code class="docutils literal"><span class="pre">&lt;base</span> <span class="pre">url</span> <span class="pre">of</span> <span class="pre">your</span> <span class="pre">installation&gt;/complete/twitter/</span></code>. We recommend to modify the application access to <em>Read only</em>, and to allow access to the email addresses.</p>
 </div>
 <div class="section" id="login-with-github-account">
-<h4>Login with GitHub account<a class="headerlink" href="#login-with-github-account" title="Permalink to this headline">¶</a></h4>
+<h3>Login with GitHub account<a class="headerlink" href="#login-with-github-account" title="Permalink to this headline">¶</a></h3>
 <p>If you want to allow users to login with an GitHub account, you need to configure the following settings:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">LOGIN_GITHUB:</span> <span class="pre">True</span></code></li>
@@ -231,10 +248,8 @@
 </ul>
 <p>The standard OpenSubmit installation already contains a key/secret pair for development purposes. It only works for OpenSubmit installations operating on <em>http://localhost:8000</em>, so in a production environment, you need a new pair of OAuth key/secret for your server.</p>
 <p>A new key / secret pair can be created in the <a class="reference external" href="https://github.com/settings/applications/new">OAuth application registration</a>.  The authorized forwarding URL should be <code class="docutils literal"><span class="pre">&lt;base</span> <span class="pre">url</span> <span class="pre">of</span> <span class="pre">your</span> <span class="pre">installation&gt;/complete/github/</span></code>.</p>
-</div>
-</div>
 <div class="section" id="user-management">
-<span id="useroverview"></span><h3>User management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h3>
+<span id="useroverview"></span><h4>User management<a class="headerlink" href="#user-management" title="Permalink to this headline">¶</a></h4>
 <p>One of the core concepts of OpenSubmit is that users register themselves by using an external authentication provider (see <a class="reference internal" href="#auth"><span class="std std-ref">Authentication methods</span></a>).</p>
 <p>Based on this, there are different groups such a registered user can belong to:</p>
 <ul class="simple">
@@ -243,8 +258,10 @@
 <li><em>Course Owners</em>: Users with advanced rights in the teacher backend.</li>
 <li><em>Administrators</em>: Users will unrestricted rights.</li>
 </ul>
+</div>
+</div>
 <div class="section" id="permissions">
-<span id="id1"></span><h4>Permissions<a class="headerlink" href="#permissions" title="Permalink to this headline">¶</a></h4>
+<span id="id1"></span><h3>Permissions<a class="headerlink" href="#permissions" title="Permalink to this headline">¶</a></h3>
 <p>The following table summarized the default permissions for each of the user groups.</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -401,7 +418,7 @@
 <p>Administrators can create custom user groups and permissions. Normally this should be avoided, since some permissions have a non-obvious impact on the usage of the teacher backend.</p>
 </div>
 <div class="section" id="assigning-users-to-groups">
-<h4>Assigning users to groups<a class="headerlink" href="#assigning-users-to-groups" title="Permalink to this headline">¶</a></h4>
+<h3>Assigning users to groups<a class="headerlink" href="#assigning-users-to-groups" title="Permalink to this headline">¶</a></h3>
 <p>There are two ways to assign users to user groups, assuming that they logged-in once for registration:</p>
 <ul class="simple">
 <li>In the teacher backend, as administrator (see <a class="reference internal" href="#auth"><span class="std std-ref">Authentication methods</span></a>).</li>
@@ -411,10 +428,9 @@
 <p>The second option is the <code class="docutils literal"><span class="pre">opensubmit-web</span></code> command-line tool that is available on the web server. Calling it without arguments shows the different options to assign users to user groups.</p>
 </div>
 <div class="section" id="merging-accounts">
-<span id="merge-users"></span><h4>Merging accounts<a class="headerlink" href="#merging-accounts" title="Permalink to this headline">¶</a></h4>
+<span id="merge-users"></span><h3>Merging accounts<a class="headerlink" href="#merging-accounts" title="Permalink to this headline">¶</a></h3>
 <p>Since OpenSubmit users always register themselves in the platform (see <a class="reference internal" href="#auth"><span class="std std-ref">Authentication methods</span></a>), it can happen that the same physical person creates multiple accounts through different authentication providers. The main reason for that is a non-matching or missing email address being provided by the authentication provider.</p>
 <p>Administrators can merge users in the teacher backend. Click on <em>Manage users</em>, mark all user accounts to be merged, and choose the according action in the lower left corner. The nect screen shows you the intended merging activity and allows to chose the “primary” account by flipping roles. The non-primary account is deleted as part of the merging activity.</p>
-</div>
 </div>
 </div>
 <div class="section" id="test-machines">
@@ -432,14 +448,11 @@
 </ul>
 <p>Smart students may try to connect to machines under their control in their code, mainly to copy tutor validation scripts. An easy prevention mechanism for that is the restriction of your test machine routing to the OpenSubmit web server only.</p>
 <p>The fetching of validations is protected by a shared secret between the web application and the executor installations. Check both the <code class="docutils literal"><span class="pre">settings.ini</span></code> on the web server, and <code class="docutils literal"><span class="pre">executor.ini</span></code> on the test machines.</p>
-<div class="section" id="id12">
-<h3>Updating your installation<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <p>Updating an existing OpenSubmit executor installation consists of the following steps:</p>
 <ul class="simple">
 <li>Run <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">opensubmit-exec</span></code> as root or in a virtualenv environment.</li>
-<li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configure</span></code> to check the configuration for compatibility.</li>
+<li>Run <code class="docutils literal"><span class="pre">opensubmit-exec</span> <span class="pre">configtest</span></code> to check the configuration for compatibility.</li>
 </ul>
-</div>
 </div>
 </div>
 

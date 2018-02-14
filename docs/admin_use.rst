@@ -4,20 +4,38 @@ Administrator Manual
 Web server
 **********
 
-OpenSubmit runs with Python 3.4 or newer versions. For an installation, you need to follow these steps:
+OpenSubmit runs with Python 3.4 or newer versions. There are two options for installation:
+
+Docker-based installation
+-------------------------
+
+- Clone the GitHub repository.
+- Call ``make`` to build the Python packages.
+- Call ``make docker-build`` to build the Docker images that run the Python packages.
+- Call ``make docker`` to run the Docker images with Docker Compose.
+- Got to the OpenSubmit start page and use one of the configured authentication methods.
+- Call ``docker exec opensubmit_web opensubmit-web makeadmin <email>`` to make the created user an administrator in the system.
+
+The images will soon be provided in Docker Hub, so that you can skip the manual build.
+
+Manual installation
+-------------------
+
+For a manual installation, you need to follow these steps:
   
 - Prepare a Python 3 web hosting environment. 
 
   - Debian / Ubuntu: ``apt-get install libapache2-mod-wsgi-py3 apache2 sqlite python3``. 
 
 - Run ``pip install opensubmit-web`` as root or in a virtualenv environment. If you get error messages about unresolved dependencies, try running ``pip install -U opensubmit-web``. PIP should come as part of your Python installation.
-- Run ``opensubmit-web configure`` to create an OpenSubmit configuration file template. Edit the generated file (``/etc/opensubmit/settings.ini``):
+- Run ``opensubmit-web configcreate`` to create an OpenSubmit configuration file template. Edit the generated file (``/etc/opensubmit/settings.ini``):
 
   - The default database is SQLite. You can use an empty MySQL, PostgreSQL or Oracle database instead.
   - OpenSubmit does not support password-based logins. You need to choose one of the supported :ref:`authentication methods <auth>`.
   - Configure a MEDIA_ROOT folder that stores all the student uploads.
 
-- Re-run ``opensubmit-web configure`` to check your configuration. If everything looks good, then a default Apache 2.4 configuration for mod_wsgi is generated in ``/etc/opensubmit/apache24.config``.  You can `include <http://httpd.apache.org/docs/2.4/en/mod/core.html#include>`_ this file in some `virtual host configuration <http://httpd.apache.org/docs/2.4/vhosts/examples.html>`_. 
+- Re-run ``opensubmit-web configtest`` to check your configuration.
+- Run ``opensubmit-web apachecreate`` to generate a default Apache 2.4 configuration for mod_wsgi, which is stored in ``/etc/opensubmit/apache24.config``.  You can `include <http://httpd.apache.org/docs/2.4/en/mod/core.html#include>`_ this file in some `virtual host configuration <http://httpd.apache.org/docs/2.4/vhosts/examples.html>`_.
 - Restart your web server.
 - Got to the OpenSubmit start page and use your configured authentication method.
 - Run ``opensubmit-web makeadmin <email>`` to make the created user an administrator in the system.
@@ -28,7 +46,7 @@ Updating your installation
 Updating an existing OpenSubmit web installation consists of the following steps:
 
 - Run ``pip install --upgrade opensubmit-web`` as root or in a virtualenv environment. 
-- Run ``opensubmit-web configure`` to perform neccessary database updates.
+- Run ``opensubmit-web configtest`` to perform neccessary database updates.
 - Restart your web server.
 
 .. _auth:
@@ -205,5 +223,5 @@ Updating your installation
 Updating an existing OpenSubmit executor installation consists of the following steps:
 
 - Run ``pip install --upgrade opensubmit-exec`` as root or in a virtualenv environment. 
-- Run ``opensubmit-exec configure`` to check the configuration for compatibility.
+- Run ``opensubmit-exec configtest`` to check the configuration for compatibility.
 
