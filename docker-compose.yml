@@ -10,6 +10,7 @@ services:
     volumes:
       - postgres-volume:/var/lib/postgresql/data  
   web:
+    image: troeger/opensubmit-web
     environment:
       OPENSUBMIT_SERVER_HOST: http://localhost:8000
       OPENSUBMIT_SERVER_HOST_ALIASES: web
@@ -28,6 +29,7 @@ services:
     volumes:
       - data-volume:/data
   exec1:
+    image: troeger/opensubmit-exec
     environment:
       OPENSUBMIT_SERVER_HOST: http://web
     build: 
@@ -36,6 +38,7 @@ services:
     depends_on:
       - web
   exec2:
+    image: troeger/opensubmit-exec
     environment:
       OPENSUBMIT_SERVER_HOST: http://web
     build: 
