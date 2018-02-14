@@ -85,8 +85,8 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Administrator Manual</a><ul>
 <li><a class="reference internal" href="#web-server">Web server</a><ul>
-<li><a class="reference internal" href="#docker-based-installation">Docker-based installation</a></li>
-<li><a class="reference internal" href="#manual-installation">Manual installation</a><ul>
+<li><a class="reference internal" href="#docker-based-test-installation">Docker-based test installation</a></li>
+<li><a class="reference internal" href="#manual-production-installation">Manual production installation</a><ul>
 <li><a class="reference internal" href="#updating-your-installation">Updating your installation</a></li>
 <li><a class="reference internal" href="#authentication-methods">Authentication methods</a></li>
 </ul>
@@ -141,20 +141,18 @@
 <div class="section" id="web-server">
 <h2>Web server<a class="headerlink" href="#web-server" title="Permalink to this headline">¶</a></h2>
 <p>OpenSubmit runs with Python 3.4 or newer versions. There are two options for installation:</p>
-<div class="section" id="docker-based-installation">
-<h3>Docker-based installation<a class="headerlink" href="#docker-based-installation" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="docker-based-test-installation">
+<h3>Docker-based test installation<a class="headerlink" href="#docker-based-test-installation" title="Permalink to this headline">¶</a></h3>
+<p>This installation approach relies on <a class="reference external" href="https://docs.docker.com/compose/overview/">Docker Compose</a>, which comes as part of a normal <a class="reference external" href="https://www.docker.com/community-edition#/download">Docker installation</a>. It starts a couple of virtual machines for the web application, the database and the executors on your chosen host.</p>
 <ul class="simple">
-<li>Clone the GitHub repository.</li>
-<li>Call <code class="docutils literal"><span class="pre">make</span></code> to build the Python packages.</li>
-<li>Call <code class="docutils literal"><span class="pre">make</span> <span class="pre">docker-build</span></code> to build the Docker images that run the Python packages.</li>
-<li>Call <code class="docutils literal"><span class="pre">make</span> <span class="pre">docker</span></code> to run the Docker images with Docker Compose.</li>
-<li>Got to the OpenSubmit start page and use one of the configured authentication methods.</li>
-<li>Call <code class="docutils literal"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">opensubmit_web</span> <span class="pre">opensubmit-web</span> <span class="pre">makeadmin</span> <span class="pre">&lt;email&gt;</span></code> to make the created user an administrator in the system.</li>
+<li>Download the <a class="reference external" href="https://raw.githubusercontent.com/troeger/opensubmit/master/docker-compose.yml">compose file</a>.</li>
+<li>Call <code class="docutils literal"><span class="pre">docker-compose</span> <span class="pre">up</span></code> to download, configure and start the neccessary Docker images.</li>
+<li>Got to <code class="docutils literal"><span class="pre">http://localhost:8000</span></code> and use one of the configured authentication methods.</li>
+<li>Call <code class="docutils literal"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">opensubmit_web_1</span> <span class="pre">opensubmit-web</span> <span class="pre">makeadmin</span>&#160; <span class="pre">&lt;email&gt;</span></code> to make the created user an administrator in the system.</li>
 </ul>
-<p>The images will soon be provided in Docker Hub, so that you can skip the manual build.</p>
 </div>
-<div class="section" id="manual-installation">
-<h3>Manual installation<a class="headerlink" href="#manual-installation" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="manual-production-installation">
+<h3>Manual production installation<a class="headerlink" href="#manual-production-installation" title="Permalink to this headline">¶</a></h3>
 <p>For a manual installation, you need to follow these steps:</p>
 <ul class="simple">
 <li>Prepare a Python 3 web hosting environment.<ul>

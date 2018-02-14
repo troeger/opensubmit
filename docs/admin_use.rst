@@ -6,20 +6,18 @@ Web server
 
 OpenSubmit runs with Python 3.4 or newer versions. There are two options for installation:
 
-Docker-based installation
--------------------------
+Docker-based test installation
+------------------------------
 
-- Clone the GitHub repository.
-- Call ``make`` to build the Python packages.
-- Call ``make docker-build`` to build the Docker images that run the Python packages.
-- Call ``make docker`` to run the Docker images with Docker Compose.
-- Got to the OpenSubmit start page and use one of the configured authentication methods.
-- Call ``docker exec opensubmit_web opensubmit-web makeadmin <email>`` to make the created user an administrator in the system.
+This installation approach relies on `Docker Compose <https://docs.docker.com/compose/overview/>`_, which comes as part of a normal `Docker installation <https://www.docker.com/community-edition#/download>`_. It starts a couple of virtual machines for the web application, the database and the executors on your chosen host.
 
-The images will soon be provided in Docker Hub, so that you can skip the manual build.
+- Download the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/docker-compose.yml>`_.
+- Call ``docker-compose up`` to download, configure and start the neccessary Docker images.
+- Got to ``http://localhost:8000`` and use one of the configured authentication methods.
+- Call ``docker exec opensubmit_web_1 opensubmit-web makeadmin  <email>`` to make the created user an administrator in the system.
 
-Manual installation
--------------------
+Manual production installation
+------------------------------
 
 For a manual installation, you need to follow these steps:
   
