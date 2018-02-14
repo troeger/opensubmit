@@ -26,7 +26,7 @@ ENV PYTHONUNBUFFERED 1
 ENV DJANGO_SETTINGS_MODULE opensubmit.settings
 
 # Install python database driver
-RUN pip3 install psycopg2
+RUN pip3 install psycopg2-binary
 
 COPY ./docker/docker-entry.sh /docker-entry.sh
 EXPOSE 80
