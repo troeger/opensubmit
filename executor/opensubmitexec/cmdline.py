@@ -46,6 +46,13 @@ def copy_and_run(config, src_dir):
         return False
 
 
+def get_config_fname(argv):
+    for index, entry in enumerate(argv):
+        if entry == "-c":
+            return argv[index + 1]
+    return CONFIG_FILE_DEFAULT
+
+
 def console_script():
     '''
         The main entry point for the production
@@ -53,42 +60,50 @@ def console_script():
         installed by setuptools.
     '''
     if len(sys.argv) == 1:
-        print("opensubmit-exec [configure|run|test <dir>|unlock|help] [-c config_file]")
+        print("opensubmit-exec [configcreate <server_url>|configtest|run|test <dir>|unlock|help] [-c config_file]")
         return 0
 
     if "help" in sys.argv[1]:
-        print("configure:        Check config files and registration of a OpenSubmit test machine.")
-        print("run:              Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab.")
-        print("test <dir>:       Run test script from a local folder for testing purposes.")
-        print("unlock:           Break the script lock, because of crashed script.")
-        print("help:             Print this help")
+        print("configcreate <server_url>:  Create initial config file for the OpenSubmit executor.")
+        print("configtest:                 Check config file for correct installation of the OpenSubmit executor.")
+        print("run:                        Fetch and run code to be tested from the OpenSubmit web server. Suitable for crontab.")
+        print("test <dir>:                 Run test script from a local folder for testing purposes.")
+        print("unlock:                     Break the script lock, because of crashed script.")
+        print("help:                       Print this help")
         print(
             "-c config_file    Configuration file to be used (default: {0})".format(CONFIG_FILE_DEFAULT))
         return 0
 
-    if len(sys.argv) > 2 and sys.argv[2] == "-c":
-        config_fname = sys.argv[3]
-    else:
-        config_fname = CONFIG_FILE_DEFAULT
+    # Translate legacy commands
+    if sys.argv[1] == "configure":
+        sys.argv[1] = 'configtest'
 
-    if "configure" in sys.argv[1]:
-        print("Checking configuration of the OpenSubmit executor...")
+    config_fname = get_config_fname(sys.argv)
+
+    if "configcreate" in sys.argv[1]:
+        print("Creating config file at " + config_fname)
+
+        server_url = sys.argv[2]
+
+        if create_config(config_fname, override_url=server_url):
+            print("Config file created, fetching jobs from " + server_url)
+            return 0
+        else:
+            return 1
+
+    if "configtest" in sys.argv[1]:
+        print("Testing config file at " + config_fname)
+
         if has_config(config_fname):
-            print("Config file found at " + config_fname)
             config = read_config(config_fname)
             if not check_config(config):
                 return 1
         else:
-            print("ERROR: Seems like the config file %s does not exist." %
+            print("ERROR: Seems like the config file %s does not exist. Call 'opensubmit-exec configcreate <server_url>' first." %
                   config_fname)
-            print("       I am creating a new one, don't forget to edit it !")
-            print("       Re-run this script again afterwards.")
-            if create_config(config_fname):
-                print("File created.")
-                return 0
-            else:
-                return 1
+            return 1
 
+        print("Sending host information update to server ...")
         send_hostinfo(config)
         return 0
 
