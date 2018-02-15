@@ -4,9 +4,6 @@ variable "region" {default = "europe-west3"}
 # The Google Cloud Engine account name
 variable "account" {default = "ptr_troeger"}
 
-# The name of the docker image in the public Google container registry
-variable "image" {default = "eu.gcr.io/opensubmit/web:v1"}
-
 provider "google" {
   project     = "opensubmit"
   region      = "${var.region}"
@@ -16,7 +13,6 @@ provider "google" {
 
 # Create database instance
 resource "google_sql_database_instance" "opensubmit" {
-  name = "opensubmit"
   region      = "${var.region}"
   database_version = "POSTGRES_9_6"
 
@@ -44,11 +40,27 @@ resource "tls_private_key" "vmkey" {
     rsa_bits = 4096
 }
 
+# Create firewall rule for inbound traffic
+resource "google_compute_firewall" "default" {
+  name    = "opensubmit"
+  network = "default"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+}
+
 # Create virtual machine with CoreOS
 resource "google_compute_instance" "opensubmit-web" {
   name         = "opensubmit-web" 
   machine_type = "f1-micro" 
   zone         = "${var.region}-a" 
+  allow_stopping_for_update = "true"
 
   depends_on = ["tls_private_key.vmkey"]
 
@@ -76,28 +88,18 @@ resource "google_compute_instance" "opensubmit-web" {
     sshKeys = "${var.account}:${tls_private_key.vmkey.public_key_openssh}"
   }
 
-  # Take existing local Docker image, tag it as needed and push it into the Google registry
-  provisioner "local-exec" {
-    command = <<EOT
-      docker tag opensubmit_web ${var.image};
-      gcloud docker -- push ${var.image}
-EOT
-  }
-
-  # Now pull that image in the remote VM
-  # "gcloud" is needed for auth against the container registry
-  # To get it, we mimic the CoreOS alias definition for it here
   provisioner "remote-exec" {
     inline = [
-      "(docker images google/cloud-sdk || docker pull google/cloud-sdk) > /dev/null",
-      "(docker run -v /var/run/docker.sock:/var/run/docker.sock google/cloud-sdk gcloud docker -- pull ${var.image}) > /dev/null",
+      "docker  pull troeger/opensubmit-web",
+      "docker  pull troeger/opensubmit-exec",
       "export OPENSUBMIT_SERVER_HOST=http://${google_compute_instance.opensubmit-web.network_interface.0.access_config.0.assigned_nat_ip}",
       "export OPENSUBMIT_SERVER_MEDIAROOT=/tmp/",
       "export OPENSUBMIT_DATABASE_NAME=opensubmit",
       "export OPENSUBMIT_DATABASE_USER=opensubmit",
       "export OPENSUBMIT_DATABASE_PASSWORD=opensubmit",
       "export OPENSUBMIT_DATABASE_HOST=${google_sql_database_instance.opensubmit.ip_address.0.ip_address}",
-      "docker run -e OPENSUBMIT_SERVER_HOST -e OPENSUBMIT_SERVER_MEDIAROOT -e OPENSUBMIT_DATABASE_NAME -e OPENSUBMIT_DATABASE_USER -e OPENSUBMIT_DATABASE_PASSWORD -e OPENSUBMIT_DATABASE_HOST ${var.image}"
+      "docker run -d --publish=80:8000 -e OPENSUBMIT_SERVER_HOST -e OPENSUBMIT_SERVER_MEDIAROOT -e OPENSUBMIT_DATABASE_NAME -e OPENSUBMIT_DATABASE_USER -e OPENSUBMIT_DATABASE_PASSWORD -e OPENSUBMIT_DATABASE_HOST troeger/opensubmit-web",
+      "docker run -d -e OPENSUBMIT_SERVER_HOST troeger/opensubmit-exec"
     ]
     connection {
       type     = "ssh"
