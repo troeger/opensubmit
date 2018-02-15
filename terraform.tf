@@ -1,13 +1,8 @@
 # The Google Cloud Engine region to be used
 variable "region" {default = "europe-west3"}
 
-# The Google Cloud Engine account name
-variable "account" {default = "root"}
-
-# A mount point without "noexec".
-# Mainly a problem with the COS images.
-variable "script_storage" {default = "/var/lib/docker"}
-
+# Most Google images, epecially COS, do not allow root login, so we need to operate as normal user.
+variable "account" {default = "ptr_troeger"}
 
 provider "google" {
   project     = "opensubmit"
@@ -50,9 +45,13 @@ resource "google_compute_instance" "opensubmit" {
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
+  # Google COS does not work with this setup, since they have no mount point to
+  # store and (sudo-)run executable scripts. Docker only. Everything is "noexec" or root-only,
+  # and root account is forbidden.
+  # This even breaks the remote_exec provisioner of TerraForm.
   boot_disk {
     initialize_params {
-      image = "cos-cloud/cos-stable"
+      image = "coreos-cloud/coreos-stable"
     }
   }
  
@@ -67,14 +66,14 @@ resource "google_compute_instance" "opensubmit" {
   metadata {
     # Establish our custom SSH key, so that the file provisioner can copy stuff
     sshKeys = "${var.account}:${tls_private_key.vmkey.public_key_openssh}"
-    startup-script = "${var.script_storage}/startup.sh"
+    # Startup scripts run as root anyway, no sudo needed.
+    startup-script = "/home/${var.account}/startup.sh"
   }
 
   connection {
     type     = "ssh"
     user     = "${var.account}"
     private_key = "${tls_private_key.vmkey.private_key_pem}"
-    script_path = "${var.script_storage}/terraform.sh"
   }
 
   provisioner "file" {
@@ -92,15 +91,14 @@ resource "google_compute_instance" "opensubmit" {
 #!/bin/sh
 docker run -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/rootfs/$PWD" -w="/rootfs/$PWD" docker/compose:1.13.0 up -d
 EOF
-    destination = "${var.script_storage}/startup.sh"
+    destination = "/home/${var.account}/startup.sh"
   }
 
-  # Run startup script in instance as last step
-  # This currently fails with the Google COS image, so you have to do this manually
+  # Fix permissions and run startup script in instance as last step.
   provisioner "remote-exec" {
     inline = [
-      "chmod u+x ${var.script_storage}/startup.sh",
-      "sudo google_metadata_script_runner --script-type startup"
+      "chmod u+x startup.sh",
+      "sudo /home/${var.account}/startup.sh"
     ]
   }
 }
