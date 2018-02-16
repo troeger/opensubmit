@@ -48,7 +48,7 @@ resource "google_compute_instance" "opensubmit" {
   # Google COS does not work with this setup, since they have no mount point to
   # store and (sudo-)run executable scripts. Docker only. Everything is "noexec" or root-only,
   # and root account is forbidden.
-  # This even breaks the remote_exec provisioner of TerraForm.
+  # This breaks the remote_exec provisioner of TerraForm.
   boot_disk {
     initialize_params {
       image = "coreos-cloud/coreos-stable"
@@ -66,8 +66,30 @@ resource "google_compute_instance" "opensubmit" {
   metadata {
     # Establish our custom SSH key, so that the file provisioner can copy stuff
     sshKeys = "${var.account}:${tls_private_key.vmkey.public_key_openssh}"
-    # Startup scripts run as root anyway, no sudo needed.
-    startup-script = "/home/${var.account}/startup.sh"
+
+    # Store cloud-init configuration which configers systemd to start our containers
+    # In short, this runs docker-compose from a docker image to fire up
+    # our customized docker-compose.yml (see data.template_file.docker-compose-yml above)
+    # We basically run Docker to run Docker Compose which starts our Docker images in detached mode.
+    # Phew.
+    user-data = <<EOF
+#cloud-config
+write_files:
+- path: /etc/systemd/system/opensubmit.service
+  permissions: 0644
+  owner: root
+  content: |
+    [Unit]
+    Description=Start the OpenSubmit docker containers
+
+    [Service]
+    Type=forking
+    ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.account}:/rootfs/home/${var.account}" -w="/rootfs/home/${var.account}" docker/compose:1.13.0 up -d
+    TimeoutSec=600
+
+    [Install]
+    WantedBy=multi-user.target
+EOF
   }
 
   connection {
@@ -81,24 +103,10 @@ resource "google_compute_instance" "opensubmit" {
     destination = "docker-compose.yml"
   }
 
-  # Store the startup script in the VM
-  # In short, this runs docker-compose from a docker image to fire up
-  # our customized docker-compose.yml (see data.template_file.docker-compose-yml above)
-  # We basically run Docker to run Docker Compose which starts our Docker images in detached mode.
-  # Phew.
-  provisioner "file" {
-    content     = <<EOF
-#!/bin/sh
-docker run -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/rootfs/$PWD" -w="/rootfs/$PWD" docker/compose:1.13.0 up -d
-EOF
-    destination = "/home/${var.account}/startup.sh"
-  }
-
-  # Fix permissions and run startup script in instance as last step.
   provisioner "remote-exec" {
     inline = [
-      "chmod u+x startup.sh",
-      "sudo /home/${var.account}/startup.sh"
+      "sudo systemctl enable opensubmit.service",
+      "sudo systemctl start opensubmit.service"
     ]
   }
 }
