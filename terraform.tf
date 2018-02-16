@@ -1,8 +1,14 @@
 # The Google Cloud Engine region to be used
 variable "region" {default = "europe-west3"}
 
-# Most Google images, epecially COS, do not allow root login, so we need to operate as normal user.
+# Most Google images, epecially COS, do not allow root login,
+# so we need to operate as normal user.
 variable "account" {default = "ptr_troeger"}
+
+# The DNS zone we want to have managed by Google,
+# so that host addresses get registered automatically
+variable "dnszone" {default = "demo.open-submit.org"}
+
 
 provider "google" {
   project     = "opensubmit"
@@ -27,6 +33,7 @@ data "template_file" "docker-compose-yml" {
   template = "${file("${path.module}/docker-compose-terraform.yml")}"
 
   vars {
+    external_adr = "${google_dns_record_set.www.name}"
     external_ip = "${google_compute_address.opensubmit.address}"
   }
 }
@@ -110,3 +117,19 @@ EOF
     ]
   }
 }
+
+resource "google_dns_managed_zone" "opensubmit-zone" {
+  name     = "opensubmit-zone"
+  dns_name = "${var.dnszone}."
+}
+
+resource "google_dns_record_set" "www" {
+  name = "www.${google_dns_managed_zone.opensubmit-zone.dns_name}"
+  type = "A"
+  ttl  = 300
+
+  managed_zone = "${google_dns_managed_zone.opensubmit-zone.name}"
+
+  rrdatas = ["${google_compute_address.opensubmit.address}"]
+}
+
