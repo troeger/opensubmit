@@ -360,7 +360,7 @@ def console_script(fsroot='/'):
     if sys.argv[1] == 'configcreate':
         # TODO: Hack, do the arg handling with a proper library
 
-        # Config name, default value, character pos of argument
+        # Config name, default value
         poss_options = [['server-host', '***not configured***'],
                         ['server-mediaroot', '***not configured***'],
                         ['server-hostaliases', ''],
