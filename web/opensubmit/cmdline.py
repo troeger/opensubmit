@@ -120,8 +120,8 @@ LOGIN_TWITTER_OAUTH_SECRET:
 LOGIN_GOOGLE: True
 
 # OAuth application credentials for Google
-LOGIN_GOOGLE_OAUTH_KEY: 631787075842-1e14uvstrno29bl9b684194lcq435p93.apps.googleusercontent.com 
-LOGIN_GOOGLE_OAUTH_SECRET: o4_b20ieVruAr_-U-N6fFwEm 
+LOGIN_GOOGLE_OAUTH_KEY: {login-google-oauth-key}  
+LOGIN_GOOGLE_OAUTH_SECRET: {login-google-oauth-secret}  
 
 # Enables or disables login with GitHub
 LOGIN_GITHUB: False
@@ -370,6 +370,8 @@ def console_script(fsroot='/'):
                         ['database-password', ''],
                         ['database-host', ''],
                         ['database-port', ''],
+                        ['login-google-oauth-key', ''],
+                        ['login-google-oauth-secret', '']
                         ]
         options = {}
 
