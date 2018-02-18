@@ -33,7 +33,7 @@ data "template_file" "docker-compose-yml" {
   template = "${file("${path.module}/docker-compose-terraform.yml")}"
 
   vars {
-    external_adr = "${google_dns_record_set.www.name}"
+    external_adr = "${substr(google_dns_record_set.www.name,0,length(google_dns_record_set.www.name)-1)}"
     external_ip = "${google_compute_address.opensubmit.address}"
   }
 }
