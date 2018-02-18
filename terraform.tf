@@ -41,7 +41,7 @@ data "template_file" "docker-compose-yml" {
 # Create virtual machine 
 resource "google_compute_instance" "opensubmit" {
   name         = "opensubmit" 
-  machine_type = "f1-micro" 
+  machine_type = "g1-small" 
   zone         = "${var.region}-a" 
   allow_stopping_for_update = "true"
 
@@ -88,11 +88,17 @@ write_files:
   content: |
     [Unit]
     Description=Start the OpenSubmit docker containers
+    Requires=docker.service
+    After=docker.service
 
     [Service]
-    Type=forking
-    ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.account}:/rootfs/home/${var.account}" -w="/rootfs/home/${var.account}" docker/compose:1.13.0 up -d
+    Restart=Always
+    WorkingDirectory=/home/${var.account}
+
+    ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.account}:/rootfs/home/${var.account}" -w="/rootfs/home/${var.account}" docker/compose:1.13.0 up
     TimeoutSec=600
+
+    ExecStop=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.account}:/rootfs/home/${var.account}" -w="/rootfs/home/${var.account}" docker/compose:1.13.0 down
 
     [Install]
     WantedBy=multi-user.target
@@ -122,6 +128,11 @@ resource "google_dns_managed_zone" "opensubmit-zone" {
   name     = "opensubmit-zone"
   dns_name = "${var.dnszone}."
 }
+
+output "name_servers" {
+  value = "${google_dns_managed_zone.opensubmit-zone.name_servers}"
+}
+
 
 resource "google_dns_record_set" "www" {
   name = "www.${google_dns_managed_zone.opensubmit-zone.dns_name}"
