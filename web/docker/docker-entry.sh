@@ -2,15 +2,6 @@
 set -e
 
 # Docker image startup script
-#
-# Expects the following environment variables:
-#
-# OPENSUBMIT_SERVER_HOST: URL of the server installation
-# OPENSUBMIT_SERVER_MEDIAROOT: Local path to media storage
-# OPENSUBMIT_DATABASE_NAME: PostgreSQL database name
-# OPENSUBMIT_DATABASE_USER: PostgreSQL database user
-# OPENSUBMIT_DATABASE_PASSWORD: PostgreSQL database password
-# OPENSUBMIT_DATABASE_HOST: PostgreSQL database host
 
 # (Re-)create OpenSubmit configuration from env variables
 # Create OpenSubmit and Apache configuration file
@@ -21,7 +12,10 @@ opensubmit-web configcreate --server-host=$OPENSUBMIT_SERVER_HOST \
                             --database-user=$OPENSUBMIT_DATABASE_USER \
                             --database-password=$OPENSUBMIT_DATABASE_PASSWORD \
                             --database-host=$OPENSUBMIT_DATABASE_HOST \
-                            --database-engine=postgresql
+                            --database-engine=postgresql \
+                            --login-google-oauth-key=$OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY \
+                            --login-google-oauth-secret=$OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET
+
 opensubmit-web apachecreate
 
 # Wait for postgres to come up

@@ -12,13 +12,15 @@ services:
   web:
     image: troeger/opensubmit-web
     environment:
-      OPENSUBMIT_SERVER_HOST: http://${external_ip}
-      OPENSUBMIT_SERVER_HOST_ALIASES: ${external_adr},web
+      OPENSUBMIT_SERVER_HOST: http://${external_adr}
+      OPENSUBMIT_SERVER_HOST_ALIASES: ${external_ip},web
       OPENSUBMIT_SERVER_MEDIAROOT: /data/media/ 
       OPENSUBMIT_DATABASE_NAME: opensubmit 
       OPENSUBMIT_DATABASE_USER: opensubmit 
       OPENSUBMIT_DATABASE_PASSWORD: opensubmit 
       OPENSUBMIT_DATABASE_HOST: db 
+      OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY: ${login_google_oauth_key}
+      OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET: ${login_google_oauth_secret}
     tty: true
     ports:
       - "80:80"

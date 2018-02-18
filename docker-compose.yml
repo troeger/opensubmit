@@ -19,6 +19,8 @@ services:
       OPENSUBMIT_DATABASE_USER: opensubmit 
       OPENSUBMIT_DATABASE_PASSWORD: opensubmit 
       OPENSUBMIT_DATABASE_HOST: db 
+      OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY: 631787075842-1e14uvstrno29bl9b684194lcq435p93.apps.googleusercontent.com
+      OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET: o4_b20ieVruAr_-U-N6fFwEm
     build: 
       context: ./web/
     tty: true
