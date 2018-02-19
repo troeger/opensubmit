@@ -16,6 +16,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import sys
+import argparse
 from configparser import RawConfigParser
 
 DEFAULT_CONFIG = '''
@@ -36,14 +37,14 @@ DEBUG: False
 # This is the root host url were the OpenSubmit tool is offered by your web server.
 # If you serve the content from a subdirectory, please specify it too, without leading or trailing slashes,
 # otherwise leave it empty.
-HOST: {server-host}
+HOST: {server_host}
 HOST_DIR:
-HOST_ALIASES: {server-hostaliases}
+HOST_ALIASES: {server_hostaliases}
 
 # This is the local directory were the uploaded assignment attachments are stored.
 # Your probably need a lot of space here.
 # Make sure that the path starts and ends with a slash.
-MEDIA_ROOT: {server-mediaroot}
+MEDIA_ROOT: {server_mediaroot}
 
 # This is the logging file. The web server must be allowed to write into it.
 LOG_FILE: /var/log/opensubmit.log
@@ -64,25 +65,25 @@ SECRET_KEY: uzfp=4gv1u((#hb*#o3*4^v#u#g9k8-)us2nw^)@rz0-$2-23)
 # - mysql
 # - sqlite3
 # - oracle
-DATABASE_ENGINE: {database-engine}
+DATABASE_ENGINE: {database_engine}
 
 # The name of the database. It must be already available for being used.
 # In SQLite, this is the path to the database file.
-DATABASE_NAME: {database-name}
+DATABASE_NAME: {database_name}
 
 # The user name for accessing the database. Not needed for SQLite.
-DATABASE_USER: {database-user}
+DATABASE_USER: {database_user}
 
 # The user password for accessing the database. Not needed for SQLite.
-DATABASE_PASSWORD: {database-password}
+DATABASE_PASSWORD: {database_password}
 
 # The host name for accessing the database. Not needed for SQLite.
 # An empty settings means that the database is on the same host as the web server.
-DATABASE_HOST: {database-host}
+DATABASE_HOST: {database_host}
 
 # The port number for accessing the database. Not needed for SQLite.
 # An empty settings means that the database default use used.
-DATABASE_PORT: {database-port}
+DATABASE_PORT: {database_port}
 
 [executor]
 # The shared secret with the job executor. This ensures that only authorized
@@ -322,78 +323,63 @@ def configtest(config_path, config_fname):
     django_admin(["collectstatic", "--noinput", "--clear", "-v 0"])
 
 
-def print_help():
-    print("configcreate:        Create initial config files for the OpenSubmit web server.")
-    print("apachecreate:        Create config file snippet for Apache 2.4.")
-    print("configtest:          Check config files and database for correct installation of the OpenSubmit web server.")
-    print("democreate:          Install some test data (courses, assignments, users).")
-    print("fixperms:            Check and fix student and tutor permissions")
-    print("fixchecksums:        Re-create all student file checksums (for duplicate detection)")
-    print("makeadmin   <email>: Make this user an admin with backend rights.")
-    print("makeowner   <email>: Make this user a course owner with backend rights.")
-    print("maketutor   <email>: Make this user a course tutor with backend rights.")
-    print("makestudent <email>: Make this user a student without backend rights.")
-
-
 def console_script(fsroot='/'):
     '''
         The main entry point for the production administration script 'opensubmit-web'.
         The argument allows the test suite to override the root of all paths used in here.
     '''
 
-    if len(sys.argv) == 1:
-        print_help()
-        return
+    parser = argparse.ArgumentParser(description='Administration for the OpenSubmit web application.')
+    subparsers = parser.add_subparsers(dest='command')
+    parser_configcreate = subparsers.add_parser('configcreate', help='Create initial config files for the OpenSubmit web server.')
+    parser_configcreate.add_argument('--server_host', default='***not configured***')
+    parser_configcreate.add_argument('--server_mediaroot', default='***not configured***')
+    parser_configcreate.add_argument('--server_hostaliases', default='')
+    parser_configcreate.add_argument('--database_name', default='/tmp/database.sqlite'),
+    parser_configcreate.add_argument('--database_engine', default='sqlite3')
+    parser_configcreate.add_argument('--database_user', default='')
+    parser_configcreate.add_argument('--database_password', default='')
+    parser_configcreate.add_argument('--database_host', default='')
+    parser_configcreate.add_argument('--database_port', default='')
 
-    # Translate legacy commands
-    if sys.argv[1] == "configure":
-        sys.argv[1] = 'configtest'
-    if sys.argv[1] == "createdemo":
-        sys.argv[1] = 'democreate'
+    parser_configtest = subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')
+    parser_democreate = subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
+    parser_apachecreate = subparsers.add_parser('apachecreate', help='Create config file snippet for Apache 2.4.')
+    parser_fixperms = subparsers.add_parser('fixperms', help='Check and fix student and tutor permissions.')
+    parser_fixchecksums = subparsers.add_parser('fixchecksums', help='Re-create all student file checksums (for duplicate detection).')
 
-    if sys.argv[1] == 'apachecreate':
+    parser_makeadmin = subparsers.add_parser('makeadmin', help='Make this user an admin with backend rights.')
+    parser_makeadmin.add_argument('email')
+    parser_makeowner = subparsers.add_parser('makeowner', help='Make this user a course owner with backend rights.')
+    parser_makeowner.add_argument('email')
+    parser_maketutor = subparsers.add_parser('maketutor', help='Make this user a course tutor with backend rights.')
+    parser_maketutor.add_argument('email')
+    parser_makestudent = subparsers.add_parser('makestudent', help='Make this user a student without backend rights.')
+    parser_makestudent.add_argument('email')
+    args = parser.parse_args()
+
+    if args.command == 'apachecreate':
         config = check_web_config(fsroot + 'etc/opensubmit/' + 'settings.ini')
         if config:
             apache_config(config, fsroot + 'etc/opensubmit/' + 'apache24.conf')
         return
 
-    if sys.argv[1] == 'configcreate':
-        # TODO: Hack, do the arg handling with a proper library
-
-        # Config name, default value, character pos of argument
-        poss_options = [['server-host', '***not configured***'],
-                        ['server-mediaroot', '***not configured***'],
-                        ['server-hostaliases', ''],
-                        ['database-name', '/tmp/database.sqlite'],
-                        ['database-engine', 'sqlite3'],
-                        ['database-user', ''],
-                        ['database-password', ''],
-                        ['database-host', ''],
-                        ['database-port', ''],
-                        ]
-        options = {}
-
-        for optionname, default in poss_options:
-            options[optionname] = default
-            for index, text in enumerate(sys.argv[2:]):
-                if text.startswith('--' + optionname + '='):
-                    options[optionname] = text[len(optionname) + 3:]
-        configcreate(fsroot + 'etc/opensubmit/', 'settings.ini', options)
+    if args.command == 'configcreate':
+        print(vars(args))
+        configcreate(fsroot + 'etc/opensubmit/', 'settings.ini', vars(args))
         return
 
-    if sys.argv[1] == 'configtest':
+    if args.command == 'configtest':
         configtest(fsroot + 'etc/opensubmit/', 'settings.ini')
         return
 
-    if sys.argv[1] in ['fixperms', 'fixchecksums', 'democreate']:
+    if args.command in ['fixperms', 'fixchecksums', 'democreate']:
         django_admin([sys.argv[1]])
         return
 
-    if sys.argv[1] in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
-        django_admin([sys.argv[1], sys.argv[2]])
+    if args.command in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:
+        django_admin([args.command, args.email])
         return
-
-    print_help()
 
 
 if __name__ == "__main__":
