@@ -1,14 +1,28 @@
+# A Terraform configuration to deploy the OpenSubmit stack
+# on the Google cloud.
+#
+# The main idea is the execution of three Docker containers
+# (web frontend, one test machine, PostgreSQL database)
+# on one machine in the Google Compute Engine cloud.
+#
+# The Docker execution relies on a slightly modified version
+# of our Docker Compose file (docker-compose-terraform.yml).
+#
+
 # The Google Cloud Engine region to be used
 variable "region" {default = "europe-west3"}
 
-# Most Google images, epecially COS, do not allow root login,
-# so we need to operate as normal user.
-variable "account" {default = "ptr_troeger"}
+# The Google Cloud user name, everything before the "@" sign.
+variable "google_account" {default = "ptr_troeger"}
 
-# The DNS zone we want to have managed by Google,
-# so that host addresses get registered automatically
+# The DNS zone for the installation, managed by the Google Cloud.
 variable "dnszone" {default = "demo.open-submit.org"}
 
+# The OAuth credentials for the OpenSubmit Google login
+# Secret is fetched interactively on build.
+# The default key is the one for the default DNS zone above.
+variable "login_google_oauth_key" {default = "631787075842-cdq29oufo6rq1q05384153je7pk6nmh3.apps.googleusercontent.com "}
+variable "login_google_oauth_secret" {}
 
 provider "google" {
   project     = "opensubmit"
@@ -33,15 +47,18 @@ data "template_file" "docker-compose-yml" {
   template = "${file("${path.module}/docker-compose-terraform.yml")}"
 
   vars {
-    external_adr = "${google_dns_record_set.www.name}"
+    # Remove trailing dot from DNS entry name
+    external_adr = "${substr(google_dns_record_set.www.name,0,length(google_dns_record_set.www.name)-1)}"
     external_ip = "${google_compute_address.opensubmit.address}"
+    login_google_oauth_key  = "${var.login_google_oauth_key}"
+    login_google_oauth_secret = "${var.login_google_oauth_secret}"
   }
 }
 
 # Create virtual machine 
 resource "google_compute_instance" "opensubmit" {
   name         = "opensubmit" 
-  machine_type = "f1-micro" 
+  machine_type = "g1-small" 
   zone         = "${var.region}-a" 
   allow_stopping_for_update = "true"
 
@@ -72,7 +89,7 @@ resource "google_compute_instance" "opensubmit" {
   # Configure instance metadata
   metadata {
     # Establish our custom SSH key, so that the file provisioner can copy stuff
-    sshKeys = "${var.account}:${tls_private_key.vmkey.public_key_openssh}"
+    sshKeys = "${var.google_account}:${tls_private_key.vmkey.public_key_openssh}"
 
     # Store cloud-init configuration which configers systemd to start our containers
     # In short, this runs docker-compose from a docker image to fire up
@@ -88,11 +105,17 @@ write_files:
   content: |
     [Unit]
     Description=Start the OpenSubmit docker containers
+    Requires=docker.service
+    After=docker.service
 
     [Service]
-    Type=forking
-    ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.account}:/rootfs/home/${var.account}" -w="/rootfs/home/${var.account}" docker/compose:1.13.0 up -d
+    Restart=Always
+    WorkingDirectory=/home/${var.google_account}
+
+    ExecStart=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.google_account}:/rootfs/home/${var.google_account}" -w="/rootfs/home/${var.google_account}" docker/compose:1.13.0 up
     TimeoutSec=600
+
+    ExecStop=/usr/bin/docker run -v /var/run/docker.sock:/var/run/docker.sock -v "/home/${var.google_account}:/rootfs/home/${var.google_account}" -w="/rootfs/home/${var.google_account}" docker/compose:1.13.0 down
 
     [Install]
     WantedBy=multi-user.target
@@ -101,7 +124,7 @@ EOF
 
   connection {
     type     = "ssh"
-    user     = "${var.account}"
+    user     = "${var.google_account}"
     private_key = "${tls_private_key.vmkey.private_key_pem}"
   }
 
@@ -122,6 +145,11 @@ resource "google_dns_managed_zone" "opensubmit-zone" {
   name     = "opensubmit-zone"
   dns_name = "${var.dnszone}."
 }
+
+output "name_servers" {
+  value = "${google_dns_managed_zone.opensubmit-zone.name_servers}"
+}
+
 
 resource "google_dns_record_set" "www" {
   name = "www.${google_dns_managed_zone.opensubmit-zone.dns_name}"
