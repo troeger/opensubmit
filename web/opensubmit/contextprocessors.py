@@ -1,4 +1,3 @@
-import opensubmit
 from opensubmit import settings
 
 
