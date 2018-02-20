@@ -281,11 +281,14 @@ LOGGING = {
     }
 }
 
-LOGIN_GOOGLE = config.get_bool('login', 'LOGIN_GOOGLE')
-LOGIN_OPENID = config.get_bool('login', 'LOGIN_OPENID')
-LOGIN_GITHUB = config.get_bool('login', 'LOGIN_GITHUB')
-LOGIN_TWITTER = config.get_bool('login', 'LOGIN_TWITTER')
-LOGIN_SHIB = config.get_bool('login', 'LOGIN_SHIB')
+LOGIN_GOOGLE = (config.get("login", "LOGIN_GOOGLE_OAUTH_KEY").strip() != '' and
+                config.get("login", "LOGIN_GOOGLE_OAUTH_SECRET").strip() != '')
+LOGIN_GITHUB = (config.get("login", "LOGIN_GITHUB_OAUTH_KEY").strip() != '' and
+                config.get("login", "LOGIN_GITHUB_OAUTH_SECRET").strip() != '')
+LOGIN_TWITTER = (config.get("login", "LOGIN_TWITTER_OAUTH_KEY").strip() != '' and
+                 config.get("login", "LOGIN_TWITTER_OAUTH_SECRET").strip() != '')
+LOGIN_OPENID = (config.get('login', 'OPENID_PROVIDER').strip() != '')
+LOGIN_SHIB = (config.get('login', 'LOGIN_SHIB_DESCRIPTION').strip() != '')
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',

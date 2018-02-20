@@ -2,26 +2,24 @@
 set -e
 
 # Docker image startup script
-#
-# Expects the following environment variables:
-#
-# OPENSUBMIT_SERVER_HOST: URL of the server installation
-# OPENSUBMIT_SERVER_MEDIAROOT: Local path to media storage
-# OPENSUBMIT_DATABASE_NAME: PostgreSQL database name
-# OPENSUBMIT_DATABASE_USER: PostgreSQL database user
-# OPENSUBMIT_DATABASE_PASSWORD: PostgreSQL database password
-# OPENSUBMIT_DATABASE_HOST: PostgreSQL database host
 
 # (Re-)create OpenSubmit configuration from env variables
 # Create OpenSubmit and Apache configuration file
-opensubmit-web configcreate --server-host=$OPENSUBMIT_SERVER_HOST \
-                            --server-mediaroot=$OPENSUBMIT_SERVER_MEDIAROOT \
-                            --server-hostaliases=$OPENSUBMIT_SERVER_HOST_ALIASES \
-                            --database-name=$OPENSUBMIT_DATABASE_NAME \
-                            --database-user=$OPENSUBMIT_DATABASE_USER \
-                            --database-password=$OPENSUBMIT_DATABASE_PASSWORD \
-                            --database-host=$OPENSUBMIT_DATABASE_HOST \
-                            --database-engine=postgresql
+opensubmit-web configcreate --server_host=$OPENSUBMIT_SERVER_HOST \
+                            --server_mediaroot=$OPENSUBMIT_SERVER_MEDIAROOT \
+                            --server_hostaliases=$OPENSUBMIT_SERVER_HOST_ALIASES \
+                            --database_name=$OPENSUBMIT_DATABASE_NAME \
+                            --database_user=$OPENSUBMIT_DATABASE_USER \
+                            --database_password=$OPENSUBMIT_DATABASE_PASSWORD \
+                            --database_host=$OPENSUBMIT_DATABASE_HOST \
+                            --database_engine=$OPENSUBMIT_DATABASE_ENGINE \
+                            --login_google_oauth_key=$OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY \
+                            --login_google_oauth_secret=$OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET \
+                            --login_twitter_oauth_key=$OPENSUBMIT_LOGIN_TWITTER_OAUTH_KEY \
+                            --login_twitter_oauth_secret=$OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET \
+                            --login_github_oauth_key=$OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY \
+                            --login_github_oauth_secret=$OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET
+
 opensubmit-web apachecreate
 
 # Wait for postgres to come up

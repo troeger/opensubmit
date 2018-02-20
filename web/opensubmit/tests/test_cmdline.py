@@ -43,6 +43,8 @@ class CmdLine(TestCase):
         self.cfg.set('server', 'MEDIA_ROOT', self.tmpdir + settings.MEDIA_ROOT)
         self.cfg.set('server', 'LOG_FILE', self.tmpdir + settings.LOG_FILE)
         self.cfg.set('database', 'DATABASE_NAME', self.tmpdir + 'database.sqlite')
+        self.cfg.set('login', 'LOGIN_GOOGLE_OAUTH_KEY', 'foo')
+        self.cfg.set('login', 'LOGIN_GOOGLE_OAUTH_SECRET', 'bar')
         with open(conf_name, 'w') as cfg_file:
             self.cfg.write(cfg_file)
         # We got an adjusted INI file, which is not-reconsidered by the

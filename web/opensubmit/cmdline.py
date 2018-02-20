@@ -17,6 +17,7 @@ import urllib.parse
 import urllib.error
 import sys
 import argparse
+from base64 import b64encode
 from configparser import RawConfigParser
 
 DEFAULT_CONFIG = '''
@@ -25,64 +26,29 @@ DEFAULT_CONFIG = '''
 #
 # It is expected to be located at:
 # /etc/opensubmit/settings.ini (on production system), or
-# ./settings_dev.ini (on developer systems)
+# <project_root>/web/opensubmit/settings_dev.ini (on developer systems)
+#
+# For further information, check the output of 'opensubmit-web configcreate -h'.
+#
 
 [general]
-# Enabling this will lead to detailed developer error information as result page
-# whenever something goes wrong on server side.
-# In production systems, you never want that to be enabled, for obvious security reasons.
-DEBUG: False
+DEBUG: {debug}
 
 [server]
-# This is the root host url were the OpenSubmit tool is offered by your web server.
-# If you serve the content from a subdirectory, please specify it too, without leading or trailing slashes,
-# otherwise leave it empty.
 HOST: {server_host}
-HOST_DIR:
+HOST_DIR: {server_hostdir}
 HOST_ALIASES: {server_hostaliases}
-
-# This is the local directory were the uploaded assignment attachments are stored.
-# Your probably need a lot of space here.
-# Make sure that the path starts and ends with a slash.
 MEDIA_ROOT: {server_mediaroot}
-
-# This is the logging file. The web server must be allowed to write into it.
-LOG_FILE: /var/log/opensubmit.log
-
-# This is the timezone all dates and deadlines are specified in.
-# This setting overrides your web server default for the time zone.
-# The list of available zones is here:
-# http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-TIME_ZONE: Europe/Berlin
-
-# This is a unique string needed for some of the security features.
-# Change it, the value does not matter.
-SECRET_KEY: uzfp=4gv1u((#hb*#o3*4^v#u#g9k8-)us2nw^)@rz0-$2-23)
+LOG_FILE: {server_logfile}
+TIME_ZONE: {server_timezone}
+SECRET_KEY: {server_secretkey}
 
 [database]
-# The database you are using. Possible choices are
-# - postgresql_psycopg2
-# - mysql
-# - sqlite3
-# - oracle
 DATABASE_ENGINE: {database_engine}
-
-# The name of the database. It must be already available for being used.
-# In SQLite, this is the path to the database file.
 DATABASE_NAME: {database_name}
-
-# The user name for accessing the database. Not needed for SQLite.
 DATABASE_USER: {database_user}
-
-# The user password for accessing the database. Not needed for SQLite.
 DATABASE_PASSWORD: {database_password}
-
-# The host name for accessing the database. Not needed for SQLite.
-# An empty settings means that the database is on the same host as the web server.
 DATABASE_HOST: {database_host}
-
-# The port number for accessing the database. Not needed for SQLite.
-# An empty settings means that the database default use used.
 DATABASE_PORT: {database_port}
 
 [executor]
@@ -93,47 +59,19 @@ DATABASE_PORT: {database_port}
 SHARED_SECRET: 49846zut93purfh977TTTiuhgalkjfnk89
 
 [admin]
-# The administrator for this installation. Course administrators
-# are stored in the database, so this is only the technical contact for problems
-# with the tool itself. Exceptions that happen due to bugs or other issues
-# are sent to this address.
-ADMIN_NAME: Super Admin
-ADMIN_EMAIL: root@localhost
+ADMIN_NAME: {admin_email}
+ADMIN_EMAIL: {admin_email}
 
 [login]
-# Enables or disables login with OpenID
-LOGIN_OPENID: True
-
-# Text shown beside the OpenID login icon.
-LOGIN_DESCRIPTION: StackExchange
-
-# OpenID provider URL to be used for login.
-OPENID_PROVIDER: https://openid.stackexchange.com
-
-# Enables or disables login with Twitter
-LOGIN_TWITTER: False
-
-# OAuth application credentials for Twitter
-LOGIN_TWITTER_OAUTH_KEY:
-LOGIN_TWITTER_OAUTH_SECRET:
-
-# Enables or disables login with Google
-LOGIN_GOOGLE: True
-
-# OAuth application credentials for Google
-LOGIN_GOOGLE_OAUTH_KEY: 631787075842-1e14uvstrno29bl9b684194lcq435p93.apps.googleusercontent.com 
-LOGIN_GOOGLE_OAUTH_SECRET: o4_b20ieVruAr_-U-N6fFwEm 
-
-# Enables or disables login with GitHub
-LOGIN_GITHUB: False
-
-# OAuth application credentials for GitHub
-LOGIN_GITHUB_OAUTH_KEY:
-LOGIN_GITHUB_OAUTH_SECRET:
-
-# Enables or diables login through Apache 2.4 mod_shib authentication
-LOGIN_SHIB: False
-LOGIN_SHIB_DESCRIPTION: Shibboleth
+LOGIN_DESCRIPTION: {login_openid_title}
+OPENID_PROVIDER: {login_openid_provider}
+LOGIN_TWITTER_OAUTH_KEY: {login_twitter_oauth_key}
+LOGIN_TWITTER_OAUTH_SECRET: {login_twitter_oauth_secret}
+LOGIN_GOOGLE_OAUTH_KEY: {login_google_oauth_key}
+LOGIN_GOOGLE_OAUTH_SECRET: {login_google_oauth_secret}
+LOGIN_GITHUB_OAUTH_KEY: {login_github_oauth_key}
+LOGIN_GITHUB_OAUTH_SECRET: {login_github_oauth_secret}
+LOGIN_SHIB_DESCRIPTION: {login_shib_title}
 '''
 
 
@@ -191,10 +129,11 @@ def apache_config(config, outputfile):
     f.close()
 
 
-def check_path(directory):
+def check_path(file_path):
     '''
         Checks if the directories for this path exist, and creates them in case.
     '''
+    directory = os.path.dirname(file_path)
     if directory != '':
         if not os.path.exists(directory):
             os.makedirs(directory, 0o775)   # rwxrwxr-x
@@ -208,7 +147,7 @@ def check_file(filepath):
 
         TODO: This is Debian / Ubuntu specific.
     '''
-    check_path(os.path.dirname(filepath))
+    check_path(filepath)
     if not os.path.exists(filepath):
         print("WARNING: File does not exist. Creating it: %s" % filepath)
         open(filepath, 'a').close()
@@ -227,9 +166,12 @@ def check_web_config_consistency(config):
         Check the web application config file for consistency.
     '''
     login_conf_deps = {
-        'LOGIN_TWITTER': ['LOGIN_TWITTER_OAUTH_KEY', 'LOGIN_TWITTER_OAUTH_SECRET'],
-        'LOGIN_GOOGLE': ['LOGIN_GOOGLE_OAUTH_KEY', 'LOGIN_GOOGLE_OAUTH_SECRET'],
-        'LOGIN_GITHUB': ['LOGIN_GITHUB_OAUTH_KEY', 'LOGIN_GITHUB_OAUTH_SECRET']
+        'LOGIN_TWITTER_OAUTH_KEY': ['LOGIN_TWITTER_OAUTH_SECRET'],
+        'LOGIN_GOOGLE_OAUTH_KEY': ['LOGIN_GOOGLE_OAUTH_SECRET'],
+        'LOGIN_GITHUB_OAUTH_KEY': ['LOGIN_GITHUB_OAUTH_SECRET'],
+        'LOGIN_TWITTER_OAUTH_SECRET': ['LOGIN_TWITTER_OAUTH_KEY'],
+        'LOGIN_GOOGLE_OAUTH_SECRET': ['LOGIN_GOOGLE_OAUTH_KEY'],
+        'LOGIN_GITHUB_OAUTH_SECRET': ['LOGIN_GITHUB_OAUTH_KEY'],
     }
 
     print("Checking configuration of the OpenSubmit web application...")
@@ -243,7 +185,7 @@ def check_web_config_consistency(config):
         print("The configured HOST seems to be invalid at the moment: " + str(e))
     # Check configuration dependencies
     for k, v in list(login_conf_deps.items()):
-        if config.getboolean('login', k):
+        if config.get('login', k):
             for needed in v:
                 if len(config.get('login', needed)) < 1:
                     print(
@@ -280,7 +222,7 @@ def check_web_config(config_fname):
         config.readfp(open(config_fname))
         return config
     except IOError:
-        print("ERROR: Seems like the config file does not exist. Please call 'opensubmit-web configcreate' first.")
+        print("ERROR: Seems like the config file does not exist. Please call 'opensubmit-web configcreate' first, or specify a location with the '-c' option.")
         return None
 
 
@@ -296,23 +238,29 @@ def check_web_db():
     return True
 
 
-def configcreate(config_path, config_fname, open_options):
-    content = DEFAULT_CONFIG.format(**open_options)
+def configcreate(config_fname, settings):
+    settings['server_secretkey'] = b64encode(os.urandom(64)).decode('utf-8')
+    url_parts = settings['server_url'].split('/', 3)
+    settings['server_host'] = url_parts[0] + '//' + url_parts[2]
+    if len(url_parts) > 3:
+        settings['server_hostdir'] = url_parts[3]
+    else:
+        settings['server_hostdir'] = ''
+    content = DEFAULT_CONFIG.format(**settings)
 
     try:
-        check_path(config_path)
-        f = open(config_path + config_fname, 'wt')
+        check_path(config_fname)
+        f = open(config_fname, 'wt')
         f.write(content)
         f.close()
-        print("Config file %s generated at %s. Please edit it." % (config_fname, config_path))
-    except Exception:
-        print("ERROR: Could not create config file at {0}. Please use sudo or become root.".format(
-            config_path + config_fname))
+        print("Config file %s generated. Please edit it." % (config_fname))
+    except Exception as e:
+        print("ERROR: Could not create config file at {0}: {1}".format(config_fname, str(e)))
 
 
-def configtest(config_path, config_fname):
+def configtest(config_fname):
     print("Inspecting OpenSubmit configuration ...")
-    config = check_web_config(config_path + config_fname)
+    config = check_web_config(config_fname)
     if not config:
         return          # Let them first fix the config file before trying a DB access
     if not check_web_config_consistency(config):
@@ -323,24 +271,38 @@ def configtest(config_path, config_fname):
     django_admin(["collectstatic", "--noinput", "--clear", "-v 0"])
 
 
-def console_script(fsroot='/'):
+def console_script(fsroot=''):
     '''
         The main entry point for the production administration script 'opensubmit-web'.
         The argument allows the test suite to override the root of all paths used in here.
     '''
 
-    parser = argparse.ArgumentParser(description='Administration for the OpenSubmit web application.')
-    subparsers = parser.add_subparsers(dest='command')
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description='Administration for the OpenSubmit web application.')
+    parser.add_argument('-c', '--config', default='/etc/opensubmit/settings.ini', help='OpenSubmit configuration file.')
+    subparsers = parser.add_subparsers(dest='command', help='Supported administrative actions.')
     parser_configcreate = subparsers.add_parser('configcreate', help='Create initial config files for the OpenSubmit web server.')
-    parser_configcreate.add_argument('--server_host', default='***not configured***')
-    parser_configcreate.add_argument('--server_mediaroot', default='***not configured***')
-    parser_configcreate.add_argument('--server_hostaliases', default='')
-    parser_configcreate.add_argument('--database_name', default='/tmp/database.sqlite'),
-    parser_configcreate.add_argument('--database_engine', default='sqlite3')
-    parser_configcreate.add_argument('--database_user', default='')
-    parser_configcreate.add_argument('--database_password', default='')
-    parser_configcreate.add_argument('--database_host', default='')
-    parser_configcreate.add_argument('--database_port', default='')
+    parser_configcreate.add_argument('-d', '--debug', default=True, action='store_true', help='Enable debug mode, not for production systems.')
+    parser_configcreate.add_argument('--server_url', default='http://localhost:8000', help='The main URL of the OpenSubmit installation, including sub-directories.')
+    parser_configcreate.add_argument('--server_mediaroot', default='/tmp/', help='Storage path for uploadeded files.')
+    parser_configcreate.add_argument('--server_hostaliases', default='127.0.0.1', help='Comma-separated list of alternative host names for the web server.')
+    parser_configcreate.add_argument('--server_logfile', default='/tmp/opensubmit.log', help='Log file for the OpenSubmit application.')
+    parser_configcreate.add_argument('--server_timezone', default='Europe/Berlin', help='Time zone for all dates and deadlines.')
+    parser_configcreate.add_argument('--database_name', default='/tmp/database.sqlite', help='Name of the database (file).'),
+    parser_configcreate.add_argument('--database_engine', default='sqlite3', choices=['postgresql', 'mysql', 'sqlite3', 'oracle'])
+    parser_configcreate.add_argument('--database_user', default='', help='The user name for accessing the database. Not needed for SQLite.')
+    parser_configcreate.add_argument('--database_password', default='', help='The user password for accessing the database. Not needed for SQLite.')
+    parser_configcreate.add_argument('--database_host', default='', help='The host name for accessing the database. Not needed for SQLite. Default is localhost.')
+    parser_configcreate.add_argument('--database_port', default='', help='The port number for accessing the database. Not needed for SQLite.')
+    parser_configcreate.add_argument('--login_google_oauth_key', default='', help='Google OAuth client key.')
+    parser_configcreate.add_argument('--login_google_oauth_secret', default='', help='Google OAuth client secret.')
+    parser_configcreate.add_argument('--login_twitter_oauth_key', default='', help='Twitter OAuth client key.')
+    parser_configcreate.add_argument('--login_twitter_oauth_secret', default='', help='Twitter OAuth client secret.')
+    parser_configcreate.add_argument('--login_github_oauth_key', default='', help='GitHub OAuth client key.')
+    parser_configcreate.add_argument('--login_github_oauth_secret', default='', help='GitHUb OAuth client secret.')
+    parser_configcreate.add_argument('--login_openid_title', default='StackExchange', help='Title of the OpenID login button.')
+    parser_configcreate.add_argument('--login_openid_provider', default='https://openid.stackexchange.com', help='URL of the OpenID provider.')
+    parser_configcreate.add_argument('--login_shib_title', default='', help='Title of the Shibboleth login button.')
+    parser_configcreate.add_argument('--admin_email', default='root@localhost', help='eMail target for technical problems with the installation.')
 
     parser_configtest = subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')
     parser_democreate = subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
@@ -358,23 +320,24 @@ def console_script(fsroot='/'):
     parser_makestudent.add_argument('email')
     args = parser.parse_args()
 
+    config_file = fsroot + args.config
+
     if args.command == 'apachecreate':
-        config = check_web_config(fsroot + 'etc/opensubmit/' + 'settings.ini')
+        config = check_web_config(config_file)
         if config:
-            apache_config(config, fsroot + 'etc/opensubmit/' + 'apache24.conf')
+            apache_config(config, os.path.dirname(config_file) + os.sep + 'apache24.conf')
         return
 
     if args.command == 'configcreate':
-        print(vars(args))
-        configcreate(fsroot + 'etc/opensubmit/', 'settings.ini', vars(args))
+        configcreate(config_file, vars(args))
         return
 
     if args.command == 'configtest':
-        configtest(fsroot + 'etc/opensubmit/', 'settings.ini')
+        configtest(config_file)
         return
 
     if args.command in ['fixperms', 'fixchecksums', 'democreate']:
-        django_admin([sys.argv[1]])
+        django_admin([args.command])
         return
 
     if args.command in ['makeadmin', 'makeowner', 'maketutor', 'makestudent']:

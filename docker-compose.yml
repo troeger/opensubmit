@@ -19,6 +19,8 @@ services:
       OPENSUBMIT_DATABASE_USER: opensubmit 
       OPENSUBMIT_DATABASE_PASSWORD: opensubmit 
       OPENSUBMIT_DATABASE_HOST: db 
+      OPENSUBMIT_DATABASE_ENGINE: postgresql 
+
     build: 
       context: ./web/
     tty: true
