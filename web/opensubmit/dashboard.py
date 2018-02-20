@@ -1,4 +1,3 @@
-from django.utils.translation import ugettext_lazy as _
 from grappelli.dashboard import modules, Dashboard
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
@@ -6,7 +5,6 @@ from django.contrib.auth.models import User
 from opensubmit import settings
 from opensubmit.models import Submission, TestMachine
 
-from . import settings
 
 class TeacherDashboard(Dashboard):
 
@@ -14,11 +12,11 @@ class TeacherDashboard(Dashboard):
         css = {'all': ('css/teacher.css',)}
 
     def init_with_context(self, context):
-        general=[]
+        general = []
         if context.request.user.has_perm('opensubmit.change_course'):
             general.append(['Manage courses', reverse('teacher:opensubmit_course_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_gradingscheme'):
-            general.append(['Manage grading schemes',reverse('teacher:opensubmit_gradingscheme_changelist'), False])
+            general.append(['Manage grading schemes', reverse('teacher:opensubmit_gradingscheme_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_studyprogram'):
             general.append(['Manage study programs', reverse('teacher:opensubmit_studyprogram_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_user'):
