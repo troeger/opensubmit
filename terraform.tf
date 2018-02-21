@@ -18,11 +18,13 @@ variable "google_account" {default = "ptr_troeger"}
 # The DNS zone for the installation, managed by the Google Cloud.
 variable "dnszone" {default = "demo.open-submit.org"}
 
-# The OAuth credentials for the OpenSubmit Google login
-# Secret is fetched interactively on build.
-# The default key is the one for the default DNS zone above.
-variable "login_google_oauth_key" {default = "631787075842-cdq29oufo6rq1q05384153je7pk6nmh3.apps.googleusercontent.com "}
-variable "login_google_oauth_secret" {}
+# Set through an external TFVARS file
+variable "google_oauth_key" {}  
+variable "google_oauth_secret" {} 
+variable "twitter_oauth_key" {}
+variable "twitter_oauth_secret" {}
+variable "github_oauth_key" {}
+variable "github_oauth_secret" {}
 
 provider "google" {
   project     = "opensubmit"
@@ -50,8 +52,12 @@ data "template_file" "docker-compose-yml" {
     # Remove trailing dot from DNS entry name
     external_adr = "${substr(google_dns_record_set.www.name,0,length(google_dns_record_set.www.name)-1)}"
     external_ip = "${google_compute_address.opensubmit.address}"
-    login_google_oauth_key  = "${var.login_google_oauth_key}"
-    login_google_oauth_secret = "${var.login_google_oauth_secret}"
+    google_oauth_key="${var.google_oauth_key}"
+    google_oauth_secret="${var.google_oauth_secret}"
+    twitter_oauth_key="${var.twitter_oauth_key}"
+    twitter_oauth_secret="${var.twitter_oauth_secret}"
+    github_oauth_key="${var.github_oauth_key}"
+    github_oauth_secret="${var.github_oauth_secret}"    
   }
 }
 
