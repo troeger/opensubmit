@@ -120,16 +120,24 @@ We need help in everything. Feel free to join us.</p>
 <ul class="simple">
 <li>Install Python &gt;= 3.4.</li>
 <li>Clone the repository with <code class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/troeger/opensubmit.git</span></code>.</li>
-<li>Prepare a virtualenv with all neccessary python packages by calling <code class="docutils literal"><span class="pre">make</span> <span class="pre">venv</span></code>. It is stored in the <code class="docutils literal"><span class="pre">venv</span></code> folder.</li>
-<li><a class="reference external" href="https://virtualenv.pypa.io/en/stable/userguide/#activate-script">Activate</a> the virtualenv.</li>
-<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code> to run all tests.</li>
-<li>In the <em>web</em> folder:<ul>
-<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create the database.</li>
-<li>Run <code class="docutils literal"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> to run a development web server.</li>
 </ul>
-</li>
+<p>The central <a class="reference external" href="https://github.com/troeger/opensubmit/blob/master/Makefile">Makefile</a> is a good starting point. It supports several targets for a development environment.</p>
+<p>You can start the web application alone with <code class="docutils literal"><span class="pre">make</span> <span class="pre">runserver</span></code>, which performs the following steps:</p>
+<ul class="simple">
+<li>Creation of a virtualenv with all neccessary packages (see <code class="docutils literal"><span class="pre">make</span> <span class="pre">venv/bin/activate</span></code>).</li>
+<li>Creation of a configuration file for the Django development server (see <code class="docutils literal"><span class="pre">make</span> <span class="pre">web/opensubmit/settings_dev.ini</span></code>).</li>
+<li>Execution of the neccessary database creation / migration steps.</li>
+<li>Startup of the Django development server.</li>
 </ul>
-<p>The central <a class="reference external" href="https://github.com/troeger/opensubmit/blob/master/Makefile">Makefile</a> is a good starting point.</p>
+<p>Other interesting targets are:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">tests</span></code>: Run test suite.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">coverage</span></code>: Run test suite and create code coverage analysis.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">docs</span></code>: Build the HTML documentation.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">build</span></code>: Create Python installation packages (wheels).</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">docker-build</span></code>: Create Docker images for web application and executors.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">docker</span></code>: Start Docker containers for the web application, executors and a PostgreSQL database.</li>
+</ul>
 </div>
 
 
