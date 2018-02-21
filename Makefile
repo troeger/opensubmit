@@ -7,7 +7,7 @@ default: build
 
 # Prepare VirtualEnv by installing project dependencies
 venv/bin/activate: web/requirements.txt executor/requirements.txt
-	test -d venv || python3.4 -m venv venv
+	test -d venv || python3 -m venv venv
 	venv/bin/pip install -r requirements.txt
 	venv/bin/pip install -r executor/requirements.txt
 	venv/bin/pip install -r web/requirements.txt
@@ -35,12 +35,12 @@ docs: venv
 	source venv/bin/activate; pushd docs; make html; popd; deactivate
 
 # Run all tests.
-tests: venv
+tests: venv web/opensubmit/settings_dev.ini
 	pushd web; ../venv/bin/python ./manage.py test; popd
 
 # Run all tests and obtain coverage information.
-coverage:
-	coverage run ./web/manage.py test opensubmit.tests; coverage html
+coverage: venv web/opensubmit/settings_dev.ini
+	venv/bin/coverage run ./web/manage.py test opensubmit.tests; venv/bin/coverage html
 
 # Re-create docker images locally
 docker-build: build

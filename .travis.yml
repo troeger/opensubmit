@@ -10,6 +10,6 @@ install:
   - pip install -r executor/requirements.txt
   - pip install scrutinizer-ocular
 # command to run tests
-script: coverage run ./web/manage.py test opensubmit.tests
+script: make coverage
 after_success:
-  - ocular
+  - ocular --access-token "37a231540cedfc2363fd2795caabe5497cbcfdb49dcd6f628cb7495e858547ca" --data-file "./.coverage" --config-file "./.coveragerc"
