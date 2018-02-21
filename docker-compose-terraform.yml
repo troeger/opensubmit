@@ -12,6 +12,7 @@ services:
   web:
     image: troeger/opensubmit-web
     environment:
+      OPENSUBMIT_DEBUG: False
       OPENSUBMIT_SERVER_URL: http://${external_adr}
       OPENSUBMIT_SERVER_HOSTALIASES: ${external_ip},web
       OPENSUBMIT_SERVER_MEDIAROOT: /data/media/ 
@@ -20,6 +21,14 @@ services:
       OPENSUBMIT_DATABASE_PASSWORD: opensubmit 
       OPENSUBMIT_DATABASE_HOST: db 
       OPENSUBMIT_DATABASE_ENGINE: postgresql      
+      OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY: ${google_oauth_key}
+      OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET: ${google_oauth_secret}
+      OPENSUBMIT_LOGIN_TWITTER_OAUTH_KEY: ${twitter_oauth_key}
+      OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET: ${twitter_oauth_secret}
+      OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY: ${github_oauth_key}
+      OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET: ${github_oauth_secret}
+      OPENSUBMIT_LOGIN_DEMO: True
+
     tty: true
     ports:
       - "80:80"

@@ -12,6 +12,7 @@ services:
   web:
     image: troeger/opensubmit-web
     environment:
+      OPENSUBMIT_DEBUG: False
       OPENSUBMIT_SERVER_URL: http://localhost:8000
       OPENSUBMIT_SERVER_HOSTALIASES: web
       OPENSUBMIT_SERVER_MEDIAROOT: /data/media/ 
@@ -20,6 +21,7 @@ services:
       OPENSUBMIT_DATABASE_PASSWORD: opensubmit 
       OPENSUBMIT_DATABASE_HOST: db 
       OPENSUBMIT_DATABASE_ENGINE: postgresql 
+      OPENSUBMIT_LOGIN_DEMO: True
 
     build: 
       context: ./web/
