@@ -9,9 +9,13 @@ RUN apt-get update \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG en_US.utf8
 
+# Install dependencies explicitely for Docker caching
+RUN mkdir /install
+COPY requirements.txt /install
+RUN pip3 install -r /install/requirements.txt
+
 # Install existing wheel of OpenSubmit executor
 # Call "make" if this step fails due to missing .whl files
-RUN mkdir /install
 COPY dist/*.whl /install
 RUN pip3 install /install/*.whl
 

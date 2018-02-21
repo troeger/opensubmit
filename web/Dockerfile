@@ -14,10 +14,15 @@ RUN apt-get update \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG en_US.utf8
 COPY ./docker/httpd.conf /etc/apache2/sites-enabled/httpd.conf
+COPY ./docker/docker-entry.sh /docker-entry.sh
+
+# Install dependencies explicitely for Docker caching
+RUN mkdir /install
+COPY requirements.txt /install
+RUN pip3 install -r /install/requirements.txt psycopg2-binary
 
 # Install existing wheel of OpenSubmit
 # Call "make" if this step fails due to missing .whl files
-RUN mkdir /install
 COPY dist/*.whl /install
 RUN pip3 install /install/*.whl
 
@@ -25,9 +30,5 @@ RUN pip3 install /install/*.whl
 ENV PYTHONUNBUFFERED 1
 ENV DJANGO_SETTINGS_MODULE opensubmit.settings
 
-# Install python database driver
-RUN pip3 install psycopg2-binary
-
-COPY ./docker/docker-entry.sh /docker-entry.sh
 EXPOSE 80
 ENTRYPOINT ["/docker-entry.sh"]
