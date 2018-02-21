@@ -3,11 +3,12 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 
 from opensubmit import admin
-from opensubmit.views import frontend, backend, lti, api
+from opensubmit.views import frontend, backend, lti, api, demo
 from opensubmit.forms import MailForm
 
 urlpatterns = [
     # Frontend Login
+    url(r'^demo/(?P<role>.*)/$', demo.LoginView.as_view(), name='demo'),
     url(r'^lti/$', lti.login, name='lti'),
     url(r'^lti/config/$', lti.config, name='lticonfig'),
     url(r'^$', frontend.IndexView.as_view(), name='index'),

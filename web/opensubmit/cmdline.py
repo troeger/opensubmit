@@ -33,6 +33,7 @@ DEFAULT_CONFIG = '''
 
 [general]
 DEBUG: {debug}
+DEMO: {login_demo}
 
 [server]
 HOST: {server_host}
@@ -72,6 +73,7 @@ LOGIN_GOOGLE_OAUTH_SECRET: {login_google_oauth_secret}
 LOGIN_GITHUB_OAUTH_KEY: {login_github_oauth_key}
 LOGIN_GITHUB_OAUTH_SECRET: {login_github_oauth_secret}
 LOGIN_SHIB_DESCRIPTION: {login_shib_title}
+LOGIN_DEMO: {login_demo}
 '''
 
 
@@ -281,7 +283,7 @@ def console_script(fsroot=''):
     parser.add_argument('-c', '--config', default='/etc/opensubmit/settings.ini', help='OpenSubmit configuration file.')
     subparsers = parser.add_subparsers(dest='command', help='Supported administrative actions.')
     parser_configcreate = subparsers.add_parser('configcreate', help='Create initial config files for the OpenSubmit web server.')
-    parser_configcreate.add_argument('-d', '--debug', default=False, action='store_true', help='Enable debug mode, not for production systems.')
+    parser_configcreate.add_argument('--debug', default=bool(os.environ.get('OPENSUBMIT_DEBUG', 'False')), action='store_true', help='Enable debug mode, not for production systems.')
     parser_configcreate.add_argument('--server_url', default=os.environ.get('OPENSUBMIT_SERVER_URL', 'http://localhost:8000'), help='The main URL of the OpenSubmit installation, including sub-directories.')
     parser_configcreate.add_argument('--server_mediaroot', default=os.environ.get('OPENSUBMIT_SERVER_MEDIAROOT', '/tmp/'), help='Storage path for uploadeded files.')
     parser_configcreate.add_argument('--server_hostaliases', default=os.environ.get('OPENSUBMIT_SERVER_HOSTALIASES', '127.0.0.1'), help='Comma-separated list of alternative host names for the web server.')
@@ -302,6 +304,7 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_openid_title', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_TITLE', 'StackExchange'), help='Title of the OpenID login button.')
     parser_configcreate.add_argument('--login_openid_provider', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_PROVIDER', 'https://openid.stackexchange.com'), help='URL of the OpenID provider.')
     parser_configcreate.add_argument('--login_shib_title', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_TITLE', ''), help='Title of the Shibboleth login button.')
+    parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Title of the Shibboleth login button.')
     parser_configcreate.add_argument('--admin_email', default=os.environ.get('OPENSUBMIT_ADMIM_EMAIL', 'root@localhost'), help='eMail target for technical problems with the installation.')
 
     parser_configtest = subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')

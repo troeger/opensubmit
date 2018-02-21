@@ -34,7 +34,9 @@ class Config():
     def has_option(self, name, category):
         return self.config.has_option(name, category)
 
-    def get_bool(self, name, category):
+    def get_bool(self, name, category, default):
+        if not self.has_option(name, category):
+            return default
         text = self.get(name, category)
         return text.lower() in ['true', 't', 'yes', 'active', 'enabled']
 
@@ -87,7 +89,10 @@ DATABASES = {
 
 # We have the is_production indicator from above, which could also determine this value.
 # But sometimes, you need Django stack traces in your production system for debugging.
-DEBUG = config.get_bool('general', 'DEBUG')
+DEBUG = config.get_bool('general', 'DEBUG', default=False)
+
+# Demo mode allows login bypass
+DEMO = config.get_bool('general', 'DEMO', default=False)
 
 # Determine MAIN_URL / FORCE_SCRIPT option
 HOST = config.get('server', 'HOST')
@@ -306,6 +311,9 @@ if LOGIN_SHIB:
 
 AUTHENTICATION_BACKENDS += ('opensubmit.social.lti.LtiAuth',)
 
+if DEMO is True:
+    AUTHENTICATION_BACKENDS += ('opensubmit.social.passthrough.PassThroughAuth',)
+
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ['next', ]
 SOCIAL_AUTH_PIPELINE = (
@@ -318,7 +326,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
-    'social_core.pipeline.user.user_details'
+    'social_core.pipeline.user.user_details',
+    'opensubmit.views.demo.assign_role'
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")

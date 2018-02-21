@@ -18,7 +18,7 @@ venv: venv/bin/activate
 
 # Create an OpenSubmit config file for the development server
 web/opensubmit/settings_dev.ini: venv 
-	venv/bin/python -m web.opensubmit.cmdline -c web/opensubmit/settings_dev.ini configcreate --debug
+	venv/bin/python -m web.opensubmit.cmdline -c web/opensubmit/settings_dev.ini configcreate --debug --login_demo
 
 # Run the OpenSubmit development server
 runserver: venv web/opensubmit/settings_dev.ini
