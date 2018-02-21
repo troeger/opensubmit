@@ -68,7 +68,7 @@ def login(request):
         data['last_name'] = post_params.get('lis_person_name_family', None)
         data['email'] = post_params.get('lis_person_contact_email_primary', None)
         data['first_name'] = post_params.get('lis_person_name_given', None)
-        request.session[passthrough.SESSION_VAR] = data
+        request.session[passthrough.SESSION_VAR] = data # this enables the login
         return redirect(reverse('social:begin', args=['lti']))
     else:
         raise PermissionDenied
