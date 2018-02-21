@@ -9,7 +9,7 @@
 
     Since PSA really wants to do all login views by itself,
     the separate auth view needs to redirect to '/login/passthrough/'
-    after storing all data in the session dict variable 'passthroughauth'.
+    after storing all data in the session variable SESSION_VAR.
     The keys can be seen in get_user_details().
 
     After the redirect, everything works as usual in Python Social,
@@ -17,8 +17,10 @@
 '''
 
 from social_core.backends.base import BaseAuth
+from django.core.exceptions import PermissionDenied
+from opensubmit import settings
 
-SESSION_VAR = 'passthroughauth'
+SESSION_VAR = 'passthrough_auth_data_' + settings.SECRET_KEY
 
 
 class PassThroughAuth(BaseAuth):
@@ -30,6 +32,10 @@ class PassThroughAuth(BaseAuth):
 
     def auth_complete(self, *args, **kwargs):
         """Completes loging process, must return user instance"""
+        if SESSION_VAR not in self.strategy.request.session:
+            # This is the only protection layer when people
+            # go directly to the passthrough login view.
+            raise PermissionDenied
         auth_data = self.strategy.request.session[SESSION_VAR]
         kwargs.update({'response': auth_data, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
