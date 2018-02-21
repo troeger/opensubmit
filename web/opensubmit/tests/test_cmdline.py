@@ -54,8 +54,8 @@ class CmdLine(TestCase):
         print("Removing temporary installation directory")
         shutil.rmtree(self.tmpdir)
 
-    def test_create_demo_call(self):
-        sys.argv = ['opensubmit-web', 'createdemo']
+    def test_democreate_call(self):
+        sys.argv = ['opensubmit-web', 'democreate']
         cmdline.console_script(fsroot=self.tmpdir)
         self.assertNotEqual(0, Course.objects.all().count())
 
@@ -100,7 +100,7 @@ class CmdLine(TestCase):
         self.assertEqual(False, u.is_staff)
 
 
-    def test_configure_call(self):
+    def test_configtest_call(self):
         '''
         Simulate real command-line calls of the 'configure' functionality.
 
@@ -112,8 +112,6 @@ class CmdLine(TestCase):
         '''
         # simulate command-line argument
         with self.settings(STATIC_ROOT=self.tmpdir + 'static'):
-            sys.argv = ['opensubmit-web', 'configure']
+            sys.argv = ['opensubmit-web', 'configtest']
             cmdline.console_script(fsroot=self.tmpdir)
-            self.assertEqual(True, os.path.isfile(
-                self.tmpdir + 'database.sqlite'))
             self.assertEqual(True, os.path.isdir(self.tmpdir + 'static/grappelli'))
