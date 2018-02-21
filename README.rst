@@ -1,6 +1,9 @@
 .. image:: https://travis-ci.org/troeger/opensubmit.svg?branch=master
     :target: https://travis-ci.org/troeger/opensubmit
 
+.. image:: https://coveralls.io/repos/github/troeger/opensubmit/badge.svg
+    :target: https://coveralls.io/github/troeger/opensubmit
+
 .. image:: https://scrutinizer-ci.com/g/troeger/opensubmit/badges/quality-score.png?b=master
     :target: https://scrutinizer-ci.com/g/troeger/opensubmit/?branch=master
 
