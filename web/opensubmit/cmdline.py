@@ -305,7 +305,7 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_openid_provider', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_PROVIDER', 'https://openid.stackexchange.com'), help='URL of the OpenID provider.')
     parser_configcreate.add_argument('--login_shib_title', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_TITLE', ''), help='Title of the Shibboleth login button.')
     parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Title of the Shibboleth login button.')
-    parser_configcreate.add_argument('--admin_email', default=os.environ.get('OPENSUBMIT_ADMIM_EMAIL', 'root@localhost'), help='eMail target for technical problems with the installation.')
+    parser_configcreate.add_argument('--admin_email', default=os.environ.get('OPENSUBMIT_ADMIN_EMAIL', 'root@localhost'), help='eMail target for technical problems with the installation.')
 
     parser_configtest = subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')
     parser_democreate = subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
