@@ -10,10 +10,6 @@ NOT_CONFIGURED_VALUE = '***not configured***'
 
 
 class Config():
-    '''
-    Custom implementation of INI-file reading with ENV variable
-    pverride.
-    '''
     config_file = None
     config = None
     is_production = None
@@ -43,18 +39,8 @@ class Config():
         return text.lower() in ['true', 't', 'yes', 'active', 'enabled']
 
     def get(self, name, category, mandatory=False, expect_leading_slash=None, expect_trailing_slash=None):
-        '''
-        Get the value for the config variable.
-        '''
-
-        # Check environment variables for overrides, otherwise use INI file
-        env_name = 'OPENSUBMIT_%s_%s'.format(category.upper(), name.upper())
-        text = os.getenv(env_name)
-        if text is None:
-            text = self.config.get(name, category)
-            logtext = "Setting '[%s] %s' in %s has the value '%s'" % (category, name, self.config_file, text)
-        else:
-            logtext = "Environment variable %s has the value '%s'" % (env_name, text)
+        text = self.config.get(name, category)
+        logtext = "Setting '[%s] %s' in %s has the value '%s'" % (category, name, self.config_file, text)
 
         if mandatory and text == NOT_CONFIGURED_VALUE:
             raise ImproperlyConfigured(logtext + ', but must be set.')
