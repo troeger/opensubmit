@@ -12,8 +12,8 @@ services:
   web:
     image: troeger/opensubmit-web
     environment:
-      OPENSUBMIT_SERVER_HOST: http://${external_adr}
-      OPENSUBMIT_SERVER_HOST_ALIASES: ${external_ip},web
+      OPENSUBMIT_SERVER_URL: http://${external_adr}
+      OPENSUBMIT_SERVER_HOSTALIASES: ${external_ip},web
       OPENSUBMIT_SERVER_MEDIAROOT: /data/media/ 
       OPENSUBMIT_DATABASE_NAME: opensubmit 
       OPENSUBMIT_DATABASE_USER: opensubmit 
