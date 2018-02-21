@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 
-.PHONY: build docs
+.PHONY: build docs check-venv
 
 # Make Python wheels
 default: build
@@ -16,31 +16,36 @@ venv/bin/activate: web/requirements.txt executor/requirements.txt
 # Shortcut for preparation of VirtualEnv
 venv: venv/bin/activate
 
+check-venv:
+ifndef VIRTUAL_ENV
+	$(error Please create a VirtualEnv with 'make venv' and activate it)
+endif
+
 # Create an OpenSubmit config file for the development server
-web/opensubmit/settings_dev.ini: venv 
-	venv/bin/python -m web.opensubmit.cmdline -c web/opensubmit/settings_dev.ini configcreate --debug --login_demo
+web/opensubmit/settings_dev.ini: check-venv 
+	python -m web.opensubmit.cmdline -c web/opensubmit/settings_dev.ini configcreate --debug --login_demo
 
 # Run the OpenSubmit development server
-runserver: venv web/opensubmit/settings_dev.ini
-	pushd web; ../venv/bin/python ./manage.py migrate; popd
-	pushd web; ../venv/bin/python ./manage.py runserver; popd
+runserver: check-venv web/opensubmit/settings_dev.ini
+	pushd web; python ./manage.py migrate; popd
+	pushd web; python ./manage.py runserver; popd
 
 # Build the Python wheel install packages.
-build: venv
-	pushd web; ../venv/bin/python ./setup.py bdist_wheel; popd
-	pushd executor; ../venv/bin/python ./setup.py bdist_wheel; popd
+build: check-venv
+	pushd web; python ./setup.py bdist_wheel; popd
+	pushd executor; python ./setup.py bdist_wheel; popd
 
 # Build the HTML documentation from the sources.
-docs: venv
-	source venv/bin/activate; pushd docs; make html; popd; deactivate
+docs: check-venv
+	pushd docs; make html; popd
 
 # Run all tests.
-tests: venv web/opensubmit/settings_dev.ini
-	pushd web; ../venv/bin/python ./manage.py test; popd
+tests: check-venv web/opensubmit/settings_dev.ini
+	pushd web; python ./manage.py test; popd
 
 # Run all tests and obtain coverage information.
-coverage: venv web/opensubmit/settings_dev.ini
-	venv/bin/coverage run ./web/manage.py test opensubmit.tests; venv/bin/coverage html
+coverage: check-venv web/opensubmit/settings_dev.ini
+	coverage run ./web/manage.py test opensubmit.tests; coverage html
 
 # Re-create docker images locally
 docker-build: build
@@ -60,13 +65,13 @@ docker-push: build
 
 # Upload built package for web application to PyPI.
 # Assumes valid credentials in ~/.pypirc
-pypi-push-web: build
-	source venv/bin/activate; twine upload web/dist/opensubmit_*.whl; deactivate
+pypi-push-web: check-venv build
+	twine upload web/dist/opensubmit_*.whl
 
 # Upload built package for executor application to PyPI.
 # Assumes valid credentials in ~/.pypirc
-pypi-push-exec: build
-	source venv/bin/activate; twine upload executor/dist/opensubmit_*.whl; deactivate
+pypi-push-exec: check-venv build
+	twine upload executor/dist/opensubmit_*.whl
 
 # Clean temporary files
 clean:
