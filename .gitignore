@@ -29,3 +29,4 @@ google_account.json
 terraform.tfstate
 terraform.tfstate.backup
 .terraform*
+settings_dev.ini
