@@ -253,8 +253,7 @@ def configcreate(config_fname, settings):
         f = open(config_fname, 'wt')
         f.write(content)
         f.close()
-        print("Config file %s generated:" % (config_fname))
-        print(content)
+        print("Config file %s generated" % (config_fname))
     except Exception as e:
         print("ERROR: Could not create config file at {0}: {1}".format(config_fname, str(e)))
 
@@ -282,7 +281,7 @@ def console_script(fsroot=''):
     parser.add_argument('-c', '--config', default='/etc/opensubmit/settings.ini', help='OpenSubmit configuration file.')
     subparsers = parser.add_subparsers(dest='command', help='Supported administrative actions.')
     parser_configcreate = subparsers.add_parser('configcreate', help='Create initial config files for the OpenSubmit web server.')
-    parser_configcreate.add_argument('-d', '--debug', default=True, action='store_true', help='Enable debug mode, not for production systems.')
+    parser_configcreate.add_argument('-d', '--debug', default=False, action='store_true', help='Enable debug mode, not for production systems.')
     parser_configcreate.add_argument('--server_url', default=os.environ.get('OPENSUBMIT_SERVER_URL', 'http://localhost:8000'), help='The main URL of the OpenSubmit installation, including sub-directories.')
     parser_configcreate.add_argument('--server_mediaroot', default=os.environ.get('OPENSUBMIT_SERVER_MEDIAROOT', '/tmp/'), help='Storage path for uploadeded files.')
     parser_configcreate.add_argument('--server_hostaliases', default=os.environ.get('OPENSUBMIT_SERVER_HOSTALIASES', '127.0.0.1'), help='Comma-separated list of alternative host names for the web server.')
