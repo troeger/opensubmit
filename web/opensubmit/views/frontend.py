@@ -11,6 +11,8 @@ from django.core.urlresolvers import reverse_lazy
 from django.forms.models import modelform_factory, model_to_dict
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
+from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse
 
 from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from opensubmit.models import UserProfile, Submission, TestMachine, Course, Assignment, SubmissionFile
@@ -153,7 +155,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # If incomplete, then we drop annyoing popups until the user gives up.
         settingsform = SettingsForm(model_to_dict(request.user), instance=request.user)
         if not settingsform.is_valid():
-            messages.error(request, "Your user settings are incomplete.")
+            msg = 'Your <a href="{0}">user settings</a> are incomplete.'.format(reverse('settings'))
+            messages.error(request, mark_safe(msg))
 
         return super().get(request)
 
