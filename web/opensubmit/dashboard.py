@@ -33,7 +33,7 @@ class TeacherDashboard(Dashboard):
             children=[
                 modules.LinkList(title="Actions",children=(general)),
                 modules.DashboardModule(title="Info",pre_content=
-                    '<table style="border:0">'+
+                    '<table class="teacher_dashboard_info">'+
                     '<tr><td>OpenSubmit release</td><td><a href="https://github.com/troeger/opensubmit/releases/tag/v{0}">v{0}</a></td></tr>'.format(settings.VERSION) +
                     '<tr><td>Administrator</td><td><a href="mailto:%s">%s</a></td></tr>' % (settings.ADMINS[0][1], settings.ADMINS[0][0]) +
                     '<tr><td>Registered users</td><td>%u</td></tr>' % (User.objects.count()) +
@@ -75,7 +75,7 @@ class TeacherDashboard(Dashboard):
                 children=[
                     modules.LinkList(title="Actions",children=(links)),
                     modules.DashboardModule(title="Info",pre_content=
-                        '<table>'+
+                        '<table class="teacher_dashboard_info">'+
                         '<tr><td>Course URL for students</td><td>%s/?course=%u</td></tr>' % (settings.MAIN_URL, course.pk) +
                         '<tr><td>Course owner</td><td><a href="mailto:%s">%s</a></td></tr>' % (course.owner.email,course.owner.get_full_name()) +
                         "<tr><td>Open assignments</td><td>%u</td></tr>" % course.open_assignments().count() +

@@ -1,6 +1,6 @@
 .grp-link-internal {
     color: black;
-    font-size: 9pt;
+    font-size: 10pt;
 }
 
 strong {
@@ -27,6 +27,11 @@ a{
 
 .grp-pagination ul li a {
 	color: black;
+}
+
+.teacher_dashboard_info tr td {
+    padding: 5px;
+    font-size: 9pt;
 }
 
 /* Disable alternative save buttons, which make no sense on submission eidting */
