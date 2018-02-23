@@ -67,12 +67,7 @@ Other tools, such as `Moodle <https://docs.moodle.org/33/en/About_Moodle>`_, sup
 assignments, but also the management of learning material, the sophisticated tracking of course
 progress and a fine-grained management of course access rights. If you want the all-inclusive solution, this is the wrong project.
 
-Table of content
-----------------
-
-.. toctree::
-   :maxdepth: 2
-
+.. toctree::   
    frontend_use
    backend_use
    admin_use
