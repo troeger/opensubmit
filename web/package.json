@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "babel": "^6.23.0",
+    "babel-loader": "^7.1.2",
+    "bootstrap": "3",
+    "bootstrap-multiselect": "^0.9.13-1",
+    "bootstrap-social": "^5.1.1",
+    "chosen": "^0.0.2",
+    "code-prettify": "^0.1.0",
+    "datatables.net-bs": "^1.10.16",
+    "datatables.net-buttons-bs": "^1.5.1",
+    "datatables.net-colreorder-bs": "^1.4.1",
+    "datatables.net-fixedheader-bs": "^3.1.3",
+    "datatables.net-responsive-bs": "^2.2.1",
+    "datatables.net-rowgroup-bs": "^1.0.2",
+    "jquery": "1",
+    "jszip": "^3.1.5",
+    "pdfmake": "^0.1.35",
+    "webpack": "^3.11.0",
+    "webpack-bundle-tracker": "^0.2.1"
+  }
+}
