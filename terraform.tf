@@ -150,6 +150,14 @@ EOF
 resource "google_dns_managed_zone" "opensubmit-zone" {
   name     = "opensubmit-zone"
   dns_name = "${var.dnszone}."
+
+  # Google DNS uses rotating nameservers for the zones,
+  # so ye need to change the parent DNS NS entry everytime
+  # this resource is destroyed and re-created
+  lifecycle {
+      prevent_destroy = "true"
+  }
+
 }
 
 output "name_servers" {
