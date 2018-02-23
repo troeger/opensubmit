@@ -1,4 +1,5 @@
 import uuid
+from time import gmtime, strftime
 from django.core.urlresolvers import reverse
 from django.views.generic import RedirectView
 from django.core.exceptions import PermissionDenied
@@ -30,7 +31,8 @@ class LoginView(RedirectView):
 
     def get(self, request, role):
         if settings.DEMO is True:
-            data = {'id': str(uuid.uuid4()), 'role': role}
+            tstamp = strftime("%y%m%d%H%M%S", gmtime())
+            data = {'id': str(uuid.uuid4()), 'role': role, 'username': 'demo' + tstamp}
             request.session[passthrough.SESSION_VAR] = data  # this enables the login
             return redirect(reverse('social:begin', args=['passthrough']))
         else:
