@@ -29,8 +29,7 @@ todo_include_todos = True
 
 html_theme = "sphinx_rtd_theme"
 html_favicon = '../web/opensubmit/static/images/favicon.ico'
-html_logo = '../web/opensubmit/static/images/favicon-32x32.png'
+html_logo = '../web/opensubmit/static/images/favicon-96x96.png'
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
-

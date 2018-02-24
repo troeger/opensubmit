@@ -20,7 +20,7 @@ web/database.sqlite
 *venv*
 *.bak*
 *.whl
-docs/formats/html/.buildinfo
+docs/formats
 *htmlcov*
 docs/formats/html/_sources/modules.rst.txt
 docs/formats/html/modules.html
