@@ -11,6 +11,10 @@
      :target: https://pyup.io/repos/github/troeger/opensubmit/
      :alt: Updates
 
+.. image:: https://readthedocs.org/projects/opensubmit/badge/?version=latest
+	:target: http://docs.open-submit.org/en/latest/?badge=latest
+	:alt: Documentation Status
+
 The OpenSubmit project
 ======================
 
