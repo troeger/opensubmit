@@ -1,7 +1,188 @@
-<html>
-<head>
-<meta http-equiv="refresh" content="0; url=formats/html/index.html" />
-</head>
-<body>
-</body>
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Peter Tröger">
+
+    <title>OpenSubmit</title>
+
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
+    <link href="css/landing-page.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Masthead -->
+    <header class="masthead text-white text-center">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-xl-9 mx-auto">
+            <h1 class="mb-5">OpenSubmit</h1>
+            <h3>A small web application for managing assignment solutions in a university environment.</h3>
+          </div>
+        </div>
+      </div>
+    </header>
+
+
+    <footer class="footer bg-light">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+            <p>
+            OpenSubmit is an assignment management system written by teachers for teachers.
+            <p/>
+            <p>
+            The unique capability of OpenSubmit is the automated testing of student submissions. This makes the life of the corrector less miserable, because all gradable solutions are ‘valid’. Students also seem to like the idea of having a tested solution, so that they do not get a bad grade due to technical difficulties on the correctors side.
+            </p>
+        </div>
+        </div>
+      </div>
+    </footer>
+
+
+
+    <!-- Image Showcases -->
+    <section class="showcase">
+      <div class="container-fluid p-0">
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/ui_student.png');"></div>
+          <div class="col-lg-6 order-lg-1 my-auto showcase-text">
+            <h2>Student dashboard</h2>
+            <p class="lead mb-0">Students use a slim web page to submit their assignment solution as single file or compressed archive. They are informed about their grading status by email or on the page.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/ui_backend_dashboard.png');"></div>
+          <div class="col-lg-6 my-auto showcase-text">
+            <h2>Teacher backend</h2>
+            <p class="lead mb-0">OpenSubmit can deal with multiple courses and allows to configure the access to submissions for teachers and tutors individually.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/ui_backend_assignments.png');"></div>
+          <div class="col-lg-6 order-lg-1 my-auto showcase-text">
+            <h2>Assignments</h2>
+            <p class="lead mb-0">Assignments can be published with or without deadline, may allow group work, may have a future publication date and can have arbitrary grading schemes.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/ui_backend_duplicate.png');"></div>
+          <div class="col-lg-6 my-auto showcase-text">
+            <h2>Plagiarism control</h2>
+            <p class="lead mb-0">Submissions can be checked for plagiarism across all courses.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/ui_backend_submission.png');"></div>
+          <div class="col-lg-6 order-lg-1 my-auto showcase-text">
+            <h2>Full grading freedom</h2>
+            <p class="lead mb-0">Gradings can be delayed and commented. When validation with test scripts is enabled, the corrector sees all the script output and can decide on the result.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/ui_backend_grading.png');"></div>
+          <div class="col-lg-6 my-auto showcase-text">
+            <h2>Single information source</h2>
+            <p class="lead mb-0">The grading table gives a summary of all students and their gradings. It can be download for further processing with Excel or other tools.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/ui_backend_submissions.png');"></div>
+          <div class="col-lg-6 order-lg-1 my-auto showcase-text">
+            <h2>Dealing with large courses</h2>
+            <p class="lead mb-0">Submissions can be filtered and downloaded for offline correction. There are also support functions for re-validation and bulk emails.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/ui_backend_preview.png');"></div>
+          <div class="col-lg-6 my-auto showcase-text">
+            <h2>Faster corrections</h2>
+            <p class="lead mb-0">Student submission archives (ZIP / TGZ) can be previewed on the web page. Downloading all submissions is also supported.</p>
+          </div>
+        </div>
+
+        <div class="row no-gutters">
+          <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/architecture.png');"></div>
+          <div class="col-lg-6 order-lg-1 my-auto showcase-text">
+            <h2>Automated testing of submissions</h2>
+            <p class="lead mb-0"> OpenSubmit can take a student upload and extract it on  separate test machines. Each assignment has its own set of test scripts. Validation tests run, visibly for the student, before the deadline.  When the deadline is over, the system can run another invisible full test for the correctors. Test machines report their software configuration in the student dashboard.
+            </p>
+          </div>
+        </div>
+
+
+
+
+
+      </div>
+    </section>
+
+    <!-- Icons Grid -->
+    <section class="features-icons bg-light text-center">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
+              <a href="http://docs.open-submit.org">  
+              <div class="features-icons-icon d-flex">
+                <i class="icon-screen-desktop m-auto text-primary"></i>
+              </div>
+              </a>
+              <h3>Demo Installation</h3>
+              <p class="lead mb-0">Test OpenSubmit in our public demo installation.</p>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="features-icons-item mx-auto mb-5 mb-lg-0 mb-lg-3">
+              <a href="http://docs.open-submit.org">
+              <div class="features-icons-icon d-flex">
+                <i class="icon-layers m-auto text-primary"></i>
+              </div>
+              </a>
+              <h3>Teacher Manual</h3>
+              
+              <p class="lead mb-0">Learn all features of OpenSubmit for teachers and correctors.</p>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="features-icons-item mx-auto mb-0 mb-lg-3">
+              <a href="http://docs.open-submit.org">  
+              <div class="features-icons-icon d-flex">
+                <i class="icon-layers m-auto text-primary"></i>
+              </div>
+              </a>
+               <h3>Administrator Manual</h3>
+              <p class="lead mb-0">Learn all details about the installation of OpenSubmit in your institution.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+    </footer>
+
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  </body>
+
 </html>
