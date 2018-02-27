@@ -8,8 +8,8 @@ OpenSubmit Documentation
 .. _index:
 
 .. toctree::   
-   student
-   teacher
-   administrator
-   developer
+   frontend_use
+   backend_use
+   admin_use
+   developer_use
    about

@@ -23,7 +23,7 @@ project = 'OpenSubmit'
 copyright = u'2018, Peter Tröger'
 author = u'Peter Tröger'
 language = "en"
-exclude_patterns = ['formats', 'Thumbs.db', '.DS_Store', 'modules.rst']
+exclude_patterns = ['formats', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 todo_include_todos = True
 
