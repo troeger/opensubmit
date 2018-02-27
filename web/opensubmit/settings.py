@@ -207,8 +207,8 @@ INSTALLED_APPS = (
     'formtools',
     'social_django',
     'bootstrapform',
-    'grappelli.dashboard',
-    'grappelli',
+    'jet.dashboard',
+    'jet',
     'django.contrib.admin',
 #    'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit.app.OpenSubmitConfig',
@@ -333,8 +333,6 @@ SOCIAL_AUTH_PIPELINE = (
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
 assert(JOB_EXECUTOR_SECRET is not "")
 
-GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
-GRAPPELLI_SWITCH_USER = True
-GRAPPELLI_INDEX_DASHBOARD = {
-    'opensubmit.admin.teacher_backend': 'opensubmit.dashboard.TeacherDashboard'
-}
+JET_SIDE_MENU_COMPACT = True
+JET_DEFAULT_THEME = 'light-gray'
+JET_INDEX_DASHBOARD = 'opensubmit.views.admin.TeacherDashboard'

@@ -31,7 +31,8 @@ urlpatterns = [
     url(r'^submission/(?P<pk>\d+)/grading_file/$', frontend.GradingFileView.as_view(), name='submission_grading_file'),
     # Backend
     url(r'^teacher/', include(admin.teacher_backend.urls)),
-    url(r'^grappelli/', include('grappelli.urls')),
+    url(r'^jet/', include('jet.urls', 'jet')),  # Django JET URLS
+    url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Django JET dashboard URLS    
     url(r'^preview/(?P<pk>\d+)/$', backend.PreviewView.as_view(), name='preview'),
     url(r'^assignments/(?P<pk>\d+)/duplicates/$', backend.DuplicatesView.as_view(), name='duplicates'),
     url(r'^assignments/(?P<pk>\d+)/archive/$', backend.AssignmentArchiveView.as_view(), name='assarchive'),

@@ -9,3 +9,4 @@ python3-openid
 python-oauth2
 oauthlib>=0.6.2
 lti
+django-jet
