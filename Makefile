@@ -55,6 +55,10 @@ docker-build: build
 docker:
 	docker-compose up
 
+# Update version numbers, commit and tag 
+bumpversion:
+    bumpversion --verbose patch
+
 # Re-create docker images and upload into registry
 docker-push: build
 	docker login --username=troeger
