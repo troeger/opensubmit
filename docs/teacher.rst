@@ -1,7 +1,7 @@
 Teacher Manual
 ##############
 
-OpenSubmit was invented for making assignments more fun for the students, and less work for the teachers. Before you start to read into details, we recommend to get into the basic :ref:`idea <index>` and general :ref:`principles <principles>`. 
+OpenSubmit was invented for making assignments more fun for the students, and less work for the teachers. Before you start to read into details, we recommend to get into the general :ref:`principles <principles>` we follow. 
 
 Student tutors, course owners and administrators (see also :ref:`permissions`) all operate in the teacher backend, which is reachable by a link at the bottom of the student dashboard page, or directly via *<your OpenSubmit url>/teacher*.
 
