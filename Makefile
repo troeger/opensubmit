@@ -57,7 +57,7 @@ docker:
 
 # Update version numbers, commit and tag 
 bumpversion:
-    bumpversion --verbose patch
+	bumpversion --verbose patch
 
 # Re-create docker images and upload into registry
 docker-push: build
