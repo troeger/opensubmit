@@ -1,3 +1,5 @@
+.. _administrator:
+
 Administrator Manual
 ####################
 
@@ -10,6 +12,8 @@ If you just want to play around, use our `demo installation <http://www.demo.ope
 If you want your own production setup, go the manual way for :ref:`web application <manualweb>` and :ref:`test machines <manualexec>`.
 
 Please note that OpenSubmit :ref:`does not support password-based login <principles>`. You need to work with one of the supported :ref:`auth`.
+
+.. _terraform:
 
 Full-stack installation with Terraform
 **************************************

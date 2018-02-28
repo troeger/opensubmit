@@ -13,3 +13,4 @@ OpenSubmit Documentation
    administrator
    developer
    about
+   changelog
