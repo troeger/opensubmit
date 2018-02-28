@@ -15,15 +15,18 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+    'sphinx_issues']
 
 source_suffix = '.rst'
 master_doc = 'index'
 project = 'OpenSubmit'
+version = '0.7.4'
+release = '0.7.4'
 copyright = u'2018, Peter Tröger'
 author = u'Peter Tröger'
 language = "en"
-exclude_patterns = ['formats', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['formats', 'Thumbs.db', '.DS_Store', 'modules.rst']
 pygments_style = 'sphinx'
 todo_include_todos = True
 
@@ -33,3 +36,5 @@ html_logo = '../web/opensubmit/static/images/favicon-96x96.png'
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
+
+issues_github_path = 'troeger/opensubmit'

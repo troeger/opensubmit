@@ -23,11 +23,11 @@ def package_files(directory):
 static = package_files('opensubmit/static')
 templates = package_files('opensubmit/templates')
 templatetags = package_files('opensubmit/templatetags')
-data_files = ['VERSION',]+static+templates+templatetags
+data_files = static+templates+templatetags
 
 setup(
     name = 'opensubmit-web',
-    version = open('opensubmit/VERSION').read(),
+    version = '0.7.4',
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Tröger',
