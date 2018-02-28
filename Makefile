@@ -63,20 +63,16 @@ bumpversion:
 # Re-create docker images and upload into registry
 docker-push: build
 	docker login --username=troeger
-	docker build -t troeger/opensubmit-web:$VERSION web
-	docker push troeger/opensubmit-web:$VERSION
-	docker build -t troeger/opensubmit-exec:$VERSION executor
-	docker push troeger/opensubmit-exec:$VERSION
+	docker build -t troeger/opensubmit-web:$(VERSION) web
+	docker push troeger/opensubmit-web:$(VERSION)
+	docker build -t troeger/opensubmit-exec:$(VERSION) executor
+	docker push troeger/opensubmit-exec:$(VERSION)
 
-# Upload built package for web application to PyPI.
+# Upload built packages to PyPI.
 # Assumes valid credentials in ~/.pypirc
-pypi-push-web: check-venv build
-	twine upload web/dist/opensubmit_web-$VERSION-py3-none-any.whl
-
-# Upload built package for executor application to PyPI.
-# Assumes valid credentials in ~/.pypirc
-pypi-push-exec: check-venv build
-	twine upload executor/dist/opensubmit_exec-$VERSION-py3-none-any.whl
+pypi-push: check-venv build
+	twine upload web/dist/opensubmit_web-$(VERSION)-py3-none-any.whl
+	twine upload executor/dist/opensubmit_exec-$(VERSION)-py3-none-any.whl
 
 # Clean temporary files
 clean:
