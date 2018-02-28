@@ -23,6 +23,11 @@ make docker-build
 make docker
     Run Docker containers for the web application, executors and a PostgreSQL database.
 
+Writing documentation
+=====================
+
+The `OpenSubmit manuals <http://docs.open-submit.org>`_ are hosted on `ReadTheDocs <http://readthedocs.io>`_ and are generated with `Sphinx <http://www.sphinx-doc.org>`_. You find the according ``.rst`` files in the `docs/ <https://github.com/troeger/opensubmit/tree/master/docs>`_ folder. 
+
 
 
 
