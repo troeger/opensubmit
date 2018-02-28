@@ -8,6 +8,12 @@ from opensubmit import settings
 from opensubmit.models import Submission, TestMachine
 
 
+class TableDashboardModule(modules.DashboardModule):
+    template = 'teacher_dash_table.html'
+
+    def init_with_context(self, context):
+        super().init_with_context(context)
+
 class TeacherDashboard(Dashboard):
 
     class Media:
@@ -64,16 +70,15 @@ class TeacherDashboard(Dashboard):
             children=general
         ))
 
-        self.children.append(modules.LinkList(
+        self.children.append(TableDashboardModule(
             title="Info",
             column=0,
-            pre_content='<table class="teacher_dashboard_info">' +
-                        '<tr><td>OpenSubmit release</td><td><a href="https://github.com/troeger/opensubmit/releases/tag/v{0}">v{0}</a></td></tr>'.format(settings.VERSION) +
-                        '<tr><td>Administrator</td><td><a href="mailto:%s">%s</a></td></tr>' % (settings.ADMINS[0][1], settings.ADMINS[0][0]) +
-                        '<tr><td>Registered users</td><td>%u</td></tr>' % (User.objects.count()) +
-                        '<tr><td>Submitted solutions</td><td>%u</td></tr>' % (Submission.objects.count()) +
-                        '<tr><td>Test machines</td><td>%u enabled, %u disabled</td></tr>' % (TestMachine.objects.filter(enabled=True).count(), TestMachine.objects.filter(enabled=False).count()) +
-                        '</table>'
+            children=[['OpenSubmit release', settings.VERSION],
+                      ['Administrator', '<a href="mailto:{0}">{1}</a>'.format(settings.ADMINS[0][1], settings.ADMINS[0][0])],
+                      ['Registered users', str(User.objects.count())],
+                      ['Submitted solutions', str(Submission.objects.count())],
+                      ['Test machines', '{0} enabled, {1} disabled'.format(TestMachine.objects.filter(enabled=True).count(), TestMachine.objects.filter(enabled=False).count())]
+                      ]
         ))
 
         # Put course action boxes in column
