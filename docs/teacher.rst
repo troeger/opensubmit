@@ -46,12 +46,17 @@ Course description link
     A URL for the course home page. Used in the student dashboard.
 Active
    The flag decides if any assignments from this course are shown to the students, regardless of their deadlines. This allows to put courses in an 'archive' mode after the term is over. 
+
+.. _lti:
+
 LTI key / LTI passphrase
    OpenSubmit supports the LTI protocol, so that you can integrate it into other learning management systems (LMSs) such as `Moodle <https://docs.moodle.org/34/en/External_tool>`_. 
 
    The LMS needs a consumer key and a shared secret resp. passphrase that you configure separately for each OpenSubmit course. This makes sure that the system knows automatically the course in which the external LMS user is interested in. Such users don't need to perform any authentication, OpenSubmit blindly believes in the identify information forwarded by the LMS. If a user already exists with the same email address, the LMS identity is added to his social login credentials. 
 
    Using LTI authentication can lead to duplicate accounts. You can :ref:`merge users <merge users>` to fix that.
+
+   The machine-readable configuration for LTI, which can be parsed by some LMS systems, is available under the relative URL ``/lti/config/``.
 
 Providing a link to the course assignments 
 ==========================================
