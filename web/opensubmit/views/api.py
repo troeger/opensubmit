@@ -33,8 +33,9 @@ class ValidityScriptView(BinaryDownloadMixin, DetailView):
 
     def get_object(self, queryset=None):
         ass = super().get_object(queryset)
-        if self.kwargs['secret'] != settings.JOB_EXECUTOR_SECRET:
-            raise PermissionDenied
+        if 'secret' in self.kwargs:
+            if self.kwargs['secret'] != settings.JOB_EXECUTOR_SECRET:
+                raise PermissionDenied
         else:
             if not ass.validity_script_download:
                 raise PermissionDenied
