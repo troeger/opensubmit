@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-VERSION = 0.7.5
+VERSION = 0.7.6
 
 .PHONY: build docs check-venv
 
