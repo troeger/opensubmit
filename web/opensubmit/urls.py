@@ -41,8 +41,8 @@ urlpatterns = [
     url(r'^mail/receivers=(?P<user_list>.*)$', backend.MailFormPreview(MailForm), name='mailstudents'),
     url(r'^mail/course=(?P<course_id>\d+)$', backend.MailFormPreview(MailForm), name='mailcourse'),
     # Executor URLs
-    url(r'^download/(?P<pk>\d+)/validity_testscript/secret=(?P<secret>\w+)$', api.ValidityScriptView.as_view()),
-    url(r'^download/(?P<pk>\d+)/full_testscript/secret=(?P<secret>\w+)$', api.FullScriptView.as_view()),
+    url(r'^download/(?P<pk>\d+)/validity_testscript/secret=(?P<secret>\w+)$', api.ValidityScriptView.as_view(), name='validity_script_secret'),
+    url(r'^download/(?P<pk>\d+)/full_testscript/secret=(?P<secret>\w+)$', api.FullScriptView.as_view(), name='full_testscript_secret'),
     url(r'^jobs/$', api.jobs, name='jobs'),
     url(r'^machines/$', api.MachinesView.as_view(), name='machines'),
     # Error pages
