@@ -102,7 +102,7 @@ class Assignment(models.Model):
             Return absolute download URL for validity test script.
         '''
         if self.pk and self.has_validity_test():
-            return settings.MAIN_URL + reverse('validity_script_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
+            return settings.HOST + reverse('validity_script_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
         else:
             return None
 
@@ -112,7 +112,7 @@ class Assignment(models.Model):
             Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
         '''
         if self.pk and self.has_full_test():
-            return settings.MAIN_URL + reverse('full_testscript_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
+            return settings.HOST + reverse('full_testscript_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
         else:
             return None
 
@@ -122,7 +122,7 @@ class Assignment(models.Model):
         '''
         if self.pk:
             if self.has_description():
-                return settings.MAIN_URL + reverse('assignment_description_file', args=[self.pk])
+                return settings.HOST + reverse('assignment_description_file', args=[self.pk])
             else:
                 return self.download
         else:
