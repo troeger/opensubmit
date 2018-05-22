@@ -1,6 +1,21 @@
 Changelog
 #########
 
+.. _v0.7.8:
+
+v0.7.8 Release
+==============
+
+This is a stable release which adds support for compliance to the GDPR / DSGVO regulations in Europe.
+
+If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
+
+Here is the list of changes since the last official release:
+
+- OpenSubmit now provides an impress and a privacy policy page. Details about the configuration can be found in the `documentation <http://docs.open-submit.org/en/latest/administrator.html>`_.
+- Script download was broken on the executors and is now fixed.
+- The release changelog moved to the official documentation.
+
 .. _v0.7.4:
 
 v0.7.4 Release
