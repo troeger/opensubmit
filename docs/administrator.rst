@@ -87,9 +87,9 @@ Impress and privacy policy
 
 There are several European regulations that expect a web page to provide both an impress and a privacy policy page (GDPR / DSGVO). There are two ways to achieve that:
 
-- Your configuration file defines name, address, and email of an administrator. The according options for ``opensubmit-web configcreate`` are ``--admin_name``, ``--admin_email``, and ``--admin_address``. The first two are anyway mandatory. Given that information, OpenSubmit will provide a default impress and privacy policy page.
+- Option 1: Your configuration file defines name, address, and email of an administrator. The according options for ``opensubmit-web configcreate`` are ``--admin_name``, ``--admin_email``, and ``--admin_address``. The first two are anyway mandatory. Given that information, OpenSubmit will provide a default impress and privacy policy page.
 
-- Your configuration file defines alternative URLs for impress page and privacy policy page. The according options for ``opensubmit-web configcreate`` are ``--admin_impress_page`` and ``--admin_privacy_page``.
+- Option 2: Your configuration file defines alternative URLs for impress page and privacy policy page. The according options for ``opensubmit-web configcreate`` are ``--admin_impress_page`` and ``--admin_privacy_page``.
 
 .. _auth:
 
