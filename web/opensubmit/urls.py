@@ -16,6 +16,8 @@ urlpatterns = [
     # Frontend views
     url(r'^logout/$', frontend.LogoutView.as_view(), name='logout'),
     url(r'^settings/$', frontend.SettingsView.as_view(), name='settings'),
+    url(r'^impress/$', frontend.ImpressView.as_view(), name='impress'),
+    url(r'^privacy/$', frontend.PrivacyView.as_view(), name='privacy'),
     url(r'^courses/$', frontend.CoursesView.as_view(), name='courses'),
     url(r'^archive/$', frontend.ArchiveView.as_view(), name='archive'),
     url(r'^dashboard/$', frontend.DashboardView.as_view(), name='dashboard'),

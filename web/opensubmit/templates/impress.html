@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% load projecttags %}
+
+{% block scripts %}
+{{ block.super }}
+{% endblock %}
+
+{% block style %}
+{{ block.super }}
+{% endblock %}
+
+{% block docready %}
+{{ block.super }}
+{% endblock %}
+
+{%block navigation_home %}hidden{% endblock %}
+{%block navigation_archive %}hidden{% endblock %}
+{%block navigation_settings %}hidden{% endblock %}
+{%block navigation_courses %}hidden{% endblock %}
+{%block navigation_logout %}hidden{% endblock %}
+
+{% block content %}
+<br/>
+<div class="page-header">
+	<h1>Impress</h1>
+</div>
+
+<p>{{ opensubmit_admin_name }}</p>
+<p>{{ opensubmit_admin_address }}</p>
+<p>eMail: <a href="mailto:{{ opensubmit_admin_mail }}">{{ opensubmit_admin_mail }}</a></p>
+
+
+
+{% endblock %}
+
+
+
+
+
+

@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
 
+from opensubmit import settings
 from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from opensubmit.models import UserProfile, Submission, TestMachine, Course, Assignment, SubmissionFile
 from opensubmit.models.userprofile import db_fixes
@@ -28,6 +29,24 @@ class IndexView(TemplateView):
             return redirect('dashboard')
         else:
             return super(IndexView, self).get(request)
+
+class ImpressView(TemplateView):
+    template_name = 'impress.html'
+
+    def get(self, request):
+        if settings.IMPRESS_PAGE:
+            return redirect(settings.IMPRESS_PAGE)
+        else:
+            return super(ImpressView, self).get(request)
+
+class PrivacyView(TemplateView):
+    template_name = 'privacy.html'
+
+    def get(self, request):
+        if settings.PRIVACY_PAGE:
+            return redirect(settings.PRIVACY_PAGE)
+        else:
+            return super(PrivacyView, self).get(request)
 
 
 class LogoutView(LoginRequiredMixin, RedirectView):

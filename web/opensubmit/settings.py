@@ -147,10 +147,29 @@ else:
     STATIC_URL = '/static/'
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# OpenSubmit information
+ADMIN_NAME = config.get('admin', 'ADMIN_NAME')
+ADMIN_EMAIL = config.get('admin', 'ADMIN_EMAIL')
+if config.has_option('admin', 'ADMIN_ADDRESS'):
+    ADMIN_ADDRESS = config.get('admin', 'ADMIN_ADDRESS')
+else:
+    ADMIN_ADDRESS = "(Address available on request.)"
+# Django information
 ADMINS = (
-    (config.get('admin', 'ADMIN_NAME'), config.get('admin', 'ADMIN_EMAIL'), ),
+    (ADMIN_NAME, ADMIN_EMAIL),
 )
 MANAGERS = ADMINS
+
+if config.has_option('admin', 'IMPRESS_PAGE'):
+    IMPRESS_PAGE = config.get('admin', 'IMPRESS_PAGE')
+else:
+    IMPRESS_PAGE = None
+
+if config.has_option('admin', 'PRIVACY_PAGE'):
+    PRIVACY_PAGE = config.get('admin', 'PRIVACY_PAGE')
+else:
+    PRIVACY_PAGE = None
+
 EMAIL_SUBJECT_PREFIX = '[OpenSubmit] '
 TIME_ZONE = config.get("server", "TIME_ZONE")
 LANGUAGE_CODE = 'en-en'
