@@ -10,9 +10,9 @@ services:
     volumes:
       - postgres-volume:/var/lib/postgresql/data  
   web:
-    image: troeger/opensubmit-web
+    image: troeger/opensubmit-web:0.7.8
     environment:
-      OPENSUBMIT_DEBUG: False
+      OPENSUBMIT_DEBUG: "False"
       OPENSUBMIT_SERVER_URL: http://${external_adr}
       OPENSUBMIT_SERVER_HOSTALIASES: ${external_ip},web
       OPENSUBMIT_SERVER_MEDIAROOT: /data/media/ 
@@ -27,7 +27,7 @@ services:
       OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET: ${twitter_oauth_secret}
       OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY: ${github_oauth_key}
       OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET: ${github_oauth_secret}
-      OPENSUBMIT_LOGIN_DEMO: True
+      OPENSUBMIT_LOGIN_DEMO: "True"
 
     tty: true
     ports:
@@ -37,7 +37,7 @@ services:
     volumes:
       - data-volume:/data
   exec:
-    image: troeger/opensubmit-exec
+    image: troeger/opensubmit-exec:0.7.8
     environment:
       OPENSUBMIT_SERVER_HOST: http://web
     tty: true
