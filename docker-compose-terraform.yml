@@ -28,6 +28,9 @@ services:
       OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY: ${github_oauth_key}
       OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET: ${github_oauth_secret}
       OPENSUBMIT_LOGIN_DEMO: "True"
+      OPENSUBMIT_ADMIN_NAME: ${admin_name}
+      OPENSUBMIT_ADMIN_EMAIL: ${admin_email}
+      OPENSUBMIT_ADMIN_ADDRESS: ${admin_address}
 
     tty: true
     ports:

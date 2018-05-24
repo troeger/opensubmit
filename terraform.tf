@@ -25,6 +25,9 @@ variable "twitter_oauth_key" {}
 variable "twitter_oauth_secret" {}
 variable "github_oauth_key" {}
 variable "github_oauth_secret" {}
+variable "admin_name" {}
+variable "admin_email" {}
+variable "admin_address" {}
 
 provider "google" {
   project     = "opensubmit"
@@ -58,6 +61,9 @@ data "template_file" "docker-compose-yml" {
     twitter_oauth_secret="${var.twitter_oauth_secret}"
     github_oauth_key="${var.github_oauth_key}"
     github_oauth_secret="${var.github_oauth_secret}"    
+    admin_name="${var.admin_name}"
+    admin_email="${var.admin_email}"
+    admin_address="${var.admin_address}"
   }
 }
 
