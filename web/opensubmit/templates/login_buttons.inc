@@ -1,9 +1,10 @@
 {% load projecttags %}
 
 {% setting "LOGIN_GOOGLE" as login_google %}
-{% setting "LOGIN_OPENID" as login_openid %}
 {% setting "LOGIN_TWITTER" as login_twitter %}
 {% setting "LOGIN_GITHUB" as login_github %}
+{% setting "LOGIN_OPENID" as login_openid %}
+{% setting "LOGIN_OIDC" as login_oidc %}
 {% setting "LOGIN_DESCRIPTION" as login_description %}
 {% setting "LOGIN_SHIB" as login_shib %}
 {% setting "LOGIN_SHIB_DESCRIPTION" as login_shib_description %}
@@ -32,6 +33,11 @@
             {% if login_openid %}
             <div class="col-md-3">
                 <a href="{% url 'social:begin' 'openid' %}?next={{ next }}" class="btn-auth btn-openid"><b>{{ login_description }}</b></a>
+            </div>
+            {% endif %}
+            {% if login_oidc %}
+            <div class="col-md-3">
+                <a href="{% url 'social:begin' 'oidc' %}?next={{ next }}" class="btn-auth btn-openid"><b>{{ login_description }}</b></a>
             </div>
             {% endif %}
             {% if login_shib %}

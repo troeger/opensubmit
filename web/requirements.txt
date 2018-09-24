@@ -8,4 +8,5 @@ social-auth-app-django
 python3-openid
 python-oauth2
 oauthlib>=0.6.2
+pyjwkest>=1.4.0
 lti
