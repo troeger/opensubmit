@@ -23,7 +23,7 @@ RUN pip3 install -r /install/requirements.txt psycopg2-binary
 
 # Install existing wheel of OpenSubmit
 # Call "make" if this step fails due to missing .whl files
-COPY dist/*.whl /install
+COPY dist/*.whl /install/
 RUN pip3 install /install/*.whl
 
 # Enable django-admin in interactive mode when running
