@@ -4,7 +4,7 @@ from configparser import SafeConfigParser
 from django.core.exceptions import ImproperlyConfigured
 
 script_dir = os.path.dirname(__file__)
-VERSION = '0.7.8'
+VERSION = '0.7.9'
 
 NOT_CONFIGURED_VALUE = '***not configured***'
 
