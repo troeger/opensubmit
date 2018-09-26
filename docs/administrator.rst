@@ -13,7 +13,7 @@ If you want your own production setup, go the manual way for :ref:`web applicati
 
 Please note that OpenSubmit :ref:`does not support password-based login <principles>`. You need to work with one of the supported :ref:`auth`.
 
-.. _terraform:
+.. _Terraform:
 
 Full-stack installation with Terraform
 **************************************
@@ -101,6 +101,8 @@ OpenSubmit supports different authentication methods, as described in the follow
 If you need another authentication method for your institution, please `open an according issue <https://github.com/troeger/opensubmit/issues/new>`_.
 
 Authentication methods show up on the front page when the according settings are not empty. You can therefore disable any of the mechanisms by commenting them out in settings.ini.
+
+.. _oidc:
 
 Login with OpenID Connect
 -------------------------

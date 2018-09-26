@@ -1,6 +1,15 @@
 Changelog
 #########
 
+.. _v0.7.9:
+
+v0.7.9 Release
+==============
+
+This is a stable release that brings :ref:`OpenID Connect support <oidc>`. Thanks to :user:`tzwenn` for the contribution!
+
+If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
+
 .. _v0.7.8:
 
 v0.7.8 Release
@@ -29,7 +38,7 @@ Here is the list of changes:
 
 - We now offer Docker images for the `web application <https://hub.docker.com/r/troeger/opensubmit-web/>`_ and the `executor <https://hub.docker.com/r/troeger/opensubmit-exec/>`_. The :ref:`administrator` was updated accordingly.
 - We now offer a demo installation at http://www.demo.open-submit.org (:issue:`98`). This lead to a new configuration option called ``DEMO``, which allows to enable passthrough login buttons on the landing page.
-- We now offer a `Terraform <http://terraform.io>`_-based installation of OpenSubmit on cloud computing resources. Check the :ref:`Terraform section in the admin manual <terraform>` for further details.
+- We now offer a `Terraform <http://terraform.io>`_-based installation of OpenSubmit on cloud computing resources. Check the :ref:`Terraform` section in the admin manual for further details.
 - The traditional ``opensubmit-web configure`` call is now split up into three explicit commands:
 
   ``opensubmit-web configcreate``
