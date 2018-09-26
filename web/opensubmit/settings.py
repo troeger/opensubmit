@@ -298,6 +298,7 @@ LOGIN_GITHUB = (config.get("login", "LOGIN_GITHUB_OAUTH_KEY").strip() != '' and
 LOGIN_TWITTER = (config.get("login", "LOGIN_TWITTER_OAUTH_KEY").strip() != '' and
                  config.get("login", "LOGIN_TWITTER_OAUTH_SECRET").strip() != '')
 LOGIN_OPENID = (config.get('login', 'OPENID_PROVIDER').strip() != '')
+LOGIN_OIDC   = (config.get('login', 'LOGIN_OIDC_ENDPOINT').strip() != '')
 LOGIN_SHIB = (config.get('login', 'LOGIN_SHIB_DESCRIPTION').strip() != '')
 
 AUTHENTICATION_BACKENDS = (
@@ -323,6 +324,13 @@ if LOGIN_OPENID:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.open_id.OpenIdAuth',)
     LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
     OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
+
+if LOGIN_OIDC:
+    AUTHENTICATION_BACKENDS += ('opensubmit.social.oidc.OpenIdConnectAuth',)
+    LOGIN_OIDC_DESCRIPTION = config.get('login', 'LOGIN_OIDC_DESCRIPTION')
+    LOGIN_OIDC_ENDPOINT = config.get('login', 'LOGIN_OIDC_ENDPOINT')
+    LOGIN_OIDC_CLIENT_ID = config.get('login', 'LOGIN_OIDC_CLIENT_ID')
+    LOGIN_OIDC_CLIENT_SECRET = config.get('login', 'LOGIN_OIDC_CLIENT_SECRET')
 
 if LOGIN_SHIB:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.apache.ModShibAuth',)

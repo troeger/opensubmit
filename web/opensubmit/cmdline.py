@@ -73,6 +73,10 @@ LOGIN_GOOGLE_OAUTH_KEY: {login_google_oauth_key}
 LOGIN_GOOGLE_OAUTH_SECRET: {login_google_oauth_secret}
 LOGIN_GITHUB_OAUTH_KEY: {login_github_oauth_key}
 LOGIN_GITHUB_OAUTH_SECRET: {login_github_oauth_secret}
+LOGIN_OIDC_DESCRIPTION: {login_oidc_title}
+LOGIN_OIDC_ENDPOINT: {login_oidc_endpoint}
+LOGIN_OIDC_CLIENT_ID: {login_oidc_client_id}
+LOGIN_OIDC_CLIENT_SECRET: {login_oidc_client_secret}
 LOGIN_SHIB_DESCRIPTION: {login_shib_title}
 LOGIN_DEMO: {login_demo}
 '''
@@ -175,6 +179,9 @@ def check_web_config_consistency(config):
         'LOGIN_TWITTER_OAUTH_SECRET': ['LOGIN_TWITTER_OAUTH_KEY'],
         'LOGIN_GOOGLE_OAUTH_SECRET': ['LOGIN_GOOGLE_OAUTH_KEY'],
         'LOGIN_GITHUB_OAUTH_SECRET': ['LOGIN_GITHUB_OAUTH_KEY'],
+        'LOGIN_OIDC_ENDPOINT': ['LOGIN_OIDC_CLIENT_ID', 'LOGIN_OIDC_CLIENT_SECRET', 'LOGIN_OIDC_DESCRIPTION'],
+        'LOGIN_OIDC_CLIENT_ID': ['LOGIN_OIDC_ENDPOINT', 'LOGIN_OIDC_CLIENT_SECRET', 'LOGIN_OIDC_DESCRIPTION'],
+        'LOGIN_OIDC_CLIENT_SECRET': ['LOGIN_OIDC_ENDPOINT', 'LOGIN_OIDC_CLIENT_ID', 'LOGIN_OIDC_DESCRIPTION'],
     }
 
     print("Checking configuration of the OpenSubmit web application...")
@@ -304,6 +311,10 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_github_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET', ''), help='GitHUb OAuth client secret.')
     parser_configcreate.add_argument('--login_openid_title', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_TITLE', 'StackExchange'), help='Title of the OpenID login button.')
     parser_configcreate.add_argument('--login_openid_provider', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_PROVIDER', 'https://openid.stackexchange.com'), help='URL of the OpenID provider.')
+    parser_configcreate.add_argument('--login_oidc_title', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_TITLE', ''), help='Title of the OpenID Connect login button.')
+    parser_configcreate.add_argument('--login_oidc_endpoint', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_ENDPOINT', ''), help='URL of the OpenID Connect endpoint.')
+    parser_configcreate.add_argument('--login_oidc_client_id', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_ID', ''), help='OpenID Connect client id.')
+    parser_configcreate.add_argument('--login_oidc_client_secret', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET', ''), help='OpenID Connect client secret.')
     parser_configcreate.add_argument('--login_shib_title', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_TITLE', ''), help='Title of the Shibboleth login button.')
     parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Title of the Shibboleth login button.')
     parser_configcreate.add_argument('--admin_name', default=os.environ.get('OPENSUBMIT_ADMIN_NAME', 'OpenSubmit Administrator'), help='Name of the administrator, shown in privacy policy, impress and backend.')
