@@ -39,6 +39,7 @@ def send_post(config, urlpath, post_data):
     according to the configuration.
     '''
     server = config.get("Server", "url")
+    logger.debug("Sending executor payload to " + server)
     post_data = urlencode(post_data)
     post_data = post_data.encode("utf-8", errors="ignore")
     url = server + urlpath
@@ -128,7 +129,13 @@ def fetch_job(config):
         if "Timeout" in headers:
             job.timeout = int(headers["Timeout"])
         if "PostRunValidation" in headers:
-            job.validator_url = headers["PostRunValidation"]
+            # Ignore server-given host + port and use the configured one instead
+            # This fixes problems with the arbitrary Django LiveServer port choice
+            # It would be better to return relative URLs only for this property,
+            # but this is a Bernhard-incompatible API change
+            from urllib.parse import urlparse
+            relative_path = urlparse(headers["PostRunValidation"]).path
+            job.validator_url = config.get("Server", "url") + relative_path
         job.working_dir = create_working_dir(config, job.sub_id)
 
         # Store submission in working directory

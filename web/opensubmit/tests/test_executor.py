@@ -69,7 +69,6 @@ class Library(SubmitStudentScenarioTestCase):
     Tests for the executor library functions used by the validator script.
     '''
     def setUp(self):
-        settings.MAIN_URL = self.live_server_url
         super(Library, self).setUp()
         self.config = config.read_config(
             os.path.dirname(__file__) + "/executor.cfg",
@@ -278,7 +277,6 @@ class Communication(SubmitStudentScenarioTestCase):
     '''
 
     def setUp(self):
-        settings.MAIN_URL = self.live_server_url
         super(Communication, self).setUp()
         self.config = config.read_config(
             os.path.dirname(__file__) + "/executor.cfg",
