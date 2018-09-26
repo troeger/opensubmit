@@ -102,15 +102,27 @@ If you need another authentication method for your institution, please `open an 
 
 Authentication methods show up on the front page when the according settings are not empty. You can therefore disable any of the mechanisms by commenting them out in settings.ini.
 
-Login with OpenID
------------------
+Login with OpenID Connect
+-------------------------
 
-If you want to allow users to login with OpenID, you need to configure the following settings:
+If you want to allow users to login with OpenID Connect (OIDC), you need to configure the following settings:
+
+- ``LOGIN_OIDC_DESCRIPTION: <visible button title>``
+- ``LOGIN_OIDC_ENDPOINT: <OpenID connect endpoint URL>``
+- ``LOGIN_OIDC_CLIENT_ID: <OpenID client ID>``
+- ``LOGIN_OIDC_CLIENT_SECRET: <OpenID client secret>``
+
+OpenID Connect is the recommended authentication method in OpenSubmit. It is offered by different endpoint providers, such as `Google <https://developers.google.com/identity/protocols/OpenIDConnect#authenticatingtheuser>`_, `Microsoft Azure AD <https://msdn.microsoft.com/en-us/library/azure/dn645541.aspx>`_, `Yahoo <https://developer.yahoo.com/oauth2/guide/openid_connect/?guccounter=1>`_, `Amazon <https://images-na.ssl-images-amazon.com/images/G/01/lwa/dev/docs/website-developer-guide._TTH_.pdf>`_, and `PayPal <https://developer.paypal.com/docs/integration/direct/identity/log-in-with-paypal/>`_.
+
+Login with classical OpenID
+---------------------------
+
+If you want to allow users to login with classical OpenID, you need to configure the following settings:
 
 - ``LOGIN_DESCRIPTION: <visible button title>``
 - ``OPENID_PROVIDER: <provider URL>``
 
-The standard OpenSubmit installation already contains an example setting for using StackExchange as OpenID provider.
+The standard OpenSubmit installation already contains an example setting for using StackExchange as authentication provider. Please note that classical OpenID is considered as being deprecated. We recommend to use OpenID Connect instead.
 
 Login with Shibboleth
 ---------------------
