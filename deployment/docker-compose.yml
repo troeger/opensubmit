@@ -24,7 +24,7 @@ services:
       OPENSUBMIT_LOGIN_DEMO: "True"
 
     build: 
-      context: ./web/
+      context: ../web/
     tty: true
     ports:
       - "8000:80"
@@ -37,7 +37,7 @@ services:
     environment:
       OPENSUBMIT_SERVER_HOST: http://web
     build: 
-      context: ./executor/
+      context: ../executor/
     tty: true
     depends_on:
       - web
@@ -46,7 +46,7 @@ services:
     environment:
       OPENSUBMIT_SERVER_HOST: http://web
     build: 
-      context: ./executor/
+      context: ../executor/
     tty: true
     depends_on:
       - web

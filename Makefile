@@ -50,11 +50,11 @@ coverage: check-venv web/opensubmit/settings_dev.ini
 
 # Re-create docker images locally
 docker-build: build
-	docker-compose build
+	docker-compose -f deployment/docker-compose.yml build
 
 # Run docker images locally
 docker:
-	docker-compose up
+	docker-compose -f deployment/docker-compose.yml up
 
 # Update version numbers, commit and tag 
 bumpversion:
