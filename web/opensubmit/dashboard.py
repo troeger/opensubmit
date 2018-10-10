@@ -89,9 +89,7 @@ class TeacherDashboard(Dashboard):
                 column=column,
                 children=[
                     modules.LinkList(title="Actions", children=(links)),
-                    modules.DashboardModule(title="Info", pre_content='<table class="teacher_dashboard_info">' +
-                                            '<tr><td>Course URL for students</td><td>%s/?course=%u</td></tr>' % (settings.MAIN_URL, course.pk) +
-                                            '<tr><td>Course owner</td><td><a href="mailto:%s">%s</a></td></tr>' % (course.owner.email, course.owner.get_full_name()) +
+                    modules.DashboardModule(title="Statistics", pre_content='<table class="teacher_dashboard_info">' +
                                             "<tr><td>Open assignments</td><td>%u</td></tr>" % course.open_assignments().count() +
                                             "<tr><td>Submissions to be graded</td><td>%u</td></tr>" % course.gradable_submissions().count() +
                                             "<tr><td>Grading finished, not notified</td><td>%u</td></tr>" % course.graded_submissions().count() +
@@ -99,7 +97,13 @@ class TeacherDashboard(Dashboard):
                                             "<tr><td>Authoring students</td><td>%u</td></tr>" % course.authors().count() +
                                             "</table>"
                                             ),
-                    modules.LinkList(title="LTI Assignment Links", children=(lti_links)),
+                    modules.LinkList(title="External Course Link",  css_classes=["grp-closed"],children=([course.title, "%s/?course=%u" % (settings.MAIN_URL, course.pk), False],)),
+                    modules.LinkList(title="LTI Assignment Links", css_classes=["grp-closed"], children=(lti_links)),
+                    modules.DashboardModule(title="LTI Credentials", css_classes=["grp-closed"], pre_content='<table class="teacher_dashboard_info">' +
+                                            '<tr><td>LTI Key</td><td>%s</td></tr>' % (course.lti_key) +
+                                            '<tr><td>LTI Secret</td><td>%s</td></tr>' % (course.lti_secret) +
+                                            "</table>"
+                                            ),
                 ]
             ))
             column += 1
