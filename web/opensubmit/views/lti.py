@@ -1,12 +1,16 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.csrf import csrf_exempt
+
+
 from oauthlib.oauth1 import RequestValidator
 from lti.contrib.django import DjangoToolProvider
 from lti import ToolConfig
 
-from opensubmit.models import Course
+from opensubmit.models import Course, Assignment
 from opensubmit.social import passthrough
 from opensubmit import settings
 
@@ -68,19 +72,29 @@ def login(request):
         data['last_name'] = post_params.get('lis_person_name_family', None)
         data['email'] = post_params.get('lis_person_contact_email_primary', None)
         data['first_name'] = post_params.get('lis_person_name_given', None)
-        request.session[passthrough.SESSION_VAR] = data # this enables the login
+        request.session[passthrough.SESSION_VAR] = data   # this enables the login
         return redirect(reverse('social:begin', args=['lti']))
     else:
         raise PermissionDenied
 
 
-def config(request):
-    launch_url = request.build_absolute_uri(reverse('lti'))
+def config(request, pk):
+    launch_url = request.build_absolute_uri(reverse('lti_assignment', args=[pk]))
+    assignment = get_object_or_404(Assignment, pk=pk)
 
     lti_tool_config = ToolConfig(
-        title='OpenSubmit',
-        description='Assignment Management and Submission System',
+        title=assignment.title,
         launch_url=launch_url,
         secure_launch_url=launch_url)
 
     return HttpResponse(lti_tool_config.to_xml(), content_type='text/xml')
+
+
+@xframe_options_exempt
+@csrf_exempt
+def assignment(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    if assignment:
+        return redirect(reverse('new', args=[pk]))
+    else:
+        return redirect('dashboard')
