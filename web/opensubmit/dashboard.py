@@ -81,7 +81,7 @@ class TeacherDashboard(Dashboard):
             lti_links = []
             for assignment in course.assignments.all():
                 lti_links.append([assignment.title, reverse(
-                    'lti_config', args=[assignment.pk]), False])
+                    'lti', args=[assignment.pk]), False])
 
             # Add course group box to dashboard
             self.children.append(modules.Group(
@@ -97,8 +97,8 @@ class TeacherDashboard(Dashboard):
                                             "<tr><td>Authoring students</td><td>%u</td></tr>" % course.authors().count() +
                                             "</table>"
                                             ),
-                    modules.LinkList(title="External Course Link",  css_classes=["grp-closed"],children=([course.title, "%s/?course=%u" % (settings.MAIN_URL, course.pk), False],)),
-                    modules.LinkList(title="LTI Assignment Links", css_classes=["grp-closed"], children=(lti_links)),
+                    modules.LinkList(title="Direct Course Link",  css_classes=["grp-closed"],children=([course.title, "%s/?course=%u" % (settings.MAIN_URL, course.pk), False],)),
+                    modules.LinkList(title="LTI Tool Links", css_classes=["grp-closed"], children=(lti_links)),
                     modules.DashboardModule(title="LTI Credentials", css_classes=["grp-closed"], pre_content='<table class="teacher_dashboard_info">' +
                                             '<tr><td>LTI Key</td><td>%s</td></tr>' % (course.lti_key) +
                                             '<tr><td>LTI Secret</td><td>%s</td></tr>' % (course.lti_secret) +

@@ -9,7 +9,6 @@ from opensubmit.forms import MailForm
 urlpatterns = [
     # Frontend Login
     url(r'^demo/(?P<role>.*)/$', demo.LoginView.as_view(), name='demo'),
-    url(r'^lti/$', lti.login, name='lti'),
     url(r'^$', frontend.IndexView.as_view(), name='index'),
     url('', include('social_django.urls', namespace='social')),
     # Frontend views
@@ -22,9 +21,8 @@ urlpatterns = [
     url(r'^dashboard/$', frontend.DashboardView.as_view(), name='dashboard'),
     url(r'^details/(?P<pk>\d+)/$', frontend.SubmissionDetailsView.as_view(), name='details'),
     url(r'^machine/(?P<pk>\d+)/$', frontend.MachineDetailsView.as_view(), name='machine'),
+    url(r'^assignments/(?P<pk>\d+)/lti/$', lti.DispatcherView.as_view(), name='lti'),
     url(r'^assignments/(?P<pk>\d+)/new/$', frontend.SubmissionNewView.as_view(), name='new'),
-    url(r'^assignments/(?P<pk>\d+)/lti/$', lti.assignment, name='lti_assignment'),
-    url(r'^assignments/(?P<pk>\d+)/lti/config/$', lti.config, name='lti_config'),
     url(r'^assignments/(?P<pk>\d+)/validity_testscript/$', frontend.ValidityScriptView.as_view(), name='validity_script'),
     url(r'^assignments/(?P<pk>\d+)/full_testscript/$', frontend.FullScriptView.as_view(), name='full_testscript'),
     url(r'^assignments/(?P<pk>\d+)/description_file/$', frontend.DescriptionFileView.as_view(), name='assignment_description_file'),
