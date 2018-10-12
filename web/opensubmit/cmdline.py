@@ -65,7 +65,7 @@ ADMIN_EMAIL: {admin_email}
 ADMIN_ADDRESS: {admin_address}
 
 [login]
-LOGIN_DESCRIPTION: {login_openid_title}
+LOGIN_DESCRIPTION: {login_openid_description}
 OPENID_PROVIDER: {login_openid_provider}
 LOGIN_TWITTER_OAUTH_KEY: {login_twitter_oauth_key}
 LOGIN_TWITTER_OAUTH_SECRET: {login_twitter_oauth_secret}
@@ -73,11 +73,11 @@ LOGIN_GOOGLE_OAUTH_KEY: {login_google_oauth_key}
 LOGIN_GOOGLE_OAUTH_SECRET: {login_google_oauth_secret}
 LOGIN_GITHUB_OAUTH_KEY: {login_github_oauth_key}
 LOGIN_GITHUB_OAUTH_SECRET: {login_github_oauth_secret}
-LOGIN_OIDC_DESCRIPTION: {login_oidc_title}
+LOGIN_OIDC_DESCRIPTION: {login_oidc_description}
 LOGIN_OIDC_ENDPOINT: {login_oidc_endpoint}
 LOGIN_OIDC_CLIENT_ID: {login_oidc_client_id}
 LOGIN_OIDC_CLIENT_SECRET: {login_oidc_client_secret}
-LOGIN_SHIB_DESCRIPTION: {login_shib_title}
+LOGIN_SHIB_DESCRIPTION: {login_shib_description}
 LOGIN_DEMO: {login_demo}
 '''
 
@@ -164,7 +164,7 @@ def check_file(filepath):
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(filepath, uid, gid)
         os.chmod(filepath, 0o660)  # rw-rw---
-    except:
+    except Exception:
         print("WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it." % filepath)
 
 
@@ -309,13 +309,13 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_twitter_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET', ''), help='Twitter OAuth client secret.')
     parser_configcreate.add_argument('--login_github_oauth_key', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY', ''), help='GitHub OAuth client key.')
     parser_configcreate.add_argument('--login_github_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET', ''), help='GitHUb OAuth client secret.')
-    parser_configcreate.add_argument('--login_openid_title', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_TITLE', 'StackExchange'), help='Title of the OpenID login button.')
+    parser_configcreate.add_argument('--login_openid_description', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_DESCRIPTION', 'StackExchange'), help='Title of the OpenID login button.')
     parser_configcreate.add_argument('--login_openid_provider', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_PROVIDER', 'https://openid.stackexchange.com'), help='URL of the OpenID provider.')
-    parser_configcreate.add_argument('--login_oidc_title', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_TITLE', ''), help='Title of the OpenID Connect login button.')
+    parser_configcreate.add_argument('--login_oidc_description', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_DESCRIPTION', ''), help='Title of the OpenID Connect login button.')
     parser_configcreate.add_argument('--login_oidc_endpoint', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_ENDPOINT', ''), help='URL of the OpenID Connect endpoint.')
     parser_configcreate.add_argument('--login_oidc_client_id', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_ID', ''), help='OpenID Connect client id.')
     parser_configcreate.add_argument('--login_oidc_client_secret', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET', ''), help='OpenID Connect client secret.')
-    parser_configcreate.add_argument('--login_shib_title', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_TITLE', ''), help='Title of the Shibboleth login button.')
+    parser_configcreate.add_argument('--login_shib_description', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_DESCRIPTION', ''), help='Title of the Shibboleth login button.')
     parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Title of the Shibboleth login button.')
     parser_configcreate.add_argument('--admin_name', default=os.environ.get('OPENSUBMIT_ADMIN_NAME', 'OpenSubmit Administrator'), help='Name of the administrator, shown in privacy policy, impress and backend.')
     parser_configcreate.add_argument('--admin_email', default=os.environ.get('OPENSUBMIT_ADMIN_EMAIL', 'root@localhost'), help='eMail of the administrator, shown in privacy policy, impress and backend.')
@@ -323,11 +323,11 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--admin_impress_page', default=os.environ.get('OPENSUBMIT_IMPRESS_PAGE', ''), help='Link to alternative impress page.')
     parser_configcreate.add_argument('--admin_privacy_page', default=os.environ.get('OPENSUBMIT_PRIVACY_PAGE', ''), help='Link to alternative privacy policy page.')
 
-    parser_configtest = subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')
-    parser_democreate = subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
-    parser_apachecreate = subparsers.add_parser('apachecreate', help='Create config file snippet for Apache 2.4.')
-    parser_fixperms = subparsers.add_parser('fixperms', help='Check and fix student and tutor permissions.')
-    parser_fixchecksums = subparsers.add_parser('fixchecksums', help='Re-create all student file checksums (for duplicate detection).')
+    subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')
+    subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
+    subparsers.add_parser('apachecreate', help='Create config file snippet for Apache 2.4.')
+    subparsers.add_parser('fixperms', help='Check and fix student and tutor permissions.')
+    subparsers.add_parser('fixchecksums', help='Re-create all student file checksums (for duplicate detection).')
 
     parser_makeadmin = subparsers.add_parser('makeadmin', help='Make this user an admin with backend rights.')
     parser_makeadmin.add_argument('email')
