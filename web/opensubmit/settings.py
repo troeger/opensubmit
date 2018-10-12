@@ -354,7 +354,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
-    'opensubmit.views.demo.assign_role'
+    'opensubmit.views.demo.assign_role',
+    'opensubmit.views.lti.store_report_link'
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")

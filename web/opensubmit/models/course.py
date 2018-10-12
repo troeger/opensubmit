@@ -6,6 +6,8 @@ from django.core.urlresolvers import reverse
 from .assignment import Assignment
 from .submission import Submission
 
+import uuid
+
 class ValidCoursesManager(models.Manager):
     '''
         A model manager used by the Course model. It returns a sorted list
@@ -15,6 +17,12 @@ class ValidCoursesManager(models.Manager):
     def get_queryset(self):
         return Course.objects.exclude(active=False).order_by('title')
 
+
+def lti_cred_generator():
+    uid = str(uuid.uuid1())
+    return uid.replace("-", "")
+
+
 class Course(models.Model):
     title = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
@@ -22,8 +30,8 @@ class Course(models.Model):
     tutors = models.ManyToManyField(User, blank=True, related_name='courses_tutoring', help_text="These users can edit / grade submissions for the course.")
     homepage = models.URLField(max_length=200, verbose_name="Course description link")
     active = models.BooleanField(default=True, help_text="Only assignments and submissions of active courses are shown to students and tutors. Use this flag for archiving past courses.")
-    lti_key = models.CharField(max_length=100, null=True, blank=True, help_text="Key to be used by an LTI consumer when accessing this course.")
-    lti_secret = models.CharField(max_length=100, null=True, blank=True, help_text="Secret to be used by an LTI consumer when accessing this course.")
+    lti_key = models.CharField(max_length=100, null=True, blank=True, default=lti_cred_generator(), help_text="Key to be used by an LTI consumer when accessing this course.")
+    lti_secret = models.CharField(max_length=100, null=True, blank=True, default=lti_cred_generator(), help_text="Secret to be used by an LTI consumer when accessing this course.")
 
     objects = models.Manager()
     valid_ones = ValidCoursesManager()

@@ -214,6 +214,7 @@ class SubmissionNewView(LoginRequiredMixin, TemplateView):
     demands tailoring of the double-form setup here.
     '''
     template_name = 'new.html'
+    redirect_on_success = 'dashboard'
 
     def dispatch(self, request, *args, **kwargs):
         self.ass = get_object_or_404(Assignment, pk=kwargs['pk'])
@@ -262,14 +263,14 @@ class SubmissionNewView(LoginRequiredMixin, TemplateView):
                     # No validation, no grading. We are done.
                     submission.state = Submission.CLOSED
                     submission.save()
-            return redirect('dashboard')
+            return redirect(self.redirect_on_success)
         else:
             messages.error(request, "Please correct your submission information.")
-            return render(request, 'new.html', {'submissionForm': submissionForm, 'assignment': self.ass})
+            return render(request, self.template_name, {'submissionForm': submissionForm, 'assignment': self.ass})
 
     def get(self, request, *args, **kwargs):
         submissionForm = self.SubmissionForm(request.user, self.ass)
-        return render(request, 'new.html', {'submissionForm': submissionForm, 'assignment': self.ass})
+        return render(request, self.template_name, {'submissionForm': submissionForm, 'assignment': self.ass})
 
 
 class SubmissionWithdrawView(LoginRequiredMixin, UpdateView):

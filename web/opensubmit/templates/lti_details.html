@@ -1,0 +1,21 @@
+{% extends "lti_base.html" %}
+{% load projecttags %}
+{% load bootstrap %}
+
+{% block title %}
+    {{ block.super }} - Submission Details
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Submission Details</h1>
+</div>
+
+{% details_table submission %}
+
+{% if submission.can_withdraw %}
+    <p></p>
+    <a href="{% url 'lti_withdraw' submission.pk %}" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span> Withdraw</a>
+{% endif %}
+
+{% endblock %}

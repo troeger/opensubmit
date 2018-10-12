@@ -8,4 +8,5 @@ from .submissiontestresult import SubmissionTestResult
 from .assignment import Assignment
 from .userprofile import UserProfile
 from .studyprogram import StudyProgram
+from .ltiresult import LtiResult
 

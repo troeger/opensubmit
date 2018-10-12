@@ -14,78 +14,96 @@ class TeacherDashboard(Dashboard):
     def init_with_context(self, context):
         general = []
         if context.request.user.has_perm('opensubmit.change_course'):
-            general.append(['Manage courses', reverse('teacher:opensubmit_course_changelist'), False])
+            general.append(['Manage courses', reverse(
+                'teacher:opensubmit_course_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_gradingscheme'):
-            general.append(['Manage grading schemes', reverse('teacher:opensubmit_gradingscheme_changelist'), False])
+            general.append(['Manage grading schemes', reverse(
+                'teacher:opensubmit_gradingscheme_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_studyprogram'):
-            general.append(['Manage study programs', reverse('teacher:opensubmit_studyprogram_changelist'), False])
+            general.append(['Manage study programs', reverse(
+                'teacher:opensubmit_studyprogram_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_user'):
-            general.append(['Manage users', reverse('admin:auth_user_changelist'), False])
+            general.append(['Manage users', reverse(
+                'admin:auth_user_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_user'):
-            general.append(['Manage user groups', reverse('admin:auth_group_changelist'), False])
+            general.append(['Manage user groups', reverse(
+                'admin:auth_group_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_permission'):
-            general.append(['Manage permissions', reverse('admin:auth_permission_changelist'), False])
+            general.append(['Manage permissions', reverse(
+                'admin:auth_permission_changelist'), False])
         if context.request.user.has_perm('opensubmit.change_testmachine'):
-            general.append(['Manage test machines', reverse('teacher:opensubmit_testmachine_changelist'), False])
+            general.append(['Manage test machines', reverse(
+                'teacher:opensubmit_testmachine_changelist'), False])
         self.children.append(modules.Group(
             title="System",
             column=1,
             children=[
-                modules.LinkList(title="Actions",children=(general)),
-                modules.DashboardModule(title="Info",pre_content=
-                    '<table class="teacher_dashboard_info">'+
-                    '<tr><td>OpenSubmit release</td><td><a target="_new" href="http://docs.open-submit.org/en/latest/changelog.html">v{0}</a></td></tr>'.format(settings.VERSION) +
-                    '<tr><td>Administrator</td><td><a href="mailto:%s">%s</a></td></tr>' % (settings.ADMINS[0][1], settings.ADMINS[0][0]) +
-                    '<tr><td>Registered users</td><td>%u</td></tr>' % (User.objects.count()) +
-                    '<tr><td>Submitted solutions</td><td>%u</td></tr>' % (Submission.objects.count()) +
-                    '<tr><td>Test machines</td><td>%u enabled, %u disabled</td></tr>' % (TestMachine.objects.filter(enabled=True).count(), TestMachine.objects.filter(enabled=False).count()) +
-                    "</table>"
-                )
+                modules.LinkList(title="Actions", children=(general)),
+                modules.DashboardModule(title="Info", pre_content='<table class="teacher_dashboard_info">' +
+                                        '<tr><td>OpenSubmit release</td><td><a target="_new" href="http://docs.open-submit.org/en/latest/changelog.html">v{0}</a></td></tr>'.format(settings.VERSION) +
+                                        '<tr><td>Administrator</td><td><a href="mailto:%s">%s</a></td></tr>' % (settings.ADMINS[0][1], settings.ADMINS[0][0]) +
+                                        '<tr><td>Registered users</td><td>%u</td></tr>' % (User.objects.count()) +
+                                        '<tr><td>Submitted solutions</td><td>%u</td></tr>' % (Submission.objects.count()) +
+                                        '<tr><td>Test machines</td><td>%u enabled, %u disabled</td></tr>' % (TestMachine.objects.filter(enabled=True).count(), TestMachine.objects.filter(enabled=False).count()) +
+                                        "</table>"
+                                        )
             ]
         ))
-
 
         # Put course action boxes in column
         try:
             courses = context.request.user.profile.tutor_courses().all()
-        except:
+        except Exception:
             courses = []
 
-        column=2
+        column = 2
         for course in courses:
             # Prepare course-related links
-            links=[]
-            links.append(['Manage submissions',course.grading_url(), False])
-            ass_url="%s?course__id__exact=%u"%(
-                                reverse('teacher:opensubmit_assignment_changelist'),
-                                course.pk
-                            )
+            links = []
+            links.append(['Manage submissions', course.grading_url(), False])
+            ass_url = "%s?course__id__exact=%u" % (
+                reverse('teacher:opensubmit_assignment_changelist'),
+                course.pk
+            )
             if context.request.user.has_perm('opensubmit.change_assignment'):
-                links.append(['Manage assignments',ass_url, False])
-            links.append(['Show grading table',reverse('gradingtable', args=[course.pk]), False])
-            links.append(['Create eMail for students',reverse('mailcourse', args=[course.pk]), False])
+                links.append(['Manage assignments', ass_url, False])
+            links.append(['Show grading table', reverse(
+                'gradingtable', args=[course.pk]), False])
+            links.append(['Create eMail for students', reverse(
+                'mailcourse', args=[course.pk]), False])
             if context.request.user.has_perm('opensubmit.change_course'):
-                links.append(['Edit course details',reverse('teacher:opensubmit_course_change', args=[course.pk]), False])
-            links.append(['Download course archive',reverse('coursearchive', args=[course.pk]), False])
+                links.append(['Edit course details', reverse(
+                    'teacher:opensubmit_course_change', args=[course.pk]), False])
+            links.append(['Download course archive', reverse(
+                'coursearchive', args=[course.pk]), False])
+
+            # Determine LTI links for existing assignments
+            lti_links = []
+            for assignment in course.assignments.all():
+                lti_links.append([assignment.title, reverse(
+                    'lti', args=[assignment.pk]), False])
 
             # Add course group box to dashboard
             self.children.append(modules.Group(
                 title="Course '{0}'".format(course.title),
                 column=column,
                 children=[
-                    modules.LinkList(title="Actions",children=(links)),
-                    modules.DashboardModule(title="Info",pre_content=
-                        '<table class="teacher_dashboard_info">'+
-                        '<tr><td>Course URL for students</td><td>%s/?course=%u</td></tr>' % (settings.MAIN_URL, course.pk) +
-                        '<tr><td>Course owner</td><td><a href="mailto:%s">%s</a></td></tr>' % (course.owner.email,course.owner.get_full_name()) +
-                        "<tr><td>Open assignments</td><td>%u</td></tr>" % course.open_assignments().count() +
-                        "<tr><td>Submissions to be graded</td><td>%u</td></tr>" % course.gradable_submissions().count() +
-                        "<tr><td>Grading finished, not notified</td><td>%u</td></tr>" % course.graded_submissions().count() +
-                        "<tr><td>Registered students</td><td>%u</td></tr>" % course.participants.count() +
-                        "<tr><td>Authoring students</td><td>%u</td></tr>" % course.authors().count() +
-                        "</table>"
-                    )
+                    modules.LinkList(title="Actions", children=(links)),
+                    modules.DashboardModule(title="Statistics", pre_content='<table class="teacher_dashboard_info">' +
+                                            "<tr><td>Open assignments</td><td>%u</td></tr>" % course.open_assignments().count() +
+                                            "<tr><td>Submissions to be graded</td><td>%u</td></tr>" % course.gradable_submissions().count() +
+                                            "<tr><td>Grading finished, not notified</td><td>%u</td></tr>" % course.graded_submissions().count() +
+                                            "<tr><td>Registered students</td><td>%u</td></tr>" % course.participants.count() +
+                                            "<tr><td>Authoring students</td><td>%u</td></tr>" % course.authors().count() +
+                                            "</table>"
+                                            ),
+                    modules.LinkList(title="Direct Course Link",  css_classes=["grp-closed"],children=([course.title, "%s/?course=%u" % (settings.MAIN_URL, course.pk), False],)),
+                    modules.LinkList(title="LTI Tool Links", css_classes=["grp-closed"], children=(lti_links)),
+                    modules.DashboardModule(title="LTI Credentials", css_classes=["grp-closed"], pre_content='<table class="teacher_dashboard_info">' +
+                                            '<tr><td>LTI Key</td><td>%s</td></tr>' % (course.lti_key) +
+                                            '<tr><td>LTI Secret</td><td>%s</td></tr>' % (course.lti_secret) +
+                                            "</table>"
+                                            ),
                 ]
             ))
-            column+=1
-
+            column += 1
