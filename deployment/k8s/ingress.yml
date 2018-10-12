@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: opensubmit
+  labels:
+    app.kubernetes.io/name: opensubmit
+    app.kubernetes.io/component: exec
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    certmanager.k8s.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+  - secretName: opensubmit-web-tls
+    hosts:
+    - beuth.open-submit.org
+  rules:
+  - host: beuth.open-submit.org
+    http:
+      paths:
+      - path:
+        backend:
+          serviceName: opensubmit-web
+          servicePort: 80

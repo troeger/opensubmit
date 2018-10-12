@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensubmit-config
+  labels:
+    app.kubernetes.io/name: opensubmit
+data:
+  server.url: "https://beuth.open-submit.org"
+  login.demo: "True"
