@@ -30,7 +30,8 @@ a{
 }
 
 .teacher_dashboard_info tr td {
-    padding: 5px;
+    padding-top: 5px;
+    padding-left: 29px;
     font-size: 9pt;
 }
 
@@ -60,3 +61,11 @@ li.grp-changelist-actions .grp-horizontal-list li {
     background-image: linear-gradient(#cee9f2,#e1f0f5);
 }
 
+.g-d-c > .g-d-12 {
+    width: 35%;
+}
+
+
+.g-d-c > .g-d-6 {
+    width: 35%;
+}
