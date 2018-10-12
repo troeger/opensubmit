@@ -39,11 +39,6 @@ spec:
         env:
         - name: OPENSUBMIT_DEBUG 
           value: "False"
-        - name: OPENSUBMIT_SERVER_URL 
-          valueFrom:
-            configMapKeyRef:
-              name: opensubmit-config
-              key: server.url
         - name: OPENSUBMIT_SERVER_HOSTALIASES 
           value: "web"
         - name: OPENSUBMIT_SERVER_MEDIAROOT 
@@ -58,11 +53,9 @@ spec:
           value: "opensubmit-db"
         - name: OPENSUBMIT_DATABASE_ENGINE 
           value: "postgresql"
-        - name: OPENSUBMIT_LOGIN_DEMO 
-          valueFrom:
-            configMapKeyRef:
-              name: opensubmit-config
-              key: login.demo
+        envFrom:
+        - configMapRef:
+            name: opensubmit-config
         volumeMounts:
         - name: opensubmit-web-storage
           mountPath: /data
