@@ -1,0 +1,44 @@
+{% extends "lti_base.html" %}
+
+{% block title %}
+    {{ block.super }} - Withdraw Submission
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+{% endblock %}
+
+
+{% block content %}
+<div class="page-header">
+    <h1>Are you sure  ?</h1>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Course</th>
+            <th>Assignment</th>
+            <th>Submitted</th>
+            <th>Original Submitter</th>
+            <th>Authors</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ submission.assignment.course }}</td>
+            <td>{{ submission.assignment }}</td>
+            <td>{{ submission.created }}</td>
+            <td>{{ submission.submitter.get_full_name }}</td>
+            <td>{{ submission.authors.all|join:"<br/>" }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<form action="." method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<input class="btn btn-danger" type="submit" value="Yes, withdraw it." />
+{{ form }}
+</form>
+
+{% endblock %}
