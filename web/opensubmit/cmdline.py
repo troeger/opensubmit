@@ -78,7 +78,6 @@ LOGIN_OIDC_ENDPOINT: {login_oidc_endpoint}
 LOGIN_OIDC_CLIENT_ID: {login_oidc_client_id}
 LOGIN_OIDC_CLIENT_SECRET: {login_oidc_client_secret}
 LOGIN_SHIB_DESCRIPTION: {login_shib_description}
-LOGIN_DEMO: {login_demo}
 '''
 
 
@@ -316,7 +315,7 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_oidc_client_id', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_ID', ''), help='OpenID Connect client id.')
     parser_configcreate.add_argument('--login_oidc_client_secret', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET', ''), help='OpenID Connect client secret.')
     parser_configcreate.add_argument('--login_shib_description', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_DESCRIPTION', ''), help='Title of the Shibboleth login button.')
-    parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Title of the Shibboleth login button.')
+    parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Offer demo login options.')
     parser_configcreate.add_argument('--admin_name', default=os.environ.get('OPENSUBMIT_ADMIN_NAME', 'OpenSubmit Administrator'), help='Name of the administrator, shown in privacy policy, impress and backend.')
     parser_configcreate.add_argument('--admin_email', default=os.environ.get('OPENSUBMIT_ADMIN_EMAIL', 'root@localhost'), help='eMail of the administrator, shown in privacy policy, impress and backend.')
     parser_configcreate.add_argument('--admin_address', default=os.environ.get('OPENSUBMIT_ADMIN_ADDRESS', '(address available by eMail)'), help='Address of the administrator, shown in privacy policy and impress.')
