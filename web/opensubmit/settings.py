@@ -309,21 +309,33 @@ if LOGIN_GOOGLE:
     AUTHENTICATION_BACKENDS += ('social_core.backends.google.GoogleOAuth2',)
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config.get("login", "LOGIN_GOOGLE_OAUTH_KEY")
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config.get("login", "LOGIN_GOOGLE_OAUTH_SECRET")
+    whitelist = config.get("whitelist", "WHITELIST_GOOGLE").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_GOOGLE_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GOOGLE").split(',')
 
 if LOGIN_TWITTER:
     AUTHENTICATION_BACKENDS += ('social_core.backends.twitter.TwitterOAuth',)
     SOCIAL_AUTH_TWITTER_KEY = config.get("login", "LOGIN_TWITTER_OAUTH_KEY")
     SOCIAL_AUTH_TWITTER_SECRET = config.get("login", "LOGIN_TWITTER_OAUTH_SECRET")
+    whitelist = config.get("whitelist", "WHITELIST_TWITTER").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_TWITTER_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_TWITTER").split(',')
 
 if LOGIN_GITHUB:
     AUTHENTICATION_BACKENDS += ('social_core.backends.github.GithubOAuth2',)
     SOCIAL_AUTH_GITHUB_KEY = config.get("login", "LOGIN_GITHUB_OAUTH_KEY")
     SOCIAL_AUTH_GITHUB_SECRET = config.get("login", "LOGIN_GITHUB_OAUTH_SECRET")
+    whitelist = config.get("whitelist", "WHITELIST_GITHUB").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_GITHUB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GITHUB").split(',')
 
 if LOGIN_OPENID:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.open_id.OpenIdAuth',)
     LOGIN_DESCRIPTION = config.get('login', 'LOGIN_DESCRIPTION')
     OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
+    whitelist = config.get("whitelist", "WHITELIST_OPENID").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_OPENID_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_OPENID").split(',')
 
 if LOGIN_OIDC:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.oidc.OpenIdConnectAuth',)
@@ -331,10 +343,16 @@ if LOGIN_OIDC:
     LOGIN_OIDC_ENDPOINT = config.get('login', 'LOGIN_OIDC_ENDPOINT')
     LOGIN_OIDC_CLIENT_ID = config.get('login', 'LOGIN_OIDC_CLIENT_ID')
     LOGIN_OIDC_CLIENT_SECRET = config.get('login', 'LOGIN_OIDC_CLIENT_SECRET')
+    whitelist = config.get("whitelist", "WHITELIST_OIDC").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_OIDC_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_OIDC").split(',')
 
 if LOGIN_SHIB:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.apache.ModShibAuth',)
     LOGIN_SHIB_DESCRIPTION = config.get('login', 'LOGIN_SHIB_DESCRIPTION')
+    whitelist = config.get("whitelist", "WHITELIST_SHIB").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_SHIB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_SHIB").split(',')
 
 AUTHENTICATION_BACKENDS += ('opensubmit.social.lti.LtiAuth',)
 

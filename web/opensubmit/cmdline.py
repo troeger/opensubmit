@@ -78,6 +78,14 @@ LOGIN_OIDC_ENDPOINT: {login_oidc_endpoint}
 LOGIN_OIDC_CLIENT_ID: {login_oidc_client_id}
 LOGIN_OIDC_CLIENT_SECRET: {login_oidc_client_secret}
 LOGIN_SHIB_DESCRIPTION: {login_shib_description}
+
+[whitelist]
+WHITELIST_OPENID: {whitelist_openid}
+WHITELIST_TWITTER: {whitelist_twitter}
+WHITELIST_GOOGLE: {whitelist_google}
+WHITELIST_GITHUB: {whitelist_github}
+WHITELIST_OIDC: {whitelist_oidc}
+WHITELIST_SHIB: {whitelist_shib}
 '''
 
 
@@ -323,6 +331,12 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--admin_address', default=os.environ.get('OPENSUBMIT_ADMIN_ADDRESS', '(address available by eMail)'), help='Address of the administrator, shown in privacy policy and impress.')
     parser_configcreate.add_argument('--admin_impress_page', default=os.environ.get('OPENSUBMIT_IMPRESS_PAGE', ''), help='Link to alternative impress page.')
     parser_configcreate.add_argument('--admin_privacy_page', default=os.environ.get('OPENSUBMIT_PRIVACY_PAGE', ''), help='Link to alternative privacy policy page.')
+    parser_configcreate.add_argument('--whitelist_openid', default=os.environ.get('OPENSUBMIT_WHITELIST_OPENID', ''), help='Comma-separated list of allowed email addresses for OpenID login.')
+    parser_configcreate.add_argument('--whitelist_twitter', default=os.environ.get('OPENSUBMIT_WHITELIST_TWITTER', ''), help='Comma-separated list of allowed email addresses for Twitter login.')
+    parser_configcreate.add_argument('--whitelist_google', default=os.environ.get('OPENSUBMIT_WHITELIST_GOOGLE', ''), help='Comma-separated list of allowed email addresses for Google login.')
+    parser_configcreate.add_argument('--whitelist_github', default=os.environ.get('OPENSUBMIT_WHITELIST_GITHUB', ''), help='Comma-separated list of allowed email addresses for Github login.')
+    parser_configcreate.add_argument('--whitelist_oidc', default=os.environ.get('OPENSUBMIT_WHITELIST_OIDC', ''), help='Comma-separated list of allowed email addresses for OpenID connect login.')
+    parser_configcreate.add_argument('--whitelist_shib', default=os.environ.get('OPENSUBMIT_WHITELIST_SHIB', ''), help='Comma-separated list of allowed email addresses for Shibboleth login.')
 
     subparsers.add_parser('configtest', aliases=['configure'], help='Check config files and database for correct installation of the OpenSubmit web server.')
     subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
