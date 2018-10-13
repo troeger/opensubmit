@@ -230,16 +230,11 @@ class Student(SubmitStudentScenarioTestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_lti_config_info(self):
-        response = self.c.get('/lti/config/')
+        response = self.c.get('/assignments/%s/lti/' % self.open_assignment.pk)
         self.assertEqual(response.status_code, 200)
 
     def test_working_lti_credentials(self):
-
-        self.course.lti_key = 'foo'
-        self.course.lti_secret = 'bar'
-        self.course.save()
-
-        url = "http://testserver/lti/"
+        url = "http://testserver/assignments/%s/lti/" % self.open_assignment.pk
 
         consumer = ToolConsumer(
             consumer_key=self.course.lti_key,
@@ -255,11 +250,11 @@ class Student(SubmitStudentScenarioTestCase):
         self.assertEqual(302, response.status_code)
 
     def test_wrong_lti_credentials(self):
-        url = "http://testserver/lti/"
+        url = "http://testserver/assignments/%s/lti/" % self.open_assignment.pk
 
         consumer = ToolConsumer(
-            consumer_key="foo",
-            consumer_secret="bar",
+            consumer_key="awilfhawilejfhcbawiehjbcfaliejkwf",
+            consumer_secret="awhlöfhjawköfjhawökefhjwaölkefrk",
             launch_url=url,
             params={
                 'lti_message_type': 'basic-lti-launch-request',
