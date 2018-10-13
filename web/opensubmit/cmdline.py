@@ -279,6 +279,8 @@ def configtest(config_fname):
     print("Preparing static files for web server...")
     django_admin(["collectstatic", "--noinput", "--clear", "-v 0"])
 
+def is_str_true(text):
+    return text.lower() in ['true', 't', 'yes', 'enable', '1']
 
 def console_script(fsroot=''):
     '''
@@ -290,7 +292,7 @@ def console_script(fsroot=''):
     parser.add_argument('-c', '--config', default='/etc/opensubmit/settings.ini', help='OpenSubmit configuration file.')
     subparsers = parser.add_subparsers(dest='command', help='Supported administrative actions.')
     parser_configcreate = subparsers.add_parser('configcreate', help='Create initial config files for the OpenSubmit web server.')
-    parser_configcreate.add_argument('--debug', default=bool(os.environ.get('OPENSUBMIT_DEBUG', 'False')), action='store_true', help='Enable debug mode, not for production systems.')
+    parser_configcreate.add_argument('--debug', default=is_str_true(os.environ.get('OPENSUBMIT_DEBUG', 'False')), action='store_true', help='Enable debug mode, not for production systems.')
     parser_configcreate.add_argument('--server_url', default=os.environ.get('OPENSUBMIT_SERVER_URL', 'http://localhost:8000'), help='The main URL of the OpenSubmit installation, including sub-directories.')
     parser_configcreate.add_argument('--server_mediaroot', default=os.environ.get('OPENSUBMIT_SERVER_MEDIAROOT', '/tmp/'), help='Storage path for uploadeded files.')
     parser_configcreate.add_argument('--server_hostaliases', default=os.environ.get('OPENSUBMIT_SERVER_HOSTALIASES', '127.0.0.1'), help='Comma-separated list of alternative host names for the web server.')
@@ -315,7 +317,7 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_oidc_client_id', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_ID', ''), help='OpenID Connect client id.')
     parser_configcreate.add_argument('--login_oidc_client_secret', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET', ''), help='OpenID Connect client secret.')
     parser_configcreate.add_argument('--login_shib_description', default=os.environ.get('OPENSUBMIT_LOGIN_SHIB_DESCRIPTION', ''), help='Title of the Shibboleth login button.')
-    parser_configcreate.add_argument('--login_demo', default=bool(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Offer demo login options.')
+    parser_configcreate.add_argument('--login_demo', default=is_str_true(os.environ.get('OPENSUBMIT_LOGIN_DEMO', 'False')), action='store_true', help='Offer demo login options.')
     parser_configcreate.add_argument('--admin_name', default=os.environ.get('OPENSUBMIT_ADMIN_NAME', 'OpenSubmit Administrator'), help='Name of the administrator, shown in privacy policy, impress and backend.')
     parser_configcreate.add_argument('--admin_email', default=os.environ.get('OPENSUBMIT_ADMIN_EMAIL', 'root@localhost'), help='eMail of the administrator, shown in privacy policy, impress and backend.')
     parser_configcreate.add_argument('--admin_address', default=os.environ.get('OPENSUBMIT_ADMIN_ADDRESS', '(address available by eMail)'), help='Address of the administrator, shown in privacy policy and impress.')
