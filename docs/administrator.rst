@@ -78,12 +78,52 @@ Updating an existing manual installation is easy:
 .. _config_web:
 
 Configuration of the web application
-====================================
+************************************
 
-OpenSubmit searches for a configuration file in ``/etc/opensubmit/settings.ini``. This file should be initially created by calling ``opensubmit-web configcreate``. This management command allows to pre-define specific configuration options via command-line or environment variables, and creates an according config file. Check ``opensubmit-web configcreate -h`` for details.
+OpenSubmit searches for a configuration file in ``/etc/opensubmit/settings.ini``. This file should be initially created by calling ``opensubmit-web configcreate``. The command allows to pre-define specific configuration options via command-line, or environment variables, and creates an according config file. 
+
+=============================== ===================================== ============================================================================
+Command-line option             Environment variable                  Description
+=============================== ===================================== ============================================================================
+--debug                         OPENSUBMIT_DEBUG                      Enable debug mode, not for production systems
+--server_url                    OPENSUBMIT_SERVER_URL                 The main URL of the OpenSubmit installation, including sub-directories
+--server_mediaroot              OPENSUBMIT_SERVER_MEDIAROOT           Storage path for uploadeded files
+--server_hostaliases            OPENSUBMIT_SERVER_HOSTALIASES         Comma-separated list of alternative host names for the web server
+--server_logfile                OPENSUBMIT_SERVER_LOGFILE             Log file for the OpenSubmit application
+--server_timezone               OPENSUBMIT_SERVER_TIMEZONE            Time zone for all dates and deadlines
+--database_name                 OPENSUBMIT_DATABASE_NAME              Name of the database (file)
+--database_engine               OPENSUBMIT_DATABASE_ENGINE            Datababase engine being used
+--database_user                 OPENSUBMIT_DATABASE_USER              The user name for accessing the database. Not needed for SQLite
+--database_password             OPENSUBMIT_DATABASE_PASSWORD          The user password for accessing the database. Not needed for SQLite
+--database_host                 OPENSUBMIT_DATABASE_HOST              The host name for accessing the database. Not needed for SQLite
+--database_port                 OPENSUBMIT_DATABASE_PORT              The port number for accessing the database. Not needed for SQLite
+--login_google_oauth_key        OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY     Google OAuth client key
+--login_google_oauth_secret     OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET  Google OAuth client secret
+--login_twitter_oauth_key       OPENSUBMIT_LOGIN_TWITTER_OAUTH_KEY    Twitter OAuth client key
+--login_twitter_oauth_secret    OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET Twitter OAuth client secret
+--login_github_oauth_key        OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY     GitHub OAuth client key
+--login_github_oauth_secret     OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET  GitHub OAuth client secret
+--login_openid_description      OPENSUBMIT_LOGIN_OPENID_DESCRIPTION   Title of the OpenID login button
+--login_openid_provider         OPENSUBMIT_LOGIN_OPENID_PROVIDER      URL of the OpenID provider
+--login_oidc_description        OPENSUBMIT_LOGIN_OIDC_DESCRIPTION     Title of the OpenID Connect login button
+--login_oidc_endpoint           OPENSUBMIT_LOGIN_OIDC_ENDPOINT        URL of the OpenID Connect endpoint
+--login_oidc_client_id          OPENSUBMIT_LOGIN_OIDC_CLIENT_ID       OpenID Connect client id
+--login_oidc_client_secret      OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET   OpenID Connect client secret
+--login_shib_description        OPENSUBMIT_LOGIN_SHIB_DESCRIPTION     Title of the Shibboleth login button
+--login_demo                    OPENSUBMIT_LOGIN_DEMO                 Offer demo login options
+--admin_name                    OPENSUBMIT_ADMIN_NAME                 Name of the administrator, shown in privacy policy, impress and backend
+--admin_email                   OPENSUBMIT_ADMIN_EMAIL                eMail of the administrator, shown in privacy policy, impress and backend
+--admin_address                 OPENSUBMIT_ADMIN_ADDRESS              Address of the administrator, shown in privacy policy and impress
+--admin_impress_page            OPENSUBMIT_IMPRESS_PAGE               Link to alternative impress page
+--admin_privacy_page            OPENSUBMIT_PRIVACY_PAGE               Link to alternative privacy policy page
+=============================== ===================================== ============================================================================
+
+Check ``opensubmit-web configcreate -h`` for details.
+
+The environment variables can also be used to configure the Docker version of OpenSubmit.
 
 Impress and privacy policy
---------------------------
+==========================
 
 There are several European regulations that expect a web page to provide both an impress and a privacy policy page (GDPR / DSGVO). There are two ways to achieve that:
 
