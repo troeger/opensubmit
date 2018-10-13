@@ -300,6 +300,9 @@ LOGIN_TWITTER = (config.get("login", "LOGIN_TWITTER_OAUTH_KEY").strip() != '' an
 LOGIN_OPENID = (config.get('login', 'OPENID_PROVIDER').strip() != '')
 LOGIN_OIDC   = (config.get('login', 'LOGIN_OIDC_ENDPOINT').strip() != '')
 LOGIN_SHIB = (config.get('login', 'LOGIN_SHIB_DESCRIPTION').strip() != '')
+LOGIN_GITLAB = (config.get("login", "LOGIN_GITLAB_OAUTH_KEY").strip() != '' and
+                config.get("login", "LOGIN_GITLAB_OAUTH_SECRET").strip() != '' and
+                config.get("login", "LOGIN_GITLAB_URL").strip() != '')
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -328,6 +331,15 @@ if LOGIN_GITHUB:
     whitelist = config.get("whitelist", "WHITELIST_GITHUB").strip()
     if whitelist != "":
         SOCIAL_AUTH_GITHUB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GITHUB").split(',')
+
+if LOGIN_GITLAB:
+    AUTHENTICATION_BACKENDS += ('social_core.backends.gitlab.GitLabOAuth2',)
+    SOCIAL_AUTH_GITLAB_KEY = config.get("login", "LOGIN_GITLAB_OAUTH_KEY")
+    SOCIAL_AUTH_GITLAB_SECRET = config.get("login", "LOGIN_GITLAB_OAUTH_SECRET")
+    SOCIAL_AUTH_GITLAB_API_URL = config.get("login", "LOGIN_GITLAB_URL")
+    whitelist = config.get("whitelist", "WHITELIST_GITLAB").strip()
+    if whitelist != "":
+        SOCIAL_AUTH_GITLAB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GITLAB").split(',')
 
 if LOGIN_OPENID:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.open_id.OpenIdAuth',)

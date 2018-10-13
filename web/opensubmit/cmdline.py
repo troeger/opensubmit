@@ -73,6 +73,9 @@ LOGIN_GOOGLE_OAUTH_KEY: {login_google_oauth_key}
 LOGIN_GOOGLE_OAUTH_SECRET: {login_google_oauth_secret}
 LOGIN_GITHUB_OAUTH_KEY: {login_github_oauth_key}
 LOGIN_GITHUB_OAUTH_SECRET: {login_github_oauth_secret}
+LOGIN_GITLAB_OAUTH_KEY: {login_gitlab_oauth_key}
+LOGIN_GITLAB_OAUTH_SECRET: {login_gitlab_oauth_secret}
+LOGIN_GITLAB_URL: {login_gitlab_url}
 LOGIN_OIDC_DESCRIPTION: {login_oidc_description}
 LOGIN_OIDC_ENDPOINT: {login_oidc_endpoint}
 LOGIN_OIDC_CLIENT_ID: {login_oidc_client_id}
@@ -84,6 +87,7 @@ WHITELIST_OPENID: {whitelist_openid}
 WHITELIST_TWITTER: {whitelist_twitter}
 WHITELIST_GOOGLE: {whitelist_google}
 WHITELIST_GITHUB: {whitelist_github}
+WHITELIST_GITLAB: {whitelist_gitlab}
 WHITELIST_OIDC: {whitelist_oidc}
 WHITELIST_SHIB: {whitelist_shib}
 '''
@@ -183,9 +187,11 @@ def check_web_config_consistency(config):
         'LOGIN_TWITTER_OAUTH_KEY': ['LOGIN_TWITTER_OAUTH_SECRET'],
         'LOGIN_GOOGLE_OAUTH_KEY': ['LOGIN_GOOGLE_OAUTH_SECRET'],
         'LOGIN_GITHUB_OAUTH_KEY': ['LOGIN_GITHUB_OAUTH_SECRET'],
+        'LOGIN_GITLAB_OAUTH_KEY': ['LOGIN_GITLAB_OAUTH_SECRET'],
         'LOGIN_TWITTER_OAUTH_SECRET': ['LOGIN_TWITTER_OAUTH_KEY'],
         'LOGIN_GOOGLE_OAUTH_SECRET': ['LOGIN_GOOGLE_OAUTH_KEY'],
         'LOGIN_GITHUB_OAUTH_SECRET': ['LOGIN_GITHUB_OAUTH_KEY'],
+        'LOGIN_GITLAB_OAUTH_SECRET': ['LOGIN_GITLAB_OAUTH_KEY'],
         'LOGIN_OIDC_ENDPOINT': ['LOGIN_OIDC_CLIENT_ID', 'LOGIN_OIDC_CLIENT_SECRET', 'LOGIN_OIDC_DESCRIPTION'],
         'LOGIN_OIDC_CLIENT_ID': ['LOGIN_OIDC_ENDPOINT', 'LOGIN_OIDC_CLIENT_SECRET', 'LOGIN_OIDC_DESCRIPTION'],
         'LOGIN_OIDC_CLIENT_SECRET': ['LOGIN_OIDC_ENDPOINT', 'LOGIN_OIDC_CLIENT_ID', 'LOGIN_OIDC_DESCRIPTION'],
@@ -318,6 +324,9 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_twitter_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET', ''), help='Twitter OAuth client secret.')
     parser_configcreate.add_argument('--login_github_oauth_key', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY', ''), help='GitHub OAuth client key.')
     parser_configcreate.add_argument('--login_github_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET', ''), help='GitHUb OAuth client secret.')
+    parser_configcreate.add_argument('--login_gitlab_oauth_key', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_OAUTH_KEY', ''), help='GitLab OAuth client key.')
+    parser_configcreate.add_argument('--login_gitlab_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_OAUTH_SECRET', ''), help='GitLab OAuth client secret.')
+    parser_configcreate.add_argument('--login_gitlab_url', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_URL', ''), help='GitLab URL.')
     parser_configcreate.add_argument('--login_openid_description', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_DESCRIPTION', 'StackExchange'), help='Title of the OpenID login button.')
     parser_configcreate.add_argument('--login_openid_provider', default=os.environ.get('OPENSUBMIT_LOGIN_OPENID_PROVIDER', 'https://openid.stackexchange.com'), help='URL of the OpenID provider.')
     parser_configcreate.add_argument('--login_oidc_description', default=os.environ.get('OPENSUBMIT_LOGIN_OIDC_DESCRIPTION', ''), help='Title of the OpenID Connect login button.')
@@ -334,7 +343,8 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--whitelist_openid', default=os.environ.get('OPENSUBMIT_WHITELIST_OPENID', ''), help='Comma-separated list of allowed email addresses for OpenID login.')
     parser_configcreate.add_argument('--whitelist_twitter', default=os.environ.get('OPENSUBMIT_WHITELIST_TWITTER', ''), help='Comma-separated list of allowed email addresses for Twitter login.')
     parser_configcreate.add_argument('--whitelist_google', default=os.environ.get('OPENSUBMIT_WHITELIST_GOOGLE', ''), help='Comma-separated list of allowed email addresses for Google login.')
-    parser_configcreate.add_argument('--whitelist_github', default=os.environ.get('OPENSUBMIT_WHITELIST_GITHUB', ''), help='Comma-separated list of allowed email addresses for Github login.')
+    parser_configcreate.add_argument('--whitelist_github', default=os.environ.get('OPENSUBMIT_WHITELIST_GITHUB', ''), help='Comma-separated list of allowed email addresses for GitHub login.')
+    parser_configcreate.add_argument('--whitelist_gitlab', default=os.environ.get('OPENSUBMIT_WHITELIST_GITLAB', ''), help='Comma-separated list of allowed email addresses for GitLab login.')
     parser_configcreate.add_argument('--whitelist_oidc', default=os.environ.get('OPENSUBMIT_WHITELIST_OIDC', ''), help='Comma-separated list of allowed email addresses for OpenID connect login.')
     parser_configcreate.add_argument('--whitelist_shib', default=os.environ.get('OPENSUBMIT_WHITELIST_SHIB', ''), help='Comma-separated list of allowed email addresses for Shibboleth login.')
 
