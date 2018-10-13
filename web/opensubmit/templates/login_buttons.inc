@@ -3,6 +3,7 @@
 {% setting "LOGIN_GOOGLE" as login_google %}
 {% setting "LOGIN_TWITTER" as login_twitter %}
 {% setting "LOGIN_GITHUB" as login_github %}
+{% setting "LOGIN_GITLAB" as login_gitlab %}
 {% setting "LOGIN_OPENID" as login_openid %}
 {% setting "LOGIN_DESCRIPTION" as login_description %}
 {% setting "LOGIN_OIDC" as login_oidc %}
@@ -39,6 +40,11 @@
             {% if login_oidc %}
             <div class="col-md-3">
                 <a href="{% url 'social:begin' 'oidc' %}?next={{ next }}" class="btn-auth btn-openid"><b>{{ login_oidc_description }}</b></a>
+            </div>
+            {% endif %}
+            {% if login_gitlab %}
+            <div class="col-md-3">
+                <a href="{% url 'social:begin' 'gitlab' %}?next={{ next }}" class="btn-auth btn-github"><b>{{ login_gitlab_description }}</b></a>
             </div>
             {% endif %}
             {% if login_shib %}

@@ -73,6 +73,7 @@ LOGIN_GOOGLE_OAUTH_KEY: {login_google_oauth_key}
 LOGIN_GOOGLE_OAUTH_SECRET: {login_google_oauth_secret}
 LOGIN_GITHUB_OAUTH_KEY: {login_github_oauth_key}
 LOGIN_GITHUB_OAUTH_SECRET: {login_github_oauth_secret}
+LOGIN_GITLAB_DESCRIPTION: {login_gitlab_description}
 LOGIN_GITLAB_OAUTH_KEY: {login_gitlab_oauth_key}
 LOGIN_GITLAB_OAUTH_SECRET: {login_gitlab_oauth_secret}
 LOGIN_GITLAB_URL: {login_gitlab_url}
@@ -324,6 +325,7 @@ def console_script(fsroot=''):
     parser_configcreate.add_argument('--login_twitter_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET', ''), help='Twitter OAuth client secret.')
     parser_configcreate.add_argument('--login_github_oauth_key', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY', ''), help='GitHub OAuth client key.')
     parser_configcreate.add_argument('--login_github_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET', ''), help='GitHUb OAuth client secret.')
+    parser_configcreate.add_argument('--login_gitlab_description', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_DESCRIPTION', ''), help='Title of the GitLab login button.')
     parser_configcreate.add_argument('--login_gitlab_oauth_key', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_OAUTH_KEY', ''), help='GitLab OAuth client key.')
     parser_configcreate.add_argument('--login_gitlab_oauth_secret', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_OAUTH_SECRET', ''), help='GitLab OAuth client secret.')
     parser_configcreate.add_argument('--login_gitlab_url', default=os.environ.get('OPENSUBMIT_LOGIN_GITLAB_URL', ''), help='GitLab URL.')
