@@ -10,16 +10,13 @@ from .models.userprofile import db_fixes
 @receiver(post_save, sender=User)
 def post_user_save(sender,instance, signal, created, **kwargs):
     """
-        Make sure that all neccessary user groups exist and have the right permissions,
-        directly after the auth system was installed. We detect this by waiting for the admin
-        account creation here, which smells hacky.
-        We need that automatism for the test database creation, people not calling the configure tool and similar cases.
+        Make sure that all neccessary user groups exist and have the right permissions.
+        We need that automatism for the test database creation, people not calling the configure tool,
+        admin rights for admins after the first login, and similar cases.
 
         Second task: Every user need a profile, which is not created by the social libraries.        
     """
-    if instance.is_staff and created:
-        check_permission_system()
-    db_fixes(instance)
+    check_permission_system()
 
 @receiver(post_save, sender=SubmissionFile)
 def submissionfile_post_save(sender,instance, signal, created, **kwargs):

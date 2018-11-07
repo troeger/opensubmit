@@ -1,6 +1,17 @@
 Changelog
 #########
 
+.. _v0.7.15:
+
+v0.7.15 Release
+===============
+
+This is a stable release that brings the following updates:
+
+- The configured site admin now automatically becomes an OpenSubmit admin on first login with a matching eMail address.
+
+If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
+
 .. _v0.7.14:
 
 v0.7.14 Release

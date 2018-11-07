@@ -68,6 +68,16 @@ def check_permission_system():
     pure_students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
     pure_students.update(is_staff=False)
 
+    # Read the admin email address from the configuration and make sure that he gets admin rights
+    # This is mainly needed for fresh installation, so that the admin has full power after his first
+    # regular (social) login
+    from opensubmit import settings
+    try:
+        conffile_admin = User.objects.get(email=settings.ADMIN_EMAIL)
+        make_admin(conffile_admin)
+    except:
+        pass
+
 def _get_user_groups():
     owner_group, created = Group.objects.get_or_create(name=COURSE_OWNERS_GROUP_NAME)
     if created:
