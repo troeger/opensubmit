@@ -241,6 +241,8 @@ You also need a fully working installation of the `Apache 2.4 mod_shib <https://
 
 Note: If you are using Apache 2.4 with *mod_wsgi*, make sure to set ``WSGIPassAuthorization On``. Otherwise, these environment variables may not pass through.
 
+.. _gitlab:
+
 Login with GitLab
 -----------------
 
@@ -380,6 +382,8 @@ Merging accounts
 Since OpenSubmit users always register themselves in the platform (see :ref:`auth`), it can happen that the same physical person creates multiple accounts through different authentication providers. The main reason for that is a non-matching or missing email address being provided by the authentication provider.
 
 Administrators can merge users in the teacher backend. Click on *Manage users*, mark all user accounts to be merged, and choose the according action in the lower left corner. The nect screen shows you the intended merging activity and allows to chose the "primary" account by flipping roles. The non-primary account is deleted as part of the merging activity.
+
+.. _troubleshooting:
 
 Troubleshooting
 ===============

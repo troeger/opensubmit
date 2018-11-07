@@ -1,12 +1,29 @@
 Changelog
 #########
 
+.. _v0.7.14:
+
+v0.7.14 Release
+===============
+
+This is a stable release that brings the following updates:
+
+- OpenSubmit now supports :ref:`GitLab authentication <gitlab>`.
+- All login providers can now be restricted by providing a user whitelist. Please check the :ref:`configuration docs <config_web>` for details.
+- There is a :ref:`new management command <troubleshooting>` that allows to check the run-time configuration of OpenSubmit, mainly for debugging purposes.
+- The :ref:`administration docs <administrator>` docs are heavily extended and re-organized. 
+- LTI credentials are now generated automatically. 
+- There are now separate LTI links for each assignment, so that they can be directly integrated into your learning management system.
+- When users access OpenSubmit through LTI, the optics now change accordingly. All interaction is reduced to a single view, so that submission creation, submission detail checking and withdrawal all happens under the same URL.
+
+If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
+
 .. _v0.7.9:
 
 v0.7.9 Release
 ==============
 
-This is a stable release that brings :ref:`OpenID Connect support <oidc>`. Thanks to :user:`tzwenn` for the contribution!
+This is a stable release that brings :ref:`OpenID Connect support <oidc>` for the authentication. Thanks to :user:`tzwenn` for the contribution!
 
 If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
 
