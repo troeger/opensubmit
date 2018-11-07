@@ -1,6 +1,5 @@
 import os
-from configparser import SafeConfigParser
-
+import configparser
 from django.core.exceptions import ImproperlyConfigured
 
 script_dir = os.path.dirname(__file__)
@@ -25,7 +24,7 @@ class Config():
             if os.path.isfile(config_file):
                 self.config_file = config_file
                 self.is_production = is_production
-                self.config = SafeConfigParser()
+                self.config = configparser.SafeConfigParser()
                 self.config.read([self.config_file], encoding='utf-8')
                 return
 
@@ -41,7 +40,19 @@ class Config():
         return text.lower() in ['true', 't', 'yes', 'active', 'enabled']
 
     def get(self, name, category, mandatory=False, expect_leading_slash=None, expect_trailing_slash=None):
-        text = self.config.get(name, category)
+        try:
+            text = self.config.get(name, category)
+        except configparser.NoOptionError:
+            if not mandatory:
+                return ''
+            else:
+                raise ImproperlyConfigured(name + ' not set in the config file.')
+        except configparser.NoSectionError:
+            if not mandatory:
+                return ''
+            else:
+                raise ImproperlyConfigured(category + ' section not set in the config file.')
+
         logtext = "Setting '[%s] %s' in %s has the value '%s'" % (category, name, self.config_file, text)
 
         if mandatory and text == NOT_CONFIGURED_VALUE:
@@ -334,6 +345,7 @@ if LOGIN_GITHUB:
 
 if LOGIN_GITLAB:
     AUTHENTICATION_BACKENDS += ('social_core.backends.gitlab.GitLabOAuth2',)
+    LOGIN_GITLAB_DESCRIPTION = config.get('login', 'LOGIN_GITLAB_DESCRIPTION')
     SOCIAL_AUTH_GITLAB_KEY = config.get("login", "LOGIN_GITLAB_OAUTH_KEY")
     SOCIAL_AUTH_GITLAB_SECRET = config.get("login", "LOGIN_GITLAB_OAUTH_SECRET")
     SOCIAL_AUTH_GITLAB_API_URL = config.get("login", "LOGIN_GITLAB_URL")
