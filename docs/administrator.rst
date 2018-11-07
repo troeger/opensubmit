@@ -11,6 +11,19 @@ If you just want to play around, use our `demo installation <http://www.demo.ope
 
 Please note that OpenSubmit :ref:`does not support password-based login <principles>`. You need to work with one of the supported :ref:`auth`.
 
+Full-stack installation with Docker Compose
+*******************************************
+
+We offer a `Docker Compose <https://docs.docker.com/compose/overview/>`_ script for deploying a complete OpenSubmit environment (web frontend, test machine, database) on a single machine running a normal `Docker installation <https://www.docker.com/community-edition#/download>`_. For such an installation:
+
+- Download the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_ on the machine.
+- Call ``docker-compose up`` to download, configure and start the OpenSubmit Docker containers and a separate database container.
+- Got to ``http://localhost:8000`` and use one of the authentication methods.
+
+If you want to adjust things such as the allowed login methods, just edit the ``docker-compose.yml`` file and modify the environment variables for the ``web`` container. The list of options can be found :ref:`below <configtable>`.
+
+Please note also that running a database inside a Docker container might not be the smartest idea. You can easily adjust the web container configuration and use an external database instead.
+
 .. _Terraform:
 
 Full-stack installation with Terraform
@@ -22,14 +35,6 @@ We offer a  `Terraform <http://terraform.io>`__ script for deploying a complete 
 - Clone the Git repository for OpenSubmit and adjust the variables in `terraform.tf <https://github.com/troeger/opensubmit/blob/master/terraform.tf>`_.
 - Call ``terraform apply``.
 
-Full-stack installation with Docker Compose
-*******************************************
-
-We offer a `Docker Compose <https://docs.docker.com/compose/overview/>`_ script for deploying a complete OpenSubmit environment (web frontend, test machine, database) on a single machine running a normal `Docker installation <https://www.docker.com/community-edition#/download>`_. For such an installation:
-
-- Download the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_ on the machine.
-- Call ``docker-compose up`` to download, configure and start the OpenSubmit Docker containers and a separate database container.
-- Got to ``http://localhost:8000`` and use one of the configured authentication methods.
 
 Single installation of the web application
 ******************************************
@@ -118,6 +123,11 @@ Configuration of the web application
 The web application searches for a configuration file in ``/etc/opensubmit/settings.ini``. This file should be initially created by calling ``opensubmit-web configcreate``. The command allows to pre-define specific configuration options via command-line, or environment variables, and creates an according config file. 
 
 The Docker images run ``opensubmit-web configcreate`` on every startup. Since this command considers environment variables, you can easily set all your options in the normal Docker way.
+
+.. _configtable:
+
+Overview
+========
 
 The following table shows all supported configuration options:
 
