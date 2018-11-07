@@ -16,9 +16,9 @@ Please note that OpenSubmit :ref:`does not support password-based login <princip
 Full-stack installation with Terraform
 **************************************
 
-We offer a  `Terraform <http://terraform.io>`_ script for deploying a complete OpenSubmit environment (web frontend, test machine, database) on a single machine running on the `Google Cloud <https://cloud.google.com/compute>`_. For such an installation:
+We offer a  `Terraform <http://terraform.io>`__ script for deploying a complete OpenSubmit environment (web frontend, test machine, database) on a single machine running on the `Google Cloud <https://cloud.google.com/compute>`_. For such an installation:
 
-- Install `Terraform <http://terraform.io>`_ on your local machine.
+- Install `Terraform <http://terraform.io>`__ on your local machine.
 - Clone the Git repository for OpenSubmit and adjust the variables in `terraform.tf <https://github.com/troeger/opensubmit/blob/master/terraform.tf>`_.
 - Call ``terraform apply``.
 
@@ -41,7 +41,7 @@ For the OpenSubmit web application alone, there are two options to run it:
 Docker-based installation
 =========================
 
-The latest official release of the OpenSubmit web application is available as `Docker image <https://hub.docker.com/r/troeger/opensubmit-web/>`_. It expects a couple of environment variables to be set, which you can easily determine from the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_.
+The latest official release of the OpenSubmit web application is available as `Docker image <https://hub.docker.com/r/troeger/opensubmit-web/>`__. It expects a couple of environment variables to be set, which you can easily determine from the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_.
 
 .. _manualweb:
 
@@ -82,7 +82,7 @@ There are two options for installation:
 Docker-based installation
 =========================
 
-The latest official release of the OpenSubmit executor application is available as `Docker image <https://hub.docker.com/r/troeger/opensubmit-exec/>`_. It expects a single environment variable to be set, which you can easily determine from the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_.
+The latest official release of the OpenSubmit executor application is available as `Docker image <https://hub.docker.com/r/troeger/opensubmit-exec/>`__. It expects a single environment variable to be set, which you can easily determine from the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_.
 
 .. _manualexec:
 
@@ -138,18 +138,29 @@ Command-line option             Environment variable                  Descriptio
 --database_port                 OPENSUBMIT_DATABASE_PORT              The port number for accessing the database. Not needed for SQLite
 --login_google_oauth_key        OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY     Google OAuth client key
 --login_google_oauth_secret     OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET  Google OAuth client secret
+--whitelist_google              OPENSUBMIT_WHITELIST_GOOGLE			  Comma-separated list of allowed email addresses for Google login. Leave empty to allow all users.')
 --login_twitter_oauth_key       OPENSUBMIT_LOGIN_TWITTER_OAUTH_KEY    Twitter OAuth client key
 --login_twitter_oauth_secret    OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET Twitter OAuth client secret
+--whitelist_twitter             OPENSUBMIT_WHITELIST_TWITTER		  Comma-separated list of allowed email addresses for Twitter login.  Leave empty to allow all users.')
 --login_github_oauth_key        OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY     GitHub OAuth client key
 --login_github_oauth_secret     OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET  GitHub OAuth client secret
+--whitelist_github              OPENSUBMIT_WHITELIST_GITHUB			  Comma-separated list of allowed email addresses for GitHub login. Leave empty to allow all users.')
+--login_gitlab_description      OPENSUBMIT_LOGIN_GITLAB_DESCRIPTION   Title of the GitLab login button
+--login_gitlab_oauth_key        OPENSUBMIT_LOGIN_GITLAB_OAUTH_KEY     GitLab OAuth client key
+--login_gitlab_oauth_secret     OPENSUBMIT_LOGIN_GITLAB_OAUTH_SECRET  GitLab OAuth client secret
+--login_gitlab_url              OPENSUBMIT_LOGIN_GITLAB_URL           GitLab URL
+--whitelist_gitlab              OPENSUBMIT_WHITELIST_GITLAB			  Comma-separated list of allowed email addresses for GitLab login. Leave empty to allow all users.')
 --login_openid_description      OPENSUBMIT_LOGIN_OPENID_DESCRIPTION   Title of the OpenID login button
 --login_openid_provider         OPENSUBMIT_LOGIN_OPENID_PROVIDER      URL of the OpenID provider
+--whitelist_openid              OPENSUBMIT_WHITELIST_OPENID			  Comma-separated list of allowed email addresses for OpenID login. Leave empty to allow all users.')
 --login_oidc_description        OPENSUBMIT_LOGIN_OIDC_DESCRIPTION     Title of the OpenID Connect login button
 --login_oidc_endpoint           OPENSUBMIT_LOGIN_OIDC_ENDPOINT        URL of the OpenID Connect endpoint
 --login_oidc_client_id          OPENSUBMIT_LOGIN_OIDC_CLIENT_ID       OpenID Connect client id
 --login_oidc_client_secret      OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET   OpenID Connect client secret
+--whitelist_oidc                OPENSUBMIT_WHITELIST_OIDC			  Comma-separated list of allowed email addresses for OpenID connect login. Leave empty to allow all users.')
 --login_shib_description        OPENSUBMIT_LOGIN_SHIB_DESCRIPTION     Title of the Shibboleth login button
---login_demo                    OPENSUBMIT_LOGIN_DEMO                 Offer demo login options
+--whitelist_shib                OPENSUBMIT_WHITELIST_SHIB			  Comma-separated list of allowed email addresses for Shibboleth login. Leave empty to allow all users.')
+--login_demo                    OPENSUBMIT_LOGIN_DEMO                 Offer demo login options. Not for production use.
 --admin_name                    OPENSUBMIT_ADMIN_NAME                 Name of the administrator, shown in privacy policy, impress and backend
 --admin_email                   OPENSUBMIT_ADMIN_EMAIL                eMail of the administrator, shown in privacy policy, impress and backend
 --admin_address                 OPENSUBMIT_ADMIN_ADDRESS              Address of the administrator, shown in privacy policy and impress
@@ -179,6 +190,8 @@ If you need another authentication method for your institution, please `open an 
 
 Authentication methods show up on the front page when the according settings are not empty. You can therefore disable any of the mechanisms by commenting them out in settings.ini.
 
+Please note that the names in the following sections relate to the configuration environment variables.
+
 .. _oidc:
 
 Login with OpenID Connect
@@ -186,10 +199,13 @@ Login with OpenID Connect
 
 If you want to allow users to login with OpenID Connect (OIDC), you need to configure the following settings:
 
-- ``LOGIN_OIDC_DESCRIPTION: <visible button title>``
-- ``LOGIN_OIDC_ENDPOINT: <OpenID connect endpoint URL>``
-- ``LOGIN_OIDC_CLIENT_ID: <OpenID client ID>``
-- ``LOGIN_OIDC_CLIENT_SECRET: <OpenID client secret>``
+- ``OPENSUBMIT_LOGIN_OIDC_DESCRIPTION: <visible button title>``
+- ``OPENSUBMIT_LOGIN_OIDC_ENDPOINT: <OpenID connect endpoint URL>``
+- ``OPENSUBMIT_LOGIN_OIDC_CLIENT_ID: <OpenID client ID>``
+- ``OPENSUBMIT_LOGIN_OIDC_CLIENT_SECRET: <OpenID client secret>``
+- ``OPENSUBMIT_WHITELIST_OICD: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
 
 OpenID Connect is the recommended authentication method in OpenSubmit. It is offered by different endpoint providers, such as `Google <https://developers.google.com/identity/protocols/OpenIDConnect#authenticatingtheuser>`_, `Microsoft Azure AD <https://msdn.microsoft.com/en-us/library/azure/dn645541.aspx>`_, `Yahoo <https://developer.yahoo.com/oauth2/guide/openid_connect/?guccounter=1>`_, `Amazon <https://images-na.ssl-images-amazon.com/images/G/01/lwa/dev/docs/website-developer-guide._TTH_.pdf>`_, and `PayPal <https://developer.paypal.com/docs/integration/direct/identity/log-in-with-paypal/>`_.
 
@@ -198,8 +214,11 @@ Login with classical OpenID
 
 If you want to allow users to login with classical OpenID, you need to configure the following settings:
 
-- ``LOGIN_DESCRIPTION: <visible button title>``
-- ``OPENID_PROVIDER: <provider URL>``
+- ``OPENSUBMIT_LOGIN_OPENID_DESCRIPTION: <visible button title>``
+- ``OPENSUBMIT_LOGIN_OPENID_PROVIDER: <provider URL>``
+- ``OPENSUBMIT_WHITELIST_OPENID: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
 
 The standard OpenSubmit installation already contains an example setting for using StackExchange as authentication provider. Please note that classical OpenID is considered as being deprecated. We recommend to use OpenID Connect instead.
 
@@ -208,7 +227,10 @@ Login with Shibboleth
 
 If you want to allow users to login with Shibboleth, you need to configure the following settings:
 
-- ``LOGIN_SHIB_DESCRIPTION: <visible button title>``
+- ``OPENSUBMIT_LOGIN_SHIB_DESCRIPTION: <visible button title>``
+- ``OPENSUBMIT_WHITELIST_SHIB: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
 
 You also need a fully working installation of the `Apache 2.4 mod_shib <https://wiki.shibboleth.net/confluence/display/SHIB2/NativeSPApacheConfig>`_ module. The authentication module of OpenSubmit assumes that, as result of the work of *mod_shib*, the following environment variables are given:
 
@@ -219,35 +241,68 @@ You also need a fully working installation of the `Apache 2.4 mod_shib <https://
 
 Note: If you are using Apache 2.4 with *mod_wsgi*, make sure to set ``WSGIPassAuthorization On``. Otherwise, these environment variables may not pass through.
 
-Login with Google account
--------------------------
+Login with GitLab
+-----------------
+
+If you want to allow users to login with some GitLab account, you need to configure the following settings:
+
+- ``OPENSUBMIT_LOGIN_GITLAB_DESCRIPTION: <visible button title>``
+- ``OPENSUBMIT_LOGIN_GITLAB_URL: <URL of the GitLab installation>``
+- ``OPENSUBMIT_LOGIN_GITLAB_OAUTH_KEY: <Application ID, as configured in GitLab>``
+- ``OPENSUBMIT_LOGIN_GITLAB_OAUTH_SECRET: <Application secret, as configured in GitLab>``
+- ``OPENSUBMIT_WHITELIST_GITLAB: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
+
+A new pair of Application ID and secret can be generated within your GitLab installation:
+
+- Login into the GitLab installation and go to your user profile
+- Go to the *Application* section and create a new entry:
+
+  - The name can be freely chosen.
+  - The Redirect URI needs to be ``<base url of your OpenSubmit installation>/complete/gitlab/``.
+  - You only need to enable *read_user* rights.
+  - Copy the creation Application ID and secret into your OpenSubmit configuration.
+
+
+Login with Google
+-----------------
 
 If you want to allow users to login with an Google account, you need to configure the following settings:
 
-- ``LOGIN_GOOGLE_OAUTH_KEY: <OAuth key>``
-- ``LOGIN_GOOGLE_OAUTH_SECRET: <OAuth secret>``
+- ``OPENSUBMIT_LOGIN_GOOGLE_OAUTH_KEY: <OAuth key>``
+- ``OPENSUBMIT_LOGIN_GOOGLE_OAUTH_SECRET: <OAuth secret>``
+- ``OPENSUBMIT_WHITELIST_GOOGLE: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
 
 A new pair can be created in the `Google API Console <https://console.developers.google.com/apis/credentials>`_. The authorized forwarding URL should be ``<base url of your installation>/complete/google-oauth2/``.
 
 You also need to `activate the Google+ API <https://console.developers.google.com/apis/api/plus.googleapis.com/overview>`_, so that OpenSubmit is able to fetch basic user information from Google.
 
-Login with Twitter account
---------------------------
+Login with Twitter
+------------------
 
 If you want to allow users to login with an Twitter account, you need to configure the following settings:
 
-- ``LOGIN_TWITTER_OAUTH_KEY: <OAuth key>``
-- ``LOGIN_TWITTER_OAUTH_SECRET: <OAuth secret>``
+- ``OPENSUBMIT_LOGIN_TWITTER_OAUTH_KEY: <OAuth key>``
+- ``OPENSUBMIT_LOGIN_TWITTER_OAUTH_SECRET: <OAuth secret>``
+- ``OPENSUBMIT_WHITELIST_TWITTER: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
 
 A new key / secret pair can be created in the `Twitter Application Management <https://apps.twitter.com/>`_.  The authorized forwarding URL should be ``<base url of your installation>/complete/twitter/``. We recommend to modify the application access to *Read only*, and to allow access to the email addresses. 
 
-Login with GitHub account
--------------------------
+Login with GitHub
+-----------------
 
 If you want to allow users to login with an GitHub account, you need to configure the following settings:
 
-- ``LOGIN_GITHUB_OAUTH_KEY: <OAuth key>``
-- ``LOGIN_GITHUB_OAUTH_SECRET: <OAuth secret>``
+- ``OPENSUBMIT_LOGIN_GITHUB_OAUTH_KEY: <OAuth key>``
+- ``OPENSUBMIT_LOGIN_GITHUB_OAUTH_SECRET: <OAuth secret>``
+- ``OPENSUBMIT_WHITELIST_GITHUB: foo@bar.de, bar@foo.org, ...``
+
+The whitelist configuration is optional, leave it out for enabling all authenticated users.
 
 A new key / secret pair can be created in the `OAuth application registration <https://github.com/settings/applications/new>`_.  The authorized forwarding URL should be ``<base url of your installation>/complete/github/``.
 
@@ -325,4 +380,15 @@ Merging accounts
 Since OpenSubmit users always register themselves in the platform (see :ref:`auth`), it can happen that the same physical person creates multiple accounts through different authentication providers. The main reason for that is a non-matching or missing email address being provided by the authentication provider.
 
 Administrators can merge users in the teacher backend. Click on *Manage users*, mark all user accounts to be merged, and choose the according action in the lower left corner. The nect screen shows you the intended merging activity and allows to chose the "primary" account by flipping roles. The non-primary account is deleted as part of the merging activity.
+
+Troubleshooting
+===============
+
+The ``opensubmit-web`` command-line tool provides some helper functions to deal with problems:
+
+- ``opensubmit-web dumpconfig``: Dumps the effective runtime configuration of OpenSubmit after parsing the config file. 
+- ``opensubmit-web fixperms``: Checks and fixes the permissions of student and teacher accounts.
+- ``opensubmit-web fixchecksums``: Re-generates all student upload checksums. You need that after fiddling around in the media folder manually.
+
+In case of trouble, make also sure that you enabled the file logging and set OPENSUBMIT_DEBUG temporarly to TRUE. This leads to a larger amount of log information that may help to pinpoint your problem.
 

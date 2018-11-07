@@ -33,6 +33,13 @@ todo_include_todos = True
 html_theme = "sphinx_rtd_theme"
 html_favicon = '../web/opensubmit/static/images/favicon.ico'
 html_logo = '../web/opensubmit/static/images/favicon-96x96.png'
+html_static_path = ['css']
+html_context = {
+    'css_files': [
+        '_static/theme_overrides.css',  # override wide tables in RTD theme
+        ],
+     }
+
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
