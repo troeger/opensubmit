@@ -4,6 +4,7 @@
 {% setting "LOGIN_TWITTER" as login_twitter %}
 {% setting "LOGIN_GITHUB" as login_github %}
 {% setting "LOGIN_GITLAB" as login_gitlab %}
+{% setting "LOGIN_GITLAB_DESCRIPTION" as login_gitlab_description %}
 {% setting "LOGIN_OPENID" as login_openid %}
 {% setting "LOGIN_DESCRIPTION" as login_description %}
 {% setting "LOGIN_OIDC" as login_oidc %}
