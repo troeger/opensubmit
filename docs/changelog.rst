@@ -1,6 +1,19 @@
 Changelog
 #########
 
+
+.. _v0.7.16:
+
+v0.7.16 Release
+===============
+
+This is a stable release that brings the following updates:
+
+- Secrets are no longer completely dumped on *opensubmit-web dumpconfig*.
+- The Docker startup now dumps the effective config by default.
+
+If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
+
 .. _v0.7.15:
 
 v0.7.15 Release
