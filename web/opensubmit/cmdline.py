@@ -354,7 +354,7 @@ def console_script(fsroot=''):
     subparsers.add_parser('democreate', aliases=['createdemo'], help='Install some test data (courses, assignments, users).')
     subparsers.add_parser('apachecreate', help='Create config file snippet for Apache 2.4.')
     subparsers.add_parser('fixperms', help='Check and fix student and tutor permissions.')
-    subparsers.add_parser('dumpconfig', help='Show effective OpenSubmit configuration at run-time.')
+    subparsers.add_parser('configdump', aliases=['dumpconfig'], help='Show effective OpenSubmit configuration at run-time.')
     subparsers.add_parser('fixchecksums', help='Re-create all student file checksums (for duplicate detection).')
 
     parser_makeadmin = subparsers.add_parser('makeadmin', help='Make this user an admin with backend rights.')
@@ -383,7 +383,7 @@ def console_script(fsroot=''):
         configtest(config_file)
         return
 
-    if args.command in ['fixperms', 'fixchecksums', 'democreate', 'dumpconfig']:
+    if args.command in ['fixperms', 'fixchecksums', 'democreate', 'createdemo', 'dumpconfig', 'configdump']:
         django_admin([args.command])
         return
 
