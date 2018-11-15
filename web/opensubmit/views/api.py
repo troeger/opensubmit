@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, View
 from django.utils.decorators import method_decorator
 
-from opensubmit import settings
+from django.conf import settings
 from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
 from opensubmit.mails import inform_student
 from opensubmit.views.helpers import BinaryDownloadMixin

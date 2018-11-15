@@ -4,7 +4,7 @@ import json
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from opensubmit.models import Course, Assignment, Grading, GradingScheme, Submission, SubmissionFile, SubmissionTestResult, TestMachine
-from opensubmit import settings
+from django.conf import settings
 from django.utils import timezone
 from django.core.files import File as DjangoFile
 from tempfile import NamedTemporaryFile

@@ -7,6 +7,8 @@ from .helpers.submission import *
 from .helpers.course import create_course
 from .helpers.user import create_user, admin_dict
 from .cases import SubmitTutorTestCase
+from django.test.utils import override_settings
+
 
 from opensubmit.admin.course import CourseAdmin
 from opensubmit.models import Assignment, Course
@@ -104,6 +106,22 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
             self.assertIn("Grading", email.subject)
             self.assertIn("grading", email.body)
             self.assertIn("localhost", email.body)
+
+    @override_settings(MAIN_URL='http://localhost:8001/foobar')
+    @override_settings(HOST='localhost:8001')
+    @override_settings(HOST_DIR='/foobar')
+    @override_settings(FORCE_SCRIPT_NAME='/foobar')
+    def test_email_link(self):
+        from django.core import mail
+        # One mail should be sent
+        self.sub1.state = Submission.GRADED
+        self.sub1.save()
+        self.submadm.closeAndNotifyAction(
+            self.request, Submission.objects.all())
+        for email in mail.outbox:
+            self.assertIn("Grading", email.subject)
+            self.assertIn("grading", email.body)
+            self.assertIn("http://localhost:8001/foobar/details", email.body)
 
     def test_set_full_pending_all(self):
         # Only one of the submission assignments has validation configured

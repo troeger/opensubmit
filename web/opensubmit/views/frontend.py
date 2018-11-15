@@ -14,7 +14,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.safestring import mark_safe
 from django.core.urlresolvers import reverse
 
-from opensubmit import settings
+from django.conf import settings
 from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from opensubmit.models import UserProfile, Submission, TestMachine, Course, Assignment, SubmissionFile
 from opensubmit.models.userprofile import db_fixes

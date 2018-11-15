@@ -116,7 +116,7 @@ def apache_config(config, outputfile):
         os.rename(outputfile, outputfile + ".old")
         print("Renamed existing Apache config file to " + outputfile + ".old")
 
-    from opensubmit import settings
+    from django.conf import settings
     f = open(outputfile, 'w')
     print("Generating Apache configuration in " + outputfile)
     subdir = (len(settings.HOST_DIR) > 0)
