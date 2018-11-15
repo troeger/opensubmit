@@ -44,7 +44,7 @@ def inform_student(submission, state):
     not work, since this may have been triggered
     by the admin.
     '''
-    details_url = settings.HOST + reverse('details', args=(submission.pk,))
+    details_url = "http://" + settings.HOST + reverse('details', args=(submission.pk,))
 
     if state == submission.TEST_VALIDITY_FAILED:
         subject = STUDENT_FAILED_SUB
