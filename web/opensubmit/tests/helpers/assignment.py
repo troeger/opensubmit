@@ -1,4 +1,4 @@
-from opensubmit import settings
+from django.conf import settings
 from opensubmit.tests import uccrap, rootdir
 from opensubmit.models import Assignment, Grading, GradingScheme
 

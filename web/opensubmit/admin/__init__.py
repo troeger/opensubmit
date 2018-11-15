@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User, Permission, Group
 from opensubmit.models import Course, Grading, GradingScheme, Assignment, SubmissionFile, Submission, TestMachine, StudyProgram
-from opensubmit import settings
+from django.conf import settings
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.views import redirect_to_login
 from django.contrib import messages

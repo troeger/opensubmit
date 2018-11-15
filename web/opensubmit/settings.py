@@ -3,7 +3,7 @@ import configparser
 from django.core.exceptions import ImproperlyConfigured
 
 script_dir = os.path.dirname(__file__)
-VERSION = '0.7.16'
+VERSION = '0.7.17'
 
 NOT_CONFIGURED_VALUE = '***not configured***'
 

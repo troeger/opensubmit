@@ -5,7 +5,7 @@ from django.views.generic import RedirectView
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 
-from opensubmit import settings
+from django.conf import settings
 from opensubmit.social import passthrough
 from opensubmit.security import make_admin, make_tutor, make_owner
 

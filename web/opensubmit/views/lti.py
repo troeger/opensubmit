@@ -14,7 +14,7 @@ from lti.contrib.django import DjangoToolProvider
 from lti import ToolConfig
 
 from opensubmit.social import lti
-from opensubmit import settings
+from django.conf import settings
 from opensubmit.models import Assignment, LtiResult, Submission
 from opensubmit.forms import getSubmissionForm
 from opensubmit.views.frontend import SubmissionNewView, SubmissionWithdrawView
