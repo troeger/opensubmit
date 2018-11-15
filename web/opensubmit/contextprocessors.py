@@ -1,4 +1,4 @@
-from opensubmit import settings
+from django.conf import settings
 
 
 def footer(request):

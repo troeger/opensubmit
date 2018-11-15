@@ -1,7 +1,7 @@
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 
-from opensubmit import settings
+from django.conf import settings
 
 
 STUDENT_FAILED_SUB = 'Warning - Validation failed'

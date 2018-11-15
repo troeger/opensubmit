@@ -9,7 +9,8 @@ import configparser
 import shutil
 
 from django.test import TestCase
-from opensubmit import cmdline, settings
+from opensubmit import cmdline
+from django.conf import settings
 from opensubmit.models import Course
 from .helpers import user
 
