@@ -16,7 +16,7 @@ Full-stack installation with Docker Compose
 
 We offer a `Docker Compose <https://docs.docker.com/compose/overview/>`_ script for deploying a complete OpenSubmit environment (web frontend, test machine, database) on a single machine running a normal `Docker installation <https://www.docker.com/community-edition#/download>`_. For such an installation:
 
-- Download the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_ on the machine.
+- Download the `compose file <https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml>`_ on the machine. One way to do that is: ``curl -o docker-compose.yml https://raw.githubusercontent.com/troeger/opensubmit/master/deployment/docker-compose.yml``.
 - Call ``docker-compose up`` to download, configure and start the OpenSubmit Docker containers and a separate database container.
 - Got to ``http://localhost:8000`` and use one of the authentication methods.
 

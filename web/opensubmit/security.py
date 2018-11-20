@@ -71,7 +71,7 @@ def check_permission_system():
     # Read the admin email address from the configuration and make sure that he gets admin rights
     # This is mainly needed for fresh installation, so that the admin has full power after his first
     # regular (social) login
-    from opensubmit import settings
+    from django.conf import settings
     try:
         conffile_admin = User.objects.get(email=settings.ADMIN_EMAIL)
         make_admin(conffile_admin)

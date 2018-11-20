@@ -8,24 +8,27 @@ from .models.userprofile import db_fixes
 
 
 @receiver(post_save, sender=User)
-def post_user_save(sender,instance, signal, created, **kwargs):
+def post_user_save(sender, instance, signal, created, **kwargs):
     """
         Make sure that all neccessary user groups exist and have the right permissions.
         We need that automatism for the test database creation, people not calling the configure tool,
         admin rights for admins after the first login, and similar cases.
 
-        Second task: Every user need a profile, which is not created by the social libraries.        
+        Second task: Every user need a profile, which is not created by the social libraries.
     """
     check_permission_system()
+    db_fixes(instance)
+
 
 @receiver(post_save, sender=SubmissionFile)
-def submissionfile_post_save(sender,instance, signal, created, **kwargs):
+def submissionfile_post_save(sender, instance, signal, created, **kwargs):
     '''
         Update MD5 field for newly uploaded files.
     '''
     if created:
         instance.md5 = instance.attachment_md5()
         instance.save()
+
 
 @receiver(post_save, sender=Submission)
 def submission_post_save(sender, instance, **kwargs):
@@ -41,10 +44,12 @@ def submission_post_save(sender, instance, **kwargs):
     # for multiplse submissions by the same students for the same assignment - however they got in here.
     if instance.state == instance.get_initial_state():
         for author in instance.authors.all():
-            same_author_subm = User.objects.get(pk=author.pk).authored.all().exclude(pk=instance.pk).filter(assignment=instance.assignment)
+            same_author_subm = User.objects.get(pk=author.pk).authored.all().exclude(
+                pk=instance.pk).filter(assignment=instance.assignment)
             for subm in same_author_subm:
                 subm.state = Submission.WITHDRAWN
                 subm.save()
+
 
 @receiver(post_save, sender=Course)
 def course_post_save(sender, instance, **kwargs):

@@ -2,7 +2,7 @@
 This is our adjustment to the OpenID Connect provider from Python Social.
 """
 
-from opensubmit import settings
+from django.conf import settings
 from social_core.backends.open_id_connect import OpenIdConnectAuth as OpenIdConnectAuthBase
 
 class OpenIdConnectAuth(OpenIdConnectAuthBase):

@@ -19,6 +19,7 @@ done
 echo "Web server started."
 
 # Perform config test, triggers also registration
-opensubmit-exec configtest
+/usr/local/bin/opensubmit-exec configtest
 
-cron && tail -f /var/log/cron.log
+# Run "opensubmit-exec run" every minute
+cron -f

@@ -19,7 +19,7 @@
 import logging
 from social_core.backends.base import BaseAuth
 from django.core.exceptions import PermissionDenied
-from opensubmit import settings
+from django.conf import settings
 
 SESSION_VAR = 'passthrough_auth_data_' + settings.SECRET_KEY
 

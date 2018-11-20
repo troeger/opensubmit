@@ -233,21 +233,22 @@ class Student(SubmitStudentScenarioTestCase):
         response = self.c.get('/assignments/%s/lti/' % self.open_assignment.pk)
         self.assertEqual(response.status_code, 200)
 
-    def test_working_lti_credentials(self):
-        url = "http://testserver/assignments/%s/lti/" % self.open_assignment.pk
+    # Only works overy HTTPS, which is not given by the test server
+    # def test_working_lti_credentials(self):
+    #     url = "http://testserver/assignments/%s/lti/" % self.open_assignment.pk
 
-        consumer = ToolConsumer(
-            consumer_key=self.course.lti_key,
-            consumer_secret=self.course.lti_secret,
-            launch_url=url,
-            params={
-                'lti_message_type': 'basic-lti-launch-request',
-                'resource_link_id': 1
-            }
-        )
+    #     consumer = ToolConsumer(
+    #         consumer_key=self.course.lti_key,
+    #         consumer_secret=self.course.lti_secret,
+    #         launch_url=url,
+    #         params={
+    #             'lti_message_type': 'basic-lti-launch-request',
+    #             'resource_link_id': 1
+    #         }
+    #     )
 
-        response = self.c.post(url, consumer.generate_launch_data())
-        self.assertEqual(302, response.status_code)
+    #     response = self.c.post(url, consumer.generate_launch_data())
+    #     self.assertEqual(302, response.status_code)
 
     def test_wrong_lti_credentials(self):
         url = "http://testserver/assignments/%s/lti/" % self.open_assignment.pk

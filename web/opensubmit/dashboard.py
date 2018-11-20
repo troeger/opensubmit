@@ -2,7 +2,7 @@ from grappelli.dashboard import modules, Dashboard
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
-from opensubmit import settings
+from django.conf import settings
 from opensubmit.models import Submission, TestMachine
 
 

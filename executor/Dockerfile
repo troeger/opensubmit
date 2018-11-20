@@ -23,7 +23,8 @@ RUN pip3 install /install/*.whl
 ENV PYTHONUNBUFFERED 1
 
 RUN touch /var/log/cron.log
-RUN (crontab -l ; echo "* * * * * opensubmit-exec run >> /var/log/cron.log") | crontab
+# Redirect output directly into Docker stdout / stderr
+RUN echo "* * * * * /usr/local/bin/opensubmit-exec run > /proc/1/fd/1 2>/proc/1/fd/2\n" | crontab
 
 COPY ./docker/docker-entry.sh /docker-entry.sh
 ENTRYPOINT ["/docker-entry.sh"]

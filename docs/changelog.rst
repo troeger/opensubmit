@@ -2,6 +2,18 @@ Changelog
 #########
 
 
+.. _v0.7.17:
+
+v0.7.17 Release
+===============
+
+This is a stable release that brings the following updates:
+
+- The URL in student notification emails was broken for OpenSubmit installations in a sub-directory (:issue:`239`). Thanks to :user:`johenning` for the patch.
+- The Docker images for executors were not running their cron job, and they were not showing log output as intended. This is fixed now. Thanks to :user:`antongulenko` for the report and suggestions.
+
+If you upgrade from a v0.6.x release, make sure that you read the :ref:`v0.7.0 release notes <v0.7.0>`!
+
 .. _v0.7.16:
 
 v0.7.16 Release
