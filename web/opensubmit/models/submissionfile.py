@@ -173,9 +173,9 @@ class SubmissionFile(models.Model):
             zf = zipfile.ZipFile(self.attachment.path, 'r')
             for zipinfo in zf.infolist():
                 if zipinfo.file_size < MAX_PREVIEW_SIZE:
-		    try:
+                    try:
                         result.append({'name': zipinfo.filename, 'is_code': is_code(
-			    zipinfo.filename), 'preview': sanitize(zf.read(zipinfo))})
+                            zipinfo.filename), 'preview': sanitize(zf.read(zipinfo))})
                     except NotImplementedError as e:
                         result.append(
                                 {'name': zipinfo.filename, 'is_code': False, 'preview': '(NotImplementedError: %s)' % (e)})
