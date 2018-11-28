@@ -103,6 +103,7 @@ def fetch_job(config):
         # Fetch information from server
         result = urlopen(url)
         headers = result.info()
+        logger.debug("Raw job data: " + str(result.headers).replace('\n', ', '))
         if not compatible_api_version(headers["APIVersion"]):
             # No proper reporting possible, so only logging.
             logger.error("Incompatible API version. Please update OpenSubmit.")
