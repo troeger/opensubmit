@@ -551,12 +551,12 @@ class Submission(models.Model):
         '''
         return self._get_test_result(SubmissionTestResult.FULL_TEST)
 
-    def inform_student(self, state):
+    def inform_student(self, request, state):
         '''
             We hand-in explicitely about which new state we want to inform,
             since this may not be reflected in the model at the moment.
         '''
-        mails.inform_student(self, state)
+        mails.inform_student(request, self, state)
 
     def info_file(self, delete=True):
         '''

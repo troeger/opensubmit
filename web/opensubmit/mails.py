@@ -1,8 +1,6 @@
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 
-from django.conf import settings
-
 
 STUDENT_FAILED_SUB = 'Warning - Validation failed'
 
@@ -35,7 +33,7 @@ for "%s" in "%s" was finalized.
 Further information can be found at %s.'''
 
 
-def inform_student(submission, state):
+def inform_student(request, submission, state):
     '''
     Create an email message for the student,
     based on the given submission state.
@@ -44,7 +42,7 @@ def inform_student(submission, state):
     not work, since this may have been triggered
     by the admin.
     '''
-    details_url = "http://" + settings.HOST + reverse('details', args=(submission.pk,))
+    details_url = request.build_absolute_uri(reverse('details', args=(submission.pk,)))
 
     if state == submission.TEST_VALIDITY_FAILED:
         subject = STUDENT_FAILED_SUB

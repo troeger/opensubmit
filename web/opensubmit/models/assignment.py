@@ -97,32 +97,51 @@ class Assignment(models.Model):
         '''
         return self.gradingScheme is not None
 
-    def validity_test_url(self):
+    def validity_test_url_relative(self):
+        '''
+            Return relative download URL for validity test script.
+        '''
+        if self.pk and self.has_validity_test():
+            return reverse('validity_script_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
+        else:
+            return None
+
+    def validity_test_url_absolute(self, request):
         '''
             Return absolute download URL for validity test script.
         '''
-        if self.pk and self.has_validity_test():
-            return settings.HOST + reverse('validity_script_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
+        relative = self.validity_test_url_relative()
+        if relative is not None:
+            return request.build_absolute_uri(relative)
         else:
             return None
 
-    def full_test_url(self):
+    def full_test_url_relative(self):
         '''
-            Return absolute download URL for full test script.
-            Using reverse() seems to be broken with FORCE_SCRIPT in use, so we use direct URL formulation.
+            Return relative download URL for full test script.
         '''
         if self.pk and self.has_full_test():
-            return settings.HOST + reverse('full_testscript_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
+            return reverse('full_testscript_secret', args=[self.pk, settings.JOB_EXECUTOR_SECRET])
         else:
             return None
 
-    def url(self):
+    def full_test_url_absolute(self, request):
+        '''
+            Return absolute download URL for full test script.
+        '''
+        relative = self.full_test_url_relative()
+        if relative is not None:
+            return request.build_absolute_uri(relative)
+        else:
+            return None
+
+    def url_absolute(self, request):
         '''
             Return absolute URL for assignment description.
         '''
         if self.pk:
             if self.has_description():
-                return settings.HOST + reverse('assignment_description_file', args=[self.pk])
+                return request.build_absolute_uri(reverse('assignment_description_file', args=[self.pk]))
             else:
                 return self.download
         else:

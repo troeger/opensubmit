@@ -309,7 +309,7 @@ class SubmissionAdmin(ModelAdmin):
         mails = []
         qs = queryset.filter(Q(state=Submission.GRADED))
         for subm in qs:
-            subm.inform_student(Submission.CLOSED)
+            subm.inform_student(request, Submission.CLOSED)
             mails.append(str(subm.pk))
         # works in bulk because inform_student never fails
         qs.update(state=Submission.CLOSED)

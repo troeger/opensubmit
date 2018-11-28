@@ -107,15 +107,13 @@ DEBUG = config.get_bool('general', 'DEBUG', default=False)
 # Demo mode allows login bypass
 DEMO = config.get_bool('general', 'DEMO', default=False)
 
-# Determine MAIN_URL / FORCE_SCRIPT option
+# Determine MAIN_URL option
 HOST = config.get('server', 'HOST')
 HOST_DIR = config.get('server', 'HOST_DIR')
 if len(HOST_DIR) > 0:
     MAIN_URL = HOST + '/' + HOST_DIR
-    FORCE_SCRIPT_NAME = '/' + HOST_DIR
 else:
     MAIN_URL = HOST
-    FORCE_SCRIPT_NAME = ''
 
 # Determine some settings based on the MAIN_URL
 LOGIN_URL = MAIN_URL
