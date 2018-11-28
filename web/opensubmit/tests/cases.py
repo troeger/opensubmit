@@ -1,6 +1,5 @@
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import LiveServerTestCase, TestCase
-from django.test.utils import override_settings
 from django.test import client
 from django.apps import apps
 from django import db, http
@@ -18,11 +17,10 @@ class MockRequest(http.HttpRequest):
         # see https://code.djangoproject.com/ticket/17971
         self.session = 'session'
         self._messages = FallbackStorage(self)
+        self.META = {"SERVER_NAME": "localhost", "SERVER_PORT": "4711"}
+        self.path = "/"
 
 
-@override_settings(
-    PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher', ])
-@override_settings(MEDIA_ROOT='/tmp/')
 class SubmitTestCase(LiveServerTestCase):
     def setUp(self):
         self.c = client.Client()
