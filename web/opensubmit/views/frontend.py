@@ -217,15 +217,16 @@ class SubmissionNewView(LoginRequiredMixin, TemplateView):
     redirect_on_success = 'dashboard'
 
     def dispatch(self, request, *args, **kwargs):
-        self.ass = get_object_or_404(Assignment, pk=kwargs['pk'])
+        if request.user.is_authenticated():
+            self.ass = get_object_or_404(Assignment, pk=kwargs['pk'])
 
-        # Check whether submissions are allowed.
-        if not self.ass.can_create_submission(user=request.user):
-            raise PermissionDenied(
-                "You are not allowed to create a submission for this assignment")
+            # Check whether submissions are allowed.
+            if not self.ass.can_create_submission(user=request.user):
+                raise PermissionDenied(
+                    "You are not allowed to create a submission for this assignment")
 
-        # get submission form according to the assignment type
-        self.SubmissionForm = getSubmissionForm(self.ass)
+            # get submission form according to the assignment type
+            self.SubmissionForm = getSubmissionForm(self.ass)
 
         return super().dispatch(request, *args, **kwargs)
 
