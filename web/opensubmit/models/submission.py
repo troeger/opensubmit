@@ -612,6 +612,11 @@ class Submission(models.Model):
             logger.error("I/O exception while accessing %s." %
                          (self.file_upload.absolute_path()))
             pass
+        except (UnicodeEncodeError, NotImplementedError)  as e:
+            # unpacking not possible, just copy it
+            shutil.copyfile(self.file_upload.absolute_path(),
+                            targetdir + "/" + self.file_upload.basename())
+            pass
 
     def add_to_zipfile(self, z):
         submitter = "user" + str(self.submitter.pk)
