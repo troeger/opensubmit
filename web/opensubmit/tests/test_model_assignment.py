@@ -23,8 +23,8 @@ class AssignmentModelTutorTestCase(SubmitTutorTestCase):
                                                       self.grading_scheme)
 
         for ass in assignments:
-            self.assertIsNone(ass.validity_test_url())
-        self.assertIsNotNone(v_ass.validity_test_url())
+            self.assertIsNone(ass.validity_test_url_relative())
+        self.assertIsNotNone(v_ass.validity_test_url_relative())
 
 
 class AssignmentModelAdminTestCase(SubmitAdminTestCase):
@@ -40,5 +40,5 @@ class AssignmentModelAdminTestCase(SubmitAdminTestCase):
                                                       self.grading_scheme)
 
         for ass in assignments:
-            self.assertIsNone(ass.validity_test_url())
-        self.assertIsNotNone(v_ass.validity_test_url())
+            self.assertIsNone(ass.validity_test_url_relative())
+        self.assertIsNotNone(v_ass.validity_test_url_relative())

@@ -18,7 +18,6 @@ from django.utils.decorators import method_decorator
 
 from django.conf import settings
 from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
-from opensubmit.mails import inform_student
 from opensubmit.views.helpers import BinaryDownloadMixin
 
 import logging
@@ -142,7 +141,7 @@ def jobs(request):
             "Test machine is unknown, creating entry and asking executor for configuration.")
         response = HttpResponse()
         response['Action'] = 'get_config'
-        response['APIVersion'] = '1.0.0'  # semantic versioning
+        response['APIVersion'] = '2.0.0'  # semantic versioning
         response['MachineId'] = machine.pk
         return response
 
@@ -168,7 +167,7 @@ def jobs(request):
                     sub.save_validation_result(
                         machine, "Killed due to non-reaction. Please check your application for deadlocks or keyboard input.", "Killed due to non-reaction on timeout signals.")
                     sub.state = Submission.TEST_VALIDITY_FAILED
-                    sub.inform_student(sub.state)
+                    sub.inform_student(request, sub.state)
                 if sub.state == Submission.TEST_FULL_PENDING:
                     sub.save_fulltest_result(
                         machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.")
@@ -199,7 +198,7 @@ def jobs(request):
                               sub.file_upload.pk, str(sub.file_upload.attachment)), fail_silently=True)
             raise Http404
         response = HttpResponse(f, content_type='application/binary')
-        response['APIVersion'] = '1.0.0'  # semantic versioning
+        response['APIVersion'] = '2.0.0'  # semantic versioning
         response['Content-Disposition'] = 'attachment; filename="%s"' % sub.file_upload.basename()
         response['SubmissionFileId'] = str(sub.file_upload.pk)
         response['SubmissionOriginalFilename'] = sub.file_upload.original_filename
@@ -213,10 +212,10 @@ def jobs(request):
         response['Timeout'] = sub.assignment.attachment_test_timeout
         if sub.state == Submission.TEST_VALIDITY_PENDING:
             response['Action'] = 'test_validity'
-            response['PostRunValidation'] = sub.assignment.validity_test_url()
+            response['ValidatorDownload'] = sub.assignment.validity_test_url_relative()
         elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
             response['Action'] = 'test_full'
-            response['PostRunValidation'] = sub.assignment.full_test_url()
+            response['ValidatorDownload'] = sub.assignment.full_test_url_relative()
         else:
             assert (False)
         logger.debug("Delivering submission %u as new %s job" %
@@ -258,12 +257,12 @@ def jobs(request):
                     if not sub.assignment.is_graded():
                         # Assignment is not graded. We are done here.
                         sub.state = Submission.CLOSED
-                        sub.inform_student(Submission.CLOSED)
+                        sub.inform_student(request, Submission.CLOSED)
             else:
                 logger.debug(
                     "Validity test not working, setting state to failed")
                 sub.state = Submission.TEST_VALIDITY_FAILED
-            sub.inform_student(sub.state)
+            sub.inform_student(request, sub.state)
         # Job state: Waiting for full test
         # Possible with + without grading
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
@@ -276,7 +275,7 @@ def jobs(request):
                 else:
                     logger.debug("Full test working, setting state to closed (since not graded)")
                     sub.state = Submission.CLOSED
-                    inform_student(sub, Submission.CLOSED)
+                    sub.inform_student(request, Submission.CLOSED)
             else:
                 logger.debug("Full test not working, setting state to failed")
                 sub.state = Submission.TEST_FULL_FAILED
