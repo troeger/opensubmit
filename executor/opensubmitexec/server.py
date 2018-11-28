@@ -27,11 +27,14 @@ def fetch(url, fullpath):
     '''
     logger.debug("Fetching %s from %s" % (fullpath, url))
 
-    tmpfile, headers = urlretrieve(url)
-    if os.path.exists(fullpath):
-        os.remove(fullpath)
-    shutil.move(tmpfile, fullpath)
-
+    try:
+        tmpfile, headers = urlretrieve(url)
+        if os.path.exists(fullpath):
+            os.remove(fullpath)
+        shutil.move(tmpfile, fullpath)
+    except Exception as e:
+        logger.error("Error during fetching: " + str(e))
+        raise
 
 def send_post(config, urlpath, post_data):
     '''
