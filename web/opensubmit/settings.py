@@ -46,30 +46,38 @@ class Config():
             if not mandatory:
                 return ''
             else:
-                raise ImproperlyConfigured(name + ' not set in the config file.')
+                raise ImproperlyConfigured(
+                    name + ' not set in the config file.')
         except configparser.NoSectionError:
             if not mandatory:
                 return ''
             else:
-                raise ImproperlyConfigured(category + ' section not set in the config file.')
+                raise ImproperlyConfigured(
+                    category + ' section not set in the config file.')
 
-        logtext = "Setting '[%s] %s' in %s has the value '%s'" % (category, name, self.config_file, text)
+        logtext = "Setting '[%s] %s' in %s has the value '%s'" % (
+            category, name, self.config_file, text)
 
         if mandatory and text == NOT_CONFIGURED_VALUE:
             raise ImproperlyConfigured(logtext + ', but must be set.')
 
         if len(text) == 0:
             if expect_leading_slash or expect_trailing_slash:
-                raise ImproperlyConfigured(logtext + ", but should not be empty.")
+                raise ImproperlyConfigured(
+                    logtext + ", but should not be empty.")
         else:
             if not text[0] == '/' and expect_leading_slash is True:
-                raise ImproperlyConfigured(logtext + ", but should have a leading slash.")
+                raise ImproperlyConfigured(
+                    logtext + ", but should have a leading slash.")
             if not text[-1] == '/' and expect_trailing_slash is True:
-                raise ImproperlyConfigured(logtext + ", but should have a trailing slash.")
+                raise ImproperlyConfigured(
+                    logtext + ", but should have a trailing slash.")
             if text[0] == '/' and expect_leading_slash is False:
-                raise ImproperlyConfigured(logtext + ", but shouldn't have a leading slash.")
+                raise ImproperlyConfigured(
+                    logtext + ", but shouldn't have a leading slash.")
             if text[-1] == '/' and expect_trailing_slash is False:
-                raise ImproperlyConfigured(logtext + ", but shouldn't have a trailing slash.")
+                raise ImproperlyConfigured(
+                    logtext + ", but shouldn't have a trailing slash.")
         return text
 
 
@@ -78,9 +86,11 @@ class Config():
 # - Linux production system are more likely to happen than Windows developer machines.
 config = Config((
     ('/etc/opensubmit/settings.ini', True),  # Linux production system
-    (os.path.dirname(__file__) + '/settings_dev.ini', False),  # Linux / Mac development system
-    (os.path.expandvars('$APPDATA') + 'opensubmit/settings.ini', False),  # Windows development system
-    ))
+    # Linux / Mac development system
+    (os.path.dirname(__file__) + '/settings_dev.ini', False),
+    # Windows development system
+    (os.path.expandvars('$APPDATA') + 'opensubmit/settings.ini', False),
+))
 
 ################################################################################################################
 ################################################################################################################
@@ -107,15 +117,8 @@ DEBUG = config.get_bool('general', 'DEBUG', default=False)
 # Demo mode allows login bypass
 DEMO = config.get_bool('general', 'DEMO', default=False)
 
-# Determine MAIN_URL option
-HOST = config.get('server', 'HOST')
-HOST_DIR = config.get('server', 'HOST_DIR')
-if len(HOST_DIR) > 0:
-    MAIN_URL = HOST + '/' + HOST_DIR
-else:
-    MAIN_URL = HOST
-
 # Determine some settings based on the MAIN_URL
+MAIN_URL = config.get('server', 'URL')
 LOGIN_URL = MAIN_URL
 LOGIN_ERROR_URL = MAIN_URL
 LOGIN_REDIRECT_URL = MAIN_URL + '/dashboard/'
@@ -139,7 +142,8 @@ if ':' in host_list[0]:
     # Strip port number
     host_list = [host_list[0].split(':')[0]]
 if config.has_option('server', 'HOST_ALIASES'):
-    add_hosts = config.get('server', 'HOST_ALIASES', True, False, False).split(',')
+    add_hosts = config.get('server', 'HOST_ALIASES',
+                           True, False, False).split(',')
     host_list += add_hosts
 ALLOWED_HOSTS = host_list
 
@@ -240,7 +244,7 @@ INSTALLED_APPS = (
     'grappelli.dashboard',
     'grappelli',
     'django.contrib.admin',
-#    'django.contrib.admin.apps.SimpleAdminConfig',
+    #    'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit.app.OpenSubmitConfig',
 )
 
@@ -309,7 +313,7 @@ LOGIN_GITHUB = (config.get("login", "LOGIN_GITHUB_OAUTH_KEY").strip() != '' and
 LOGIN_TWITTER = (config.get("login", "LOGIN_TWITTER_OAUTH_KEY").strip() != '' and
                  config.get("login", "LOGIN_TWITTER_OAUTH_SECRET").strip() != '')
 LOGIN_OPENID = (config.get('login', 'OPENID_PROVIDER').strip() != '')
-LOGIN_OIDC   = (config.get('login', 'LOGIN_OIDC_ENDPOINT').strip() != '')
+LOGIN_OIDC = (config.get('login', 'LOGIN_OIDC_ENDPOINT').strip() != '')
 LOGIN_SHIB = (config.get('login', 'LOGIN_SHIB_DESCRIPTION').strip() != '')
 LOGIN_GITLAB = (config.get("login", "LOGIN_GITLAB_OAUTH_KEY").strip() != '' and
                 config.get("login", "LOGIN_GITLAB_OAUTH_SECRET").strip() != '' and
@@ -321,37 +325,46 @@ AUTHENTICATION_BACKENDS = (
 
 if LOGIN_GOOGLE:
     AUTHENTICATION_BACKENDS += ('social_core.backends.google.GoogleOAuth2',)
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config.get("login", "LOGIN_GOOGLE_OAUTH_KEY")
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config.get("login", "LOGIN_GOOGLE_OAUTH_SECRET")
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config.get(
+        "login", "LOGIN_GOOGLE_OAUTH_KEY")
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config.get(
+        "login", "LOGIN_GOOGLE_OAUTH_SECRET")
     whitelist = config.get("whitelist", "WHITELIST_GOOGLE").strip()
     if whitelist != "":
-        SOCIAL_AUTH_GOOGLE_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GOOGLE").split(',')
+        SOCIAL_AUTH_GOOGLE_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_GOOGLE").split(',')
 
 if LOGIN_TWITTER:
     AUTHENTICATION_BACKENDS += ('social_core.backends.twitter.TwitterOAuth',)
     SOCIAL_AUTH_TWITTER_KEY = config.get("login", "LOGIN_TWITTER_OAUTH_KEY")
-    SOCIAL_AUTH_TWITTER_SECRET = config.get("login", "LOGIN_TWITTER_OAUTH_SECRET")
+    SOCIAL_AUTH_TWITTER_SECRET = config.get(
+        "login", "LOGIN_TWITTER_OAUTH_SECRET")
     whitelist = config.get("whitelist", "WHITELIST_TWITTER").strip()
     if whitelist != "":
-        SOCIAL_AUTH_TWITTER_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_TWITTER").split(',')
+        SOCIAL_AUTH_TWITTER_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_TWITTER").split(',')
 
 if LOGIN_GITHUB:
     AUTHENTICATION_BACKENDS += ('social_core.backends.github.GithubOAuth2',)
     SOCIAL_AUTH_GITHUB_KEY = config.get("login", "LOGIN_GITHUB_OAUTH_KEY")
-    SOCIAL_AUTH_GITHUB_SECRET = config.get("login", "LOGIN_GITHUB_OAUTH_SECRET")
+    SOCIAL_AUTH_GITHUB_SECRET = config.get(
+        "login", "LOGIN_GITHUB_OAUTH_SECRET")
     whitelist = config.get("whitelist", "WHITELIST_GITHUB").strip()
     if whitelist != "":
-        SOCIAL_AUTH_GITHUB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GITHUB").split(',')
+        SOCIAL_AUTH_GITHUB_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_GITHUB").split(',')
 
 if LOGIN_GITLAB:
     AUTHENTICATION_BACKENDS += ('social_core.backends.gitlab.GitLabOAuth2',)
     LOGIN_GITLAB_DESCRIPTION = config.get('login', 'LOGIN_GITLAB_DESCRIPTION')
     SOCIAL_AUTH_GITLAB_KEY = config.get("login", "LOGIN_GITLAB_OAUTH_KEY")
-    SOCIAL_AUTH_GITLAB_SECRET = config.get("login", "LOGIN_GITLAB_OAUTH_SECRET")
+    SOCIAL_AUTH_GITLAB_SECRET = config.get(
+        "login", "LOGIN_GITLAB_OAUTH_SECRET")
     SOCIAL_AUTH_GITLAB_API_URL = config.get("login", "LOGIN_GITLAB_URL")
     whitelist = config.get("whitelist", "WHITELIST_GITLAB").strip()
     if whitelist != "":
-        SOCIAL_AUTH_GITLAB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_GITLAB").split(',')
+        SOCIAL_AUTH_GITLAB_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_GITLAB").split(',')
 
 if LOGIN_OPENID:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.open_id.OpenIdAuth',)
@@ -359,7 +372,8 @@ if LOGIN_OPENID:
     OPENID_PROVIDER = config.get('login', 'OPENID_PROVIDER')
     whitelist = config.get("whitelist", "WHITELIST_OPENID").strip()
     if whitelist != "":
-        SOCIAL_AUTH_OPENID_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_OPENID").split(',')
+        SOCIAL_AUTH_OPENID_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_OPENID").split(',')
 
 if LOGIN_OIDC:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.oidc.OpenIdConnectAuth',)
@@ -369,14 +383,16 @@ if LOGIN_OIDC:
     LOGIN_OIDC_CLIENT_SECRET = config.get('login', 'LOGIN_OIDC_CLIENT_SECRET')
     whitelist = config.get("whitelist", "WHITELIST_OIDC").strip()
     if whitelist != "":
-        SOCIAL_AUTH_OIDC_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_OIDC").split(',')
+        SOCIAL_AUTH_OIDC_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_OIDC").split(',')
 
 if LOGIN_SHIB:
     AUTHENTICATION_BACKENDS += ('opensubmit.social.apache.ModShibAuth',)
     LOGIN_SHIB_DESCRIPTION = config.get('login', 'LOGIN_SHIB_DESCRIPTION')
     whitelist = config.get("whitelist", "WHITELIST_SHIB").strip()
     if whitelist != "":
-        SOCIAL_AUTH_SHIB_WHITELISTED_EMAILS = config.get("whitelist", "WHITELIST_SHIB").split(',')
+        SOCIAL_AUTH_SHIB_WHITELISTED_EMAILS = config.get(
+            "whitelist", "WHITELIST_SHIB").split(',')
 
 AUTHENTICATION_BACKENDS += ('opensubmit.social.lti.LtiAuth',)
 
@@ -391,7 +407,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
-    'social_core.pipeline.social_auth.associate_by_email',  # Transition for existing users
+    # Transition for existing users
+    'social_core.pipeline.social_auth.associate_by_email',
     'social_core.pipeline.user.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',

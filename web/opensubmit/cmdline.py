@@ -36,8 +36,7 @@ DEBUG: {debug}
 DEMO: {login_demo}
 
 [server]
-HOST: {server_host}
-HOST_DIR: {server_hostdir}
+URL: {server_url}
 HOST_ALIASES: {server_hostaliases}
 MEDIA_ROOT: {server_mediaroot}
 LOG_FILE: {server_logfile}
@@ -119,19 +118,28 @@ def apache_config(config, outputfile):
     from django.conf import settings
     f = open(outputfile, 'w')
     print("Generating Apache configuration in " + outputfile)
-    subdir = (len(settings.HOST_DIR) > 0)
+    url_parts = settings.MAIN_URL.split('/')
+    if len(url_parts) == 3:
+        # Only host, no subdir
+        subdir = ""
+    elif len(url_parts) == 4:
+        # One subdir
+        subdir = url_parts[3]
+    else:
+        # Multi-level sub dir
+        subdir = url_parts[3:].join("")
+
+    if not subdir.startswith("/"):
+        subdir = "/" + subdir
+    if subdir.endswith("/"):
+        subdir = subdir[:-1]
+
     text = """
     # OpenSubmit Configuration for Apache 2.4
     # These directives are expected to live in some <VirtualHost> block
     """
-    if subdir:
-        text += "Alias /%s/static/ %s\n" % (settings.HOST_DIR,
-                                            settings.STATIC_ROOT)
-        text += "    WSGIScriptAlias /%s %s/wsgi.py\n" % (
-            settings.HOST_DIR, settings.SCRIPT_ROOT)
-    else:
-        text += "Alias /static/ %s\n" % (settings.STATIC_ROOT)
-        text += "    WSGIScriptAlias / %s/wsgi.py" % (settings.SCRIPT_ROOT)
+    text += "Alias %s/static/ %s\n" % (subdir, settings.STATIC_ROOT)
+    text += "WSGIScriptAlias %s %s/wsgi.py\n" % (subdir, settings.SCRIPT_ROOT)
     text += """
     WSGIPassAuthorization On
     <Directory {static_path}>
@@ -264,12 +272,6 @@ def check_web_db():
 
 def configcreate(config_fname, settings):
     settings['server_secretkey'] = b64encode(os.urandom(64)).decode('utf-8')
-    url_parts = settings['server_url'].split('/', 3)
-    settings['server_host'] = url_parts[0] + '//' + url_parts[2]
-    if len(url_parts) > 3:
-        settings['server_hostdir'] = url_parts[3]
-    else:
-        settings['server_hostdir'] = ''
     content = DEFAULT_CONFIG.format(**settings)
 
     try:
