@@ -1,7 +1,14 @@
 from django.contrib.auth.models import User, Group, Permission
+from django.db import transaction
+from django.conf import settings
+
+import logging
+logger = logging.getLogger('OpenSubmit')
+
 
 STUDENT_TUTORS_GROUP_NAME = "Student Tutors"
 COURSE_OWNERS_GROUP_NAME = "Course Owners"
+
 
 def check_permission_system():
     '''
@@ -18,124 +25,157 @@ def check_permission_system():
 
         This method is idempotent and does not touch manually assigned permissions.
     '''
-    tutor_perms = (  "change_submission", 
-                     "delete_submission",
-                     "add_submissionfile", 
-                     "change_submissionfile", 
-                     "delete_submissionfile" )
-    owner_perms = (  "add_assignment", 
-                     "change_assignment", 
-                     "delete_assignment",
-                     "add_course", 
-                     "change_course", 
-                     "delete_course",
-                     "add_grading", 
-                     "change_grading",  
-                     "delete_grading",
-                     "add_gradingscheme", 
-                     "change_gradingscheme", 
-                     "delete_gradingscheme",
-                     "add_studyprogram", 
-                     "change_studyprogram", 
-                     "delete_studyprogram",
-                     "change_submission", 
-                     "delete_submission",
-                     "add_submissionfile", 
-                     "change_submissionfile", 
-                     "delete_submissionfile")
+    tutor_perms = ("change_submission",
+                   "delete_submission",
+                   "add_submissionfile",
+                   "change_submissionfile",
+                   "delete_submissionfile")
+    owner_perms = ("add_assignment",
+                   "change_assignment",
+                   "delete_assignment",
+                   "add_course",
+                   "change_course",
+                   "delete_course",
+                   "add_grading",
+                   "change_grading",
+                   "delete_grading",
+                   "add_gradingscheme",
+                   "change_gradingscheme",
+                   "delete_gradingscheme",
+                   "add_studyprogram",
+                   "change_studyprogram",
+                   "delete_studyprogram",
+                   "change_submission",
+                   "delete_submission",
+                   "add_submissionfile",
+                   "change_submissionfile",
+                   "delete_submissionfile")
 
-    # Give all tutor users staff rights and add them to the tutors permission group
-    tutors = User.objects.filter(courses_tutoring__isnull=False)
-    tutors.update(is_staff=True)
-    # If the app crashes here, you may have duplicate group objects, which must be fixed manually in the DB.
-    tutor_group, created = Group.objects.get_or_create(name=STUDENT_TUTORS_GROUP_NAME)
-    # If the app crashes here, you may have duplicate permission objects, which must be fixed manually in the DB.
-    tutor_group.permissions = [Permission.objects.get(codename=perm) for perm in tutor_perms]
-    tutor_group.user_set.add(*tutors)
-    tutor_group.save()
-
-    # Give all course owner users staff rights and add them to the course owners permission group
-    owners = User.objects.filter(courses__isnull=False)
-    owners.update(is_staff=True)
-    # If the app crashes here, you may have duplicate group objects, which must be fixed manually in the DB.
-    owner_group, created = Group.objects.get_or_create(name=COURSE_OWNERS_GROUP_NAME)
-    # If the app crashes here, you may have duplicate permission objects, which must be fixed manually in the DB.
-    owner_group.permissions = [Permission.objects.get(codename=perm) for perm in owner_perms]
-    owner_group.user_set.add(*owners)
-    owner_group.save()
-
-    # Make sure that pure students (no tutor, no course owner, no superuser) have no backend access at all
-    pure_students = User.objects.filter(courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
-    pure_students.update(is_staff=False)
-
-    # Read the admin email address from the configuration and make sure that he gets admin rights
-    # This is mainly needed for fresh installation, so that the admin has full power after his first
-    # regular (social) login
-    from django.conf import settings
     try:
-        conffile_admin = User.objects.get(email=settings.ADMIN_EMAIL)
-        make_admin(conffile_admin)
-    except:
-        pass
+        with transaction.atomic():
+            # Give all tutor users staff rights and add them to the tutors permission group
+            tutors = User.objects.filter(courses_tutoring__isnull=False)
+            tutors.update(is_staff=True)
+    except Exception as e:
+        logger.error("Error while checking tutor staff permissions: " + str(e))
+
+    try:
+        with transaction.atomic():
+            # If the app crashes here, you may have duplicate group objects, which must be fixed manually in the DB.
+            tutor_group, created = Group.objects.get_or_create(
+                name=STUDENT_TUTORS_GROUP_NAME)
+            # If the app crashes here, you may have duplicate permission objects, which must be fixed manually in the DB.
+            tutor_group.permissions = [Permission.objects.get(
+                codename=perm) for perm in tutor_perms]
+            tutor_group.user_set.add(*tutors)
+            tutor_group.save()
+    except Exception as e:
+        logger.error("Error while checking tutor group permissions: " + str(e))
+
+    try:
+        with transaction.atomic():
+            # Give all course owner users staff rights and add them to the course owners permission group
+            owners = User.objects.filter(courses__isnull=False)
+            owners.update(is_staff=True)
+    except Exception as e:
+        logger.error("Error while checking course owner staff permissions: " + str(e))
+
+    try:
+        with transaction.atomic():
+            # If the app crashes here, you may have duplicate group objects, which must be fixed manually in the DB.
+            owner_group, created = Group.objects.get_or_create(
+                name=COURSE_OWNERS_GROUP_NAME)
+            # If the app crashes here, you may have duplicate permission objects, which must be fixed manually in the DB.
+            owner_group.permissions = [Permission.objects.get(
+                codename=perm) for perm in owner_perms]
+            owner_group.user_set.add(*owners)
+            owner_group.save()
+    except Exception as e:
+        logger.error("Error while checking course owner group permissions: " + str(e))
+
+    try:
+        with transaction.atomic():
+            # Make sure that pure students (no tutor, no course owner, no superuser) have no backend access at all
+            pure_students = User.objects.filter(
+                courses__isnull=True, courses_tutoring__isnull=True, is_superuser=False)
+            pure_students.update(is_staff=False)
+    except Exception as e:
+        logger.error("Error while checking student permissions: " + str(e))
+
+    try:
+        with transaction.atomic():
+            # Read the admin email address from the configuration and make sure that he gets admin rights
+            # This is mainly needed for fresh installation, so that the admin has full power after his first
+            # regular (social) login
+            conffile_admin = User.objects.get(email=settings.ADMIN_EMAIL)
+            make_admin(conffile_admin)
+    except Exception as e:
+        logger.error("Error while checking admin permissions: " + str(e))
+
 
 def _get_user_groups():
-    owner_group, created = Group.objects.get_or_create(name=COURSE_OWNERS_GROUP_NAME)
+    owner_group, created = Group.objects.get_or_create(
+        name=COURSE_OWNERS_GROUP_NAME)
     if created:
         check_permission_system()
-    tutor_group, created = Group.objects.get_or_create(name=STUDENT_TUTORS_GROUP_NAME)
+    tutor_group, created = Group.objects.get_or_create(
+        name=STUDENT_TUTORS_GROUP_NAME)
     if created:
         check_permission_system()
     return tutor_group, owner_group
+
 
 def make_student(user):
     '''
     Makes the given user a student.
     '''
     tutor_group, owner_group = _get_user_groups()
-    user.is_staff=False
-    user.is_superuser=False
+    user.is_staff = False
+    user.is_superuser = False
     user.save()
     owner_group.user_set.remove(user)
     owner_group.save()
     tutor_group.user_set.remove(user)
     tutor_group.save()
 
+
 def make_tutor(user):
     '''
     Makes the given user a tutor.
     '''
     tutor_group, owner_group = _get_user_groups()
-    user.is_staff=True
-    user.is_superuser=False
+    user.is_staff = True
+    user.is_superuser = False
     user.save()
     owner_group.user_set.remove(user)
     owner_group.save()
     tutor_group.user_set.add(user)
     tutor_group.save()
 
+
 def make_owner(user):
     '''
     Makes the given user a owner and tutor.
     '''
     tutor_group, owner_group = _get_user_groups()
-    user.is_staff=True
-    user.is_superuser=False
+    user.is_staff = True
+    user.is_superuser = False
     user.save()
     owner_group.user_set.add(user)
     owner_group.save()
     tutor_group.user_set.add(user)
     tutor_group.save()
+
 
 def make_admin(user):
     '''
     Makes the given user an admin.
     '''
     tutor_group, owner_group = _get_user_groups()
-    user.is_staff=True
-    user.is_superuser=True
+    user.is_staff = True
+    user.is_superuser = True
     user.save()
     owner_group.user_set.add(user)
     owner_group.save()
     tutor_group.user_set.add(user)
     tutor_group.save()
-
