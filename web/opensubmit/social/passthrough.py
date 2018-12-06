@@ -31,7 +31,7 @@ class PassThroughAuth(BaseAuth):
 
     def auth_url(self):
         """Must return redirect URL to auth provider."""
-        return '/complete/%s/' % self.name
+        return self.strategy.build_absolute_uri(settings.MAIN_URL + '/complete/' + self.name)
 
     def auth_complete(self, *args, **kwargs):
         """Completes loging process, must return user instance"""
