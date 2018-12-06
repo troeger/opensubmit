@@ -106,13 +106,13 @@ class Assignment(models.Model):
         else:
             return None
 
-    def validity_test_url_absolute(self, request):
+    def validity_test_url_absolute(self):
         '''
             Return absolute download URL for validity test script.
         '''
         relative = self.validity_test_url_relative()
         if relative is not None:
-            return request.build_absolute_uri(relative)
+            return settings.MAIN_URL + relative
         else:
             return None
 
@@ -131,7 +131,7 @@ class Assignment(models.Model):
         '''
         relative = self.full_test_url_relative()
         if relative is not None:
-            return request.build_absolute_uri(relative)
+            return settings.MAIN_URL + relative
         else:
             return None
 
@@ -141,7 +141,7 @@ class Assignment(models.Model):
         '''
         if self.pk:
             if self.has_description():
-                return request.build_absolute_uri(reverse('assignment_description_file', args=[self.pk]))
+                return settings.MAIN_URL + reverse('assignment_description_file', args=[self.pk])
             else:
                 return self.download
         else:
