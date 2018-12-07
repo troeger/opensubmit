@@ -17,7 +17,6 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
 from opensubmit.models import UserProfile, Submission, TestMachine, Course, Assignment, SubmissionFile
-from opensubmit.models.userprofile import db_fixes
 from opensubmit.views.helpers import BinaryDownloadMixin
 
 
@@ -147,9 +146,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request):
-        # Check and fix database on lower levels for the current user
-        db_fixes(request.user)
-
         # LTI keys and passwords are defined per course
         # We use this here to register students automatically for
         # courses based on their LTI credentials.

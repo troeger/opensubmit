@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User, Group, Permission
 from django.db import transaction
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+
 
 import logging
 logger = logging.getLogger('OpenSubmit')
@@ -24,6 +26,10 @@ def check_permission_system():
         so we can assume them to be given.
 
         This method is idempotent and does not touch manually assigned permissions.
+
+        The actitivities are wrapped in transactions, since they might be triggered
+        by a signal handler in the middle of some other transaction. The latter - when
+        some change happens - may crash the app on PostgreSQL.
     '''
     tutor_perms = ("change_submission",
                    "delete_submission",
@@ -50,6 +56,8 @@ def check_permission_system():
                    "add_submissionfile",
                    "change_submissionfile",
                    "delete_submissionfile")
+
+    logger.debug("Starting check of permission system ...")
 
     try:
         with transaction.atomic():
@@ -109,6 +117,8 @@ def check_permission_system():
             # regular (social) login
             conffile_admin = User.objects.get(email=settings.ADMIN_EMAIL)
             make_admin(conffile_admin)
+    except ObjectDoesNotExist:
+        pass
     except Exception as e:
         logger.error("Error while checking admin permissions: " + str(e))
 

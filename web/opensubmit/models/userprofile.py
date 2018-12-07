@@ -2,7 +2,6 @@ from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from django.db import transaction
 
 from .assignment import Assignment
 from .course import Course
@@ -98,20 +97,6 @@ class UserProfile(models.Model):
         qs = qs.filter(course__in=self.user_courses())
         # Include only assignments this user has no submission for
         return qs.order_by('-hard_deadline')
-
-def db_fixes(user):
-    '''
-        Fix users that already exist and never got a user profile attached.
-        This may be user accounts that were created by the Django Social
-        or manually by the admin.
-    '''
-    try:
-        with transaction.atomic():
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            if created:
-                logger.info("Created missing profile for user " + str(user.pk))
-    except Exception as e:
-        logger.error("Error while creating user profile: " + str(e))
 
 
 def user_unicode(self):

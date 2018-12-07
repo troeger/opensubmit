@@ -3,7 +3,7 @@ import json
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from opensubmit.models import Course, Assignment, Grading, GradingScheme, Submission, SubmissionFile, SubmissionTestResult, TestMachine
+from opensubmit.models import Course, Assignment, Grading, GradingScheme, Submission, SubmissionFile, SubmissionTestResult, TestMachine, UserProfile
 from django.conf import settings
 from django.utils import timezone
 from django.core.files import File as DjangoFile
@@ -15,6 +15,7 @@ machine = TestMachine(
     host='UUID4711',
     config=json.dumps([["Operating system", "Plan 9"], ]))
 machine.save()
+
 
 def createSubmissionFile():
     with NamedTemporaryFile(mode="wt", delete=False, prefix=settings.MEDIA_ROOT) as tmpfile:
@@ -57,6 +58,8 @@ class Command(BaseCommand):
                                             password=name,
                                             first_name=name,
                                             last_name=name)
+            profile = UserProfile(user=user)
+            profile.save()
             users[name] = user
 
         # create demo grading
