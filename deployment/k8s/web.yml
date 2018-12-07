@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: opensubmit-web
-        image: troeger/opensubmit-web:0.7.18
+        image: troeger/opensubmit-web:0.7.19
         ports:
         - containerPort: 80
         env:
