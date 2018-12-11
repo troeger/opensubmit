@@ -18,16 +18,14 @@ PR.prettyPrint();
     {{ block.super }} - File Preview
 {% endblock %}
 
-{% setting "MAIN_URL" as main_url %}
-
 {% block breadcrumbs %}
 <ul>
-    <li><a href="{{ main_url }}/teacher/">Home</a></li>
+    <li><a href="{% url 'teacher:index' %}">Home</a></li>
     <li>
-        <a href="{{ main_url }}/teacher/opensubmit/submission/?coursefilter={{ submission.assignment.course.pk }}">Submissions</a>
+        <a href="{% url 'teacher:opensubmit_submission_changelist' %}?coursefilter={{ submission.assignment.course.pk }}">Submissions</a>
     </li>
     <li>
-        <a href="{{ main_url }}/teacher/opensubmit/submission/{{ submission.pk }}/change/">{{ submission.pk }}</a>
+        <a href="{% url 'teacher:opensubmit_submission_change' submission.pk %}">{{ submission.pk }}</a>
     </li>
     <li>Preview</li>
 </ul>
