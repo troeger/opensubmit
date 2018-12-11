@@ -169,6 +169,11 @@ class SubmissionFile(models.Model):
             return False
 
         result = []
+        try:
+            assert(self.attachment.path is not None)
+        except ValueError:
+            # The file behind the given path does not exist
+            return None
         if zipfile.is_zipfile(self.attachment.path):
             zf = zipfile.ZipFile(self.attachment.path, 'r')
             for zipinfo in zf.infolist():
