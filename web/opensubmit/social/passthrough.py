@@ -20,6 +20,7 @@ import logging
 from social_core.backends.base import BaseAuth
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
+from django.urls import get_script_prefix
 
 SESSION_VAR = 'passthrough_auth_data_' + settings.SECRET_KEY
 
@@ -31,7 +32,7 @@ class PassThroughAuth(BaseAuth):
 
     def auth_url(self):
         """Must return redirect URL to auth provider."""
-        return '/complete/%s/' % self.name
+        return get_script_prefix() + 'complete/%s/' % self.name
 
     def auth_complete(self, *args, **kwargs):
         """Completes loging process, must return user instance"""
