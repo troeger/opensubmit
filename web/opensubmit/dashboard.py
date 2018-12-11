@@ -97,7 +97,7 @@ class TeacherDashboard(Dashboard):
                                             "<tr><td>Authoring students</td><td>%u</td></tr>" % course.authors().count() +
                                             "</table>"
                                             ),
-                    modules.LinkList(title="Direct Course Link",  css_classes=["grp-closed"],children=([course.title, "%s/?course=%u" % (settings.MAIN_URL, course.pk), False],)),
+                    modules.LinkList(title="Direct Course Link",  css_classes=["grp-closed"], children=([course.title, context.request.build_absolute_uri(reverse("dashboard")) + "?course=%u" % (course.pk), False],)),
                     modules.LinkList(title="LTI Tool Links", css_classes=["grp-closed"], children=(lti_links)),
                     modules.DashboardModule(title="LTI Credentials", css_classes=["grp-closed"], pre_content='<table class="teacher_dashboard_info">' +
                                             '<tr><td>LTI Key</td><td>%s</td></tr>' % (course.lti_key) +
