@@ -29,12 +29,9 @@ table.buttons('visibility', 0).container().prependTo( 'div.col-sm-12' );
 table.buttons('export', 0).container().appendTo( '#lower_buttons');
 {% endblock %}
 
-{% setting "MAIN_URL" as main_url %}
-
-
 {% block breadcrumbs %}
 <ul>
-    <li><a href="{{ main_url }}/teacher/">Home</a></li>
+    <li><a href="{% url 'teacher:index' %}">Home</a></li>
     <li>Grading Table</li>
 </ul>
 {% endblock %}

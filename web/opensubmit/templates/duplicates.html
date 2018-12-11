@@ -31,9 +31,9 @@ var table=$('#duplicates').DataTable(
 
 {% block breadcrumbs %}
 <ul>
-    <li><a href="{{ main_url }}/teacher/">Home</a></li>
+    <li><a href="{% url 'teacher:index' %}">Home</a></li>
     <li>
-        <a href="{{ main_url }}/teacher/opensubmit/assignment/">Assignments</a>
+        <a href="{% url 'teacher:opensubmit_assignment_changelist' %}">Assignments</a>
     </li>
     <li>Duplicates</li>
 </ul>
