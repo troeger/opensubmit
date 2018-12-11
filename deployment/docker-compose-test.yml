@@ -32,6 +32,7 @@ services:
       - db
     volumes:
       - data-volume:/data
+      - ../web/opensubmit/:/usr/local/lib/python3.6/dist-packages/opensubmit/
   exec1:
     image: troeger/opensubmit-exec:0.7.19
     environment:

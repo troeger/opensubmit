@@ -48,13 +48,11 @@ tests: check-venv web/opensubmit/settings_dev.ini
 coverage: check-venv web/opensubmit/settings_dev.ini
 	coverage run ./web/manage.py test opensubmit.tests; coverage html
 
-# Re-create docker images locally
-docker-build: build
-	docker-compose -f deployment/docker-compose.yml build
-
-# Run docker images locally
-docker:
-	docker-compose -f deployment/docker-compose.yml up
+# Run docker container with current code for smoke testing
+# Mounts the sources in the Docker container - so, as long as Apache
+# detects the source code change, you should be able to do live patching
+docker-test:
+	docker-compose -f deployment/docker-compose-test.yml up
 
 # Update version numbers, commit and tag 
 bumpversion:
