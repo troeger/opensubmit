@@ -16,6 +16,7 @@ from .submissionfile import SubmissionFileAdmin
 from .submission import SubmissionAdmin
 from .studyprogram import StudyProgramAdmin
 
+
 def _social_auth_login(self, request, **kwargs):
     '''
         View function that redirects to social auth login,
@@ -28,14 +29,15 @@ def _social_auth_login(self, request, **kwargs):
         messages.add_message(request, messages.WARNING, 'Please authenticate first.')
         return redirect_to_login(request.get_full_path())
 
+
 class TeacherBackend(AdminSite):
     site_header = "OpenSubmit"
-    site_url = settings.MAIN_URL
     index_title = "Teacher Backend"
     login = _social_auth_login
 
     def app_index(self, request, app_label, extra_context=None):
         return redirect('teacher:index')
+
 
 teacher_backend = TeacherBackend(name="teacher")
 # Only for admins
