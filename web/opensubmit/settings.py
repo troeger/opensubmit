@@ -116,9 +116,9 @@ else:
     MAIN_URL = HOST
 
 # Determine some settings based on the MAIN_URL
-LOGIN_URL = MAIN_URL
-LOGIN_ERROR_URL = MAIN_URL
-LOGIN_REDIRECT_URL = MAIN_URL + '/dashboard/'
+LOGIN_URL = 'index'
+LOGIN_ERROR_URL = 'index'
+LOGIN_REDIRECT_URL = 'dashboard'
 
 # Local file system storage for uploads.
 # Please note that MEDIA_URL is intentionally not set, since all media
