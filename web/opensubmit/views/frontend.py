@@ -29,6 +29,7 @@ class IndexView(TemplateView):
         else:
             return super(IndexView, self).get(request)
 
+
 class ImpressView(TemplateView):
     template_name = 'impress.html'
 
