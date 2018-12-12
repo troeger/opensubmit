@@ -107,15 +107,13 @@ DEBUG = config.get_bool('general', 'DEBUG', default=False)
 # Demo mode allows login bypass
 DEMO = config.get_bool('general', 'DEMO', default=False)
 
-# Determine MAIN_URL option
 HOST = config.get('server', 'HOST')
 HOST_DIR = config.get('server', 'HOST_DIR')
 if len(HOST_DIR) > 0:
-    MAIN_URL = HOST + '/' + HOST_DIR
+    mainurl = HOST + '/' + HOST_DIR
 else:
-    MAIN_URL = HOST
+    mainurl = HOST
 
-# Determine some settings based on the MAIN_URL
 LOGIN_URL = 'index'
 LOGIN_ERROR_URL = 'index'
 LOGIN_REDIRECT_URL = 'dashboard'
@@ -134,7 +132,7 @@ else:
     SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Determine list of allowed hosts
-host_list = [MAIN_URL.split('/')[2]]
+host_list = [mainurl.split('/')[2]]
 if ':' in host_list[0]:
     # Strip port number
     host_list = [host_list[0].split(':')[0]]
@@ -148,7 +146,7 @@ if config.is_production:
     STATIC_ROOT = SCRIPT_ROOT + '/static-production/'
     STATICFILES_DIRS = (SCRIPT_ROOT + '/static/', )
     # Absolute URL for static files, directly served by Apache on production systems
-    STATIC_URL = MAIN_URL + '/static/'
+    STATIC_URL = mainurl + '/static/'
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     SERVER_EMAIL = config.get('admin', 'ADMIN_EMAIL')
 else:
