@@ -201,12 +201,6 @@ def check_web_config_consistency(config):
     print("Checking configuration of the OpenSubmit web application...")
     # Let Django's manage.py load the settings file, to see if this works in general
     django_admin(["check"])
-    # Check configured host
-    try:
-        urllib.request.urlopen(config.get("server", "HOST"))
-    except Exception as e:
-        # This may be ok, when the admin is still setting up to server
-        print("The configured HOST seems to be invalid at the moment: " + str(e))
     # Check configuration dependencies
     for k, v in list(login_conf_deps.items()):
         if config.get('login', k):
