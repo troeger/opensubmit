@@ -11,8 +11,6 @@
     <h6>{{ user.get_full_name }} &lt;{{ user.email }}&gt; </h6>
 </div>
 
-{%with assign_missed=user.profile.gone_assignments assignments=user.profile.open_assignments%}
-
 <section>
     <h3>Open</h3>
     {% if not user.profile.user_courses %}
@@ -42,7 +40,7 @@
                                     {{ assignment.course }}
                                 </a>
                             </td>
-                            <td><a href="{{ assignment.url }}">
+                            <td><a href="{{ assignment.description_url }}">
                                     {{ assignment }}
                                 </a>
                                 {% if  assignment.publish_at > today %}
@@ -165,8 +163,6 @@
     {% endif %}
 </section>
 
-{% endwith %}
-
 <section>
     {% if machines %}
         <h3>Test Machines</h3>
@@ -174,8 +170,8 @@
         {% for machine in machines %}
             <li><a href="{% url 'machine' machine.pk %}">{{ machine }}</a></li>
         {% endfor %}
+        </ul>
     {% endif %}
-</ul>
 </section>
 
 {% endblock %}

@@ -24,27 +24,38 @@ class AssignmentAdminForm(forms.ModelForm):
         '''
         super(AssignmentAdminForm, self).__init__(*args, **kwargs)
         if self.instance.pk:        # makes only sense if this is not a new assignment to be created
-            if self.instance.validity_test_url():
+            try:
+                # We got cases where the request information was missing,
+                # so we wrap the determination of the URL in an exception handler here
+                request = kwargs.pop('request')
+                val_test_url = self.instance.validity_test_url(request)
+                ful_test_url = self.instance.full_test_url(request)
+                instance_url = self.instance.url(request)
+            except Exception:
+                val_test_url = None
+                ful_test_url = None
+                instance_url = None
+            if val_test_url:
                 self.fields['attachment_test_validity'].widget.template_with_initial = (
-                    '%(initial_text)s: <a href="'+self.instance.validity_test_url()+'">%(initial)s</a> '
+                    '%(initial_text)s: <a href="' + val_test_url + '">%(initial)s</a> '
                     '%(clear_template)s<br />%(input_text)s: %(input)s'
                 )
             else:
                 self.fields['attachment_test_validity'].widget.template_with_initial = (
                     '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
                 )
-            if self.instance.full_test_url():
+            if ful_test_url:
                 self.fields['attachment_test_full'].widget.template_with_initial = (
-                    '%(initial_text)s: <a href="'+self.instance.full_test_url()+'">%(initial)s</a> '
+                    '%(initial_text)s: <a href="' + ful_test_url + '">%(initial)s</a> '
                     '%(clear_template)s<br />%(input_text)s: %(input)s'
                 )
             else:
                 self.fields['attachment_test_full'].widget.template_with_initial = (
                     '%(initial_text)s: %(clear_template)s<br />%(input_text)s: %(input)s'
                 )
-            if self.instance.url():
+            if instance_url:
                 self.fields['description'].widget.template_with_initial = (
-                    '%(initial_text)s: <a href="'+self.instance.url()+'">%(initial)s</a> '
+                    '%(initial_text)s: <a href="' + instance_url + '">%(initial)s</a> '
                     '%(clear_template)s<br />%(input_text)s: %(input)s'
                 )
             else:

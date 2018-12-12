@@ -212,10 +212,10 @@ def jobs(request):
         response['Timeout'] = sub.assignment.attachment_test_timeout
         if sub.state == Submission.TEST_VALIDITY_PENDING:
             response['Action'] = 'test_validity'
-            response['PostRunValidation'] = sub.assignment.validity_test_url()
+            response['PostRunValidation'] = sub.assignment.validity_test_url(request)
         elif sub.state == Submission.TEST_FULL_PENDING or sub.state == Submission.CLOSED_TEST_FULL_PENDING:
             response['Action'] = 'test_full'
-            response['PostRunValidation'] = sub.assignment.full_test_url()
+            response['PostRunValidation'] = sub.assignment.full_test_url(request)
         else:
             assert (False)
         logger.debug("Delivering submission %u as new %s job" %

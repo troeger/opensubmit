@@ -143,6 +143,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['machines'] = TestMachine.objects.filter(enabled=True)
         context['today'] = datetime.now()
         context['user'] = self.request.user
+        context['assign_missed'] = self.request.user.profile.gone_assignments()
+        assignments = self.request.user.profile.open_assignments()
+        for assign in assignments:
+            # The function for getting an assignment download URL
+            # expects the current request object
+            assign.description_url = assign.url(self.request)
+        context['assignments'] = assignments
         return context
 
     def get(self, request):
