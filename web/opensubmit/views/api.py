@@ -18,7 +18,6 @@ from django.utils.decorators import method_decorator
 
 from django.conf import settings
 from opensubmit.models import Assignment, Submission, TestMachine, SubmissionFile
-from opensubmit.mails import inform_student
 from opensubmit.views.helpers import BinaryDownloadMixin
 
 import logging
@@ -168,7 +167,7 @@ def jobs(request):
                     sub.save_validation_result(
                         machine, "Killed due to non-reaction. Please check your application for deadlocks or keyboard input.", "Killed due to non-reaction on timeout signals.")
                     sub.state = Submission.TEST_VALIDITY_FAILED
-                    sub.inform_student(sub.state)
+                    sub.inform_student(request, sub.state)
                 if sub.state == Submission.TEST_FULL_PENDING:
                     sub.save_fulltest_result(
                         machine, "Killed due to non-reaction on timeout signals. Student not informed, since this was the full test.")
@@ -258,12 +257,12 @@ def jobs(request):
                     if not sub.assignment.is_graded():
                         # Assignment is not graded. We are done here.
                         sub.state = Submission.CLOSED
-                        sub.inform_student(Submission.CLOSED)
+                        sub.inform_student(request, Submission.CLOSED)
             else:
                 logger.debug(
                     "Validity test not working, setting state to failed")
                 sub.state = Submission.TEST_VALIDITY_FAILED
-            sub.inform_student(sub.state)
+            sub.inform_student(request, sub.state)
         # Job state: Waiting for full test
         # Possible with + without grading
         elif request.POST['Action'] == 'test_full' and sub.state == Submission.TEST_FULL_PENDING:
@@ -276,7 +275,7 @@ def jobs(request):
                 else:
                     logger.debug("Full test working, setting state to closed (since not graded)")
                     sub.state = Submission.CLOSED
-                    inform_student(sub, Submission.CLOSED)
+                    sub.inform_student(request, Submission.CLOSED)
             else:
                 logger.debug("Full test not working, setting state to failed")
                 sub.state = Submission.TEST_FULL_FAILED

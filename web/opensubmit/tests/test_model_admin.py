@@ -105,7 +105,7 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
         for email in mail.outbox:
             self.assertIn("Grading", email.subject)
             self.assertIn("grading", email.body)
-            self.assertIn("localhost", email.body)
+            self.assertIn("http://testserver/details/", email.body)
 
     def test_email_link(self):
         from django.core import mail
@@ -117,7 +117,7 @@ class SubmissionModelAdminTestCase(SubmitTutorTestCase):
         for email in mail.outbox:
             self.assertIn("Grading", email.subject)
             self.assertIn("grading", email.body)
-            self.assertIn("http://localhost:8001", email.body)
+            self.assertIn("http://testserver/details/", email.body)
 
     def test_set_full_pending_all(self):
         # Only one of the submission assignments has validation configured

@@ -18,6 +18,8 @@ class MockRequest(http.HttpRequest):
         # see https://code.djangoproject.com/ticket/17971
         self.session = 'session'
         self._messages = FallbackStorage(self)
+        self.META = {'SERVER_NAME':'testserver', 'SERVER_PORT':80}
+        self.path = '/'
 
 
 @override_settings(
