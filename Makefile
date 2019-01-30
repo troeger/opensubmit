@@ -51,7 +51,7 @@ coverage: check-venv web/opensubmit/settings_dev.ini
 # Run docker container with current code for smoke testing
 # Mounts the sources in the Docker container - so, as long as Apache
 # detects the source code change, you should be able to do live patching
-docker-test:
+docker-test: build
 	docker-compose -f deployment/docker-compose-test.yml up
 
 # Update version numbers, commit and tag 
