@@ -238,7 +238,6 @@ INSTALLED_APPS = (
     'grappelli.dashboard',
     'grappelli',
     'django.contrib.admin',
-#    'django.contrib.admin.apps.SimpleAdminConfig',
     'opensubmit.app.OpenSubmitConfig',
 )
 
@@ -307,7 +306,7 @@ LOGIN_GITHUB = (config.get("login", "LOGIN_GITHUB_OAUTH_KEY").strip() != '' and
 LOGIN_TWITTER = (config.get("login", "LOGIN_TWITTER_OAUTH_KEY").strip() != '' and
                  config.get("login", "LOGIN_TWITTER_OAUTH_SECRET").strip() != '')
 LOGIN_OPENID = (config.get('login', 'OPENID_PROVIDER').strip() != '')
-LOGIN_OIDC   = (config.get('login', 'LOGIN_OIDC_ENDPOINT').strip() != '')
+LOGIN_OIDC = (config.get('login', 'LOGIN_OIDC_ENDPOINT').strip() != '')
 LOGIN_SHIB = (config.get('login', 'LOGIN_SHIB_DESCRIPTION').strip() != '')
 LOGIN_GITLAB = (config.get("login", "LOGIN_GITLAB_OAUTH_KEY").strip() != '' and
                 config.get("login", "LOGIN_GITLAB_OAUTH_SECRET").strip() != '' and
