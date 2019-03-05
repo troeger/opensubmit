@@ -76,13 +76,16 @@ def store_report_link(backend, user, response, *args, **kwargs):
     if backend.name is 'lti':
         assignment_pk = response.get('assignment_pk', None)
         assignment = get_object_or_404(Assignment, pk=assignment_pk)
-        lti_result, created = LtiResult.objects.get_or_create(assignment=assignment, user=user)
+        lti_result, created = LtiResult.objects.get_or_create(
+            assignment=assignment, user=user)
         if created:
             logger.debug("LTI result record not found, creating it.")
         else:
-            logger.debug("LTI result record found, updating it.")   # Expected, check LTI standard
+            # Expected, check LTI standard
+            logger.debug("LTI result record found, updating it.")
         lti_result.lis_result_sourcedid = response.get('lis_result_sourcedid')
-        lti_result.lis_outcome_service_url = response.get('lis_outcome_service_url')
+        lti_result.lis_outcome_service_url = response.get(
+            'lis_outcome_service_url')
         lti_result.save()
 
 
@@ -103,13 +106,14 @@ class DispatcherView(View):
         '''
         launch_url = request.build_absolute_uri(
             reverse('lti', args=[pk]))
+        secure_launch_url = launch_url.replace("http://", "https://")
         assignment = get_object_or_404(Assignment, pk=pk)
 
         from lti import ToolConfig
         lti_tool_config = ToolConfig(
             title=assignment.title,
             launch_url=launch_url,
-            secure_launch_url=launch_url)
+            secure_launch_url=secure_launch_url)
 
         return HttpResponse(lti_tool_config.to_xml(), content_type='text/xml')
 
@@ -127,7 +131,8 @@ class DispatcherView(View):
                 logger.debug("LTI consumer is already authenticated")
                 return redirect(reverse('lti_submission', args=[pk]))
             else:
-                logger.debug("LTI consumer needs OpenSubmit user, starting auth pipeline")
+                logger.debug(
+                    "LTI consumer needs OpenSubmit user, starting auth pipeline")
                 # Store data being used by the Django Social Auth Provider for account creation
                 data = request.POST.copy()
                 data['assignment_pk'] = pk
@@ -160,7 +165,8 @@ class SubmissionView(SubmissionNewView):
 
     def dispatch(self, request, *args, **kwargs):
         self.ass = get_object_or_404(Assignment, pk=kwargs['pk'])
-        self.submission = request.user.authored.all().filter(assignment=self.ass).exclude(state=Submission.WITHDRAWN)
+        self.submission = request.user.authored.all().filter(
+            assignment=self.ass).exclude(state=Submission.WITHDRAWN)
 
         if self.submission:
             self.submission = self.submission[0]
