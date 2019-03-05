@@ -62,11 +62,11 @@ bumpversion:
 	bumpversion --verbose patch
 
 # Re-create docker images and upload into registry
-docker-push: build
+docker-push: clean build
 	docker login --username=troeger
-	docker build -t troeger/opensubmit-web:$(VERSION) web
+	pushd web; docker build -t troeger/opensubmit-web:$(VERSION) .; popd
 	docker push troeger/opensubmit-web:$(VERSION)
-	docker build -t troeger/opensubmit-exec:$(VERSION) executor
+	pushd executor; docker build -t troeger/opensubmit-exec:$(VERSION) .; popd
 	docker push troeger/opensubmit-exec:$(VERSION)
 
 # Upload built packages to PyPI.

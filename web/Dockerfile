@@ -13,8 +13,8 @@ RUN apt-get update \
     && rm /etc/apache2/sites-enabled/000-default.conf \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 ENV LANG en_US.utf8
-COPY ./httpd.conf /etc/apache2/sites-enabled/httpd.conf
-COPY ./docker-entry.sh /docker-entry.sh
+COPY ./docker/httpd.conf /etc/apache2/sites-enabled/httpd.conf
+COPY ./docker/docker-entry.sh /docker-entry.sh
 
 # Install dependencies explicitely for Docker caching
 RUN mkdir /install
