@@ -54,11 +54,8 @@ class LtiRequestValidator(RequestValidator):
 
     @property
     def enforce_ssl(self):
-        if settings.DEBUG:
-            # for test suite runs
-            return False
-        else:
-            return True
+        # Support operation behind SSL-terminating proxy, and test suite
+        return False
 
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce, request, request_token=None, access_token=None):
         # TODO: Store nonces in the database and take replay attacks seriously.
@@ -124,6 +121,19 @@ class DispatcherView(View):
         logger.debug("Incoming POST request through LTI")
         from lti.contrib.django import DjangoToolProvider
         tool_provider = DjangoToolProvider.from_django_request(request=request)
+        if not tool_provider.launch_url.startswith(settings.HOST):
+            # When OpenSubmit runs behind an SSL-terminating proxy,
+            # we run into the issue that the launch URL determined from the tool
+            # provider is not the original one. Since OAuth requests are signed
+            # with the called URL, this breaks the OAuth signature check
+            # coming afterwards.
+            #
+            # The solution is to fix the URL manually in this special case.
+            adjusted_url = settings.HOST + '/' + \
+                tool_provider.launch_url.split('/', 3)[3]
+            logger.info("Changing LTI launch URL from {0} to {1}, based on OpenSubmit configuration, before OAuth check.".format(
+                tool_provider.launch_url, adjusted_url))
+            tool_provider.launch_url = adjusted_url
         validator = LtiRequestValidator(pk)
         if tool_provider.is_valid_request(validator):
             logger.debug("Valid OAuth request through LTI")
