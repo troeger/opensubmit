@@ -174,12 +174,13 @@ def check_path(file_path):
         if not os.path.exists(directory):
             os.makedirs(directory, 0o775)   # rwxrwxr-x
     www_uid = webserver_uid()
-    if www_uid:
-        dir_uid = os.stat(directory).st_uid
-        if dir_uid != www_uid:
-            print("WARNING: {0} is not owned by www-data. Make sure that the permissions fit to your web server installation.".format(directory))
+    www_gid = webserver_gid()
+    if not www_uid or not www_gid:
+        print("WARNING: Skipping permission change of {0}, www-data does not exist on this system.".format(directory))
     else:
-        print("Skipping permission check of {0}, www-data does not exist on this system.".format(directory))
+        print("Setting owner of {0} to web server".format(directory))
+        os.chown(directory, www_uid, www_gid)
+        os.chmod(directory, 0o777)  # rw-rw---
 
 
 def check_file(filepath):
@@ -192,13 +193,14 @@ def check_file(filepath):
     if not os.path.exists(filepath):
         print("File does not exist. Creating it: %s" % filepath)
         open(filepath, 'a').close()
-        www_uid = webserver_uid()
-        www_gid = webserver_gid()
-        if not www_uid or not www_gid:
-            print("WARNING: Skipping permission change of {0}, www-data does not exist on this system.".format(filepath))
-        else:
-            os.chown(filepath, www_uid, www_gid)
-            os.chmod(filepath, 0o660)  # rw-rw---
+    www_uid = webserver_uid()
+    www_gid = webserver_gid()
+    if not www_uid or not www_gid:
+        print("WARNING: Skipping permission change of {0}, www-data does not exist on this system.".format(filepath))
+    else:
+        print("Setting owner of {0} to web server".format(filepath))
+        os.chown(filepath, www_uid, www_gid)
+        os.chmod(filepath, 0o777)  # rw-rw---
 
 
 def check_web_config_consistency(config):
@@ -417,8 +419,6 @@ def console_script(fsroot=''):
                           'dumpconfig'], help='Show effective OpenSubmit configuration at run-time.')
     subparsers.add_parser(
         'fixchecksums', help='Re-create all student file checksums (for duplicate detection).')
-    subparsers.add_parser(
-        'ensureroot', help='Create root account, if missing, and show password for it.')
 
     parser_makeadmin = subparsers.add_parser(
         'makeadmin', help='Make this user an admin with backend rights.')
