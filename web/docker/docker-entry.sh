@@ -23,6 +23,7 @@ echo "Database is up."
 
 # perform relevant database migrations
 opensubmit-web configtest
+opensubmit-web ensureroot
 
 # Start Apache
 rm -f /var/run/apache2/apache2.pid
