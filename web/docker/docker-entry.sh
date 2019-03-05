@@ -29,4 +29,4 @@ opensubmit-web ensureroot
 /etc/init.d/apache2 stop
 /etc/init.d/apache2 start
 
-tail -f /var/log/apache2/opensubmit_error.log 
+tail -f /tmp/opensubmit.log  

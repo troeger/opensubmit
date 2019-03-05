@@ -296,6 +296,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'oauthlib': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     }
 }
 
