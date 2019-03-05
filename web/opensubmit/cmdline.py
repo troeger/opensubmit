@@ -156,7 +156,14 @@ def check_path(file_path):
     if directory != '':
         if not os.path.exists(directory):
             os.makedirs(directory, 0o775)   # rwxrwxr-x
-
+        try:
+            print("Setting access rights for %s for www-data user" % (directory))
+            uid = pwd.getpwnam("www-data").pw_uid
+            gid = grp.getgrnam("www-data").gr_gid
+            os.chown(directory, uid, gid)
+            os.chmod(directory, 0o660)  # rw-rw---
+        except Exception:
+            print("WARNING: Could not adjust file system permissions for %s. Make sure your web server can write into it." % directory)
 
 def check_file(filepath):
     '''
