@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setup(
     name = 'opensubmit-exec',
-    version = '0.7.27',
+    version = '0.7.28',
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Tröger',
