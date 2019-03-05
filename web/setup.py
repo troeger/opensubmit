@@ -27,7 +27,7 @@ data_files = static+templates+templatetags
 
 setup(
     name = 'opensubmit-web',
-    version = '0.7.19',
+    version = '0.7.20',
     url = 'https://github.com/troeger/opensubmit',
     license='AGPL',
     author = 'Peter Tröger',
