@@ -5,7 +5,11 @@ set -e
 
 # (Re-)create OpenSubmit configuration from env variables
 opensubmit-web configcreate 
+
+# (Re-)create Apache configuration from env variables
 opensubmit-web apachecreate
+
+# Show config on stdout, for Docker debugging purposes
 opensubmit-web dumpconfig
 
 # Wait for postgres to come up
@@ -21,11 +25,10 @@ do
 done
 echo "Database is up."
 
-# perform relevant database migrations
+# perform relevant database migrations, check file permissions
 opensubmit-web configtest
-opensubmit-web ensureroot
 
-# Start Apache
+# Make sure Apache really loads the new configs
 /etc/init.d/apache2 stop
 /etc/init.d/apache2 start
 
