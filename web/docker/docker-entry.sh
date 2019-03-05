@@ -13,6 +13,7 @@ opensubmit-web apachecreate
 opensubmit-web dumpconfig
 
 # Wait for postgres to come up
+echo "Waiting for database to come up ..."
 while ! nc -z $OPENSUBMIT_DATABASE_HOST 5432 2>/dev/null
 do
     let elapsed=elapsed+1
@@ -32,4 +33,4 @@ opensubmit-web configtest
 /etc/init.d/apache2 stop
 /etc/init.d/apache2 start
 
-tail -f /tmp/opensubmit.log  
+tail -f /var/log/apache2/opensubmit_error.log
