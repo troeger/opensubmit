@@ -375,7 +375,7 @@ def console_script(fsroot=''):
         configtest(config_file)
         return
 
-    if args.command in ['fixperms', 'fixchecksums', 'democreate', 'createdemo', 'dumpconfig', 'configdump']:
+    if args.command in ['fixperms', 'fixchecksums', 'democreate', 'createdemo', 'dumpconfig', 'configdump', 'ensureroot']:
         django_admin([args.command])
         return
 
