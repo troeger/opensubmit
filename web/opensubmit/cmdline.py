@@ -12,9 +12,6 @@
 import os
 import pwd
 import grp
-import urllib.request
-import urllib.parse
-import urllib.error
 import sys
 import argparse
 from base64 import b64encode
@@ -134,6 +131,7 @@ def apache_config(config, outputfile):
         text += "    WSGIScriptAlias / %s/wsgi.py" % (settings.SCRIPT_ROOT)
     text += """
     WSGIPassAuthorization On
+    WSGIProcessGroup opensubmit
     <Directory {static_path}>
          Require all granted
     </Directory>
