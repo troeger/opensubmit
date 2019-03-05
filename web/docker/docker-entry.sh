@@ -26,5 +26,7 @@ opensubmit-web configtest
 opensubmit-web ensureroot
 
 # Start Apache
-rm -f /var/run/apache2/apache2.pid
-apache2ctl -D FOREGROUND
+#rm -f /var/run/apache2/apache2.pid
+#apache2ctl -D FOREGROUND
+service apache2 start
+tail -f /var/log/apache2/opensubmit_error.log 
