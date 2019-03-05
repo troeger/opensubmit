@@ -10,8 +10,6 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
 from oauthlib.oauth1 import RequestValidator
-from lti.contrib.django import DjangoToolProvider
-from lti import ToolConfig
 
 from opensubmit.social import lti
 from django.conf import settings
@@ -107,6 +105,7 @@ class DispatcherView(View):
             reverse('lti', args=[pk]))
         assignment = get_object_or_404(Assignment, pk=pk)
 
+        from lti import ToolConfig
         lti_tool_config = ToolConfig(
             title=assignment.title,
             launch_url=launch_url,
@@ -119,6 +118,7 @@ class DispatcherView(View):
         The LTI tool provider uses POST to send a real, OAuth-signed, request for the LTI provider content.
         '''
         logger.debug("Incoming POST request through LTI")
+        from lti.contrib.django import DjangoToolProvider
         tool_provider = DjangoToolProvider.from_django_request(request=request)
         validator = LtiRequestValidator(pk)
         if tool_provider.is_valid_request(validator):
