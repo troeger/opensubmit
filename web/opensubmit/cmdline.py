@@ -124,14 +124,16 @@ def apache_config(config, outputfile):
     if subdir:
         text += "Alias /%s/static/ %s\n" % (settings.HOST_DIR,
                                             settings.STATIC_ROOT)
-        text += "    WSGIScriptAlias /%s %s/wsgi.py\n" % (
+        text += "    WSGIScriptAlias /%s %s/wsgi.py process-group=opensubmit\n" % (
             settings.HOST_DIR, settings.SCRIPT_ROOT)
     else:
         text += "Alias /static/ %s\n" % (settings.STATIC_ROOT)
-        text += "    WSGIScriptAlias / %s/wsgi.py" % (settings.SCRIPT_ROOT)
+        text += "    WSGIScriptAlias / %s/wsgi.py  process-group=opensubmit" % (settings.SCRIPT_ROOT)
     text += """
     WSGIPassAuthorization On
     WSGIProcessGroup opensubmit
+    WSGIDaemonProcess opensubmit threads=1 processes=1
+
     <Directory {static_path}>
          Require all granted
     </Directory>
@@ -348,6 +350,7 @@ def console_script(fsroot=''):
     subparsers.add_parser('fixperms', help='Check and fix student and tutor permissions.')
     subparsers.add_parser('configdump', aliases=['dumpconfig'], help='Show effective OpenSubmit configuration at run-time.')
     subparsers.add_parser('fixchecksums', help='Re-create all student file checksums (for duplicate detection).')
+    subparsers.add_parser('ensureroot', help='Create root account, if missing, and show password for it.')
 
     parser_makeadmin = subparsers.add_parser('makeadmin', help='Make this user an admin with backend rights.')
     parser_makeadmin.add_argument('email')
