@@ -116,6 +116,7 @@ def check_permission_system():
             # This is mainly needed for fresh installation, so that the admin has full power after his first
             # regular (social) login
             conffile_admin = User.objects.get(email=settings.ADMIN_EMAIL)
+            logger.debug("Making {0} an admin.".format(conffile_admin))
             make_admin(conffile_admin)
     except ObjectDoesNotExist:
         pass
