@@ -4,10 +4,11 @@ metadata:
   name: opensubmit
   labels:
     app.kubernetes.io/name: opensubmit
-    app.kubernetes.io/component: exec
+    app.kubernetes.io/component: web
   annotations:
     kubernetes.io/ingress.class: nginx
     certmanager.k8s.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 10g
 spec:
   tls:
   - secretName: opensubmit-web-tls
