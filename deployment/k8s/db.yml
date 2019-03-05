@@ -47,7 +47,7 @@ spec:
         volumeMounts:
         - name: opensubmit-db-storage
           mountPath: /var/lib/postgresql/data 
-
+          subPath: postgres
       volumes:
       - name: opensubmit-db-storage
         persistentVolumeClaim:
