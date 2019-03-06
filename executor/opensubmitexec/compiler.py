@@ -9,6 +9,7 @@ logger = logging.getLogger('opensubmitexec')
 
 GCC = ['gcc', '-o', '{output}', '{inputs}']
 GPP = ['g++', '-pthread', '-o', '{output}', '{inputs}']
+JAVAC = ['javac', '{inputs}']
 
 
 def compiler_cmdline(compiler=GCC, output=None, inputs=None):
