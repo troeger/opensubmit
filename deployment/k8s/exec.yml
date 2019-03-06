@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: opensubmit-exec
-        image: troeger/opensubmit-exec:0.7.31
+        image: troeger/opensubmit-exec:0.7.32
         envFrom:
         - configMapRef:
             name: opensubmit-config
