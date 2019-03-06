@@ -42,7 +42,7 @@ services:
   exec:
     image: troeger/opensubmit-exec:0.7.31
     environment:
-      OPENSUBMIT_SERVER_HOST: http://web
+      OPENSUBMIT_SERVER_URL: http://web
     tty: true
     depends_on:
       - web

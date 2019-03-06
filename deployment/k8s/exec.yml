@@ -20,6 +20,6 @@ spec:
       containers:
       - name: opensubmit-exec
         image: troeger/opensubmit-exec:0.7.31
-        env:
-        - name: OPENSUBMIT_SERVER_HOST
-          value: "opensubmit-web"
+        envFrom:
+        - configMapRef:
+            name: opensubmit-config
