@@ -15,6 +15,8 @@ def validate_authors(authors, assignment):
 
 class SubmissionWithGroups(forms.ModelForm):
 
+    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2, 'cols': 40}))
+
     class Meta:
         model = Submission
         fields = ('authors', 'notes')
@@ -50,6 +52,8 @@ class SubmissionWithGroups(forms.ModelForm):
 
 class SubmissionWithoutGroups(forms.ModelForm):
 
+    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2, 'cols': 40}))
+
     class Meta:
         model = Submission
         fields = ('notes',)
@@ -84,6 +88,7 @@ class SubmissionWithGroupsWithoutFileForm(SubmissionWithGroups):
 class SubmissionFileUpdateForm(forms.ModelForm):
 
     attachment = forms.FileField()
+    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2, 'cols': 40}))
 
     class Meta:
         model = Submission
