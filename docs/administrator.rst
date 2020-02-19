@@ -55,7 +55,7 @@ Manual installation
 
 When you want to run the OpenSubmit web application without Docker, you need to follow these steps:
   
-- Prepare a Python 3 web hosting environment. 
+- Prepare a Python 3 (>= 3.5) web hosting environment. 
 
   - Debian / Ubuntu: ``apt-get install libapache2-mod-wsgi-py3 apache2 sqlite python3``. 
 
