@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assignment',
             name='gradingScheme',
-            field=models.ForeignKey(related_name='assignments', verbose_name='grading scheme', to='opensubmit.GradingScheme'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', verbose_name='grading scheme', to='opensubmit.GradingScheme'),
         ),
         migrations.AlterField(
             model_name='assignment',
@@ -87,7 +87,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='course',
             name='owner',
-            field=models.ForeignKey(related_name='courses', to=settings.AUTH_USER_MODEL, help_text='Only this user can change the course details and create new assignments.'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='courses', to=settings.AUTH_USER_MODEL, help_text='Only this user can change the course details and create new assignments.'),
         ),
         migrations.AlterField(
             model_name='course',
@@ -122,7 +122,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='submission',
             name='file_upload',
-            field=models.ForeignKey(related_name='submissions', verbose_name='New upload', blank=True, to='opensubmit.SubmissionFile', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissions', verbose_name='New upload', blank=True, to='opensubmit.SubmissionFile', null=True),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -142,7 +142,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='submissionfile',
             name='replaced_by',
-            field=models.ForeignKey(blank=True, editable=False, to='opensubmit.SubmissionFile', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, editable=False, to='opensubmit.SubmissionFile', null=True),
         ),
         migrations.AlterField(
             model_name='testmachine',

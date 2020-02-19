@@ -214,7 +214,7 @@ TEMPLATES = [
 
 TEST_RUNNER = 'opensubmit.tests.DiscoverRunner'
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -403,7 +403,7 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 JOB_EXECUTOR_SECRET = config.get("executor", "SHARED_SECRET")
-assert(JOB_EXECUTOR_SECRET is not "")
+assert(JOB_EXECUTOR_SECRET != "")
 
 GRAPPELLI_ADMIN_TITLE = "OpenSubmit"
 GRAPPELLI_SWITCH_USER = True

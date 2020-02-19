@@ -42,7 +42,7 @@ def state_label_css(subm):
     return grey_label
 
 
-@register.assignment_tag
+@register.simple_tag
 def setting(name):
     return getattr(settings, name, "")
 

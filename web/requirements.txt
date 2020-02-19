@@ -1,4 +1,4 @@
-Django=3.0.3
+Django==3.0.3
 django-bootstrap-form
 djangorestframework>=2.4
 django-grappelli>=2.8.1

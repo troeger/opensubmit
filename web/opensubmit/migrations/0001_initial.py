@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('homepage', models.URLField()),
                 ('active', models.BooleanField(default=True)),
                 ('max_authors', models.PositiveSmallIntegerField(default=1)),
-                ('owner', models.ForeignKey(related_name=b'courses', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'courses', to=settings.AUTH_USER_MODEL)),
                 ('tutors', models.ManyToManyField(related_name=b'courses_tutoring', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
             ],
             options={
@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                 ('grading_notes', models.TextField(max_length=1000, null=True, blank=True)),
                 ('grading_file', models.FileField(null=True, upload_to=upload_path, blank=True)),
                 ('state', models.CharField(default=b'R', max_length=2, choices=[(b'R', b'Received'), (b'W', b'Withdrawn'), (b'S', b'Submitted'), (b'PC', b'Compilation test pending'), (b'FC', b'Compilation test failed'), (b'PV', b'Validity test pending'), (b'FV', b'Validity test failed'), (b'PF', b'Full test pending'), (b'FF', b'All but full test passed, grading pending'), (b'ST', b'All tests passed, grading pending'), (b'GP', b'Grading not finished'), (b'G', b'Grading finished'), (b'C', b'Closed, student notified'), (b'CT', b'Closed, full test pending')])),
-                ('assignment', models.ForeignKey(related_name=b'submissions', to='opensubmit.Assignment')),
+                ('assignment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'submissions', to='opensubmit.Assignment')),
                 ('authors', models.ManyToManyField(help_text=b'', related_name=b'authored', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('attachment', models.FileField(upload_to=upload_path)),
                 ('fetched', models.DateTimeField(null=True, editable=False)),
-                ('replaced_by', models.ForeignKey(blank=True, to='opensubmit.SubmissionFile', null=True)),
+                ('replaced_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='opensubmit.SubmissionFile', null=True)),
             ],
             options={
             },
@@ -132,7 +132,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('courses', models.ManyToManyField(related_name=b'participants', null=True, to='opensubmit.Course', blank=True)),
-                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
             },
@@ -141,43 +141,43 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='submissiontestresult',
             name='machine',
-            field=models.ForeignKey(related_name=b'test_results', to='opensubmit.TestMachine'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'test_results', to='opensubmit.TestMachine'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='submissiontestresult',
             name='submission_file',
-            field=models.ForeignKey(related_name=b'test_results', to='opensubmit.SubmissionFile'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'test_results', to='opensubmit.SubmissionFile'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='submission',
             name='file_upload',
-            field=models.ForeignKey(related_name=b'submissions', blank=True, to='opensubmit.SubmissionFile', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'submissions', blank=True, to='opensubmit.SubmissionFile', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='submission',
             name='grading',
-            field=models.ForeignKey(blank=True, to='opensubmit.Grading', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='opensubmit.Grading', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='submission',
             name='submitter',
-            field=models.ForeignKey(related_name=b'submitted', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'submitted', to=settings.AUTH_USER_MODEL),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='assignment',
             name='course',
-            field=models.ForeignKey(related_name=b'assignments', to='opensubmit.Course'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'assignments', to='opensubmit.Course'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='assignment',
             name='gradingScheme',
-            field=models.ForeignKey(related_name=b'assignments', to='opensubmit.GradingScheme'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name=b'assignments', to='opensubmit.GradingScheme'),
             preserve_default=True,
         ),
         migrations.AddField(
