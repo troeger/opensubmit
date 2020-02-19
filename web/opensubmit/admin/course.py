@@ -2,7 +2,7 @@
 import django.contrib.admin
 from django.db.models import Q
 from django.shortcuts import redirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.html import format_html
 
 def assignments(course):

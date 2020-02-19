@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from datetime import datetime
 import tempfile
@@ -190,17 +190,17 @@ class Submission(models.Model):
     )
     # Docs end: States    
 
-    assignment = models.ForeignKey('Assignment', related_name='submissions')
-    submitter = models.ForeignKey(User, related_name='submitted')
+    assignment = models.ForeignKey('Assignment', related_name='submissions', on_delete=models.CASCADE)
+    submitter = models.ForeignKey(User, related_name='submitted', on_delete=models.CASCADE)
     # includes also submitter, see submission_post_save() handler
     authors = models.ManyToManyField(User, related_name='authored')
     notes = models.TextField(max_length=200, blank=True)
     file_upload = models.ForeignKey(
-        'SubmissionFile', related_name='submissions', blank=True, null=True, verbose_name='New upload')
+        'SubmissionFile', related_name='submissions', blank=True, null=True, verbose_name='New upload', on_delete=models.SET_NULL)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(
         auto_now=True, editable=False, blank=True, null=True)
-    grading = models.ForeignKey('Grading', blank=True, null=True)
+    grading = models.ForeignKey('Grading', blank=True, null=True, on_delete=models.SET_NULL)
     grading_notes = models.TextField(max_length=10000, blank=True, null=True,
                                      help_text="Specific notes about the grading for this submission.")
     grading_file = models.FileField(upload_to=upload_path, blank=True, null=True,

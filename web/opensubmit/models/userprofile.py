@@ -13,12 +13,12 @@ logger = logging.getLogger('OpenSubmit')
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, related_name='profile')
+    user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
     student_id = models.CharField(max_length=30, blank=True, null=True)
     courses = models.ManyToManyField(
         Course, blank=True, related_name='participants', limit_choices_to={'active__exact': True})
     study_program = models.ForeignKey(
-        StudyProgram, blank=True, null=True, related_name='students')
+        StudyProgram, blank=True, null=True, related_name='students', on_delete=models.SET_NULL)
 
     class Meta:
         app_label = 'opensubmit'

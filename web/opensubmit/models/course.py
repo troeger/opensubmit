@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .assignment import Assignment
 from .submission import Submission
@@ -26,7 +26,7 @@ def lti_cred_generator():
 class Course(models.Model):
     title = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    owner = models.ForeignKey(User, related_name='courses', help_text="Only this user can change the course details and create new assignments.")
+    owner = models.ForeignKey(User, related_name='courses', null=True, on_delete=models.SET_NULL, help_text="Only this user can change the course details and create new assignments.")
     tutors = models.ManyToManyField(User, blank=True, related_name='courses_tutoring', help_text="These users can edit / grade submissions for the course.")
     homepage = models.URLField(max_length=200, verbose_name="Course description link")
     active = models.BooleanField(default=True, help_text="Only assignments and submissions of active courses are shown to students and tutors. Use this flag for archiving past courses.")

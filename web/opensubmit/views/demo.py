@@ -1,6 +1,6 @@
 import uuid
 from time import gmtime, strftime
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.views.generic import RedirectView
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect

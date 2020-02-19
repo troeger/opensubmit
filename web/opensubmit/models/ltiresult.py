@@ -9,7 +9,7 @@ class LtiResult(models.Model):
     See https://www.imsglobal.org/specs/ltiomv1p0/specification for data validity
     and lifetime issues.
     '''
-    user = models.ForeignKey(User, related_name='ltiresults')
-    assignment = models.ForeignKey(Assignment, related_name='ltiresults')
+    user = models.ForeignKey(User, related_name='ltiresults', on_delete=models.CASCADE)
+    assignment = models.ForeignKey(Assignment, related_name='ltiresults', on_delete=models.CASCADE)
     lis_outcome_service_url = models.URLField()
     lis_result_sourcedid = models.CharField(max_length=255)

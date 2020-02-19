@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from django.conf import settings
 
@@ -50,7 +50,7 @@ class SubmissionFile(models.Model):
     original_filename = models.CharField(max_length=255, default='student.upload')
     fetched = models.DateTimeField(editable=False, null=True)
     replaced_by = models.ForeignKey(
-        'SubmissionFile', null=True, blank=True, editable=False)
+        'SubmissionFile', null=True, blank=True, editable=False, on_delete=models.SET_NULL)
     md5 = models.CharField(max_length=36, null=True,
                            blank=True, editable=False)
 

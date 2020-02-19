@@ -11,8 +11,8 @@ class SubmissionTestResult(models.Model):
         (VALIDITY_TEST, 'Validation test'),
         (FULL_TEST, 'Full test')
     )
-    submission_file = models.ForeignKey('SubmissionFile', related_name="test_results")
-    machine = models.ForeignKey('TestMachine', related_name="test_results")
+    submission_file = models.ForeignKey('SubmissionFile', related_name="test_results", on_delete=models.CASCADE)
+    machine = models.ForeignKey('TestMachine', related_name="test_results", on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     result = models.TextField(null=True, blank=True)
     result_tutor = models.TextField(null=True, blank=True)

@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.contrib import messages
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from opensubmit.models import UserProfile
 from opensubmit.security import make_student, make_tutor, make_owner, make_admin, STUDENT_TUTORS_GROUP_NAME, COURSE_OWNERS_GROUP_NAME

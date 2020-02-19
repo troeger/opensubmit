@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, get_object_or_404, render
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View

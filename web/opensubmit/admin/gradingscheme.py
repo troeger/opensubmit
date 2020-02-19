@@ -2,7 +2,7 @@
 
 from django.contrib.admin import ModelAdmin
 from django.db.models import Q
-from django.core.urlresolvers import resolve
+from django.urls import resolve
 from opensubmit.models import Course, Grading
 
 

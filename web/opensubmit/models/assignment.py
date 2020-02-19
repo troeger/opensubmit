@@ -20,11 +20,11 @@ class Assignment(models.Model):
     '''
 
     title = models.CharField(max_length=200)
-    course = models.ForeignKey('Course', related_name='assignments')
+    course = models.ForeignKey('Course', related_name='assignments', on_delete=models.CASCADE)
     download = models.URLField(max_length=200, blank=True, null=True, verbose_name="As link", help_text="External link to the assignment description.")
     description = models.FileField(upload_to="assignment_desc", blank=True, null=True, verbose_name='As file', help_text="Uploaded document with the assignment description.")
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme", blank=True, null=True, help_text="Grading scheme for this assignment. Leave empty to have an ungraded assignment.")
+    gradingScheme = models.ForeignKey('GradingScheme', related_name="assignments", verbose_name="grading scheme", blank=True, null=True, on_delete=models.SET_NULL, help_text="Grading scheme for this assignment. Leave empty to have an ungraded assignment.")
     publish_at = models.DateTimeField(default=timezone.now, help_text="Shown for students after this point in time. Users with backend rights always see it.")
     soft_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline shown to students. After this point in time, submissions are still possible. Leave empty for only using a hard deadline.")
     hard_deadline = models.DateTimeField(blank=True, null=True, help_text="Deadline after which submissions are no longer possible. Can be empty.")

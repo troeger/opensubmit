@@ -7,12 +7,11 @@ from django.views.generic.edit import UpdateView
 from django.shortcuts import redirect
 from django.contrib import auth, messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.forms.models import modelform_factory, model_to_dict
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
 from django.utils.safestring import mark_safe
-from django.core.urlresolvers import reverse
 
 from django.conf import settings
 from opensubmit.forms import SettingsForm, getSubmissionForm, SubmissionFileUpdateForm
