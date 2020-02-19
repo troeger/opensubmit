@@ -174,6 +174,14 @@ class Student(SubmitStudentScenarioTestCase):
         response = self.c.get('/machine/%u/' % machine.pk)
         self.assertEqual(response.status_code, 200)
 
+    def test_cannot_use_mail_backend1(self):
+        response = self.c.get('/mail/receivers=1')
+        self.assertEqual(response.status_code, 302)
+
+    def test_cannot_use_mail_backend2(self):
+        response = self.c.get('/mail/course=1')
+        self.assertEqual(response.status_code, 302)
+
     def test_cannot_use_teacher_backend(self):
         response = self.c.get('/teacher/opensubmit/submission/')
         # 302: can access the model in principle

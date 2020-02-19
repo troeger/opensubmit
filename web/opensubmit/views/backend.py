@@ -140,7 +140,12 @@ class MergeUsersView(StaffRequiredMixin, TemplateView):
         return redirect('admin:index')
 
 
-class MailFormPreview(StaffRequiredMixin, FormPreview):
+class MailFormPreview(FormPreview):
+    '''
+    django-formtools is unable to utlize Django mixins, since it does
+    not rely on Django CBV. Given that, security must be handled directly
+    in the URL routing, and not here.
+    '''
     form_template = 'mail_form.html'
     preview_template = 'mail_preview.html'
 
@@ -172,4 +177,3 @@ class MailFormPreview(StaffRequiredMixin, FormPreview):
         sent = send_mass_mail(tosend, fail_silently=True)
         messages.add_message(request, messages.INFO, '%u message(s) sent.' % sent)
         return redirect('teacher:index')
-

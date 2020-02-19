@@ -1,10 +1,12 @@
 from django.conf.urls import include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.contrib.auth.decorators import user_passes_test
 from django.views.generic import TemplateView
 
 from opensubmit import admin
-from opensubmit.views import frontend, backend, lti, api, demo
+from opensubmit.views import frontend, backend, lti, api, demo, helpers
 from opensubmit.forms import MailForm
+
 
 urlpatterns = [
     # Frontend Login
@@ -41,8 +43,11 @@ urlpatterns = [
     url(r'^course/(?P<pk>\d+)/archive/$', backend.CourseArchiveView.as_view(), name='coursearchive'),
     url(r'^course/(?P<pk>\d+)/gradingtable/$', backend.GradingTableView.as_view(), name='gradingtable'),
     url(r'^mergeusers/(?P<primary_pk>\d+)/(?P<secondary_pk>\d+)/$', backend.MergeUsersView.as_view(), name='mergeusers'),
-    url(r'^mail/receivers=(?P<user_list>.*)$', backend.MailFormPreview(MailForm), name='mailstudents'),
-    url(r'^mail/course=(?P<course_id>\d+)$', backend.MailFormPreview(MailForm), name='mailcourse'),
+
+    # Security must be handled here, see MailFormPreview class for details
+    url(r'^mail/receivers=(?P<user_list>.*)$', user_passes_test(helpers.staff_required_test)(backend.MailFormPreview(MailForm)), name='mailstudents'),
+    url(r'^mail/course=(?P<course_id>\d+)$', user_passes_test(helpers.staff_required_test)(backend.MailFormPreview(MailForm)), name='mailcourse'),
+
     # Executor URLs
     url(r'^download/(?P<pk>\d+)/validity_testscript/secret=(?P<secret>\w+)$', api.ValidityScriptView.as_view(), name='validity_script_secret'),
     url(r'^download/(?P<pk>\d+)/full_testscript/secret=(?P<secret>\w+)$', api.FullScriptView.as_view(), name='full_testscript_secret'),

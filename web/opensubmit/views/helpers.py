@@ -18,6 +18,12 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_staff
 
 
+# replica of StaffRequiredMixin
+# needed for Django formtools views, see urls.py
+def staff_required_test(user):
+    return user.is_staff and user.is_authenticated
+
+
 class BinaryDownloadMixin(object):
     f = None
     fname = None
