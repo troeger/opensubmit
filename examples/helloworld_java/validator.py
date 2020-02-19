@@ -3,10 +3,9 @@ from opensubmitexec.compiler import JAVAC
 
 def validate(job):
 
-    # Make sure that the right file name is given
-    job.ensure_files(['HelloWorld.java'])
+    if not job.ensure_files(['HelloWorld.java']):
+        job.send_fail_result("Your submitted file must be named 'HelloWorld.java'.", "Student used wrong file name.")
 
-    # Run the compiler
     job.run_compiler(compiler=JAVAC, inputs=['HelloWorld.java'])
 
     # Run the compilation result.
