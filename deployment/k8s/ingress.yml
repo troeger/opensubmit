@@ -13,9 +13,9 @@ spec:
   tls:
   - secretName: opensubmit-web-tls
     hosts:
-    - beuth.open-submit.org
+    - demo.open-submit.org
   rules:
-  - host: beuth.open-submit.org
+  - host: demo.open-submit.org
     http:
       paths:
       - path:

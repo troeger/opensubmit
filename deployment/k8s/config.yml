@@ -5,6 +5,6 @@ metadata:
   labels:
     app.kubernetes.io/name: opensubmit
 data:
-  OPENSUBMIT_SERVER_URL: <External URL>
+  OPENSUBMIT_SERVER_URL: https://www.demo.open-submit.org
   OPENSUBMIT_LOGIN_DEMO: "True"
   OPENSUBMIT_DEBUG: "False"
